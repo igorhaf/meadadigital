@@ -176,11 +176,11 @@ export default function Home() {
                   onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 14px 32px rgba(59,130,246,0.38)'; }}>
                   Comece Agora →
                 </Link>
-                <button style={{ padding: '15px 34px', background: 'transparent', border: '1px solid rgba(59,130,246,0.28)', borderRadius: '10px', color: 'rgb(96,165,250)', fontWeight: '600', fontSize: '15px', cursor: 'pointer', transition: 'all 0.3s ease' }}
+                <Link href="/produtos" style={{ padding: '15px 34px', background: 'transparent', border: '1px solid rgba(59,130,246,0.28)', borderRadius: '10px', color: 'rgb(96,165,250)', fontWeight: '600', fontSize: '15px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.3s ease' }}
                   onMouseEnter={e => { e.currentTarget.style.background = 'rgba(59,130,246,0.08)'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.5)'; }}
                   onMouseLeave={e => { e.currentTarget.style.background = 'transparent'; e.currentTarget.style.borderColor = 'rgba(59,130,246,0.28)'; }}>
                   Ver Produtos
-                </button>
+                </Link>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '2rem', paddingTop: '3rem', borderTop: '1px solid rgba(71,85,105,0.25)' }}>
@@ -535,11 +535,11 @@ export default function Home() {
               onMouseLeave={e => { e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = '0 8px 24px rgba(59,130,246,0.3)'; }}>
               Agendar Consultoria
             </button>
-            <button style={{ padding: '13px 32px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', color: 'rgba(255,255,255,0.75)', fontWeight: '600', fontSize: '15px', cursor: 'pointer', transition: 'all 0.22s ease', letterSpacing: '0.01em' }}
+            <Link href="/produtos" style={{ padding: '13px 32px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', color: 'rgba(255,255,255,0.75)', fontWeight: '600', fontSize: '15px', textDecoration: 'none', display: 'inline-block', transition: 'all 0.22s ease', letterSpacing: '0.01em' }}
               onMouseEnter={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.borderColor = 'rgba(99,102,241,0.5)'; e.currentTarget.style.color = 'white'; }}
               onMouseLeave={e => { e.currentTarget.style.background = 'rgba(255,255,255,0.04)'; e.currentTarget.style.borderColor = 'rgba(255,255,255,0.12)'; e.currentTarget.style.color = 'rgba(255,255,255,0.75)'; }}>
               Ver Produtos
-            </button>
+            </Link>
           </div>
         </div>
       </section>
