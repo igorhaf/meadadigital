@@ -5,9 +5,9 @@ export default function BannerLinkedInPage() {
       height: '396px',
       background: '#000812',
       display: 'flex',
-      alignItems: 'center',
+      alignItems: 'flex-start',
       justifyContent: 'space-between',
-      padding: '0 80px',
+      padding: '44px 80px 0',
       position: 'relative',
       overflow: 'hidden',
       margin: '0 auto',
@@ -43,7 +43,68 @@ export default function BannerLinkedInPage() {
         backgroundSize: '60px 60px',
       }} />
 
-      {/* LEFT: Logo + Name */}
+      {/* LEFT: Tagline + pills */}
+      <div style={{
+        display: 'flex', flexDirection: 'column', gap: '20px',
+        position: 'relative', zIndex: 1,
+        maxWidth: '700px',
+      }}>
+        <p style={{
+          fontSize: '30px', fontWeight: 700, color: '#fff',
+          lineHeight: 1.3, letterSpacing: '-0.5px', margin: 0,
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+        }}>
+          Sites e Sistemas com o{' '}
+          <span style={{
+            backgroundImage: 'linear-gradient(125deg, #60a5fa 0%, #a855f7 50%, #ec4899 100%)',
+            backgroundClip: 'text',
+            WebkitBackgroundClip: 'text',
+            color: 'transparent',
+          }}>
+            Diferencial da IA
+          </span>
+        </p>
+
+        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+          {['Desenvolvimento Web', 'IA & Automação', 'Cloud & DevOps', 'Design & UX'].map((tag, i) => {
+            const colors = ['#60a5fa', '#a855f7', '#ec4899', '#34d399'];
+            return (
+              <span key={tag} style={{
+                padding: '6px 16px',
+                borderRadius: '100px',
+                border: `1px solid ${colors[i]}40`,
+                background: `${colors[i]}0f`,
+                color: colors[i],
+                fontSize: '13px',
+                fontWeight: 600,
+                letterSpacing: '0.02em',
+                fontFamily: 'system-ui, -apple-system, sans-serif',
+              }}>
+                {tag}
+              </span>
+            );
+          })}
+        </div>
+
+        <p style={{
+          fontSize: '16px', color: 'rgba(148,163,184,0.55)',
+          margin: 0, letterSpacing: '0.01em',
+          fontFamily: 'system-ui, -apple-system, sans-serif',
+        }}>
+          meadadigital.com
+        </p>
+      </div>
+
+      {/* CENTER divider */}
+      <div style={{
+        width: '1px', height: '120px',
+        background: 'linear-gradient(to bottom, transparent, rgba(59,130,246,0.3), transparent)',
+        flexShrink: 0, position: 'relative', zIndex: 1,
+        alignSelf: 'center',
+        marginTop: '-20px',
+      }} />
+
+      {/* RIGHT: Logo + Name */}
       <div style={{
         display: 'flex', alignItems: 'center', gap: '32px',
         position: 'relative', zIndex: 1,
@@ -96,65 +157,6 @@ export default function BannerLinkedInPage() {
             Digital
           </span>
         </div>
-      </div>
-
-      {/* CENTER divider */}
-      <div style={{
-        width: '1px', height: '120px',
-        background: 'linear-gradient(to bottom, transparent, rgba(59,130,246,0.3), transparent)',
-        flexShrink: 0, position: 'relative', zIndex: 1,
-      }} />
-
-      {/* RIGHT: Tagline + pills */}
-      <div style={{
-        display: 'flex', flexDirection: 'column', gap: '20px',
-        position: 'relative', zIndex: 1,
-        maxWidth: '700px',
-      }}>
-        <p style={{
-          fontSize: '30px', fontWeight: 700, color: '#fff',
-          lineHeight: 1.3, letterSpacing: '-0.5px', margin: 0,
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}>
-          Sites e Sistemas com o{' '}
-          <span style={{
-            backgroundImage: 'linear-gradient(125deg, #60a5fa 0%, #a855f7 50%, #ec4899 100%)',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            color: 'transparent',
-          }}>
-            Diferencial da IA
-          </span>
-        </p>
-
-        <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
-          {['Desenvolvimento Web', 'IA & Automação', 'Cloud & DevOps', 'Design & UX'].map((tag, i) => {
-            const colors = ['#60a5fa', '#a855f7', '#ec4899', '#34d399'];
-            return (
-              <span key={tag} style={{
-                padding: '6px 16px',
-                borderRadius: '100px',
-                border: `1px solid ${colors[i]}40`,
-                background: `${colors[i]}0f`,
-                color: colors[i],
-                fontSize: '13px',
-                fontWeight: 600,
-                letterSpacing: '0.02em',
-                fontFamily: 'system-ui, -apple-system, sans-serif',
-              }}>
-                {tag}
-              </span>
-            );
-          })}
-        </div>
-
-        <p style={{
-          fontSize: '16px', color: 'rgba(148,163,184,0.55)',
-          margin: 0, letterSpacing: '0.01em',
-          fontFamily: 'system-ui, -apple-system, sans-serif',
-        }}>
-          meadadigital.com
-        </p>
       </div>
 
     </div>
