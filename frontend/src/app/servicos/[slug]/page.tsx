@@ -29,7 +29,7 @@ const SERVICES: Record<string, ServiceData> = {
     gradient: 'linear-gradient(135deg, #1d4ed8, #4f46e5)',
     title: 'Desenvolvimento Personalizado',
     subtitle: 'Sites e sistemas feitos sob medida para o seu negócio',
-    description: 'Do site institucional ao sistema mais complexo, entrego soluções digitais que funcionam de verdade. Código limpo, performance otimizada e foco total no que importa para o seu negócio.',
+    description: 'Do site institucional ao sistema mais complexo, entregamos soluções digitais que funcionam de verdade. Código limpo, performance otimizada e foco total no que importa para o seu negócio.',
     features: [
       { title: 'Design Responsivo', desc: 'Layout perfeito em desktop, tablet e mobile sem comprometer a experiência' },
       { title: 'Performance Otimizada', desc: 'Carregamento rápido, Core Web Vitals no verde e SEO técnico from scratch' },
@@ -51,7 +51,7 @@ const SERVICES: Record<string, ServiceData> = {
     gradient: 'linear-gradient(135deg, #7c3aed, #4f46e5)',
     title: 'Infraestrutura em Nuvem',
     subtitle: 'Seu projeto no ar com segurança, velocidade e escalabilidade',
-    description: 'Configuro, migro e mantenho servidores e ambientes em nuvem para que sua aplicação rode com estabilidade e performance. Sem dores de cabeça técnicas, sem surpresas.',
+    description: 'Configuramos, migramos e mantemos servidores e ambientes em nuvem para que sua aplicação rode com estabilidade e performance. Sem dores de cabeça técnicas, sem surpresas.',
     features: [
       { title: 'Deploy Automatizado', desc: 'CI/CD configurado do zero: menos erros humanos, mais agilidade nas entregas' },
       { title: 'SSL & Segurança', desc: 'HTTPS obrigatório, firewalls configurados e boas práticas de segurança aplicadas' },
@@ -73,7 +73,7 @@ const SERVICES: Record<string, ServiceData> = {
     gradient: 'linear-gradient(135deg, #db2777, #7c3aed)',
     title: 'IA & Automação',
     subtitle: 'Inteligência artificial aplicada ao seu negócio, de forma prática',
-    description: 'Integro IA nos seus sistemas ou processos onde faz sentido real: chatbots, automações, análise de documentos e muito mais. Sem hype, com resultado mensurável.',
+    description: 'Integramos IA nos seus sistemas ou processos onde faz sentido real: chatbots, automações, análise de documentos e muito mais. Sem hype, com resultado mensurável.',
     features: [
       { title: 'Chatbots Inteligentes', desc: 'Atendimento automático treinado com as informações do seu negócio' },
       { title: 'Automação de Processos', desc: 'Tarefas repetitivas eliminadas com fluxos automáticos e gatilhos inteligentes' },
@@ -95,7 +95,7 @@ const SERVICES: Record<string, ServiceData> = {
     gradient: 'linear-gradient(135deg, #0891b2, #1d4ed8)',
     title: 'Design Mobile First',
     subtitle: 'Experiências digitais que funcionam perfeitamente em qualquer tela',
-    description: 'Desenvolvo interfaces e aplicações com foco total no mobile: layouts responsivos, apps nativos e PWAs que oferecem uma experiência fluida e rápida em qualquer dispositivo.',
+    description: 'Desenvolvemos interfaces e aplicações com foco total no mobile: layouts responsivos, apps nativos e PWAs que oferecem uma experiência fluida e rápida em qualquer dispositivo.',
     features: [
       { title: 'Totalmente Responsivo', desc: 'Layout perfeito em qualquer resolução, do celular ao ultrawide' },
       { title: 'Performance Mobile', desc: 'Carregamento rápido mesmo em conexões 3G/4G e dispositivos mais simples' },
@@ -117,7 +117,7 @@ const SERVICES: Record<string, ServiceData> = {
     gradient: 'linear-gradient(135deg, #059669, #0891b2)',
     title: 'Design & UX',
     subtitle: 'Interfaces bonitas que as pessoas sabem e gostam de usar',
-    description: 'Crio interfaces com foco em usabilidade e estética. Do wireframe ao protótipo navegável, passando por design system e handoff completo para desenvolvimento.',
+    description: 'Criamos interfaces com foco em usabilidade e estética. Do wireframe ao protótipo navegável, passando por design system e handoff completo para desenvolvimento.',
     features: [
       { title: 'Wireframes', desc: 'Estrutura e hierarquia da interface antes de partir para o visual final' },
       { title: 'Prototipação', desc: 'Protótipos interativos para validar o fluxo com usuários antes de codar' },
@@ -139,7 +139,7 @@ const SERVICES: Record<string, ServiceData> = {
     gradient: 'linear-gradient(135deg, #d97706, #dc2626)',
     title: 'APIs & Integrações',
     subtitle: 'Conecte seus sistemas e ferramentas em uma arquitetura coesa',
-    description: 'Crio APIs robustas e integro plataformas externas para que seus sistemas conversem entre si sem atrito. Pagamentos, CRM, ERP, marketplaces — tudo conectado e funcionando.',
+    description: 'Criamos APIs robustas e integramos plataformas externas para que seus sistemas conversem entre si sem atrito. Pagamentos, CRM, ERP, marketplaces — tudo conectado e funcionando.',
     features: [
       { title: 'APIs REST & GraphQL', desc: 'Endpoints claros, bem documentados e protegidos por autenticação adequada' },
       { title: 'Webhooks', desc: 'Comunicação em tempo real entre sistemas diferentes por eventos' },
@@ -227,18 +227,6 @@ export default function ServicePage({ params }: { params: Promise<{ slug: string
                 <h3 style={{ fontSize: '17px', fontWeight: '800', marginBottom: '0.75rem', color: '#f1f5f9' }}>{u.title}</h3>
                 <p style={{ fontSize: '14px', color: 'rgb(148,163,184)', lineHeight: '1.7' }}>{u.desc}</p>
               </div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* Tech stack */}
-      <section style={{ padding: '3.5rem 4rem', borderTop: '1px solid rgba(59,130,246,0.1)' }}>
-        <div style={{ maxWidth: '1360px', margin: '0 auto' }}>
-          <p style={{ fontSize: '11px', fontWeight: '700', color: 'rgba(148,163,184,0.6)', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '1.25rem' }}>Tecnologias utilizadas</p>
-          <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.6rem' }}>
-            {tech.map(t => (
-              <span key={t} style={{ padding: '6px 14px', borderRadius: '7px', border: `1px solid ${color}25`, background: `${color}0a`, fontSize: '12px', fontWeight: '600', color: 'rgb(203,213,225)' }}>{t}</span>
             ))}
           </div>
         </div>
