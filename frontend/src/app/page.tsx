@@ -8,7 +8,7 @@ import {
   CodeIcon, CloudIcon, CpuIcon, SmartphoneIcon, LayersIcon, BarChartIcon,
 } from './components/icons';
 
-const CLAUDIO_URL = 'http://claudio.meadadigital.com';
+const CLAUDIO_URL = 'https://claudio.meadadigital.com';
 
 function IconBox({ icon, color }: { icon: React.ReactNode; color: string }) {
   return (
