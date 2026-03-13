@@ -395,66 +395,6 @@ export default function ServicosPage() {
         </div>
       </section>
 
-      {/* Tech Stack Section */}
-      <section style={{ padding: '5rem 2rem' }}>
-        <div style={{ maxWidth: '1360px', margin: '0 auto' }}>
-          <div style={{ textAlign: 'center', marginBottom: '3rem' }}>
-            <h2
-              style={{
-                fontSize: 'clamp(1.75rem, 3vw, 2.5rem)',
-                fontWeight: 800,
-                color: '#fff',
-                letterSpacing: '-0.03em',
-                marginBottom: '0.75rem',
-              }}
-            >
-              Tecnologias que Dominamos
-            </h2>
-            <p style={{ color: 'rgba(255,255,255,0.45)', fontSize: '1rem' }}>
-              Stack moderno e battle-tested para construir produtos de classe mundial.
-            </p>
-          </div>
-
-          <div
-            style={{
-              display: 'flex',
-              flexWrap: 'wrap',
-              gap: '0.75rem',
-              justifyContent: 'center',
-            }}
-          >
-            {techStack.map((tech) => (
-              <span
-                key={tech}
-                style={{
-                  padding: '8px 18px',
-                  borderRadius: '100px',
-                  background: 'rgba(59,130,246,0.07)',
-                  border: '1px solid rgba(59,130,246,0.18)',
-                  color: 'rgba(255,255,255,0.7)',
-                  fontSize: '13px',
-                  fontWeight: 500,
-                  letterSpacing: '0.02em',
-                  transition: 'background 0.2s, border-color 0.2s, color 0.2s',
-                  cursor: 'default',
-                }}
-                onMouseEnter={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = 'rgba(59,130,246,0.15)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(59,130,246,0.4)';
-                  (e.currentTarget as HTMLElement).style.color = '#93c5fd';
-                }}
-                onMouseLeave={(e) => {
-                  (e.currentTarget as HTMLElement).style.background = 'rgba(59,130,246,0.07)';
-                  (e.currentTarget as HTMLElement).style.borderColor = 'rgba(59,130,246,0.18)';
-                  (e.currentTarget as HTMLElement).style.color = 'rgba(255,255,255,0.7)';
-                }}
-              >
-                {tech}
-              </span>
-            ))}
-          </div>
-        </div>
-      </section>
 
       {/* CTA Section */}
       <section style={{ padding: '5rem 2rem 7rem' }}>
