@@ -108,6 +108,7 @@ export default function Footer() {
               {[
                 { label: 'Sobre Nós', href: '/sobre' },
                 { label: 'Produtos', href: '/produtos' },
+                { label: 'Serviços', href: '/servicos' },
               ].map((item) => (
                 <li key={item.label}>
                   <Link href={item.href}
