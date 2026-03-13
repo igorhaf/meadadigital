@@ -323,7 +323,8 @@ export default function Home() {
                 onMouseLeave={e => { e.currentTarget.style.border = '1px solid rgba(59,130,246,0.1)'; e.currentTarget.style.transform = 'translateY(0)'; e.currentTarget.style.boxShadow = 'none'; e.currentTarget.style.background = 'rgba(15,23,42,0.4)'; }}>
                 <IconBox icon={<s.Icon size={24} color={s.color} />} color={s.color} />
                 <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '0.75rem', lineHeight: '1.3' }}>{s.title}</h3>
-                <p style={{ color: 'rgb(148,163,184)', fontSize: '14px', lineHeight: '1.7', flex: 1 }}>{s.desc}</p>
+                <p style={{ color: 'rgb(148,163,184)', fontSize: '14px', lineHeight: '1.7', marginBottom: '1.75rem', flex: 1 }}>{s.desc}</p>
+                <Link href={s.href} style={{ color: s.color, fontWeight: '600', fontSize: '14px', textDecoration: 'none' }}>Saiba mais →</Link>
               </div>
             ))}
           </div>
