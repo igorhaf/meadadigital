@@ -48,9 +48,9 @@ Contato:
 export async function POST(req: NextRequest) {
   const { message, session_id } = await req.json()
 
-  const claudioUrl = process.env.CLAUDIO_API_URL ?? 'http://localhost:8001'
+  const claudioEndpoint = process.env.CLAUDE_ADDRESS ?? 'http://claudio.local/v1/messages'
 
-  const upstream = await fetch(`${claudioUrl}/v1/messages`, {
+  const upstream = await fetch(claudioEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({
