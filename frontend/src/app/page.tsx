@@ -8,7 +8,7 @@ import {
   CodeIcon, CloudIcon, CpuIcon, SmartphoneIcon, LayersIcon, BarChartIcon,
 } from './components/icons';
 
-const CLAUDIO_URL = 'https://claudio.meadadigital.com';
+const CLAUDIO_URL = '';
 
 function IconBox({ icon, color }: { icon: React.ReactNode; color: string }) {
   return (
@@ -86,10 +86,10 @@ export default function Home() {
     setLiveMessages(prev => [...prev, userMsg, aiMsg]);
 
     try {
-      const res = await fetch(`${CLAUDIO_URL}/api/chat`, {
+      const res = await fetch(`${CLAUDIO_URL}/api/homepage-chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, session_id: sessionId, project: 'meada', use_case: 'homepage' }),
+        body: JSON.stringify({ message: text, session_id: sessionId }),
       });
       const reader = res.body!.getReader();
       const decoder = new TextDecoder();
