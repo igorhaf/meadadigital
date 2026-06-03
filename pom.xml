@@ -76,6 +76,17 @@
             <artifactId>junit-jupiter</artifactId>
             <scope>test</scope>
         </dependency>
+
+        <!-- MockWebServer: simula a Gemini API (3.2) e a Evolution (3.3) nos testes,
+             sem chamada real (crédito/latência/flakiness). Versão herdada do
+             okhttp-bom que o Spring Boot 3.3.13 gerencia (okhttp 4.12.0) — por isso
+             sem <version>. O cliente HTTP de produção é o RestClient (Spring 6.1,
+             já no spring-web via starter-web) — síncrono, sem Reactor/Netty. -->
+        <dependency>
+            <groupId>com.squareup.okhttp3</groupId>
+            <artifactId>mockwebserver</artifactId>
+            <scope>test</scope>
+        </dependency>
     </dependencies>
 
     <build>

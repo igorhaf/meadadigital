@@ -1,6 +1,7 @@
 package com.meada.whatsapp.messaging;
 
 import com.meada.whatsapp.AbstractIntegrationTest;
+import com.meada.whatsapp.ai.ConversationTurn;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -127,5 +128,56 @@ class MessageRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertThat(inB).isEmpty();   // global: o mesmo id já existe (em A), B vira DO NOTHING
         assertThat(countMessages(COMPANY_A)).isEqualTo(1);
         assertThat(countMessages(COMPANY_B)).isZero();
+    }
+
+    // ---- findRecentByConversation -------------------------------------------
+
+    /** Insere uma mensagem com created_at explícito (segundos a partir de uma base),
+     *  para ordem cronológica determinística no teste. */
+    private void insertAt(UUID company, UUID conv, MessageDirection dir, MessageSender sender,
+                          String content, int secondsOffset) {
+        jdbcTemplate.update(
+            "insert into messages (company_id, conversation_id, direction, sender, content, created_at) "
+                + "values (?, ?, ?, ?, ?, now() + (? || ' seconds')::interval)",
+            company, conv, dir.dbValue(), sender.dbValue(), content, secondsOffset);
+    }
+
+    @Test
+    @DisplayName("(f) findRecent: retorna em ordem cronológica com roles corretos")
+    void findRecent_chronologicalWithRoles() {
+        insertAt(COMPANY_A, CONV_A, MessageDirection.INBOUND, MessageSender.CONTACT, "oi", 1);
+        insertAt(COMPANY_A, CONV_A, MessageDirection.OUTBOUND, MessageSender.AI, "ola, como ajudo?", 2);
+        insertAt(COMPANY_A, CONV_A, MessageDirection.INBOUND, MessageSender.CONTACT, "quero um corte", 3);
+
+        var turns = repository.findRecentByConversation(CONV_A, 20);
+
+        assertThat(turns).hasSize(3);
+        // ordem cronológica (mais antiga primeiro)
+        assertThat(turns.get(0).role()).isEqualTo(ConversationTurn.Role.USER);
+        assertThat(turns.get(0).text()).isEqualTo("oi");
+        assertThat(turns.get(1).role()).isEqualTo(ConversationTurn.Role.ASSISTANT);   // ai → ASSISTANT
+        assertThat(turns.get(1).text()).isEqualTo("ola, como ajudo?");
+        assertThat(turns.get(2).role()).isEqualTo(ConversationTurn.Role.USER);
+        assertThat(turns.get(2).text()).isEqualTo("quero um corte");
+    }
+
+    @Test
+    @DisplayName("(g) findRecent: limit retorna as N mais recentes, em ordem cronológica")
+    void findRecent_limitReturnsMostRecentChronological() {
+        // 5 mensagens; limit 3 → as 3 mais recentes (m3, m4, m5), cronológicas
+        for (int i = 1; i <= 5; i++) {
+            insertAt(COMPANY_A, CONV_A, MessageDirection.INBOUND, MessageSender.CONTACT, "m" + i, i);
+        }
+
+        var turns = repository.findRecentByConversation(CONV_A, 3);
+
+        assertThat(turns).hasSize(3);
+        assertThat(turns).extracting(ConversationTurn::text).containsExactly("m3", "m4", "m5");
+    }
+
+    @Test
+    @DisplayName("(h) findRecent: conversa sem mensagens → lista vazia")
+    void findRecent_emptyConversation() {
+        assertThat(repository.findRecentByConversation(CONV_A, 20)).isEmpty();
     }
 }

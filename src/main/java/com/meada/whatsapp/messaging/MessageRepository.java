@@ -1,9 +1,13 @@
 package com.meada.whatsapp.messaging;
 
+import com.meada.whatsapp.ai.ConversationTurn;
+import com.meada.whatsapp.ai.ConversationTurn.Role;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -24,6 +28,26 @@ public class MessageRepository {
         new Message(
             (UUID) rs.getObject("id"),
             (UUID) rs.getObject("company_id"));
+
+    // Histórico para o prompt da IA: sender → Role (contact=USER; ai/human=ASSISTANT,
+    // ambos são "nosso lado" do ponto de vista do modelo).
+    private static final RowMapper<ConversationTurn> TURN_MAPPER = (rs, rowNum) ->
+        new ConversationTurn(
+            "contact".equals(rs.getString("sender")) ? Role.USER : Role.ASSISTANT,
+            rs.getString("content"));
+
+    // Busca as N mais recentes (DESC + limit), depois inverte para ordem
+    // cronológica em memória (a IA lê o diálogo do início ao fim).
+    //   order by created_at DESC, id DESC: o tiebreaker (id) é DESEMPATE de
+    //   COLISÃO de timestamp (várias mensagens no mesmo instante em rajada ou em
+    //   testes rápidos) — mesmo motivo do FAQ. NÃO é ordem semântica (uuid v4 não
+    //   tem). created_at não é único; sem o tiebreaker a ordem entre colisões fica
+    //   indefinida. (uq_messages_evolution_id é o único unique e não serve à ordem.)
+    private static final String SELECT_RECENT =
+        "select sender, content from messages "
+            + "where conversation_id = ? "
+            + "order by created_at desc, id desc "
+            + "limit ?";
 
     // Insert idempotente. ON CONFLICT repete o predicado parcial
     // (WHERE evolution_message_id IS NOT NULL) para o Postgres reconhecer
@@ -76,5 +100,27 @@ public class MessageRepository {
             companyId, conversationId, direction.dbValue(), sender.dbValue(), content, evolutionMessageId);
 
         return inserted.stream().findFirst();
+    }
+
+    /**
+     * Últimas {@code limit} mensagens da conversa, em ordem CRONOLÓGICA (mais
+     * antiga primeiro), como turns para o prompt da IA.
+     *
+     * <p>{@code limit} é teto, não piso: conversa com 5 mensagens e limit 20
+     * retorna 5; com 50 e limit 20 retorna as 20 mais recentes. A query busca
+     * DESC + limit (pega as recentes) e este método INVERTE para cronológica.
+     *
+     * @param limit máximo de turns (as mais recentes)
+     * @return turns em ordem cronológica; lista vazia se a conversa não tem mensagens
+     */
+    public List<ConversationTurn> findRecentByConversation(UUID conversationId, int limit) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        List<ConversationTurn> recentFirst =
+            jdbcTemplate.query(SELECT_RECENT, TURN_MAPPER, conversationId, limit);
+        // recentFirst está em ordem decrescente (mais recente → mais antiga);
+        // inverte para cronológica (mais antiga → mais recente).
+        List<ConversationTurn> chronological = new ArrayList<>(recentFirst);
+        Collections.reverse(chronological);
+        return chronological;
     }
 }

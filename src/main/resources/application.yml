@@ -72,6 +72,15 @@ spring:
 webhook:
   secret: ${WEBHOOK_SECRET}
 
+# IA (Gemini). api-key e model obrigatórios (sem default) — fail-fast no
+#   GeminiProvider se ausentes. O nome do modelo vigente deve ser confirmado antes
+#   do deploy (ver RISKS.md "Nome do modelo Gemini vigente"). base-url tem default
+#   (a API pública); nos testes é sobrescrito para o MockWebServer.
+gemini:
+  base-url: ${GEMINI_BASE_URL:https://generativelanguage.googleapis.com}
+  api-key: ${GEMINI_API_KEY}
+  model: ${GEMINI_MODEL}
+
 server:
   port: 8080
   shutdown: graceful

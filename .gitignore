@@ -17,3 +17,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Documento de coordenação entre conversas — vive fora do repo
+CONTEXT.md

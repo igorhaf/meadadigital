@@ -103,6 +103,11 @@ public abstract class AbstractIntegrationTest {
         registry.add("spring.datasource.password", POSTGRES::getPassword);
         // WEBHOOK_SECRET precisa existir para o WebhookSecretFilter instanciar no boot.
         registry.add("webhook.secret", () -> "test-secret");
+        // gemini.api-key e gemini.model são obrigatórios (fail-fast no GeminiProvider);
+        // valores dummy para o contexto subir nos testes de integração. O teste do
+        // GeminiProvider em si aponta o base-url para o MockWebServer.
+        registry.add("gemini.api-key", () -> "test-gemini-key");
+        registry.add("gemini.model", () -> "test-model");
     }
 
     /**
