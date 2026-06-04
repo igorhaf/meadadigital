@@ -118,4 +118,44 @@ public class ConversationRepository {
             "update conversations set last_message_at = ?, updated_at = now() where id = ?",
             Timestamp.from(when), conversationId);
     }
+
+    /**
+     * Transfere a conversa para atendimento humano (handled_by 'ai' → 'human').
+     * Chamado pelo OutboundService quando a IA pede humano, ou quando a IA/envio
+     * falha após retries (ver matriz de fluxo da Fase 3.3).
+     *
+     * <p>O {@code AND handled_by = 'ai'} torna a operação IDEMPOTENTE: um flip
+     * redundante (conversa já 'human') atualiza 0 linhas e retorna false. Isso não
+     * é erro — é informação de log (o caller distingue "flipei agora" de "já estava
+     * humana"). updated_at = now() por coerência com touchLastMessageAt (toda
+     * modificação da conversa atualiza o timestamp).
+     *
+     * @return true se transferiu (era 'ai'); false se a conversa não existe ou já
+     *         estava 'human'.
+     */
+    public boolean markHandledByHuman(UUID conversationId) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        int updated = jdbcTemplate.update(
+            "update conversations set handled_by = 'human', updated_at = now() "
+                + "where id = ? and handled_by = 'ai'",
+            conversationId);
+        return updated > 0;
+    }
+
+    /**
+     * Lê o {@code handled_by} atual da conversa — usado pelo OutboundService como
+     * pré-condição (só processa IA se a conversa ainda está 'ai'; se um humano
+     * assumiu, pula). Leitura fresca, pós-commit do inbound.
+     *
+     * @return "ai" ou "human", ou {@link Optional#empty()} se a conversa não existe
+     *         (ex.: deletada entre o evento e o processamento async).
+     */
+    public Optional<String> findHandledBy(UUID conversationId) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        return jdbcTemplate.query(
+                "select handled_by from conversations where id = ?",
+                (rs, rowNum) -> rs.getString("handled_by"), conversationId)
+            .stream()
+            .findFirst();
+    }
 }

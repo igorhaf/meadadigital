@@ -111,4 +111,73 @@ class ConversationRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertThat(a.companyId()).isEqualTo(COMPANY_A);
         assertThat(b.companyId()).isEqualTo(COMPANY_B);
     }
+
+    // ---- markHandledByHuman -------------------------------------------------
+    // Sem caso de isolamento de tenant — conversationId é PK uuid global única;
+    // o WHERE id=? mira uma conversa específica, não confunde tenants.
+
+    private String handledByOf(UUID conversationId) {
+        return jdbcTemplate.queryForObject(
+            "select handled_by from conversations where id = ?", String.class, conversationId);
+    }
+
+    @Test
+    @DisplayName("markHandledByHuman: conversa 'ai' → flip, retorna true, estado vira 'human'")
+    void mark_aiConversation_flips() {
+        Conversation conv = repository.resolveOpenOrCreate(COMPANY_A, CONTACT_A, INSTANCE_A);  // nasce 'ai'
+
+        boolean flipped = repository.markHandledByHuman(conv.id());
+
+        assertThat(flipped).isTrue();
+        assertThat(handledByOf(conv.id())).isEqualTo("human");
+    }
+
+    @Test
+    @DisplayName("markHandledByHuman: conversa já 'human' → retorna false (idempotente), estado inalterado")
+    void mark_alreadyHuman_returnsFalse() {
+        Conversation conv = repository.resolveOpenOrCreate(COMPANY_A, CONTACT_A, INSTANCE_A);
+        repository.markHandledByHuman(conv.id());   // 1º flip: ai → human
+
+        boolean second = repository.markHandledByHuman(conv.id());   // redundante
+
+        assertThat(second).isFalse();
+        assertThat(handledByOf(conv.id())).isEqualTo("human");   // continua human
+    }
+
+    @Test
+    @DisplayName("markHandledByHuman: conversa inexistente → retorna false")
+    void mark_unknownConversation_returnsFalse() {
+        boolean result = repository.markHandledByHuman(
+            UUID.fromString("c9000000-0000-0000-0000-000000000099"));
+
+        assertThat(result).isFalse();
+    }
+
+    // ---- findHandledBy ------------------------------------------------------
+
+    @Test
+    @DisplayName("findHandledBy: conversa 'ai' retorna Optional.of(\"ai\")")
+    void findHandledBy_aiConversation_returnsAi() {
+        Conversation conv = repository.resolveOpenOrCreate(COMPANY_A, CONTACT_A, INSTANCE_A);  // nasce 'ai'
+
+        assertThat(repository.findHandledBy(conv.id())).contains("ai");
+    }
+
+    @Test
+    @DisplayName("findHandledBy: conversa 'human' retorna Optional.of(\"human\")")
+    void findHandledBy_humanConversation_returnsHuman() {
+        Conversation conv = repository.resolveOpenOrCreate(COMPANY_A, CONTACT_A, INSTANCE_A);
+        repository.markHandledByHuman(conv.id());   // ai → human
+
+        // documenta o uso real (OutboundService compara contra "ai"); pega
+        // regressão se alguém trocar por um isHandledByAi() booleano.
+        assertThat(repository.findHandledBy(conv.id())).contains("human");
+    }
+
+    @Test
+    @DisplayName("findHandledBy: conversa inexistente retorna empty")
+    void findHandledBy_unknown_returnsEmpty() {
+        assertThat(repository.findHandledBy(
+            UUID.fromString("c9000000-0000-0000-0000-000000000099"))).isEmpty();
+    }
 }

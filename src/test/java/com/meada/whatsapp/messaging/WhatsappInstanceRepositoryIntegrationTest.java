@@ -75,4 +75,32 @@ class WhatsappInstanceRepositoryIntegrationTest extends AbstractIntegrationTest 
         assertThat(result.get().id()).isEqualTo(INSTANCE_A);
         assertThat(result.get().companyId()).isEqualTo(COMPANY_A);
     }
+
+    // ---- findEvolutionCredentials -------------------------------------------
+    // Nota: NÃO há caso de "isolamento de tenant" aqui — instanceId é PK uuid
+    // global única, e a FK para companies já garante o vínculo. Buscar por PK
+    // não tem como confundir tenants (ao contrário de findByInstanceName, que
+    // busca por um campo de negócio). Por isso só 2 casos: existe / não existe.
+
+    @Test
+    @DisplayName("findEvolutionCredentials: instância existente retorna instance_name + token")
+    void findEvolutionCredentials_existing_returnsNameAndToken() {
+        seedCompany(COMPANY_A, "empresa-a");
+        seedInstance(INSTANCE_A, COMPANY_A, "inst-a");   // token = "tok-inst-a"
+
+        Optional<EvolutionCredentials> creds = repository.findEvolutionCredentials(INSTANCE_A);
+
+        assertThat(creds).isPresent();
+        assertThat(creds.get().instanceName()).isEqualTo("inst-a");
+        assertThat(creds.get().token()).isEqualTo("tok-inst-a");
+    }
+
+    @Test
+    @DisplayName("findEvolutionCredentials: instância inexistente retorna empty")
+    void findEvolutionCredentials_unknown_returnsEmpty() {
+        Optional<EvolutionCredentials> creds =
+            repository.findEvolutionCredentials(INSTANCE_A);   // nada semeado
+
+        assertThat(creds).isEmpty();
+    }
 }

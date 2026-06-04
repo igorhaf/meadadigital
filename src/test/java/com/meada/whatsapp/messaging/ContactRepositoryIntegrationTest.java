@@ -117,4 +117,41 @@ class ContactRepositoryIntegrationTest extends AbstractIntegrationTest {
         assertThat(again.id()).isEqualTo(created.id());
         assertThat(again.name()).isEqualTo("Original");
     }
+
+    // ---- findPhoneByConversationId ------------------------------------------
+    // Nota: sem caso de "isolamento de tenant" — conversationId é PK uuid global
+    // única; o JOIN resolve o contato dono daquela conversa específica. Buscar por
+    // PK não confunde tenants. Só 2 casos: existe / inexistente.
+
+    private static final UUID INSTANCE_A = UUID.fromString("a1000000-0000-0000-0000-000000000001");
+    private static final UUID CONTACT_A = UUID.fromString("a2000000-0000-0000-0000-000000000001");
+    private static final UUID CONV_A = UUID.fromString("a3000000-0000-0000-0000-000000000001");
+
+    /** Semeia a cadeia FK (instance + contact + conversation) para o JOIN. */
+    private void seedConversation() {
+        jdbcTemplate.update(
+            "insert into whatsapp_instances (id, company_id, instance_name, evolution_token) values (?, ?, ?, ?)",
+            INSTANCE_A, COMPANY_A, "inst-a", "tok-a");
+        jdbcTemplate.update(
+            "insert into contacts (id, company_id, phone_number, name) values (?, ?, ?, ?)",
+            CONTACT_A, COMPANY_A, PHONE, "Cliente A");
+        jdbcTemplate.update(
+            "insert into conversations (id, company_id, contact_id, whatsapp_instance_id, status, handled_by) "
+                + "values (?, ?, ?, ?, 'open', 'ai')",
+            CONV_A, COMPANY_A, CONTACT_A, INSTANCE_A);
+    }
+
+    @Test
+    @DisplayName("findPhoneByConversationId: conversa existente retorna o phone do contato")
+    void findPhone_existing_returnsPhone() {
+        seedConversation();
+
+        assertThat(repository.findPhoneByConversationId(CONV_A)).contains(PHONE);
+    }
+
+    @Test
+    @DisplayName("findPhoneByConversationId: conversa inexistente retorna empty")
+    void findPhone_unknown_returnsEmpty() {
+        assertThat(repository.findPhoneByConversationId(CONV_A)).isEmpty();   // nada semeado
+    }
 }

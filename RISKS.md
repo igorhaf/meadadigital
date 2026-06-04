@@ -47,3 +47,23 @@ Template por item:
 - **Razão:** A doc oficial da Gemini cita variantes de nome diferentes em exemplos diferentes (gemini-1.5-flash, 2.0-flash, 2.5-flash, 3.5-flash). O Google renomeia modelos com frequência, e um nome desatualizado faz a API recusar a chamada. O `GeminiProvider` lê o modelo de `GEMINI_MODEL` (env, sem default no código — fail-fast) justamente para não enterrar um nome que envelhece silenciosamente. Os testes (MockWebServer) usam um valor qualquer e não validam o nome real.
 - **Plano de mitigação:** Na validação manual da Fase 3.4, confirmar o nome do modelo flash vigente contra a API real (`GET /v1beta/models` ou doc atual) e preencher `GEMINI_MODEL` com o nome confirmado antes do deploy. Documentar o nome validado aqui (mudando o Status para Mitigado).
 - **Detectado em:** Camada 3 (IA), Fase 3.2, ao desenhar o `GeminiProvider`.
+
+---
+
+## Backoff síncrono via Thread.sleep no thread pool @Async
+
+- **Status:** Aceito (trade-off MVP).
+- **Bloqueante para:** N/A — mitigado por dimensionamento conservador do pool.
+- **Razão:** O retry de IA/Evolution (3 tentativas, backoffs 1s/3s) usa `Thread.sleep` na thread do pool @Async que processa o pipeline outbound. Pior caso ~4s/mensagem de thread PRESA dormindo. Com pool pequeno (2-4 threads na Fase 3.4), sob carga isso vira gargalo (threads bloqueadas em sleep não processam outras mensagens).
+- **Plano de mitigação:** Pool dimensionado conservador na 3.4 (suficiente para o volume MVP). Saturação observada (threads do pool todas em sleep, fila de eventos crescendo) → migrar para retry-com-reagendamento (Spring `@Scheduled` + tabela de pendências) ou fila externa (Redis/SQS) — fase 2.
+- **Detectado em:** Camada 3 (IA), Fase 3.3, ao desenhar o retry do `OutboundService`.
+
+---
+
+## Tenant com canal Evolution quebrado (token/instância inválidos) fica em backlog até intervenção operacional
+
+- **Status:** Aceito (com alerta).
+- **Bloqueante para:** N/A — mitigado por log ERROR alertável.
+- **Razão:** Se o `evolution_token` ou o `instance_name` de um tenant estiverem errados, TODO envio outbound falha com erro fatal (401/404). A decisão (matriz do OutboundService, caso 8) é NÃO fazer flip para humano — porque o atendente humano usaria o mesmo canal quebrado, e flip empilharia conversas em `handled_by='human'` sem ninguém poder responder (backlog invisível). Em vez disso: log ERROR, `handled_by` continua 'ai', e cada nova mensagem tenta enviar e falha igual — até um admin corrigir a config. Consequência: o tenant fica efetivamente sem responder (inbound persiste, IA gera resposta, mas não entrega) até a intervenção.
+- **Plano de mitigação:** O log ERROR (com `reason` evolution_auth_failed/evolution_instance_not_found, instance, company_id) deve ser ALERTÁVEL no monitoramento — é como o problema é descoberto, não por flip silencioso. Operação corrige token/instance na config do tenant. Pós-MVP: um health-check de instância no onboarding/periódico evitaria o tenant entrar quebrado.
+- **Detectado em:** Camada 3 (IA), Fase 3.3, na matriz de fluxo do OutboundService.

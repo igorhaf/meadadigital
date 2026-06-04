@@ -118,4 +118,30 @@ public class ContactRepository {
             .stream()
             .findFirst();
     }
+
+    // Telefone do contato de uma conversa (JOIN contacts ← conversations pelo
+    // contact_id). Lookup por id de conversa — não há defesa em profundidade aqui
+    // (phone não é segredo); é só a forma de obter o destinatário do envio outbound.
+    private static final String FIND_PHONE_BY_CONVERSATION =
+        "select c.phone_number from contacts c "
+            + "join conversations cv on cv.contact_id = c.id "
+            + "where cv.id = ?";
+
+    /**
+     * Telefone (E.164) do contato dono de uma conversa — para o envio outbound da
+     * Evolution, que exige o {@code number} do destinatário.
+     *
+     * <p>Lido do banco (não carregado no evento) porque o phone é PROJEÇÃO ESTÁVEL:
+     * não muda entre a publicação do evento e o processamento async, então reler é
+     * seguro. (Diferente do userMessage, que é identidade do disparo e vai no evento.)
+     *
+     * @return o telefone, ou {@link Optional#empty()} se a conversa/contato não existe.
+     */
+    public Optional<String> findPhoneByConversationId(UUID conversationId) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        return jdbcTemplate.query(FIND_PHONE_BY_CONVERSATION,
+                (rs, rowNum) -> rs.getString("phone_number"), conversationId)
+            .stream()
+            .findFirst();
+    }
 }

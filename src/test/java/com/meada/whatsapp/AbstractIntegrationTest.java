@@ -108,6 +108,10 @@ public abstract class AbstractIntegrationTest {
         // GeminiProvider em si aponta o base-url para o MockWebServer.
         registry.add("gemini.api-key", () -> "test-gemini-key");
         registry.add("gemini.model", () -> "test-model");
+        // evolution.base-url é obrigatório (fail-fast no EvolutionClient @Component);
+        // placeholder para o contexto subir nos testes de integração. O teste do
+        // EvolutionClient em si aponta o base-url para o MockWebServer.
+        registry.add("evolution.base-url", () -> "http://localhost:0");
     }
 
     /**

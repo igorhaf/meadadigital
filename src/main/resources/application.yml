@@ -81,6 +81,28 @@ gemini:
   api-key: ${GEMINI_API_KEY}
   model: ${GEMINI_MODEL}
 
+# Evolution API (envio outbound). base-url obrigatório SEM default (self-hosted,
+#   não há URL pública para fallback) — fail-fast. SEM api-key/token aqui: o token
+#   é PER-INSTANCE, lido via findEvolutionCredentials na hora do envio e passado
+#   ao EvolutionClient.sendText. Endpoint/shape confirmados na doc oficial v2.1.1.
+evolution:
+  base-url: ${EVOLUTION_BASE_URL}
+  connect-timeout-ms: ${EVOLUTION_CONNECT_TIMEOUT_MS:5000}
+  read-timeout-ms: ${EVOLUTION_READ_TIMEOUT_MS:30000}
+
+# Retry do OutboundService (IA + envio). max-attempts inclui a 1ª tentativa;
+#   backoff-ms tem max-attempts-1 entradas (a espera ANTES de cada retry). Aqui:
+#   3 tentativas, esperas de 1s e 3s. Lida via OutboundRetryProperties
+#   (@ConfigurationProperties — agrega a lista YAML indexada, o que @Value não faria).
+#   O teste sobrescreve com esperas curtas (1ms) via @DynamicPropertySource para
+#   exercitar a exaustão sem latência real.
+outbound:
+  retry:
+    max-attempts: 3
+    backoff-ms:
+      - 1000
+      - 3000
+
 server:
   port: 8080
   shutdown: graceful
