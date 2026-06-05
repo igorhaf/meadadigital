@@ -183,3 +183,13 @@ meada-delta-01 assina com HS256 + secret compartilhada. O JwtAuthenticationFilte
 `com.meada.whatsapp.admin.security`) lê `SUPABASE_JWT_SECRET` e valida via MACVerifier do
 nimbus-jose-jwt. Sem JWKS endpoint, sem rotação automática — o secret é estático e
 rotacionado manualmente se necessário.
+
+### Versão de nimbus-jose-jwt: 9.48 (linha 9.x)
+O `pom.xml` fixa `com.nimbusds:nimbus-jose-jwt:9.48` (versão exata, sem range —
+Maven não tem caret). Razão: 10.x evitada por incompatibilidade conhecida com o
+ecossistema Spring Security — o `spring-security-oauth2-jose:6.3.8` (linha do
+Spring Boot 3.3.13) fixa transitivamente `nimbus-jose-jwt:9.37.3`. Qualquer
+dep Spring Security futura traria 9.x transitiva; pinar 10.x conflitaria.
+Escolha de 9.48 (em vez de 9.37.3 exata): patches de segurança recentes
+(9.38-9.48); descompasso de patch dentro da major é inócuo. MACVerifier/HS256
+tem API idêntica em toda a 9.x — sem perda funcional.

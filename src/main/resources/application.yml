@@ -103,6 +103,19 @@ outbound:
       - 1000
       - 3000
 
+# Admin (painel — camada 4.1+). super-admin-emails: CSV de emails que o filtro JWT
+#   trata como super-admin (sem SELECT em public.users). cors-allowed-origins: origens
+#   do frontend aceitas no CORS de /admin/**. Ambos via @ConfigurationProperties (AdminProperties).
+admin:
+  super-admin-emails: ${ADMIN_SUPER_ADMIN_EMAILS:}
+  cors-allowed-origins: ${ADMIN_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+# Supabase. jwt-secret SEM default (fail-fast): o filtro JWT do admin valida os tokens
+#   HS256 com este secret (Settings → API → JWT Settings). Sem ele, nenhum endpoint
+#   /admin/** consegue autenticar — fail-fast é correto.
+supabase:
+  jwt-secret: ${SUPABASE_JWT_SECRET}
+
 server:
   port: 8080
   shutdown: graceful
