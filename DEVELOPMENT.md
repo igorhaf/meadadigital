@@ -59,3 +59,39 @@ A porta local pode colidir com o Orbit (8080) — usar `SERVER_PORT=8088` em dev
 
 ### Evolution: investigar tag que exponha `remoteJidAlt` em 1:1
 A `evoapicloud/evolution-api:v2.3.1` (usada na validação E2E local) **não** expõe `remoteJidAlt` nem `senderPn` (`@s.whatsapp.net`) em mensagens `@lid` 1:1 — validado contra 39 mensagens reais (0 traziam o número). Investigar se há uma tag mais recente de `evoapicloud/evolution-api` que exponha `remoteJidAlt` de forma consistente em 1:1. Se houver, subir essa versão **é frente própria** (operação de infra Docker, exige nova validação E2E — como foi o salto v2.1.1 → v2.3.1 que destravou o pareamento), separada do código. Com o campo disponível, capturar o payload real e adicionar o ramo de recuperação ao `MessagePayloadNormalizer` (ver item "@lid" no [RISKS.md](RISKS.md)).
+
+### Frontend: 4 vulnerabilidades moderate transitivas no npm audit (camada 4.0)
+Detectadas no install inicial do `frontend/` (camada 4.0). Todas em deps transitivas
+(não declaradas diretamente). Não acionadas no MVP (painel admin interno, dev). Revisar
+antes de qualquer deploy público: rodar `npm audit` para listar, avaliar se é possível
+resolver com `npm audit fix` (sem `--force`) ou se exige bump de dep direta. NUNCA rodar
+`npm audit fix --force` automaticamente — pode quebrar versões cravadas + package-lock.
+
+## Frontend (camada 4)
+
+### Bootstrap de usuário de teste / super-admin
+O painel não tem cadastro self-service (MVP). Usuários nascem por seed manual:
+- **Admin de tenant:** (1) criar o usuário no Supabase Auth (painel meada-delta-01 →
+  Authentication → Users → "Add user", email+senha; ou via Admin API); (2) inserir a
+  linha correspondente em `public.users` via SQL (`id` = uid do auth user, `company_id`
+  = empresa dele, `role` em owner|admin|agent). Sem a linha em public.users, o
+  `app.company_id()` retorna NULL e o RLS bloqueia tudo.
+- **Super-admin meada:** (1) criar o usuário no Supabase Auth (SEM linha em
+  public.users); (2) adicionar o email à allowlist `admin.super-admin-emails` no
+  application.yml do backend (entra na sub-fase 4.1, junto com o filtro JWT). A
+  allowlist é o que distingue super-admin — ele opera sempre via Spring (service_role),
+  fora do RLS.
+
+### Nota: @supabase/ssr em linha 0.x
+`@supabase/ssr` é a lib oficial da Supabase para o Next app router (sessão em cookies,
+server+client). É mantida na linha 0.x estável — a versão 1.0 nunca foi lançada; 0.x é
+a linha de produção recomendada pela própria Supabase, sem alternativa mais madura. Não
+é abandono nem beta — não "migrar para 1.0" achando que 0.x é provisório.
+
+### P1 cravado: validação do JWT Supabase no Spring (input para 4.1)
+O Supabase meada-delta-01 assina o JWT com **HS256 + secret compartilhada** (Settings →
+API → JWT Settings: Algorithm HS256, JWT Secret estático; SEM JWKS URL, sem chave
+assimétrica). O filtro JWT do Spring (sub-fase 4.1, em `com.meada.whatsapp.admin.security`)
+deve ler `SUPABASE_JWT_SECRET` do env e validar os tokens via `MACVerifier` do
+nimbus-jose-jwt. Sem JWKS endpoint, sem rotação automática — o secret é estático e
+rotacionado manualmente se necessário.
