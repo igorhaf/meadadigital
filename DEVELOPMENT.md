@@ -91,10 +91,8 @@ a linha de produção recomendada pela própria Supabase, sem alternativa mais m
 ### P1 cravado: validação do JWT Supabase no Spring (input para 4.1)
 O Supabase meada-delta-01 assina o JWT com **HS256 + secret compartilhada** (Settings →
 API → JWT Settings: Algorithm HS256, JWT Secret estático; SEM JWKS URL, sem chave
-assimétrica). O filtro JWT do Spring (sub-fase 4.1, em `com.meada.whatsapp.admin.security`)
-deve ler `SUPABASE_JWT_SECRET` do env e validar os tokens via `MACVerifier` do
-nimbus-jose-jwt. Sem JWKS endpoint, sem rotação automática — o secret é estático e
-rotacionado manualmente se necessário.
+assimétrica). Detalhamento técnico completo + onde o filtro mora: ver seção
+"Camada 4.1 — decisões de auth/admin" abaixo (fonte canônica).
 
 ### Lições de processo (camada 4.0 — frontend)
 1. **Aprovar conteúdo de arquivo ≠ arquivo criado.** Após cada "aprovado", o Write
@@ -110,3 +108,78 @@ rotacionado manualmente se necessário.
 3. **Critério de "fechado" do 4.0 (e padrão para 4.x frontend):** `mvn -B clean test`
    verde (backend intacto) + `next build` limpo + smoke test manual sobre o estado
    PÓS-build (não sobre estado intermediário).
+
+## Camada 4.1 — decisões de auth/admin
+
+Estas 12 decisões foram cravadas em prosa antes de qualquer código da 4.1 (padrão das
+fases 3.x). Surgem do trade-off "frontend chama backend sempre" (c-revisado da
+arquitetura híbrida), do P1 já cravado (HS256 + secret compartilhada), e do escopo da
+camada 4 (super-admin via Spring, tenant-admin via SDK+RLS). Estão agrupadas por bloco
+temático: A=transporte JWT, B=validação no Spring, C=estrutura de código, D=frontend,
+E=bootstrap operacional. Esta seção é a FONTE CANÔNICA do assunto JWT/admin (a nota P1
+acima é só um ponteiro).
+
+**A1 — Transporte do JWT:** `Authorization: Bearer <token>` (header), não cookie
+HTTP-only. Alinhado ao pattern Supabase; CORS sem credentials simplifica; debug com
+curl/Postman trivial.
+
+**A2 — Frontend obtém o token:** `supabase.auth.getSession()` a cada chamada,
+encapsulado num wrapper `apiFetch()`. Sem provider próprio (duplicaria o state que o
+@supabase/ssr já gerencia).
+
+**B1 — Onde o filtro guarda a identidade:** `request.setAttribute("authenticatedUser", au)`.
+Não SecurityContext (não usamos Spring Security), não ThreadLocal próprio (pool reusa
+thread → mesma pegadinha do MDC na 3.4).
+
+**B2 — Eager (filtro resolve, controller só lê):** o filtro produz um `AuthenticatedUser`
+completo. **Otimização super-admin:** se o email está na allowlist → `role=SUPER_ADMIN`,
+`companyId=null`, SEM SELECT em public.users. Tenant-admin → SELECT `company_id, role`
+em public.users WHERE id=sub; se NÃO encontrar linha → 403 `user_not_provisioned`
+(evita 500 quando o user existe no Auth mas falta provisão em public.users). O controller
+lê via `@RequestAttribute("authenticatedUser") AuthenticatedUser user`.
+
+**B3 — Teste do filtro:** helper estático `mintToken(...)` em `AbstractAdminIntegrationTest`
+(herda de AbstractIntegrationTest) que gera token HS256 via nimbus-jose-jwt (mesma lib
+do prod), claims customizáveis. 6 casos: válido+allowlist → 200 super-admin; válido+linha
+em public.users → 200 tenant-admin com companyId; válido+sem provisão → 403
+user_not_provisioned; assinatura errada → 401; expirado → 401; sem header → 401.
+
+**C1 — Sub-pacotes:** `admin.{security,companies,me,instances}`. `me` em pacote próprio
+(endpoint de identidade, não de segurança). `instances` fica vazio na 4.1, popula na 4.6.
+
+**C2 — DTOs:** records Java (padrão das camadas 2/3).
+
+**D1 — Frontend lib/api:** `apiFetch` genérico em `lib/api/client.ts` (injeta o header
+Authorization, trata 401/403) + helpers tipados por recurso (`lib/api/me.ts`,
+`lib/api/companies.ts`). Híbrido: wrapper único para concerns transversais, helpers
+tipados onde o TypeScript ajuda.
+
+**D2 — Tratamento de erro HTTP:** 401 → `apiFetch` força `supabase.auth.signOut()` +
+redirect /login (sessão morreu). 403 → propaga como `ApiError(403, msg)` para o caller
+tratar inline (usuário está logado, só não pode ver aquilo; redirect confundiria).
+
+**D3 — Tela companies:** client component com TanStack Query, sem SSR (painel admin, não
+landing). Estabelece o pattern para o 4.5 (polling de conversas).
+
+**E1 — Seed para o smoke test:** manual via SQL/painel Supabase, documentado aqui (não
+em script versionado). Necessário: user igor.test@meada.dev no Auth (já existe da 4.0);
+igor.test em ADMIN_SUPER_ADMIN_EMAILS; 1+ empresa em public.companies; SUPABASE_JWT_SECRET
+no .env; para testar 403: tenant.test@meada.dev no Auth + linha em public.users.
+
+**E2 — SUPABASE_JWT_SECRET:** obtido em Settings → API → JWT Settings → "Reveal", colado
+no .env raiz. No .env.example raiz com comentário apontando onde pegar.
+
+### Divisão 401 vs 403 (duas fontes de 403, documentadas)
+- **401 (filtro):** token ausente, malformado, assinatura inválida, expirado → erro de
+  AUTENTICAÇÃO (quem é você?).
+- **403 user_not_provisioned (filtro):** token válido, mas tenant-admin sem linha em
+  public.users → o filtro não consegue construir o AuthenticatedUser completo.
+- **403 forbidden_not_super_admin (controller):** AuthenticatedUser construído, mas role
+  insuficiente para o endpoint (tenant-admin em /admin/companies) → erro de AUTORIZAÇÃO
+  (você pode fazer isso?).
+
+### JWT do Supabase: HS256 (fonte canônica)
+meada-delta-01 assina com HS256 + secret compartilhada. O JwtAuthenticationFilter (em
+`com.meada.whatsapp.admin.security`) lê `SUPABASE_JWT_SECRET` e valida via MACVerifier do
+nimbus-jose-jwt. Sem JWKS endpoint, sem rotação automática — o secret é estático e
+rotacionado manualmente se necessário.
