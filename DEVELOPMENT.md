@@ -95,3 +95,18 @@ assimétrica). O filtro JWT do Spring (sub-fase 4.1, em `com.meada.whatsapp.admi
 deve ler `SUPABASE_JWT_SECRET` do env e validar os tokens via `MACVerifier` do
 nimbus-jose-jwt. Sem JWKS endpoint, sem rotação automática — o secret é estático e
 rotacionado manualmente se necessário.
+
+### Lições de processo (camada 4.0 — frontend)
+1. **Aprovar conteúdo de arquivo ≠ arquivo criado.** Após cada "aprovado", o Write
+   literal deve aparecer no output antes de seguir para o próximo arquivo. No 4.0 o
+   `lib/supabase/server.ts` foi aprovado mas nunca escrito (passou direto ao
+   middleware) — só pego no sanity check pré-commit. Disciplina: Write visível por
+   aprovação; se não apareceu, cobrar antes de avançar.
+2. **`npx next build` no critério de "fechado" de toda sub-fase 4.x que toca frontend.**
+   O Turbopack em dev compila lazy — um import quebrado pode passar despercebido se a
+   rota afetada não executar o code path no momento certo (foi o caso: smoke test 5/5
+   verde em dev com o server.ts faltando). O build de produção resolve todos os imports
+   estaticamente e é honesto. Smoke test em dev NÃO substitui build.
+3. **Critério de "fechado" do 4.0 (e padrão para 4.x frontend):** `mvn -B clean test`
+   verde (backend intacto) + `next build` limpo + smoke test manual sobre o estado
+   PÓS-build (não sobre estado intermediário).
