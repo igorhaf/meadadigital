@@ -2,6 +2,8 @@ package com.meada.whatsapp.outbound;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.web.client.ClientHttpRequestFactories;
 import org.springframework.boot.web.client.ClientHttpRequestFactorySettings;
@@ -13,6 +15,7 @@ import org.springframework.web.client.RestClientResponseException;
 
 import java.time.Duration;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Cliente HTTP da Evolution API para envio de texto, via RestClient síncrono
@@ -39,17 +42,36 @@ import java.util.Map;
 @Component
 public class EvolutionClient implements EvolutionSender {
 
+    private static final Logger log = LoggerFactory.getLogger(EvolutionClient.class);
+
     private final RestClient restClient;
     private final ObjectMapper objectMapper;
+
+    /**
+     * Quando true, sendText() loga em vez de fazer HTTP real. Default false
+     * (envio real) — comportamento correto para produção, que opera sem flag.
+     *
+     * <p>Em desenvolvimento, EVOLUTION_DRY_RUN=true no .env (e no .env.example)
+     * protege contra envio acidental a contatos reais. Inversão de ônus
+     * consciente: prod óbvio sem flag; dev assume responsabilidade.
+     *
+     * <p>NÃO REMOVA EVOLUTION_DRY_RUN=true do .env.example. Ele documenta a
+     * proteção de ambiente local. Sem ele, o próximo dev que clonar e rodar
+     * testes E2E sem configurar pode disparar envio real ao Supabase real
+     * (vide RISKS.md, incidente re-sync 2026-06-10).
+     */
+    private final boolean dryRun;
 
     public EvolutionClient(@Value("${evolution.base-url}") String baseUrl,
                            @Value("${evolution.connect-timeout-ms:5000}") long connectTimeoutMs,
                            @Value("${evolution.read-timeout-ms:30000}") long readTimeoutMs,
+                           @Value("${evolution.dry-run:false}") boolean dryRun,
                            ObjectMapper objectMapper) {
         if (baseUrl == null || baseUrl.isBlank()) {
             throw new IllegalStateException("evolution.base-url must be configured (env EVOLUTION_BASE_URL)");
         }
         this.objectMapper = objectMapper;
+        this.dryRun = dryRun;
         ClientHttpRequestFactory requestFactory = ClientHttpRequestFactories.get(
             ClientHttpRequestFactorySettings.DEFAULTS
                 .withConnectTimeout(Duration.ofMillis(connectTimeoutMs))
@@ -63,6 +85,9 @@ public class EvolutionClient implements EvolutionSender {
     /**
      * Envia uma mensagem de texto pela Evolution.
      *
+     * <p>Quando {@code evolution.dry-run=true} (ver campo {@link #dryRun}), o envio
+     * HTTP é suprimido: loga e retorna id fake com prefixo "dry-run-".
+     *
      * @param instanceName nome da instância (path)
      * @param token        evolution_token da instância (header apikey) — per-instance
      * @param number       destinatário em E.164 (com +; ver RISKS se Evolution recusar)
@@ -73,6 +98,12 @@ public class EvolutionClient implements EvolutionSender {
      */
     @Override
     public String sendText(String instanceName, String token, String number, String text) {
+        if (dryRun) {
+            String fakeId = "dry-run-" + UUID.randomUUID();
+            log.info("DRY-RUN: envio suprimido instance={} number={} textLength={} fakeId={}",
+                instanceName, number, text.length(), fakeId);
+            return fakeId;
+        }
         Map<String, Object> body = Map.of("number", number, "text", text);
         String responseJson;
         try {

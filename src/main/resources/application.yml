@@ -85,10 +85,13 @@ gemini:
 #   não há URL pública para fallback) — fail-fast. SEM api-key/token aqui: o token
 #   é PER-INSTANCE, lido via findEvolutionCredentials na hora do envio e passado
 #   ao EvolutionClient.sendText. Endpoint/shape confirmados na doc oficial v2.1.1.
+#   dry-run: false (default) = envia real; true = só loga (proteção de dev local
+#   contra envio acidental a contatos reais — ver EvolutionClient.dryRun e RISKS.md).
 evolution:
   base-url: ${EVOLUTION_BASE_URL}
   connect-timeout-ms: ${EVOLUTION_CONNECT_TIMEOUT_MS:5000}
   read-timeout-ms: ${EVOLUTION_READ_TIMEOUT_MS:30000}
+  dry-run: ${EVOLUTION_DRY_RUN:false}
 
 # Retry do OutboundService (IA + envio). max-attempts inclui a 1ª tentativa;
 #   backoff-ms tem max-attempts-1 entradas (a espera ANTES de cada retry). Aqui:

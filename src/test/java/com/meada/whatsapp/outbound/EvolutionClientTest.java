@@ -20,8 +20,9 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
  * sem chamada real. Não precisa de Spring context: instancia o client direto
  * apontando para o mock.
  *
- * <p>5 cenários: 201 sucesso (parseia key.id), 429→transient, 503→transient,
- * 400→fatal, 201 com key.id ausente→fatal.
+ * <p>5 cenários de envio real (dryRun=false): 201 sucesso (parseia key.id),
+ * 429→transient, 503→transient, 400→fatal, 201 com key.id ausente→fatal.
+ * +1 cenário dry-run: HTTP suprimido, retorna id fake.
  */
 class EvolutionClientTest {
 
@@ -34,7 +35,7 @@ class EvolutionClientTest {
         server.start();
         client = new EvolutionClient(
             server.url("/").toString().replaceAll("/$", ""),   // base-url do mock
-            5000, 30000, new ObjectMapper());
+            5000, 30000, false, new ObjectMapper());           // dryRun=false: exercita o HTTP real
     }
 
     @AfterEach
@@ -114,5 +115,20 @@ class EvolutionClientTest {
         assertThatThrownBy(() -> client.sendText("inst-a", "tok", "+5511999990000", "oi"))
             .isInstanceOf(EvolutionException.class)
             .isNotInstanceOf(EvolutionTransientException.class);
+    }
+
+    @Test
+    @DisplayName("dryRun=true → não faz HTTP e retorna id com prefixo 'dry-run-'")
+    void dryRunSuppressesHttpAndReturnsFakeId() {
+        // client dedicado com dryRun=true (o de classe é dryRun=false); aponta para o
+        // mesmo mock, mas nenhuma request deve chegar nele.
+        EvolutionClient dryClient = new EvolutionClient(
+            server.url("/").toString().replaceAll("/$", ""),
+            5000, 30000, true, new ObjectMapper());
+
+        String id = dryClient.sendText("inst-a", "tok", "+5511999990000", "Olá, tudo bem?");
+
+        assertThat(id).startsWith("dry-run-");
+        assertThat(server.getRequestCount()).isZero();   // nenhum HTTP saiu
     }
 }
