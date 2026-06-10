@@ -39,7 +39,13 @@ public enum WebhookOutcome {
     IGNORED_NON_TEXT(Level.INFO),
 
     /** evolution_message_id já existia — reentrega de webhook, não reprocessa. */
-    IGNORED_DUPLICATE(Level.INFO);
+    IGNORED_DUPLICATE(Level.INFO),
+
+    /** messageTimestamp mais velho que webhook.message-max-age-seconds (default 180s).
+     *  Tipicamente append-on-reconnect: a Evolution reentrega mensagens antigas como
+     *  messages.upsert ao reconectar a instância. WARN — distinto dos IGNORED_* INFO:
+     *  stale chegando = "algo reconectou", merece visibilidade no log. */
+    IGNORED_STALE(Level.WARN);
 
     private final Level logLevel;
 

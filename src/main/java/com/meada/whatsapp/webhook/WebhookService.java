@@ -17,6 +17,7 @@ import com.meada.whatsapp.webhook.dto.EvolutionWebhookPayload;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -37,6 +38,8 @@ import java.util.Optional;
  *   <li>instância desconhecida → IGNORED_UNKNOWN_INSTANCE
  *   <li>JID group/broadcast/unknown → IGNORED_*
  *   <li>sem texto → IGNORED_NON_TEXT
+ *   <li>guard de frescor por messageTimestamp → IGNORED_STALE (rejeita
+ *       append-on-reconnect; ver RISKS.md incidente re-sync 2026-06-10)
  *   <li>persistência: contato → conversa → message; duplicata → IGNORED_DUPLICATE,
  *       nova → touchLastMessageAt + PROCESSED
  * </ol>
@@ -63,18 +66,29 @@ public class WebhookService {
     private final MessagePayloadNormalizer normalizer;
     private final ApplicationEventPublisher eventPublisher;
 
+    /**
+     * Idade máxima (segundos) de uma mensagem para ser processada. Acima disto, o
+     * guard de frescor a rejeita como IGNORED_STALE — defesa contra o
+     * append-on-reconnect do Baileys/Evolution (ver RISKS.md incidente 2026-06-10).
+     * Default 180s: largo o bastante para latência Evolution→backend + processamento
+     * @Async + clock skew NTP; apertado o bastante para barrar histórico (minutos+).
+     */
+    private final long messageMaxAgeSeconds;
+
     public WebhookService(WhatsappInstanceRepository instanceRepository,
                           ContactRepository contactRepository,
                           ConversationRepository conversationRepository,
                           MessageRepository messageRepository,
                           MessagePayloadNormalizer normalizer,
-                          ApplicationEventPublisher eventPublisher) {
+                          ApplicationEventPublisher eventPublisher,
+                          @Value("${webhook.message-max-age-seconds:180}") long messageMaxAgeSeconds) {
         this.instanceRepository = instanceRepository;
         this.contactRepository = contactRepository;
         this.conversationRepository = conversationRepository;
         this.messageRepository = messageRepository;
         this.normalizer = normalizer;
         this.eventPublisher = eventPublisher;
+        this.messageMaxAgeSeconds = messageMaxAgeSeconds;
     }
 
     @Transactional
@@ -124,7 +138,25 @@ public class WebhookService {
             return logOutcome(WebhookOutcome.IGNORED_NON_TEXT, "instance", payload.instance());
         }
 
-        // 6. persistência (transacional)
+        // 6. guard de frescor: rejeita mensagens antigas (append-on-reconnect do
+        //    Baileys/Evolution despeja histórico como messages.upsert; ver
+        //    RISKS.md incidente 2026-06-10). messageTimestamp null não rejeita
+        //    (defensivo, mesma semântica do resolveTimestamp). Limitação:
+        //    NÃO protege contra mensagens novas chegando ao vivo num número
+        //    não-dedicado — esse cenário é coberto pelo dry-run em STAGE=local.
+        Long messageTs = data.messageTimestamp();
+        if (messageTs != null) {
+            long ageSeconds = Instant.now().getEpochSecond() - messageTs;
+            if (ageSeconds > messageMaxAgeSeconds) {
+                return logOutcome(WebhookOutcome.IGNORED_STALE,
+                    "instance", payload.instance(),
+                    "evolution_message_id", key.id(),
+                    "messageTimestamp", String.valueOf(messageTs),
+                    "ageSeconds", String.valueOf(ageSeconds));
+            }
+        }
+
+        // 7. persistência (transacional)
         Contact contact = contactRepository.resolveOrCreate(
             wi.companyId(), jid.phoneNumber(), data.pushName());
         Conversation conversation = conversationRepository.resolveOpenOrCreate(

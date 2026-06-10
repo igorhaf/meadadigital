@@ -18,7 +18,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 /**
  * Integration test do {@link WebhookService} ponta a ponta contra PostgreSQL real
- * (Testcontainers), como service_role. Cobre os 9 {@link WebhookOutcome} + idempotência
+ * (Testcontainers), como service_role. Cobre os 10 {@link WebhookOutcome} + idempotência
  * + contato novo, verificando tanto o outcome quanto o estado persistido.
  */
 class WebhookServiceIntegrationTest extends AbstractIntegrationTest {
@@ -58,7 +58,7 @@ class WebhookServiceIntegrationTest extends AbstractIntegrationTest {
     /** Inbound user de texto, válida — base dos casos que devem PROCESSAR. */
     private EvolutionWebhookPayload validInbound(String remoteJid, String evolutionId, String text) {
         return payload("messages.upsert", INSTANCE_NAME, false,
-            remoteJid, evolutionId, "Cliente A", 1700000000L, text, null);
+            remoteJid, evolutionId, "Cliente A", recentTimestamp(), text, null);
     }
 
     private long count(String table, UUID companyId) {
@@ -72,7 +72,7 @@ class WebhookServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("evento != messages.upsert → IGNORED_NON_MESSAGE_EVENT")
     void nonMessageEvent() {
         var p = payload("presence.update", INSTANCE_NAME, false,
-            "5511999990000@s.whatsapp.net", "EVT-1", "X", 1700000000L, "oi", null);
+            "5511999990000@s.whatsapp.net", "EVT-1", "X", recentTimestamp(), "oi", null);
         assertThat(service.process(p)).isEqualTo(WebhookOutcome.IGNORED_NON_MESSAGE_EVENT);
         assertThat(count("messages", COMPANY_A)).isZero();
     }
@@ -81,7 +81,7 @@ class WebhookServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("fromMe=true → IGNORED_FROM_ME")
     void fromMeTrue() {
         var p = payload("messages.upsert", INSTANCE_NAME, true,
-            "5511999990000@s.whatsapp.net", "EVT-1", "X", 1700000000L, "oi", null);
+            "5511999990000@s.whatsapp.net", "EVT-1", "X", recentTimestamp(), "oi", null);
         assertThat(service.process(p)).isEqualTo(WebhookOutcome.IGNORED_FROM_ME);
         assertThat(count("messages", COMPANY_A)).isZero();
     }
@@ -90,7 +90,7 @@ class WebhookServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("fromMe=null → IGNORED_FROM_ME (defensivo)")
     void fromMeNull() {
         var p = payload("messages.upsert", INSTANCE_NAME, null,
-            "5511999990000@s.whatsapp.net", "EVT-1", "X", 1700000000L, "oi", null);
+            "5511999990000@s.whatsapp.net", "EVT-1", "X", recentTimestamp(), "oi", null);
         assertThat(service.process(p)).isEqualTo(WebhookOutcome.IGNORED_FROM_ME);
         assertThat(count("messages", COMPANY_A)).isZero();
     }
@@ -99,7 +99,7 @@ class WebhookServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("instância desconhecida → IGNORED_UNKNOWN_INSTANCE")
     void unknownInstance() {
         var p = payload("messages.upsert", "nao-existe", false,
-            "5511999990000@s.whatsapp.net", "EVT-1", "X", 1700000000L, "oi", null);
+            "5511999990000@s.whatsapp.net", "EVT-1", "X", recentTimestamp(), "oi", null);
         assertThat(service.process(p)).isEqualTo(WebhookOutcome.IGNORED_UNKNOWN_INSTANCE);
         assertThat(count("messages", COMPANY_A)).isZero();
     }
@@ -132,9 +132,25 @@ class WebhookServiceIntegrationTest extends AbstractIntegrationTest {
     @DisplayName("mensagem sem texto (message=null) → IGNORED_NON_TEXT")
     void nonText() {
         var p = payload("messages.upsert", INSTANCE_NAME, false,
-            "5511999990000@s.whatsapp.net", "EVT-1", "X", 1700000000L, null, null);
+            "5511999990000@s.whatsapp.net", "EVT-1", "X", recentTimestamp(), null, null);
         assertThat(service.process(p)).isEqualTo(WebhookOutcome.IGNORED_NON_TEXT);
         assertThat(count("messages", COMPANY_A)).isZero();
+    }
+
+    @Test
+    @DisplayName("messageTimestamp além do threshold (1h atrás) → IGNORED_STALE (nada persistido)")
+    void staleMessageIsIgnored() {
+        // 1h atrás = bem além do threshold default (180s) — simula append-on-reconnect
+        var p = payload("messages.upsert", INSTANCE_NAME, false,
+            "5511999990000@s.whatsapp.net", "EVT-STALE", "Cliente Velho",
+            recentTimestamp() - 3600, "oi de 1h atrás", null);
+
+        assertThat(service.process(p)).isEqualTo(WebhookOutcome.IGNORED_STALE);
+
+        // stale é no-op total: nada persistido (consistente com os outros IGNORED_*)
+        assertThat(count("messages", COMPANY_A)).isZero();
+        assertThat(count("conversations", COMPANY_A)).isZero();
+        assertThat(count("contacts", COMPANY_A)).isZero();
     }
 
     @Test

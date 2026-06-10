@@ -16,6 +16,7 @@ import org.testcontainers.junit.jupiter.Testcontainers;
 import java.sql.Connection;
 import java.sql.DriverManager;
 import java.sql.SQLException;
+import java.time.Instant;
 
 /**
  * Base para integration tests com PostgreSQL real via Testcontainers.
@@ -140,5 +141,14 @@ public abstract class AbstractIntegrationTest {
               faqs, documents, ai_settings, contacts, conversations, messages
             RESTART IDENTITY CASCADE
             """);
+    }
+
+    /**
+     * Epoch segundos "agora" — para construir payloads de teste com messageTimestamp
+     * fresh (passa pelo guard de frescor do WebhookService). Testes que precisam
+     * simular mensagem antiga (ex. staleMessageIsIgnored) usam {@code recentTimestamp() - N}.
+     */
+    protected static long recentTimestamp() {
+        return Instant.now().getEpochSecond();
     }
 }

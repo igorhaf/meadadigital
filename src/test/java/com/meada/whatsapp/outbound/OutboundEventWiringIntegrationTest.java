@@ -92,7 +92,7 @@ class OutboundEventWiringIntegrationTest extends AbstractIntegrationTest {
             "messages.upsert", INSTANCE_NAME,
             new MessageData(
                 new MessageKey(evolutionId, remoteJid, false),
-                "Cliente A", 1700000000L,
+                "Cliente A", recentTimestamp(),
                 new MessageContent(text, null)),
             null, null, null, null, null);
     }
@@ -121,7 +121,7 @@ class OutboundEventWiringIntegrationTest extends AbstractIntegrationTest {
             "messages.upsert", "instancia-fantasma",
             new MessageData(
                 new MessageKey("evt-x", "5511999990001@s.whatsapp.net", false),
-                "Cliente", 1700000000L,
+                "Cliente", recentTimestamp(),
                 new MessageContent("Oi", null)),
             null, null, null, null, null);
 

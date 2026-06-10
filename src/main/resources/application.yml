@@ -67,10 +67,14 @@ spring:
       # Defesa em profundidade: primitivo que receba null da Evolution não estoura.
       fail-on-null-for-primitives: false
 
-# Segredo do webhook (decisão 7): obrigatório, sem default. Sem WEBHOOK_SECRET
-#   a app não sobe. Comparado em constant-time no filtro do webhook (código).
+# Webhook (Evolution → backend). secret (decisão 7): obrigatório, sem default —
+#   sem WEBHOOK_SECRET a app não sobe; comparado em constant-time no filtro (código).
+#   message-max-age-seconds: threshold do guard de frescor do WebhookService —
+#   default 180s, largo o bastante para latência + clock skew, apertado para
+#   rejeitar append-on-reconnect (ver RISKS.md incidente 2026-06-10).
 webhook:
   secret: ${WEBHOOK_SECRET}
+  message-max-age-seconds: ${WEBHOOK_MESSAGE_MAX_AGE_SECONDS:180}
 
 # IA (Gemini). api-key e model obrigatórios (sem default) — fail-fast no
 #   GeminiProvider se ausentes. O nome do modelo vigente deve ser confirmado antes
