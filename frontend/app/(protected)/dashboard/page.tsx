@@ -91,6 +91,9 @@ function TenantDashboard() {
           <Link href="/dashboard/business-hours">
             <Button variant="outline">Horários</Button>
           </Link>
+          <Link href="/dashboard/ai-settings">
+            <Button variant="outline">IA</Button>
+          </Link>
           <SignOutButton />
         </div>
       </div>

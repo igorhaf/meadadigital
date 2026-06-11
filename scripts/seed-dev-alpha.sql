@@ -83,4 +83,15 @@ BEGIN
     (v_alpha, 4, '09:00', '18:00', false),  -- Quinta
     (v_alpha, 5, '09:00', '18:00', false),  -- Sexta
     (v_alpha, 6, '09:00', '13:00', false);  -- Sábado
+
+  -- ---- ai_settings (4.9): 1 linha 1:1 da Alpha ---------------------------
+  -- DELETE por company_id (Alpha = empresa de teste; ver justificativa acima).
+  -- model_provider NÃO especificado: usa o default 'gemini' do banco.
+  delete from ai_settings where company_id = v_alpha;
+  insert into ai_settings (company_id, tone, system_rules, restrictions, handoff_triggers) values
+    (v_alpha,
+     'Cordial e profissional. Trate o cliente por você.',
+     'Sempre confirmar dados de agendamento. Nunca prometer prazo sem checar a agenda.',
+     'Não enviar áudio. Não dar descontos sem confirmação humana.',
+     'Cliente pede pessoa humana. Cliente expressa irritação. Reclamação formal ou jurídico.');
 END $$;
