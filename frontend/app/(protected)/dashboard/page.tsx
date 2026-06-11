@@ -88,6 +88,9 @@ function TenantDashboard() {
           <Link href="/dashboard/conversations">
             <Button variant="outline">Conversas</Button>
           </Link>
+          <Link href="/dashboard/business-hours">
+            <Button variant="outline">Horários</Button>
+          </Link>
           <SignOutButton />
         </div>
       </div>

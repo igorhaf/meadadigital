@@ -69,4 +69,18 @@ BEGIN
     (v_alpha, v_conv2, 'inbound',  'contact', 'Preciso de ajuda com um problema complexo.', v_now - interval '8 minutes'),
     (v_alpha, v_conv2, 'outbound', 'human',   'Claro, um atendente vai te ajudar agora.', v_now - interval '5 minutes'),
     (v_alpha, v_conv2, 'inbound',  'contact', 'Muito obrigado pela atenção.', v_now - interval '2 minutes');
+
+  -- ---- business_hours (4.8): 7 linhas fixas da Alpha ----------------------
+  -- DELETE por company_id (não por marcador): a Alpha é EMPRESA DE TESTE e seu
+  -- único business_hours vem deste seed. ⚠ Este padrão (limpar por company_id)
+  -- NÃO serve para empresas reais — só porque a Alpha é descartável de dev.
+  delete from business_hours where company_id = v_alpha;
+  insert into business_hours (company_id, weekday, opens_at, closes_at, closed) values
+    (v_alpha, 0, null,    null,    true),   -- Domingo: fechado
+    (v_alpha, 1, '09:00', '18:00', false),  -- Segunda
+    (v_alpha, 2, '09:00', '18:00', false),  -- Terça
+    (v_alpha, 3, '09:00', '18:00', false),  -- Quarta
+    (v_alpha, 4, '09:00', '18:00', false),  -- Quinta
+    (v_alpha, 5, '09:00', '18:00', false),  -- Sexta
+    (v_alpha, 6, '09:00', '13:00', false);  -- Sábado
 END $$;
