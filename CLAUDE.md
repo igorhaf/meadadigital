@@ -72,6 +72,31 @@ sobe local) — é preciso um projeto Supabase com o schema das migrations aplic
 - **Contagem de testes vem do Surefire (`Tests run: N`), nunca de `grep @Test`.**
   (Lição: grep textual contou 137; o real era 129.)
 
+## Paralelismo dentro de uma sessão
+
+O agente trabalha sozinho na sessão (Igor é o arquiteto único). Aceleração vem de
+paralelizar DENTRO da própria rodada, não de abrir sessões extras.
+
+- **Leituras independentes em paralelo numa rodada.** Quando precisa ler N arquivos,
+  rodar N queries `psql`, fazer N greps que não dependem um do outro — disparar tudo
+  na mesma resposta, em paralelo. Sequencial só quando o passo N depende do resultado
+  do passo N-1.
+- **Task tool (sub-agentes) pra trabalho disjunto não-trivial.** Quando há fluxos
+  que não tocam os mesmos arquivos e cada um exige investigação própria (ex.:
+  replicar template em 2 tabelas com schemas distintos, investigar 2 incidentes
+  independentes), lançar via Task em paralelo. NÃO usar Task pra coisa trivial —
+  overhead de sub-agente só compensa em trabalho não-trivial.
+- **Agrupar fases sem aval do Igor intermediário numa rodada só.** Leitura empírica
+  + análise + bruto literal podem vir juntos no mesmo cola lá quando o arquiteto já
+  decidiu o caminho. Pausar pra revisão acontece só em pontos reais de decisão
+  (bifurcação arquitetural, bruto pra aprovar, smoke pra confirmar antes do commit).
+- **NÃO paralelizar quando há dependência sequencial óbvia.** Decisão pendente,
+  schema desconhecido necessário pro próximo passo, build precisa passar antes do
+  smoke — esses são pontos de sincronização que não aceleram com paralelismo.
+- **Ganho realista: 30-50% por sessão.** Não 300%. A revisão de bruto pelo arquiteto
+  e as decisões arquiteturais continuam sendo o limite real. Honestidade sobre isso
+  evita prometer demais.
+
 ## Padrão de git
 
 - **Commits semânticos**, mensagem em português, prefixo `feat/fix/docs/chore(camada-N):`.
@@ -89,7 +114,9 @@ sobe local) — é preciso um projeto Supabase com o schema das migrations aplic
   para o commit que a fecha. Tags não se movem depois de criadas.
 - **Trailer obrigatório** no fim de cada commit:
   `Co-Authored-By: Claude Opus 4.8 <noreply@anthropic.com>`
-- **Repo é local (sem remote). NÃO fazer `git push`.** Branch `main`.
+- **Repo tem remote no GitHub:** `origin` = `https://github.com/igorhaf/whatsapp.git`.
+  Push pra `origin/main` + `git push origin --tags` é prática válida (foi feito no
+  checkpoint de 2026-06-11). NUNCA `git push --force`. Branch `main`.
 - **Critério de "fechado" de sub-fase que toca backend:** `mvn -B clean test` verde
   (gate empírico com a contagem do Surefire). Que toca frontend: `next build` limpo
   (Turbopack dev é lazy e esconde import quebrado — build de prod é a verdade) + smoke.
