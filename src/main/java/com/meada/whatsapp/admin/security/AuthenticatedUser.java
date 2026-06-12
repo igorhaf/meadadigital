@@ -10,9 +10,13 @@ import java.util.UUID;
  * <p><b>Invariante</b> (garantida pelo filtro na construção, NÃO validada aqui):
  * <ul>
  *   <li>{@code role == SUPER_ADMIN} ⟹ {@code companyId == null} (super-admin não
- *       pertence a tenant; o filtro nem consulta public.users para ele).
+ *       pertence a tenant; o filtro nem consulta public.users para ele) E
+ *       {@code paletteId == "meada-default"} (constante: super-admin não tem linha em
+ *       public.users de onde ler paleta; preferência pessoal de super-admin é fase
+ *       futura — decisão Opção A da camada 5.0).
  *   <li>{@code role == TENANT_ADMIN} ⟹ {@code companyId != null} (resolvido do SELECT
- *       em public.users).
+ *       em public.users) E {@code paletteId} lido de {@code users.palette_id} na MESMA
+ *       query (NOT NULL DEFAULT 'meada-default' no banco → nunca null).
  * </ul>
  * Não há validação dessa invariante no compact constructor de propósito: o filtro é o
  * único produtor e já a garante; uma assertion aqui seria custo recorrente no hot path
@@ -22,6 +26,9 @@ import java.util.UUID;
  * @param userId    id do usuário (claim {@code sub} do JWT = auth.users.id)
  * @param role      papel no painel (ver {@link AdminRole})
  * @param companyId tenant do usuário; null para SUPER_ADMIN
+ * @param paletteId id da paleta de tema; "meada-default" para SUPER_ADMIN, lido de
+ *                  users.palette_id para TENANT_ADMIN (nunca null)
  */
-public record AuthenticatedUser(String email, UUID userId, AdminRole role, UUID companyId) {
+public record AuthenticatedUser(
+    String email, UUID userId, AdminRole role, UUID companyId, String paletteId) {
 }

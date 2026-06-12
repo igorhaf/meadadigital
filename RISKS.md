@@ -134,3 +134,13 @@ Template por item:
     defesa em profundidade), e o dry-run é a salvaguarda independente
     que teria evitado o impacto do episódio.
 - **Detectado em:** Camada 4.1, sessão 2026-06-10, ao subir o backend repetidamente durante tentativas de smoke do painel admin.
+
+---
+
+## Senha do banco reusada como senha de login dos usuários no Supabase Auth (dev)
+
+- **Status:** Aceito (dívida de dev).
+- **Bloqueante para:** Deploy de produção (não para fechar a camada 5.0 nem para o desenvolvimento local).
+- **Razão:** Em dev, a senha do Postgres no Supabase (Session pooler, lida pelo Spring via `SPRING_DATASOURCE_PASSWORD`) é reusada como a senha dos usuários de teste no Supabase Auth (igorhaf, igorhaf2) — decisão consciente para simplificar os smokes locais (uma senha só para DB e login). Não vaza para o git: o valor vive apenas em `.env` (gitignored) e nunca é registrado em arquivo nem neste documento. O risco é estrutural: a credencial do banco e a credencial da UI de login passam a compartilhar o mesmo segredo — rotacionar uma exige rotacionar a outra, e o comprometimento da senha de login de Auth comprometeria também o acesso ao banco (e vice-versa).
+- **Plano de mitigação:** Antes de produção, desacoplar — gerar senhas de Auth independentes por usuário, fora do escopo do backend (não derivadas de nem iguais a `SPRING_DATASOURCE_PASSWORD`, e não armazenadas nas variáveis de ambiente do serviço Spring). A `SPRING_DATASOURCE_PASSWORD` fica restrita ao serviço Spring (acesso ao banco), sem papel de credencial de usuário. Critério de fechamento: nenhum usuário de Auth de produção compartilha senha com o datasource; rotação de uma é independente da outra.
+- **Detectado em:** Camada 5.0, sessão 2026-06-11, durante o smoke E2E do theming (login do super-admin divergia da senha do datasource).

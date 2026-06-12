@@ -1,5 +1,6 @@
 import { redirect } from 'next/navigation'
 
+import { ThemeProvider } from '@/components/theme-provider'
 import { createClient } from '@/lib/supabase/server'
 
 /**
@@ -17,6 +18,13 @@ import { createClient } from '@/lib/supabase/server'
  * É a 2ª chamada a getUser por request em rotas protegidas (a 1ª é o middleware, que
  * refresca o cookie). Trade aceito: middleware = preventivo (refresh), layout =
  * autoritativo (autorização). É o pattern canônico; não otimizamos agora.
+ *
+ * ThemeProvider (client) envolve os filhos para injetar as CSS vars do tema (camada
+ * 5.0). Importado direto: um client component dentro de um server component cria o
+ * boundary corretamente — o layout segue server (mantém a barreira getUser), e o
+ * 'use client' mora no ThemeProvider. Sem next/dynamic: o provider é SSR-safe (no
+ * server renderiza só os filhos; o useEffect que toca o document só roda no client) e
+ * já aplica meada-default enquanto a query carrega (anti-flash).
  *
  * Sem header/nav/sidebar aqui: este layout é só passagem. UI de shell entra em
  * sub-fase futura quando houver telas de verdade.
@@ -36,5 +44,5 @@ export default async function ProtectedLayout({
     redirect('/login')
   }
 
-  return <>{children}</>
+  return <ThemeProvider>{children}</ThemeProvider>
 }

@@ -67,7 +67,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/03_rls.sql",
         "db/migrations/04_grants.sql",
         "db/migrations/05_storage.sql",
-        "db/migrations/06_unique_open_conversation.sql"
+        "db/migrations/06_unique_open_conversation.sql",
+        "db/migrations/07_palette_id.sql"
     };
 
     static {

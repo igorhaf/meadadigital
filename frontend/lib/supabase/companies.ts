@@ -15,15 +15,16 @@ import type { Company } from '@/lib/api/companies'
  * o resultado é 0 ou 1 linha. Se 0 (tenant sem empresa — não deveria ocorrer com
  * provisão correta), .single() lança PostgrestError, tratado como erro pela query.
  *
- * <p>O SDK devolve as colunas cruas do banco (snake_case: created_at). Mapeamos para o
- * shape Company (createdAt camelCase) reusado do contrato REST, para a UI tratar empresa
- * de forma uniforme independente da fonte (SDK ou Spring).
+ * <p>O SDK devolve as colunas cruas do banco (snake_case: created_at, palette_id).
+ * Mapeamos para o shape Company (createdAt, paletteId camelCase) reusado do contrato
+ * REST, para a UI tratar empresa de forma uniforme independente da fonte (SDK ou Spring).
+ * palette_id é NOT NULL DEFAULT 'meada-default' no banco (camada 5.0) → nunca null.
  */
 export async function getMyCompany(): Promise<Company> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('companies')
-    .select('id, name, slug, status, created_at')
+    .select('id, name, slug, status, created_at, palette_id')
     .single()
 
   if (error) {
@@ -36,5 +37,6 @@ export async function getMyCompany(): Promise<Company> {
     slug: data.slug,
     status: data.status,
     createdAt: data.created_at,
+    paletteId: data.palette_id,
   }
 }

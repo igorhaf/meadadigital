@@ -8,6 +8,12 @@ import { apiFetch } from './client'
  * literal — mesma razão do backend (CHECK constraint garante; frontend só tipa).
  * createdAt fica como string ISO-8601 cru: a formatação (new Date(...)) é da TELA, não
  * desta camada (separation of concerns — aqui é só shape).
+ *
+ * paletteId é OPCIONAL (camada 5.0): o SELECT do SDK em getMyCompany o traz (NOT NULL
+ * DEFAULT 'meada-default' no banco), mas o CompanyResponse do backend REST
+ * (getCompanies/createCompany, caminho super-admin) ainda NÃO o expõe. Opcional aqui
+ * mantém o type compartilhado válido para ambas as fontes sem inflar o contrato REST;
+ * quando o backend passar a devolvê-lo, vira obrigatório.
  */
 export type Company = {
   id: string
@@ -15,6 +21,7 @@ export type Company = {
   slug: string
   status: 'active' | 'suspended'
   createdAt: string
+  paletteId?: string
 }
 
 /**

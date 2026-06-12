@@ -66,8 +66,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
     public static final String AUTH_USER_ATTRIBUTE = "authenticatedUser";
 
-    private static final String SELECT_COMPANY_ID =
-        "select company_id from users where id = ?";
+    private static final String SELECT_USER_DATA =
+        "select company_id, palette_id from users where id = ?";
 
     private final ConfigurableJWTProcessor<SecurityContext> jwtProcessor;
     private final Set<String> allowlistLower;
@@ -196,19 +196,26 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /**
      * Resolve a identidade (eager). Allowlist (lowercase) checada ANTES do banco:
-     * super-admin pula o SELECT (otimização B2). Tenant-admin sem linha em public.users
-     * → 403 user_not_provisioned.
+     * super-admin pula o SELECT (otimização B2) e recebe paletteId "meada-default"
+     * constante — ele não tem linha em public.users de onde ler tema (decisão Opção A
+     * da camada 5.0). Tenant-admin sem linha em public.users → 403 user_not_provisioned;
+     * com linha, lê company_id E palette_id na MESMA query (palette_id é NOT NULL
+     * DEFAULT 'meada-default' no banco, nunca null).
      */
     private AuthenticatedUser resolveUser(VerifiedClaims claims) {
         if (allowlistLower.contains(claims.email().toLowerCase())) {
-            return new AuthenticatedUser(claims.email(), claims.userId(), AdminRole.SUPER_ADMIN, null);
+            return new AuthenticatedUser(
+                claims.email(), claims.userId(), AdminRole.SUPER_ADMIN, null, "meada-default");
         }
         try {
-            UUID companyId = jdbcTemplate.queryForObject(
-                SELECT_COMPANY_ID, (rs, rowNum) -> (UUID) rs.getObject("company_id"),
+            UserData data = jdbcTemplate.queryForObject(
+                SELECT_USER_DATA,
+                (rs, rowNum) -> new UserData(
+                    (UUID) rs.getObject("company_id"), rs.getString("palette_id")),
                 claims.userId());
             return new AuthenticatedUser(
-                claims.email(), claims.userId(), AdminRole.TENANT_ADMIN, companyId);
+                claims.email(), claims.userId(), AdminRole.TENANT_ADMIN,
+                data.companyId(), data.paletteId());
         } catch (EmptyResultDataAccessException e) {
             throw new AuthRejectException(403, "user_not_provisioned");
         }
@@ -229,6 +236,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     /** Claims já validadas e tipadas — detalhe interno do filtro. */
     private record VerifiedClaims(String email, UUID userId) {
+    }
+
+    /** Tupla (company_id, palette_id) do SELECT em public.users — detalhe interno. */
+    private record UserData(UUID companyId, String paletteId) {
     }
 
     /** Sinaliza rejeição com status HTTP + reason; capturada em doFilterInternal. */
