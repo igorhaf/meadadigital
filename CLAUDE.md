@@ -71,6 +71,11 @@ sobe local) — é preciso um projeto Supabase com o schema das migrations aplic
   overwrite vs append.
 - **Contagem de testes vem do Surefire (`Tests run: N`), nunca de `grep @Test`.**
   (Lição: grep textual contou 137; o real era 129.)
+- **Agente NÃO edita CLAUDE.md por iniciativa própria.** CLAUDE.md é território
+  do agente (lê/cria/atualiza convenções E lições) — mas a edição vem por
+  trabalho cravado pelo Igor ou pelo arquiteto, NUNCA por dedução do agente
+  sobre "regra implícita". Atribuir ao Igor uma regra que ele não cravou é
+  violação. Quando em dúvida, perguntar antes de editar.
 
 ## Paralelismo dentro de uma sessão
 
