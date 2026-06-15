@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { SignOutButton } from '@/components/sign-out-button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { getMe } from '@/lib/api/me'
 import {
@@ -128,6 +129,7 @@ export default function BusinessHoursPage() {
           <Link href="/dashboard">
             <Button variant="outline">Voltar</Button>
           </Link>
+          <ThemeToggle />
           <SignOutButton />
         </div>
       </div>

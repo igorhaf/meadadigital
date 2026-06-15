@@ -11,9 +11,31 @@ export const metadata: Metadata = {
   description: 'Painel administrativo do Meada WhatsApp',
 };
 
+// Anti-flash (camada 5.9): aplica a classe `dark` no <html> ANTES do React hidratar,
+// lendo localStorage 'meada-theme'. Default é CLARO — sem nada salvo (!m), NÃO segue o
+// SO; o app abre claro. Só segue prefers-color-scheme quando o usuário escolheu
+// EXPLICITAMENTE 'system' no toggle. Roda síncrono no <head> → sem flash no boot.
+const themeInitScript = `
+(function () {
+  try {
+    var m = localStorage.getItem('meada-theme');
+    var dark = m === 'dark' ||
+      (m === 'system' && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    if (dark) document.documentElement.classList.add('dark');
+  } catch (e) {}
+})();
+`;
+
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="pt-BR" className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}>
+    <html
+      lang="pt-BR"
+      className={`${geistSans.variable} ${geistMono.variable} h-full antialiased`}
+      suppressHydrationWarning
+    >
+      <head>
+        <script dangerouslySetInnerHTML={{ __html: themeInitScript }} />
+      </head>
       <body className="min-h-full bg-muted/40">
         <Providers>{children}</Providers>
       </body>

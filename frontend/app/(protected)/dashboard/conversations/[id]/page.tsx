@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 import { use, useEffect } from 'react'
 
 import { SignOutButton } from '@/components/sign-out-button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getMe } from '@/lib/api/me'
@@ -107,6 +108,7 @@ export default function ConversationDetailPage({
           <Link href="/dashboard/conversations">
             <Button variant="outline">Voltar</Button>
           </Link>
+          <ThemeToggle />
           <SignOutButton />
         </div>
       </div>

@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { SignOutButton } from '@/components/sign-out-button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
@@ -115,6 +116,7 @@ export default function ServicesPage() {
           <Link href="/dashboard">
             <Button variant="outline">Voltar</Button>
           </Link>
+          <ThemeToggle />
           <SignOutButton />
         </div>
       </div>

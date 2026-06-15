@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 import { SignOutButton } from '@/components/sign-out-button'
+import { ThemeToggle } from '@/components/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
@@ -76,6 +77,7 @@ export default function CompaniesPage() {
         <h1 className="text-xl font-semibold">Empresas</h1>
         <div className="flex items-center gap-2">
           <Button onClick={() => setDialogOpen(true)}>Nova empresa</Button>
+          <ThemeToggle />
           <SignOutButton />
         </div>
       </div>
