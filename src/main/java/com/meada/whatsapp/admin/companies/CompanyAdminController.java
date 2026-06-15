@@ -66,7 +66,8 @@ public class CompanyAdminController {
                 .body(Map.of("error", "Forbidden", "reason", "forbidden_not_super_admin"));
         }
         try {
-            CompanyResponse created = repository.insert(request.name(), request.slug());
+            CompanyResponse created = repository.insert(
+                request.name(), request.slug(), request.paletteId());
             return ResponseEntity.status(201).body(created);
         } catch (DuplicateKeyException e) {
             return ResponseEntity.status(409)

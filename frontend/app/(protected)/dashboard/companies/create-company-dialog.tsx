@@ -6,19 +6,24 @@ import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { PaletteSelect } from '@/components/palette-select'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { ApiError } from '@/lib/api/client'
 import { createCompany } from '@/lib/api/companies'
+import { DEFAULT_PALETTE_ID } from '@/lib/themes/palettes'
 
 // Espelha a validação do backend (CreateCompanyRequest): name obrigatório; slug em
-// minúsculas/números/hífens (mesmo regex do @Pattern Java). O zod é a 1ª barreira; o
-// backend revalida (400 defensivo).
+// minúsculas/números/hífens (mesmo regex do @Pattern Java); paletteId obrigatório
+// (@NotBlank no backend). O zod é a 1ª barreira; o backend revalida (400 defensivo).
+// paletteId não precisa de regra além de min(1): o PaletteSelect é controlled e sempre
+// tem um id válido (inicia em meada-default), então nunca fica vazio na prática.
 const createCompanySchema = z.object({
   name: z.string().min(1, 'Informe o nome'),
   slug: z
     .string()
     .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'slug inválido: minúsculas, números e hífens'),
+  paletteId: z.string().min(1, 'Selecione uma paleta'),
 })
 
 type CreateCompanyForm = z.infer<typeof createCompanySchema>
@@ -44,10 +49,17 @@ export function CreateCompanyDialog({ open, onClose }: { open: boolean; onClose:
     register,
     handleSubmit,
     setValue,
+    watch,
     setError,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CreateCompanyForm>({ resolver: zodResolver(createCompanySchema) })
+  } = useForm<CreateCompanyForm>({
+    resolver: zodResolver(createCompanySchema),
+    // paletteId inicia em meada-default: o campo é obrigatório (banco NOT NULL) e o
+    // PaletteSelect é controlled, então pré-selecionar o verde-Meada satisfaz o
+    // obrigatório sem o super-admin precisar abrir o dropdown.
+    defaultValues: { paletteId: DEFAULT_PALETTE_ID },
+  })
 
   const mutation = useMutation({
     mutationFn: createCompany,
@@ -66,7 +78,7 @@ export function CreateCompanyDialog({ open, onClose }: { open: boolean; onClose:
   })
 
   function handleClose() {
-    reset()
+    reset({ paletteId: DEFAULT_PALETTE_ID })
     setServerError(null)
     setSlugEditedManually(false)
     onClose()
@@ -79,6 +91,8 @@ export function CreateCompanyDialog({ open, onClose }: { open: boolean; onClose:
 
   const nameField = register('name')
   const slugField = register('slug')
+  // PaletteSelect é controlled (não <input>): liga ao RHF via watch + setValue, não register.
+  const paletteId = watch('paletteId')
 
   return (
     <Modal open={open} onClose={handleClose} title="Nova empresa">
@@ -117,6 +131,18 @@ export function CreateCompanyDialog({ open, onClose }: { open: boolean; onClose:
             }}
           />
           {errors.slug && <p className="mt-1 text-sm text-destructive">{errors.slug.message}</p>}
+        </div>
+
+        <div>
+          <label className="mb-1 block text-sm font-medium">Paleta de tema</label>
+          <PaletteSelect
+            value={paletteId}
+            onChange={(id) => setValue('paletteId', id, { shouldValidate: true })}
+            disabled={mutation.isPending}
+          />
+          {errors.paletteId && (
+            <p className="mt-1 text-sm text-destructive">{errors.paletteId.message}</p>
+          )}
         </div>
 
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}

@@ -24,29 +24,32 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *   <li>GET sem token → 401 missing_auth_header (coverage do endpoint pelo filtro; a
  *       unidade do filtro já é testada no JwtAuthenticationFilterIntegrationTest, aqui
  *       confirma que ESTE endpoint está atrás dele).
- *   <li>POST super-admin válido → 201 + persistida;
+ *   <li>POST super-admin válido → 201 + persistida (com paletteId);
  *   <li>POST tenant-admin → 403 (nada persistido);
  *   <li>POST slug duplicado → 409 slug_already_exists (não duplica);
- *   <li>POST payload inválido → 400 (nada persistido).
+ *   <li>POST payload inválido (slug) → 400 (nada persistido);
+ *   <li>POST paletteId em branco → 400 (validação @NotBlank; nada persistido);
+ *   <li>POST paletteId ausente do body → 400 (validação @NotBlank cobre ausente também).
  * </ol>
  */
 class CompanyAdminControllerIntegrationTest extends AbstractAdminIntegrationTest {
 
     private static final UUID SUB = UUID.fromString("33333333-3333-3333-3333-333333333333");
 
-    /** Insere uma company com created_at explícito (determinismo da ordenação DESC). */
-    private void seedCompany(String name, String slug, Instant createdAt) {
+    /** Insere uma company com created_at + palette_id explícitos (determinismo da
+     *  ordenação DESC e da asserção de paletteId no GET). */
+    private void seedCompany(String name, String slug, Instant createdAt, String paletteId) {
         jdbcTemplate.update(
-            "insert into companies (id, name, slug, created_at) values (?, ?, ?, ?)",
-            UUID.randomUUID(), name, slug, Timestamp.from(createdAt));
+            "insert into companies (id, name, slug, created_at, palette_id) values (?, ?, ?, ?, ?)",
+            UUID.randomUUID(), name, slug, Timestamp.from(createdAt), paletteId);
     }
 
     @Test
-    @DisplayName("super-admin → 200 lista todas as empresas (mais novas primeiro)")
+    @DisplayName("super-admin → 200 lista todas as empresas (mais novas primeiro, com paletteId)")
     void superAdmin_listsAllCompanies() throws Exception {
         Instant now = Instant.now();
-        seedCompany("Empresa Antiga", "empresa-antiga", now.minusSeconds(3600));  // 1h atrás
-        seedCompany("Empresa Nova", "empresa-nova", now);                          // agora
+        seedCompany("Empresa Antiga", "empresa-antiga", now.minusSeconds(3600), "meada-default");
+        seedCompany("Empresa Nova", "empresa-nova", now, "oceano");
 
         String token = mintValidToken(SUPER_ADMIN_EMAIL, SUB);
         mockMvc.perform(get("/admin/companies").header("Authorization", "Bearer " + token))
@@ -56,7 +59,9 @@ class CompanyAdminControllerIntegrationTest extends AbstractAdminIntegrationTest
             // ORDER BY created_at DESC → a mais nova vem primeiro
             .andExpect(jsonPath("$[0].name").value("Empresa Nova"))
             .andExpect(jsonPath("$[0].slug").value("empresa-nova"))
-            .andExpect(jsonPath("$[1].name").value("Empresa Antiga"));
+            .andExpect(jsonPath("$[0].paletteId").value("oceano"))
+            .andExpect(jsonPath("$[1].name").value("Empresa Antiga"))
+            .andExpect(jsonPath("$[1].paletteId").value("meada-default"));
     }
 
     @Test
@@ -80,23 +85,24 @@ class CompanyAdminControllerIntegrationTest extends AbstractAdminIntegrationTest
     // ---- POST /admin/companies (4.2) ----------------------------------------
 
     @Test
-    @DisplayName("super-admin cria empresa → 201 + persistida")
+    @DisplayName("super-admin cria empresa → 201 + persistida (com paletteId)")
     void create_superAdmin_returns201_andPersists() throws Exception {
         String token = mintValidToken(SUPER_ADMIN_EMAIL, SUB);
         mockMvc.perform(post("/admin/companies")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON)
-                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\"}"))
+                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\",\"paletteId\":\"oceano\"}"))
             .andExpect(status().isCreated())
             .andExpect(jsonPath("$.name").value("Acme Corp"))
             .andExpect(jsonPath("$.slug").value("acme-corp"))
             .andExpect(jsonPath("$.status").value("active"))
             .andExpect(jsonPath("$.id").exists())
-            .andExpect(jsonPath("$.createdAt").exists());
+            .andExpect(jsonPath("$.createdAt").exists())
+            .andExpect(jsonPath("$.paletteId").value("oceano"));
 
-        Long count = jdbcTemplate.queryForObject(
-            "select count(*) from companies where slug = ?", Long.class, "acme-corp");
-        assertThat(count).isEqualTo(1L);
+        String persistedPalette = jdbcTemplate.queryForObject(
+            "select palette_id from companies where slug = ?", String.class, "acme-corp");
+        assertThat(persistedPalette).isEqualTo("oceano");
     }
 
     @Test
@@ -107,7 +113,7 @@ class CompanyAdminControllerIntegrationTest extends AbstractAdminIntegrationTest
         mockMvc.perform(post("/admin/companies")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON)
-                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\"}"))
+                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\",\"paletteId\":\"oceano\"}"))
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.reason").value("forbidden_not_super_admin"));
 
@@ -119,12 +125,12 @@ class CompanyAdminControllerIntegrationTest extends AbstractAdminIntegrationTest
     @Test
     @DisplayName("slug duplicado → 409 slug_already_exists (não duplica)")
     void create_duplicateSlug_returns409() throws Exception {
-        seedCompany("Já Existe", "acme-corp", Instant.now());
+        seedCompany("Já Existe", "acme-corp", Instant.now(), "meada-default");
         String token = mintValidToken(SUPER_ADMIN_EMAIL, SUB);
         mockMvc.perform(post("/admin/companies")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON)
-                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\"}"))
+                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\",\"paletteId\":\"oceano\"}"))
             .andExpect(status().isConflict())
             .andExpect(jsonPath("$.reason").value("slug_already_exists"));
 
@@ -140,7 +146,35 @@ class CompanyAdminControllerIntegrationTest extends AbstractAdminIntegrationTest
         mockMvc.perform(post("/admin/companies")
                 .header("Authorization", "Bearer " + token)
                 .contentType(APPLICATION_JSON)
-                .content("{\"name\":\"Acme Corp\",\"slug\":\"Acme Corp\"}"))   // slug inválido
+                .content("{\"name\":\"Acme Corp\",\"slug\":\"Acme Corp\",\"paletteId\":\"oceano\"}"))   // slug inválido
+            .andExpect(status().isBadRequest());
+
+        Long count = jdbcTemplate.queryForObject("select count(*) from companies", Long.class);
+        assertThat(count).isZero();
+    }
+
+    @Test
+    @DisplayName("paletteId em branco → 400 (validação @NotBlank; nada persistido)")
+    void create_blankPaletteId_returns400() throws Exception {
+        String token = mintValidToken(SUPER_ADMIN_EMAIL, SUB);
+        mockMvc.perform(post("/admin/companies")
+                .header("Authorization", "Bearer " + token)
+                .contentType(APPLICATION_JSON)
+                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\",\"paletteId\":\"\"}"))
+            .andExpect(status().isBadRequest());
+
+        Long count = jdbcTemplate.queryForObject("select count(*) from companies", Long.class);
+        assertThat(count).isZero();
+    }
+
+    @Test
+    @DisplayName("paletteId ausente do body → 400")
+    void create_missingPaletteId_returns400() throws Exception {
+        String token = mintValidToken(SUPER_ADMIN_EMAIL, SUB);
+        mockMvc.perform(post("/admin/companies")
+                .header("Authorization", "Bearer " + token)
+                .contentType(APPLICATION_JSON)
+                .content("{\"name\":\"Acme Corp\",\"slug\":\"acme-corp\"}"))
             .andExpect(status().isBadRequest());
 
         Long count = jdbcTemplate.queryForObject("select count(*) from companies", Long.class);
