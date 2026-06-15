@@ -23,11 +23,16 @@ import org.slf4j.event.Level;
  *       canal quebrado; flip empilharia backlog invisível). ERROR alertável.
  *   <li>{@code SKIPPED_NOT_AI} — pré-condição: a conversa já é 'human' (humano
  *       assumiu) ou sumiu. Não processa. INFO.
+ *   <li>{@code PROCESSED_OUTSIDE_HOURS} — gate de horário (camada 5.4): a empresa
+ *       está fora do horário comercial; respondeu a mensagem padrão SEM chamar a IA
+ *       (sender=ai, conversa segue 'ai'). Distinto de PROCESSED para a observabilidade
+ *       contar "respostas fora-de-horário" no log. INFO.
  * </ul>
  */
 public enum OutboundOutcome {
 
     PROCESSED(Level.INFO),
+    PROCESSED_OUTSIDE_HOURS(Level.INFO),
     FLIPPED_AI_HANDOFF(Level.INFO),
     FLIPPED_AI_BAD_REPLY(Level.WARN),
     FLIPPED_AI_EXHAUSTED(Level.WARN),

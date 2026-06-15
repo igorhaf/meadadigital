@@ -38,9 +38,9 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 - [x] 23. IA Gemini responde mensagens automaticamente
 - [x] 24. Tenant configura tom, regras, restrições, gatilhos de handoff
 - [ ] 25. IA detecta sozinha quando passar pra humano (gatilho automático)
-- [ ] 26. IA usa as FAQs cadastradas como conhecimento
-- [ ] 27. IA conhece os serviços cadastrados (nome, descrição, preço)
-- [ ] 28. IA respeita horário comercial (responde fora do horário com mensagem padrão)
+- [x] 26. IA usa as FAQs cadastradas como conhecimento (fase-3.2)
+- [x] 27. IA conhece os serviços cadastrados (nome, descrição, preço) (fase-3.2)
+- [x] 28. IA respeita horário comercial (responde fora do horário com mensagem padrão) (fase-5.4)
 - [ ] 29. IA reconhece intent de agendamento (sem agendar ainda, só sinaliza)
 - [ ] 30. Histórico da conversa entra no contexto da IA
 

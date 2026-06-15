@@ -17,6 +17,9 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.ZoneId;
 import java.util.ArrayDeque;
 import java.util.Map;
 import java.util.Queue;
@@ -86,8 +89,31 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
             + "values (?, 'Corte', 'Corte masculino', 5000, true)", COMPANY);
         jdbcTemplate.update("insert into faqs (company_id, question, answer, active) "
             + "values (?, 'Aceitam cartão?', 'Sim.', true)", COMPANY);
+        // business_hours DINÂMICO (camada 5.4): janela clampada a agora±1h no fuso SP, no
+        // weekday atual, pra os testes da matriz (3.3) NUNCA caírem fora do horário e
+        // gerarem flakiness quando o CI rodar fora de seg 9-18h. O gate de horário do
+        // OutboundService agora intercepta todos eles; sem esta janela larga, um run de
+        // sábado/madrugada cortaria para PROCESSED_OUTSIDE_HOURS e quebraria a matriz.
+        seedOpenWindowAroundNow();
+    }
+
+    /** Insere uma janela business_hours [agora-1h, agora+1h] clampada aos limites do dia,
+     *  no weekday atual (fuso SP). Garante que o gate de horário deixa passar. */
+    private void seedOpenWindowAroundNow() {
+        LocalDateTime nowSp = LocalDateTime.now(ZoneId.of("America/Sao_Paulo"));
+        int weekday = nowSp.getDayOfWeek().getValue() % 7;   // ISO Mon=1..Sun=7 → Sun=0..Sat=6
+        LocalTime now = nowSp.toLocalTime();
+        // clamp NÃO-circular: minusHours/plusHours em LocalTime dão a volta (23:30→00:30);
+        // comparamos contra os limites do dia explicitamente para a janela conter 'now'.
+        LocalTime opens = now.isAfter(LocalTime.of(1, 0)) ? now.minusHours(1) : LocalTime.MIDNIGHT;
+        LocalTime closes = now.isBefore(LocalTime.of(22, 59)) ? now.plusHours(1) : LocalTime.of(23, 59, 59);
         jdbcTemplate.update("insert into business_hours (company_id, weekday, closed, opens_at, closes_at) "
-            + "values (?, 1, false, '09:00'::time, '18:00'::time)", COMPANY);
+            + "values (?, ?, false, ?::time, ?::time)", COMPANY, weekday, opens.toString(), closes.toString());
+    }
+
+    /** weekday atual (fuso SP) — para os testes do gate seedarem o dia certo. */
+    private static int currentWeekdaySp() {
+        return LocalDateTime.now(ZoneId.of("America/Sao_Paulo")).getDayOfWeek().getValue() % 7;
     }
 
     // ---- helpers ------------------------------------------------------------
@@ -238,6 +264,62 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
         assertThat(row.get("sender")).isEqualTo("ai");
         assertThat(row.get("content")).isEqualTo("Olá! Tudo bem? 😊");
         assertThat(row.get("evolution_message_id")).isEqualTo("key-6");
+    }
+
+    // ---- gate de horário comercial (camada 5.4) -----------------------------
+
+    @Test
+    @DisplayName("gate dentro do horário (seed dinâmico do @BeforeEach) → IA é chamada → PROCESSED")
+    void gate_insideHours_callsAi() {
+        // O seed do @BeforeEach já abre uma janela ao redor de agora → dentro do horário.
+        fakeAi.enqueue(aiReply("Resposta da IA.", false));
+        fakeEvolution.enqueue("key-inside");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);
+        assertThat(fakeAi.calls()).isEqualTo(1);          // IA FOI chamada
+        assertThat(handledByOf(CONV)).isEqualTo("ai");
+        assertThat(countOutbound(CONV)).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("gate fora do horário (dia atual closed) → IA NÃO chamada → PROCESSED_OUTSIDE_HOURS")
+    void gate_outsideHours_respondsDefaultWithoutAi() {
+        // Substitui a janela aberta do seed por um dia FECHADO no weekday atual.
+        jdbcTemplate.update("delete from business_hours where company_id = ?", COMPANY);
+        jdbcTemplate.update("insert into business_hours (company_id, weekday, closed) values (?, ?, true)",
+            COMPANY, currentWeekdaySp());
+        fakeEvolution.enqueue("key-outside");   // o envio da mensagem padrão usa a Evolution
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED_OUTSIDE_HOURS);
+        assertThat(fakeAi.calls()).isZero();              // IA NÃO foi chamada
+        assertThat(handledByOf(CONV)).isEqualTo("ai");    // segue 'ai' (foi a IA padrão)
+        assertThat(countOutbound(CONV)).isEqualTo(1);
+
+        Map<String, Object> row = outboundRow(CONV);
+        assertThat(row.get("sender")).isEqualTo("ai");
+        assertThat(row.get("content")).isEqualTo(
+            "No momento estamos fora do horário de atendimento. "
+                + "Retornaremos sua mensagem assim que possível.");
+    }
+
+    @Test
+    @DisplayName("gate sem horários configurados → fallback aberto → IA é chamada → PROCESSED")
+    void gate_noHoursConfigured_fallbackOpen() {
+        // Sem nenhuma linha business_hours → BusinessHoursGate retorna true (fallback aberto).
+        jdbcTemplate.update("delete from business_hours where company_id = ?", COMPANY);
+        fakeAi.enqueue(aiReply("Resposta da IA.", false));
+        fakeEvolution.enqueue("key-nohours");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);
+        assertThat(fakeAi.calls()).isEqualTo(1);          // fallback aberto → IA roda
+        assertThat(handledByOf(CONV)).isEqualTo("ai");
+        assertThat(countOutbound(CONV)).isEqualTo(1);
     }
 
     // ---- casos 7-8 (falha de envio) -----------------------------------------

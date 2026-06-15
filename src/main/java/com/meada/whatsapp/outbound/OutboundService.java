@@ -6,6 +6,8 @@ import com.meada.whatsapp.ai.AiTransientException;
 import com.meada.whatsapp.ai.AiResponse;
 import com.meada.whatsapp.ai.Prompt;
 import com.meada.whatsapp.ai.PromptBuilder;
+import com.meada.whatsapp.messaging.BusinessHours;
+import com.meada.whatsapp.messaging.BusinessHoursRepository;
 import com.meada.whatsapp.messaging.ContactRepository;
 import com.meada.whatsapp.messaging.ConversationRepository;
 import com.meada.whatsapp.messaging.EvolutionCredentials;
@@ -18,6 +20,8 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
 import java.time.Duration;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
@@ -63,8 +67,21 @@ public class OutboundService {
     private final EvolutionSender evolutionSender;
     private final RetryRunner retryRunner;
 
+    private final BusinessHoursRepository businessHoursRepository;
+    private final BusinessHoursGate businessHoursGate;
+
     private final int maxAttempts;
     private final List<Duration> backoffs;
+
+    // Fuso do tenant para avaliar o horário comercial. HARDCODED no MVP (tenants BR).
+    // TODO: coluna companies.timezone quando virar multi-país.
+    private static final ZoneId TENANT_ZONE = ZoneId.of("America/Sao_Paulo");
+
+    // Resposta automática quando a empresa está fora do horário (camada 5.4). Hardcoded
+    // pt-BR; pode virar campo editável no ai_settings em fase futura.
+    private static final String OUTSIDE_HOURS_REPLY =
+        "No momento estamos fora do horário de atendimento. "
+            + "Retornaremos sua mensagem assim que possível.";
 
     public OutboundService(ConversationRepository conversationRepository,
                            ContactRepository contactRepository,
@@ -74,7 +91,9 @@ public class OutboundService {
                            AiProvider aiProvider,
                            EvolutionSender evolutionSender,
                            RetryRunner retryRunner,
-                           OutboundRetryProperties retryProps) {
+                           OutboundRetryProperties retryProps,
+                           BusinessHoursRepository businessHoursRepository,
+                           BusinessHoursGate businessHoursGate) {
         this.conversationRepository = conversationRepository;
         this.contactRepository = contactRepository;
         this.whatsappInstanceRepository = whatsappInstanceRepository;
@@ -83,6 +102,8 @@ public class OutboundService {
         this.aiProvider = aiProvider;
         this.evolutionSender = evolutionSender;
         this.retryRunner = retryRunner;
+        this.businessHoursRepository = businessHoursRepository;
+        this.businessHoursGate = businessHoursGate;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
         // o invariante backoffs.size() == maxAttempts-1 em cada chamada.
@@ -106,6 +127,18 @@ public class OutboundService {
         if (handledBy.isEmpty() || !"ai".equals(handledBy.get())) {
             // IA não rodou → sem aiResponse, sem reason.
             return logOutcome(OutboundOutcome.SKIPPED_NOT_AI, event, null, null);
+        }
+
+        // ---- BLOCO 0.5 — gate de horário comercial (camada 5.4) ----
+        // Determinístico, ANTES de chamar a IA: se o tenant está fora do horário,
+        // responde a mensagem padrão SEM custo de Gemini. Fallback aberto quando não há
+        // horários configurados (BusinessHoursGate). Roda DEPOIS do BLOCO 0: se um humano
+        // assumiu, ele responde no horário dele — o gate é da IA automática, não da conversa.
+        List<BusinessHours> hours = businessHoursRepository.findByCompany(event.companyId());
+        LocalDateTime nowLocal = LocalDateTime.now(TENANT_ZONE);
+        int weekday = nowLocal.getDayOfWeek().getValue() % 7;   // ISO Mon=1..Sun=7 → Sun=0..Sat=6
+        if (!businessHoursGate.isInsideHours(hours, weekday, nowLocal.toLocalTime())) {
+            return respondOutsideHours(event, conversationId);
         }
 
         // ---- BLOCO 1 — monta o prompt e chama a IA com retry ----
@@ -160,6 +193,27 @@ public class OutboundService {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
         }
         return logOutcome(OutboundOutcome.PROCESSED, event, aiResponse, null);
+    }
+
+    /**
+     * Responde a mensagem padrão de fora-de-horário (camada 5.4). Reusa o caminho de
+     * envio/persistência do caso 6 via um {@link AiResponse} sintético (reply=padrão,
+     * needsHuman=false, métricas zeradas — não houve IA). A conversa segue
+     * handled_by='ai'. Falhas de envio (casos 7/8/9) ainda são cobertas pelo
+     * sendAndPersist e dominam o outcome se ocorrerem.
+     *
+     * <p>logOutcome recebe aiResponse=null de propósito (decisão cravada): não houve
+     * chamada de IA, então o log NÃO traz tokens/latency — sairiam todos 0, enganoso.
+     */
+    private OutboundOutcome respondOutsideHours(MessageInboundProcessedEvent event,
+                                                UUID conversationId) {
+        AiResponse synthetic = new AiResponse(OUTSIDE_HOURS_REPLY, false, null, 0, 0, 0L);
+        Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, synthetic);
+        if (sendFailure.isPresent()) {
+            return sendFailure.get();   // casos 7/8/9 de envio — já logado lá
+        }
+        // aiResponse=null no log: não houve IA, o log sai limpo (sem tokens/latency).
+        return logOutcome(OutboundOutcome.PROCESSED_OUTSIDE_HOURS, event, null, null);
     }
 
     /**
