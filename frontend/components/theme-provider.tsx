@@ -9,7 +9,7 @@ import { DEFAULT_PALETTE_ID, getPalette } from '@/lib/themes/palettes'
 
 /**
  * Injeta as CSS vars do tema no :root conforme a paleta EFETIVA do usuário logado
- * (camada 5.1.a — dual-fetch).
+ * (camada 5.1.a — dual-fetch; camada 5.1.b — sobrescrita de tokens shadcn de marca).
  *
  * Fonte do paletteId por papel:
  *   - super-admin: me.paletteId (constante 'meada-default' — Opção A, super-admin não
@@ -28,8 +28,24 @@ import { DEFAULT_PALETTE_ID, getPalette } from '@/lib/themes/palettes'
  *   - tenant_admin, company ainda carregando → meada-default (loading state)
  *   - tenant_admin, company resolvida        → company.paletteId
  *
- * Cleanup: ao desmontar, remove as vars do :root para não vazar tema entre sessões/contas
- * num mesmo documento.
+ * Aplicação (5.1.b — Caminho 2): além das --palette-* (consumidas por componentes que
+ * usam arbitrary values, ex.: PaletteSelect), o provider SOBRESCREVE os tokens shadcn de
+ * MARCA no :root, apontando-os para as --palette-*. Isso faz todo bg-primary /
+ * text-primary-foreground / ring-ring (botões primários, bolhas outbound, foco visível)
+ * herdar a paleta SEM tocar nenhuma das 9 telas — um ponto de controle único.
+ *   - --primary            → --palette-primary
+ *   - --primary-foreground → --palette-text-on-primary
+ *   - --ring               → --palette-primary
+ * NÃO sobrescreve --accent/--destructive/--secondary/--muted/--border nem demais neutros:
+ * accent é hover de superfície neutra, destructive é vermelho semântico de erro, e os
+ * outros são estruturais — colori-los pintaria lugares que não são identidade de marca.
+ * Badges de status (success/danger/warning) seguem shadcn: semântica universal (um tenant
+ * com paleta vermelha não quer badge "ativo" vermelho, que confundiria com erro).
+ *
+ * Cleanup: ao desmontar, remove TODAS as vars do :root (inclui os tokens shadcn
+ * sobrescritos, que voltam ao valor declarado em globals.css — o cinza padrão). Itera
+ * Object.keys(vars), então as 3 novas entradas são removidas sem código extra. Evita
+ * vazar tema entre sessões/contas num mesmo documento.
  */
 export function ThemeProvider({ children }: { children: React.ReactNode }) {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe })
@@ -57,11 +73,17 @@ export function ThemeProvider({ children }: { children: React.ReactNode }) {
     const palette = getPalette(paletteId)
     const root = document.documentElement
     const vars: Record<string, string> = {
+      // CSS vars próprias da paleta (consumidas por arbitrary values, ex.: PaletteSelect).
       '--palette-primary': palette.primary,
       '--palette-primary-hover': palette.primaryHover,
       '--palette-accent': palette.accent,
       '--palette-surface': palette.surface,
       '--palette-text-on-primary': palette.textOnPrimary,
+      // Tokens shadcn de MARCA sobrescritos (5.1.b): botões primários, bolhas outbound,
+      // foco visível herdam a paleta sem tocar nenhuma tela. Neutros e semânticos ficam.
+      '--primary': 'var(--palette-primary)',
+      '--primary-foreground': 'var(--palette-text-on-primary)',
+      '--ring': 'var(--palette-primary)',
     }
     for (const [k, v] of Object.entries(vars)) {
       root.style.setProperty(k, v)
