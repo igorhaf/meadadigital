@@ -42,7 +42,7 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 - [x] 27. IA conhece os serviços cadastrados (nome, descrição, preço) (fase-3.2)
 - [x] 28. IA respeita horário comercial (responde fora do horário com mensagem padrão) (fase-5.4)
 - [ ] 29. IA reconhece intent de agendamento (sem agendar ainda, só sinaliza)
-- [ ] 30. Histórico da conversa entra no contexto da IA
+- [x] 30. Histórico da conversa entra no contexto da IA (fase-3.2)
 
 ## Conteúdo do tenant
 
