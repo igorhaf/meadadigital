@@ -2,71 +2,96 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
-import { createFaq } from '@/lib/supabase/faqs'
+import { createFaq, updateFaq, type Faq } from '@/lib/supabase/faqs'
 
 // question e answer obrigatórios (text NOT NULL no banco). Sem campos opcionais — mais
 // simples que o form de service.
-const createFaqSchema = z.object({
+const faqSchema = z.object({
   question: z.string().min(1, 'Informe a pergunta'),
   answer: z.string().min(1, 'Informe a resposta'),
 })
 
-type CreateFaqForm = z.infer<typeof createFaqSchema>
+type FaqForm = z.infer<typeof faqSchema>
 
+/**
+ * Modal dual de FAQ (camada 5.5): cria ou edita conforme a prop `faq`.
+ *  - faq ausente → modo CRIAÇÃO (chama createFaq com companyId).
+ *  - faq presente → modo EDIÇÃO (pré-popula, chama updateFaq pelo id; companyId não é
+ *    necessário no UPDATE — o RLS já garante que a FAQ é da empresa do tenant).
+ *
+ * O reset() num useEffect sincroniza o form quando o dialog abre OU o registro muda —
+ * sem isso, o RHF manteria valores stale entre aberturas (ex.: abrir editar B logo após
+ * fechar editar A mostraria os campos de A).
+ */
 export function CreateFaqDialog({
   open,
   onClose,
   companyId,
+  faq,
 }: {
   open: boolean
   onClose: () => void
   companyId: string
+  faq?: Faq
 }) {
   const queryClient = useQueryClient()
   const [serverError, setServerError] = useState<string | null>(null)
+  const isEdit = faq != null
 
   const {
     register,
     handleSubmit,
     reset,
     formState: { errors, isSubmitting },
-  } = useForm<CreateFaqForm>({ resolver: zodResolver(createFaqSchema) })
+  } = useForm<FaqForm>({ resolver: zodResolver(faqSchema) })
+
+  // Sincroniza os campos quando abre (ou troca de registro): edição pré-popula, criação
+  // limpa. Depende de open também para repreencher ao reabrir o mesmo registro.
+  useEffect(() => {
+    if (open) {
+      reset({ question: faq?.question ?? '', answer: faq?.answer ?? '' })
+      setServerError(null)
+    }
+  }, [open, faq, reset])
 
   const mutation = useMutation({
-    mutationFn: createFaq,
+    mutationFn: (values: FaqForm) =>
+      isEdit
+        ? updateFaq(faq!.id, values)
+        : createFaq({ companyId, question: values.question, answer: values.answer }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-faqs'] })
       handleClose()
     },
     onError: (err) => {
-      console.error('createFaq failed:', err)
-      setServerError('Erro ao criar FAQ. Tente novamente.')
+      console.error(isEdit ? 'updateFaq failed:' : 'createFaq failed:', err)
+      setServerError(
+        isEdit
+          ? 'Erro ao salvar alterações. Tente novamente.'
+          : 'Erro ao criar FAQ. Tente novamente.',
+      )
     },
   })
 
   function handleClose() {
-    reset()
+    reset({ question: '', answer: '' })
     setServerError(null)
     onClose()
   }
 
-  function onSubmit(values: CreateFaqForm) {
+  function onSubmit(values: FaqForm) {
     setServerError(null)
-    mutation.mutate({
-      companyId,
-      question: values.question,
-      answer: values.answer,
-    })
+    mutation.mutate(values)
   }
 
   return (
-    <Modal open={open} onClose={handleClose} title="Nova FAQ">
+    <Modal open={open} onClose={handleClose} title={isEdit ? 'Editar FAQ' : 'Nova FAQ'}>
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
         <div>
           <label htmlFor="question" className="mb-1 block text-sm font-medium">
@@ -107,7 +132,13 @@ export function CreateFaqDialog({
             Cancelar
           </Button>
           <Button type="submit" disabled={isSubmitting || mutation.isPending}>
-            {mutation.isPending ? 'Criando…' : 'Criar'}
+            {mutation.isPending
+              ? isEdit
+                ? 'Salvando…'
+                : 'Criando…'
+              : isEdit
+                ? 'Salvar alterações'
+                : 'Criar'}
           </Button>
         </div>
       </form>

@@ -49,8 +49,8 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 - [x] 31. CRUD de Serviços (nome, descrição, preço)
 - [x] 32. CRUD de FAQs (pergunta/resposta)
 - [x] 33. Horários de funcionamento (7 dias, abre/fecha)
-- [ ] 34. Edição de FAQ existente (hoje só cria)
-- [ ] 35. Edição de serviço existente (hoje só cria)
+- [x] 34. Edição de FAQ existente (hoje só cria) (fase-5.5)
+- [x] 35. Edição de serviço existente (hoje só cria) (fase-5.5)
 - [ ] 36. Ativar/desativar FAQ ou serviço sem deletar
 - [ ] 37. Upload de documento (PDF, etc.) pra IA usar como conhecimento
 

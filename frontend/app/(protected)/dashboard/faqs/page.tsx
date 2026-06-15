@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -37,6 +38,7 @@ const columns: Column<Faq>[] = [
 export default function FaqsPage() {
   const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingFaq, setEditingFaq] = useState<Faq | undefined>(undefined)
 
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe })
   const isTenant = me?.role === 'tenant_admin'
@@ -77,7 +79,13 @@ export default function FaqsPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">FAQs</h1>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setDialogOpen(true)} disabled={!me?.companyId}>
+          <Button
+            onClick={() => {
+              setEditingFaq(undefined)
+              setDialogOpen(true)
+            }}
+            disabled={!me?.companyId}
+          >
             Nova FAQ
           </Button>
           <Link href="/dashboard">
@@ -91,12 +99,29 @@ export default function FaqsPage() {
         columns={columns}
         loading={isPending}
         emptyMessage="Nenhuma FAQ cadastrada."
+        actions={(f) => (
+          <Button
+            variant="outline"
+            className="h-7 px-2 text-xs"
+            onClick={() => {
+              setEditingFaq(f)
+              setDialogOpen(true)
+            }}
+          >
+            <Pencil className="size-3" />
+            Editar
+          </Button>
+        )}
       />
       {me?.companyId && (
         <CreateFaqDialog
           open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
+          onClose={() => {
+            setDialogOpen(false)
+            setEditingFaq(undefined)
+          }}
           companyId={me.companyId}
+          faq={editingFaq}
         />
       )}
     </div>

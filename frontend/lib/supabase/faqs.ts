@@ -79,3 +79,39 @@ export async function createFaq(payload: {
     createdAt: data.created_at,
   }
 }
+
+/**
+ * Edita uma FAQ existente do tenant (camada 5.5). UPDATE via SDK + RLS: a policy
+ * faqs_update tem USING + WITH CHECK (company_id = app.company_id()), então o tenant só
+ * altera FAQ da própria empresa — não precisa passar company_id (a linha já é da empresa
+ * dele e o RLS revalida). Audita automaticamente via trigger app.audit_trigger (fase-5.3).
+ *
+ * <p>Retorna a FAQ atualizada (RETURNING via .select().single()).
+ */
+export async function updateFaq(
+  id: string,
+  payload: { question: string; answer: string },
+): Promise<Faq> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('faqs')
+    .update({
+      question: payload.question,
+      answer: payload.answer,
+    })
+    .eq('id', id)
+    .select('id, question, answer, active, created_at')
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return {
+    id: data.id,
+    question: data.question,
+    answer: data.answer,
+    active: data.active,
+    createdAt: data.created_at,
+  }
+}

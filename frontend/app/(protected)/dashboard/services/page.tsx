@@ -1,6 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { Pencil } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -46,6 +47,7 @@ const columns: Column<Service>[] = [
 export default function ServicesPage() {
   const router = useRouter()
   const [dialogOpen, setDialogOpen] = useState(false)
+  const [editingService, setEditingService] = useState<Service | undefined>(undefined)
 
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe })
   const isTenant = me?.role === 'tenant_admin'
@@ -86,7 +88,13 @@ export default function ServicesPage() {
       <div className="mb-6 flex items-center justify-between">
         <h1 className="text-xl font-semibold">Serviços</h1>
         <div className="flex items-center gap-2">
-          <Button onClick={() => setDialogOpen(true)} disabled={!me?.companyId}>
+          <Button
+            onClick={() => {
+              setEditingService(undefined)
+              setDialogOpen(true)
+            }}
+            disabled={!me?.companyId}
+          >
             Novo serviço
           </Button>
           <Link href="/dashboard">
@@ -100,12 +108,29 @@ export default function ServicesPage() {
         columns={columns}
         loading={isPending}
         emptyMessage="Nenhum serviço cadastrado."
+        actions={(s) => (
+          <Button
+            variant="outline"
+            className="h-7 px-2 text-xs"
+            onClick={() => {
+              setEditingService(s)
+              setDialogOpen(true)
+            }}
+          >
+            <Pencil className="size-3" />
+            Editar
+          </Button>
+        )}
       />
       {me?.companyId && (
         <CreateServiceDialog
           open={dialogOpen}
-          onClose={() => setDialogOpen(false)}
+          onClose={() => {
+            setDialogOpen(false)
+            setEditingService(undefined)
+          }}
           companyId={me.companyId}
+          service={editingService}
         />
       )}
     </div>

@@ -83,3 +83,41 @@ export async function createService(payload: {
     createdAt: data.created_at,
   }
 }
+
+/**
+ * Edita um serviço existente do tenant (camada 5.5). UPDATE via SDK + RLS: a policy
+ * services_update tem USING + WITH CHECK (company_id = app.company_id()), então o tenant
+ * só altera serviço da própria empresa. Audita via trigger app.audit_trigger (fase-5.3).
+ *
+ * <p>description e priceCents são nullable (null = sem descrição / sem preço). Retorna o
+ * serviço atualizado.
+ */
+export async function updateService(
+  id: string,
+  payload: { name: string; description: string | null; priceCents: number | null },
+): Promise<Service> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('services')
+    .update({
+      name: payload.name,
+      description: payload.description,
+      price_cents: payload.priceCents,
+    })
+    .eq('id', id)
+    .select('id, name, description, price_cents, active, created_at')
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return {
+    id: data.id,
+    name: data.name,
+    description: data.description,
+    priceCents: data.price_cents,
+    active: data.active,
+    createdAt: data.created_at,
+  }
+}
