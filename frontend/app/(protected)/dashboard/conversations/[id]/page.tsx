@@ -10,6 +10,7 @@ import { TagChip } from '@/components/tag-color-picker'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { submitMessageFeedback } from '@/lib/api/feedback'
 import { getMe } from '@/lib/api/me'
 import { getMySavedReplies } from '@/lib/api/saved-replies'
 import { getMyTeams } from '@/lib/api/teams'
@@ -142,6 +143,29 @@ export default function ConversationDetailPage({
   // Estado efêmero de "copiado": guarda o id da resposta copiada por ~1.5s (feedback visual).
   // Não há envio manual nesta fase, então a ação é copiar o corpo para a área de transferência.
   const [copiedReplyId, setCopiedReplyId] = useState<string | null>(null)
+
+  // Feedback de respostas da IA (#57 modo treinamento): mapa messageId → rating já enviado, para
+  // marcar visualmente o botão clicado. Efêmero (estado de UI; o registro vive no backend).
+  const [feedbackGiven, setFeedbackGiven] = useState<Record<string, 'good' | 'bad'>>({})
+
+  // Envia feedback (👍/👎) de uma mensagem da IA. No 👎, oferece (window.prompt) uma correção
+  // opcional — simples e sem componente novo, como pede a fase. Falha é só logada (não bloqueia).
+  async function sendFeedback(messageId: string, rating: 'good' | 'bad') {
+    let correction: string | undefined
+    if (rating === 'bad') {
+      const input = window.prompt(
+        'Opcional: como a IA deveria ter respondido? (deixe em branco para só marcar)',
+      )
+      // null = cancelou; string vazia = sem correção. Ambos: envia só o rating.
+      correction = input && input.trim() ? input.trim() : undefined
+    }
+    try {
+      await submitMessageFeedback(messageId, rating, correction)
+      setFeedbackGiven((prev) => ({ ...prev, [messageId]: rating }))
+    } catch (err) {
+      console.error('submitMessageFeedback failed:', err)
+    }
+  }
 
   function copyReply(replyId: string, body: string) {
     navigator.clipboard
@@ -492,6 +516,9 @@ export default function ConversationDetailPage({
         )}
         {page?.messages.map((m) => {
           const isInbound = m.direction === 'inbound'
+          // Feedback (#57): só nas respostas da IA (outbound + sender 'ai'); não nas do humano.
+          const isAiMessage = m.direction === 'outbound' && m.sender === 'ai'
+          const given = feedbackGiven[m.id]
           return (
             <div key={m.id} className={`flex ${isInbound ? 'justify-start' : 'justify-end'}`}>
               <div
@@ -500,13 +527,37 @@ export default function ConversationDetailPage({
                 }`}
               >
                 <p>{m.content}</p>
-                <p
-                  className={`mt-1 text-[10px] ${
-                    isInbound ? 'text-muted-foreground' : 'text-primary-foreground/70'
-                  }`}
-                >
-                  {m.sender} · {new Date(m.createdAt).toLocaleString('pt-BR')}
-                </p>
+                <div className="mt-1 flex items-center justify-between gap-2">
+                  <p
+                    className={`text-[10px] ${
+                      isInbound ? 'text-muted-foreground' : 'text-primary-foreground/70'
+                    }`}
+                  >
+                    {m.sender} · {new Date(m.createdAt).toLocaleString('pt-BR')}
+                  </p>
+                  {isAiMessage && (
+                    <span className="flex shrink-0 items-center gap-1">
+                      <button
+                        type="button"
+                        title="Boa resposta"
+                        aria-label="Marcar como boa resposta"
+                        onClick={() => sendFeedback(m.id, 'good')}
+                        className={`text-xs leading-none ${given === 'good' ? 'opacity-100' : 'opacity-50 hover:opacity-90'}`}
+                      >
+                        👍
+                      </button>
+                      <button
+                        type="button"
+                        title="Resposta ruim (com correção opcional)"
+                        aria-label="Marcar como resposta ruim"
+                        onClick={() => sendFeedback(m.id, 'bad')}
+                        className={`text-xs leading-none ${given === 'bad' ? 'opacity-100' : 'opacity-50 hover:opacity-90'}`}
+                      >
+                        👎
+                      </button>
+                    </span>
+                  )}
+                </div>
               </div>
             </div>
           )

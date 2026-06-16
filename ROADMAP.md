@@ -89,7 +89,7 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 - [x] 53. Coleta de dados estruturados (extracted_data jsonb)
 - [x] 54. Sugestões de FAQ
 - [x] 55. Memória de longo prazo do contato (contact_memory jsonb)
-- [ ] 57. Modo treinamento (melhorar resposta da IA)
+- [x] 57. Modo treinamento (melhorar resposta da IA)
 - [x] 58. Tom dinâmico por perfil do contato
 
 ### Agendamento real
@@ -107,8 +107,8 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 
 ### Multi-canal
 - [ ] 72. Suporte email
-- [ ] 73. Widget de chat no site
-- [ ] 74. Unificação multi-canal
+- [x] 73. Widget de chat no site
+- [x] 74. Unificação multi-canal
 
 ### Multi-tenant avançado
 - [x] 75. Hierarquia de roles (owner/admin/agent) (fase-5.17)

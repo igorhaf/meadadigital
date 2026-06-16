@@ -11,6 +11,10 @@ export type Contact = {
   name: string | null
   blocked: boolean
   createdAt: string
+  // Canais do contato (#74 unificação multi-canal): jsonb agregando o identificador por canal
+  // (ex.: { whatsapp: '+5511...', web: 'sess-abc' }). Opcional — só o detalhe (getContact) o
+  // carrega; a lista e os mutators (rename/block) não, para não over-fetchar.
+  channels?: Record<string, string> | null
 }
 
 /** Conversa resumida de um contato (para a lista no detalhe). */
@@ -19,6 +23,8 @@ export type ContactConversation = {
   status: string
   handledBy: string
   lastMessageAt: string | null
+  // Canal de origem da conversa (#74): 'whatsapp' (default) | 'web' | 'email'.
+  channel: string
 }
 
 /**
@@ -43,6 +49,7 @@ export async function getMyContacts(): Promise<Contact[]> {
     name: c.name,
     blocked: c.blocked,
     createdAt: c.created_at,
+    channels: null, // a lista não exibe canais — só o detalhe os carrega.
   }))
 }
 
@@ -51,7 +58,7 @@ export async function getContact(id: string): Promise<Contact> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('contacts')
-    .select('id, phone_number, name, blocked, created_at')
+    .select('id, phone_number, name, blocked, created_at, channels')
     .eq('id', id)
     .single()
 
@@ -65,6 +72,7 @@ export async function getContact(id: string): Promise<Contact> {
     name: data.name,
     blocked: data.blocked,
     createdAt: data.created_at,
+    channels: (data.channels ?? null) as Record<string, string> | null,
   }
 }
 
@@ -73,7 +81,7 @@ export async function getContactConversations(contactId: string): Promise<Contac
   const supabase = createClient()
   const { data, error } = await supabase
     .from('conversations')
-    .select('id, status, handled_by, last_message_at')
+    .select('id, status, handled_by, last_message_at, channel')
     .eq('contact_id', contactId)
     .order('last_message_at', { ascending: false, nullsFirst: false })
 
@@ -86,6 +94,7 @@ export async function getContactConversations(contactId: string): Promise<Contac
     status: c.status,
     handledBy: c.handled_by,
     lastMessageAt: c.last_message_at,
+    channel: c.channel ?? 'whatsapp',
   }))
 }
 

@@ -179,6 +179,28 @@ public class ContactRepository {
             tone, contactId);
     }
 
+    /**
+     * Mescla/define os canais do contato em {@code channels} (jsonb) — unificação multi-canal
+     * (camada 5.25 #74). Um mesmo contato pode existir em vários canais (whatsapp/web/email); a
+     * coluna agrega o identificador por canal (ex.: {@code {"whatsapp": "+5511...", "web": "sess-abc"}}).
+     *
+     * <p>Usa o operador {@code ||} de jsonb (merge raso): o novo objeto sobrescreve só as chaves
+     * que traz, preservando os demais canais já gravados. {@code coalesce(channels, '{}')} cobre o
+     * caso da 1ª gravação (coluna ainda NULL). {@code ?::jsonb} casta a String JSON do Java. Chamado
+     * na criação/resolução do contato web; o caller garante o JSON bem-formado.
+     *
+     * @param contactId     contato a atualizar
+     * @param channelsJsonb objeto JSON do(s) canal(is) a mesclar (não-null; o caller garante)
+     */
+    public void updateChannels(UUID contactId, String channelsJsonb) {
+        Objects.requireNonNull(contactId, "contactId must not be null");
+        Objects.requireNonNull(channelsJsonb, "channelsJsonb must not be null");
+        jdbcTemplate.update(
+            "update contacts set channels = coalesce(channels, '{}'::jsonb) || ?::jsonb, "
+                + "updated_at = now() where id = ?",
+            channelsJsonb, contactId);
+    }
+
     // contact_memory / detected_tone do contato dono de uma conversa (JOIN contacts ←
     // conversations) — lidos pelo PromptBuilder para injetar a memória e ajustar o tom.
     // contact_memory::text porque o PromptBuilder consome o jsonb como string crua.

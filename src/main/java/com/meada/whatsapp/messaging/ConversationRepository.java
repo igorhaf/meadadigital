@@ -50,6 +50,19 @@ public class ConversationRepository {
             + "do nothing "
             + "returning id, company_id";
 
+    // Variante WEB (camada 5.25 #73): idêntica ao INSERT_OPEN, mas marca channel='web' para
+    // distinguir a origem da conversa. whatsapp_instance_id NÃO é nullable no schema (FK composta
+    // NOT NULL), então o canal web REUTILIZA uma instância existente da empresa como portadora da
+    // FK — o channel é o que distingue (decisão documentada no WebChatService). O arbiter do
+    // ON CONFLICT é o mesmo índice parcial (contact_id, whatsapp_instance_id) where status='open':
+    // contatos web têm phone sintético próprio, então não colidem com conversas WhatsApp.
+    private static final String INSERT_OPEN_WEB =
+        "insert into conversations (company_id, contact_id, whatsapp_instance_id, status, handled_by, channel) "
+            + "values (?, ?, ?, 'open', 'ai', 'web') "
+            + "on conflict (contact_id, whatsapp_instance_id) where status = 'open' "
+            + "do nothing "
+            + "returning id, company_id";
+
     private final JdbcTemplate jdbcTemplate;
 
     public ConversationRepository(JdbcTemplate jdbcTemplate) {
@@ -93,6 +106,41 @@ public class ConversationRepository {
         return selectOpen(companyId, contactId, whatsappInstanceId)
             .orElseThrow(() -> new IllegalStateException(
                 "Open conversation disappeared after ON CONFLICT for company=" + companyId
+                    + " contact=" + contactId + " instance=" + whatsappInstanceId));
+    }
+
+    /**
+     * Resolve a conversa aberta do canal WEB de {@code (companyId, contactId, whatsappInstanceId)},
+     * criando uma nova (channel='web') se não houver aberta. Mesmo contrato idempotente do
+     * {@link #resolveOpenOrCreate} — só muda o channel da linha criada para 'web'.
+     *
+     * <p>{@code whatsappInstanceId} é a instância da empresa REUTILIZADA como portadora da FK
+     * NOT NULL conversations.whatsapp_instance_id (não existe instância "web" no schema desta
+     * fase — ver javadoc do WebChatService). O caller (WebChatService) resolve essa instância
+     * via WebChatRepository.findAnyInstanceId.
+     */
+    public Conversation resolveOpenWebOrCreate(UUID companyId, UUID contactId, UUID whatsappInstanceId) {
+        Objects.requireNonNull(companyId, "companyId must not be null");
+        Objects.requireNonNull(contactId, "contactId must not be null");
+        Objects.requireNonNull(whatsappInstanceId, "whatsappInstanceId must not be null");
+
+        // 1. caminho quente: já há uma conversa aberta deste contato web.
+        Optional<Conversation> open = selectOpen(companyId, contactId, whatsappInstanceId);
+        if (open.isPresent()) {
+            return open.get();
+        }
+
+        // 2. cria (channel='web')
+        List<Conversation> created = jdbcTemplate.query(
+            INSERT_OPEN_WEB, ROW_MAPPER, companyId, contactId, whatsappInstanceId);
+        if (!created.isEmpty()) {
+            return created.get(0);
+        }
+
+        // 3. reselect (race: outra thread criou a aberta entre 1 e 2)
+        return selectOpen(companyId, contactId, whatsappInstanceId)
+            .orElseThrow(() -> new IllegalStateException(
+                "Open web conversation disappeared after ON CONFLICT for company=" + companyId
                     + " contact=" + contactId + " instance=" + whatsappInstanceId));
     }
 

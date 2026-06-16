@@ -190,6 +190,21 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             <dd className="text-sm font-medium">{contact.phoneNumber}</dd>
           </div>
 
+          {/* Canais (#74 unificação multi-canal): mostra os canais em que o contato existe
+              (whatsapp/web/email) com o identificador de cada. Some quando ainda não há nenhum. */}
+          {contact.channels && Object.keys(contact.channels).length > 0 && (
+            <div>
+              <dt className="text-xs uppercase text-muted-foreground">Canais</dt>
+              <dd className="mt-1 flex flex-wrap items-center gap-1.5">
+                {Object.entries(contact.channels).map(([channel, identifier]) => (
+                  <span key={channel} title={String(identifier)}>
+                    <Badge variant="default">{channel}</Badge>
+                  </span>
+                ))}
+              </dd>
+            </div>
+          )}
+
           <div className="flex items-center gap-3">
             <div>
               <dt className="text-xs uppercase text-muted-foreground">Status</dt>
@@ -259,6 +274,8 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             <span className="flex items-center gap-2">
               <Badge variant={c.status === 'open' ? 'success' : 'danger'}>{c.status}</Badge>
               <Badge variant={c.handledBy === 'ai' ? 'default' : 'warning'}>{c.handledBy}</Badge>
+              {/* Canal de origem da conversa (#74): só destaca quando não é o whatsapp default. */}
+              {c.channel !== 'whatsapp' && <Badge variant="default">{c.channel}</Badge>}
             </span>
             <span className="text-muted-foreground">
               {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString('pt-BR') : '—'}
