@@ -16,6 +16,14 @@ function orNull(s: string): string | null {
   return s.trim() === '' ? null : s.trim()
 }
 
+/** Converte o campo numérico (string) para int positivo, ou null se vazio/inválido. */
+function orNullInt(s: string): number | null {
+  const trimmed = s.trim()
+  if (trimmed === '') return null
+  const n = Number.parseInt(trimmed, 10)
+  return Number.isFinite(n) && n > 0 ? n : null
+}
+
 /**
  * Configuração da IA do tenant (SDK + RLS). Form único (1:1 por empresa via UPSERT). 4
  * campos de texto opcionais; model_provider não aparece (fica 'gemini' default no banco).
@@ -28,6 +36,9 @@ export default function AiSettingsPage() {
   const [systemRules, setSystemRules] = useState('')
   const [restrictions, setRestrictions] = useState('')
   const [handoffTriggers, setHandoffTriggers] = useState('')
+  const [welcomeMessage, setWelcomeMessage] = useState('')
+  const [reactivationDays, setReactivationDays] = useState('')
+  const [reactivationMessage, setReactivationMessage] = useState('')
   const [saved, setSaved] = useState(false)
 
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe })
@@ -52,6 +63,9 @@ export default function AiSettingsPage() {
       setSystemRules(data.systemRules ?? '')
       setRestrictions(data.restrictions ?? '')
       setHandoffTriggers(data.handoffTriggers ?? '')
+      setWelcomeMessage(data.welcomeMessage ?? '')
+      setReactivationDays(data.reactivationDays != null ? String(data.reactivationDays) : '')
+      setReactivationMessage(data.reactivationMessage ?? '')
     }
   }, [data])
 
@@ -62,6 +76,9 @@ export default function AiSettingsPage() {
         systemRules: orNull(systemRules),
         restrictions: orNull(restrictions),
         handoffTriggers: orNull(handoffTriggers),
+        welcomeMessage: orNull(welcomeMessage),
+        reactivationDays: orNullInt(reactivationDays),
+        reactivationMessage: orNull(reactivationMessage),
       }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-ai-settings'] })
@@ -173,6 +190,70 @@ export default function AiSettingsPage() {
               placeholder="ex.: 'Quando o cliente pedir falar com pessoa humana, quando expressar irritação ou frustração, quando o assunto envolver reclamação formal ou jurídico.'"
               className="w-full rounded-md border border-border px-3 py-2 text-sm"
             />
+          </div>
+
+          <div className="border-t border-border pt-4">
+            <h2 className="mb-3 text-sm font-semibold">Engajamento</h2>
+
+            <div className="mb-4">
+              <label htmlFor="welcomeMessage" className="mb-1 block text-sm font-medium">
+                Mensagem de boas-vindas <span className="text-muted-foreground">(opcional)</span>
+              </label>
+              <textarea
+                id="welcomeMessage"
+                rows={2}
+                maxLength={500}
+                value={welcomeMessage}
+                onChange={(e) => {
+                  setWelcomeMessage(e.target.value)
+                  setSaved(false)
+                }}
+                placeholder="ex.: 'Olá! Seja bem-vindo. Sou o atendente virtual e vou te ajudar com agendamentos e dúvidas.'"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Enviada automaticamente na primeira mensagem de cada cliente. Até 500 caracteres.
+              </p>
+            </div>
+
+            <div className="mb-4">
+              <label htmlFor="reactivationDays" className="mb-1 block text-sm font-medium">
+                Dias para reativação <span className="text-muted-foreground">(opcional)</span>
+              </label>
+              <input
+                id="reactivationDays"
+                type="number"
+                min={1}
+                value={reactivationDays}
+                onChange={(e) => {
+                  setReactivationDays(e.target.value)
+                  setSaved(false)
+                }}
+                placeholder="ex.: 30"
+                className="w-32 rounded-md border border-border px-3 py-2 text-sm"
+              />
+              <p className="mt-1 text-xs text-muted-foreground">
+                Clientes sem mensagem por esse número de dias recebem a mensagem de reativação.
+                Deixe vazio para desativar.
+              </p>
+            </div>
+
+            <div>
+              <label htmlFor="reactivationMessage" className="mb-1 block text-sm font-medium">
+                Mensagem de reativação <span className="text-muted-foreground">(opcional)</span>
+              </label>
+              <textarea
+                id="reactivationMessage"
+                rows={2}
+                value={reactivationMessage}
+                onChange={(e) => {
+                  setReactivationMessage(e.target.value)
+                  setSaved(false)
+                }}
+                placeholder="ex.: 'Sentimos sua falta! Que tal agendar um horário? Estamos à disposição.'"
+                className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              />
+            </div>
           </div>
         </div>
       )}

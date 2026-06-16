@@ -273,6 +273,63 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
         assertThat(row.get("evolution_message_id")).isEqualTo("key-6");
     }
 
+    // ---- boas-vindas (camada 5.21 #82) --------------------------------------
+
+    @Test
+    @DisplayName("welcome (#82): 1ª inbound do contato + welcome_message configurado → envia welcome ANTES da resposta (2 outbound)")
+    void welcome_sentOnFirstInboundWhenConfigured() {
+        // Configura a mensagem de boas-vindas no ai_settings da empresa (o @BeforeEach criou a linha).
+        jdbcTemplate.update("update ai_settings set welcome_message = ? where company_id = ?",
+            "Bem-vindo! Como posso ajudar?", COMPANY);
+        // Semeia EXATAMENTE uma inbound do contato (representa a mensagem atual já persistida pelo
+        // webhook em produção): countInboundForContact == 1 → é a primeira mensagem do contato.
+        jdbcTemplate.update(
+            "insert into messages (company_id, conversation_id, direction, sender, content) "
+                + "values (?, ?, 'inbound', 'contact', ?)",
+            COMPANY, CONV, "Oi, tudo bem?");
+        // Dois envios pela Evolution: 1º o welcome, 2º a resposta da IA (ordem do caso 6).
+        fakeAi.enqueue(aiReply("Claro, posso ajudar com agendamentos.", false));
+        fakeEvolution.enqueue("key-welcome");
+        fakeEvolution.enqueue("key-reply");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);
+        assertThat(fakeEvolution.calls()).isEqualTo(2);   // welcome + reply
+        assertThat(countOutbound(CONV)).isEqualTo(2);
+        assertThat(handledByOf(CONV)).isEqualTo("ai");
+
+        // O conteúdo de boas-vindas foi persistido como mensagem outbound da IA.
+        long welcomeRows = jdbcTemplate.queryForObject(
+            "select count(*) from messages where conversation_id = ? and direction = 'outbound' "
+                + "and content = ?", Long.class, CONV, "Bem-vindo! Como posso ajudar?");
+        assertThat(welcomeRows).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("welcome (#82): NÃO é a 1ª inbound (já há mensagens prévias) → sem welcome (só a resposta)")
+    void welcome_notSentWhenNotFirstInbound() {
+        jdbcTemplate.update("update ai_settings set welcome_message = ? where company_id = ?",
+            "Bem-vindo! Como posso ajudar?", COMPANY);
+        // Duas inbounds: countInboundForContact == 2 → NÃO é a primeira mensagem.
+        jdbcTemplate.update(
+            "insert into messages (company_id, conversation_id, direction, sender, content) "
+                + "values (?, ?, 'inbound', 'contact', ?)",
+            COMPANY, CONV, "Mensagem antiga");
+        jdbcTemplate.update(
+            "insert into messages (company_id, conversation_id, direction, sender, content) "
+                + "values (?, ?, 'inbound', 'contact', ?)",
+            COMPANY, CONV, "Mensagem atual");
+        fakeAi.enqueue(aiReply("Posso ajudar.", false));
+        fakeEvolution.enqueue("key-reply");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);
+        assertThat(fakeEvolution.calls()).isEqualTo(1);   // só a resposta, sem welcome
+        assertThat(countOutbound(CONV)).isEqualTo(1);
+    }
+
     // ---- scheduling intent (camada 5.15 #29) --------------------------------
 
     @Test

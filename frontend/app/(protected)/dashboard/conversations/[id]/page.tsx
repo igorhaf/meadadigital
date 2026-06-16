@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { use, useEffect } from 'react'
+import { use, useEffect, useState } from 'react'
 
 import { SignOutButton } from '@/components/sign-out-button'
 import { TagChip } from '@/components/tag-color-picker'
@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getMe } from '@/lib/api/me'
+import { getMySavedReplies } from '@/lib/api/saved-replies'
 import { getMyTeams } from '@/lib/api/teams'
 import {
   addTagToConversation,
@@ -129,6 +130,28 @@ export default function ConversationDetailPage({
     queryFn: getMyTeams,
     enabled: isTenant,
   })
+
+  // Respostas prontas da empresa (#88) para inserir na conversa. Mudam por ação do tenant
+  // na tela de Respostas prontas — sem polling; o seletor relê quando a query invalida.
+  const { data: savedReplies } = useQuery({
+    queryKey: ['my-saved-replies'],
+    queryFn: getMySavedReplies,
+    enabled: isTenant,
+  })
+
+  // Estado efêmero de "copiado": guarda o id da resposta copiada por ~1.5s (feedback visual).
+  // Não há envio manual nesta fase, então a ação é copiar o corpo para a área de transferência.
+  const [copiedReplyId, setCopiedReplyId] = useState<string | null>(null)
+
+  function copyReply(replyId: string, body: string) {
+    navigator.clipboard
+      .writeText(body)
+      .then(() => {
+        setCopiedReplyId(replyId)
+        setTimeout(() => setCopiedReplyId(null), 1500)
+      })
+      .catch((err) => console.error('clipboard write failed:', err))
+  }
 
   // Atribui/desatribui a conversa a um time (#76). String vazia no <select> → null.
   const teamMutation = useMutation({
@@ -417,6 +440,40 @@ export default function ConversationDetailPage({
                   'Todas as tags já estão aplicadas.'
                 )}
               </p>
+            )}
+          </div>
+
+          {/* Respostas prontas (#88): lista os textos reutilizáveis da empresa. Como ainda
+              não há envio manual, a ação é copiar o corpo para a área de transferência
+              (feedback "copiado" por ~1.5s). Catálogo é gerido em /dashboard/saved-replies. */}
+          <div className="mb-4 rounded-xl border border-border p-4">
+            <h2 className="mb-2 text-sm font-medium">Respostas prontas</h2>
+            {(savedReplies ?? []).length === 0 ? (
+              <p className="text-xs text-muted-foreground">
+                Nenhuma resposta pronta cadastrada.{' '}
+                <Link href="/dashboard/saved-replies" className="underline">
+                  Criar respostas
+                </Link>
+                .
+              </p>
+            ) : (
+              <ul className="space-y-1.5">
+                {(savedReplies ?? []).map((r) => (
+                  <li key={r.id} className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-sm font-medium">{r.title}</p>
+                      <p className="line-clamp-1 text-xs text-muted-foreground">{r.body}</p>
+                    </div>
+                    <Button
+                      variant="outline"
+                      className="h-7 shrink-0 px-2 text-xs"
+                      onClick={() => copyReply(r.id, r.body)}
+                    >
+                      {copiedReplyId === r.id ? 'Copiado' : 'Copiar'}
+                    </Button>
+                  </li>
+                ))}
+              </ul>
             )}
           </div>
         </>

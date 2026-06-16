@@ -1,5 +1,7 @@
 import { redirect } from 'next/navigation'
 
+import { GlobalSearch } from '@/components/global-search'
+import { RealtimeNotifications } from '@/components/realtime-notifications'
 import { ThemeProvider } from '@/components/theme-provider'
 import { createClient } from '@/lib/supabase/server'
 
@@ -28,6 +30,11 @@ import { createClient } from '@/lib/supabase/server'
  *
  * Sem header/nav/sidebar aqui: este layout é só passagem. UI de shell entra em
  * sub-fase futura quando houver telas de verdade.
+ *
+ * GlobalSearch (paleta Cmd+K, #84) e RealtimeNotifications (toasts de nova conversa,
+ * #83) são montados aqui (uma vez só) para ficarem disponíveis em todas as telas do
+ * dashboard. Ambos são client components ('use client') — o boundary fica neles; o
+ * layout segue server (mantém a barreira getUser).
  */
 export default async function ProtectedLayout({
   children,
@@ -44,5 +51,11 @@ export default async function ProtectedLayout({
     redirect('/login')
   }
 
-  return <ThemeProvider>{children}</ThemeProvider>
+  return (
+    <ThemeProvider>
+      <GlobalSearch />
+      <RealtimeNotifications />
+      {children}
+    </ThemeProvider>
+  )
 }

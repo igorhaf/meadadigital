@@ -88,7 +88,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/19_roles_and_availability.sql",
         "db/migrations/20_ia_intelligence.sql",
         "db/migrations/21_appointments.sql",
-        "db/migrations/22_teams_and_limits.sql"
+        "db/migrations/22_teams_and_limits.sql",
+        "db/migrations/23_engagement_and_ux.sql"
     };
 
     /**
@@ -195,7 +196,7 @@ public abstract class AbstractIntegrationTest {
               companies, users, whatsapp_instances, services, business_hours,
               faqs, documents, ai_settings, contacts, conversations, messages,
               audit_log, tags, conversation_tags, tenant_invitations,
-              availability_slots, appointments, teams
+              availability_slots, appointments, teams, saved_replies
             RESTART IDENTITY CASCADE
             """);
     }

@@ -11,6 +11,10 @@ export type AiSettings = {
   restrictions: string | null
   handoffTriggers: string | null
   modelProvider: string
+  // Engajamento (camada 5.21): boas-vindas na 1ª mensagem (#82) e reativação automática (#81).
+  welcomeMessage: string | null
+  reactivationDays: number | null
+  reactivationMessage: string | null
 }
 
 /**
@@ -22,7 +26,9 @@ export async function getMyAiSettings(): Promise<AiSettings | null> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('ai_settings')
-    .select('tone, system_rules, restrictions, handoff_triggers, model_provider')
+    .select(
+      'tone, system_rules, restrictions, handoff_triggers, model_provider, welcome_message, reactivation_days, reactivation_message',
+    )
     .maybeSingle()
 
   if (error) {
@@ -39,6 +45,9 @@ export async function getMyAiSettings(): Promise<AiSettings | null> {
     restrictions: data.restrictions,
     handoffTriggers: data.handoff_triggers,
     modelProvider: data.model_provider,
+    welcomeMessage: data.welcome_message,
+    reactivationDays: data.reactivation_days,
+    reactivationMessage: data.reactivation_message,
   }
 }
 
@@ -56,6 +65,9 @@ export async function upsertMyAiSettings(
     systemRules: string | null
     restrictions: string | null
     handoffTriggers: string | null
+    welcomeMessage: string | null
+    reactivationDays: number | null
+    reactivationMessage: string | null
   },
 ): Promise<AiSettings> {
   const supabase = createClient()
@@ -68,10 +80,15 @@ export async function upsertMyAiSettings(
         system_rules: payload.systemRules,
         restrictions: payload.restrictions,
         handoff_triggers: payload.handoffTriggers,
+        welcome_message: payload.welcomeMessage,
+        reactivation_days: payload.reactivationDays,
+        reactivation_message: payload.reactivationMessage,
       },
       { onConflict: 'company_id' },
     )
-    .select('tone, system_rules, restrictions, handoff_triggers, model_provider')
+    .select(
+      'tone, system_rules, restrictions, handoff_triggers, model_provider, welcome_message, reactivation_days, reactivation_message',
+    )
     .single()
 
   if (error) {
@@ -84,5 +101,8 @@ export async function upsertMyAiSettings(
     restrictions: data.restrictions,
     handoffTriggers: data.handoff_triggers,
     modelProvider: data.model_provider,
+    welcomeMessage: data.welcome_message,
+    reactivationDays: data.reactivation_days,
+    reactivationMessage: data.reactivation_message,
   }
 }

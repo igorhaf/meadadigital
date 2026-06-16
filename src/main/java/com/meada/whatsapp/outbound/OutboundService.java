@@ -12,6 +12,7 @@ import com.meada.whatsapp.ai.Prompt;
 import com.meada.whatsapp.ai.PromptBuilder;
 import com.meada.whatsapp.ai.SchedulingIntent;
 import com.meada.whatsapp.appointments.AppointmentService;
+import com.meada.whatsapp.messaging.AiSettingsRepository;
 import com.meada.whatsapp.messaging.BusinessHours;
 import com.meada.whatsapp.messaging.BusinessHoursRepository;
 import com.meada.whatsapp.messaging.ContactRepository;
@@ -77,6 +78,7 @@ public class OutboundService {
     private final BusinessHoursGate businessHoursGate;
     private final ObjectMapper objectMapper;
     private final AppointmentService appointmentService;
+    private final AiSettingsRepository aiSettingsRepository;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -103,7 +105,8 @@ public class OutboundService {
                            BusinessHoursRepository businessHoursRepository,
                            BusinessHoursGate businessHoursGate,
                            ObjectMapper objectMapper,
-                           AppointmentService appointmentService) {
+                           AppointmentService appointmentService,
+                           AiSettingsRepository aiSettingsRepository) {
         this.conversationRepository = conversationRepository;
         this.contactRepository = contactRepository;
         this.whatsappInstanceRepository = whatsappInstanceRepository;
@@ -116,6 +119,7 @@ public class OutboundService {
         this.businessHoursGate = businessHoursGate;
         this.objectMapper = objectMapper;
         this.appointmentService = appointmentService;
+        this.aiSettingsRepository = aiSettingsRepository;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
         // o invariante backoffs.size() == maxAttempts-1 em cada chamada.
@@ -202,8 +206,9 @@ public class OutboundService {
             return logOutcome(OutboundOutcome.FLIPPED_AI_BAD_REPLY, event, aiResponse, null);
         }
 
-        // caso 6: caminho feliz — persiste a intent (#29) e os insights (5.18) ANTES de enviar,
-        // depois envia e grava.
+        // caso 6: caminho feliz — boas-vindas (#82) na 1ª mensagem do contato (best-effort,
+        // ANTES da resposta da IA), depois persiste a intent (#29) e os insights (5.18) e envia.
+        maybeSendWelcome(event, conversationId);
         persistSchedulingIntent(conversationId, aiResponse);
         persistInsights(event.companyId(), conversationId, aiResponse);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, aiResponse);
@@ -232,6 +237,50 @@ public class OutboundService {
         }
         // aiResponse=null no log: não houve IA, o log sai limpo (sem tokens/latency).
         return logOutcome(OutboundOutcome.PROCESSED_OUTSIDE_HOURS, event, null, null);
+    }
+
+    /**
+     * Boas-vindas (camada 5.21 #82): na PRIMEIRA mensagem do contato em todo o histórico,
+     * envia a mensagem de boas-vindas configurada (ai_settings.welcome_message) ANTES da
+     * resposta normal da IA. No-op (silencioso) quando não é a primeira mensagem OU o tenant
+     * não configurou welcome_message — o caso da esmagadora maioria das mensagens.
+     *
+     * <p>Semântica de "primeira mensagem" (decisão cravada): conta as inbound do contato em
+     * todas as suas conversas. O webhook persiste a inbound ANTES de disparar o evento, então
+     * {@code count == 1} é a primeira de todas; tratamos {@code count <= 1} como primeira (também
+     * cobre o fluxo direto de teste/sem pré-persistência). Só envia se houver welcome_message.
+     *
+     * <p>É best-effort e DEFENSIVO por contrato: qualquer falha (contato sumiu, lookup, envio,
+     * persistência) é logada em warn e NUNCA propaga — a resposta da IA (o que importa para o
+     * cliente) segue normalmente. Reusa o caminho de envio/persistência do caso 6 via um
+     * {@link AiResponse} sintético (reply=welcome, needsHuman=false, métricas zeradas: não houve IA).
+     * Diferente do sendAndPersist do reply, aqui IGNORAMOS o Optional de falha de envio: o welcome
+     * não pode degradar o outcome do atendimento.
+     */
+    private void maybeSendWelcome(MessageInboundProcessedEvent event, UUID conversationId) {
+        try {
+            Optional<UUID> contactId =
+                conversationRepository.findContactIdByConversation(conversationId);
+            if (contactId.isEmpty()) {
+                return;   // conversa sem contato resolúvel — nada a fazer (silencioso).
+            }
+            // Não é a 1ª mensagem do contato → sem boas-vindas (caso dominante).
+            if (messageRepository.countInboundForContact(contactId.get()) > 1) {
+                return;
+            }
+            Optional<String> welcome = aiSettingsRepository.findWelcomeMessage(event.companyId());
+            if (welcome.isEmpty()) {
+                return;   // tenant não configurou boas-vindas — comportamento invisível.
+            }
+            // Synthetic AiResponse (reply=welcome): reusa o sendAndPersist do caso 6. Ignoramos
+            // o Optional de falha — o welcome é best-effort e não degrada o outcome do atendimento.
+            AiResponse welcomeSynthetic = new AiResponse(welcome.get(), false, null, 0, 0, 0L);
+            sendAndPersist(event, conversationId, welcomeSynthetic);
+        } catch (RuntimeException e) {
+            // Boas-vindas NUNCA derruba o atendimento (igual ao persistSchedulingIntent/insights).
+            log.warn("outbound: failed to send welcome for conversation {} ({})",
+                conversationId, e.getMessage());
+        }
     }
 
     /**

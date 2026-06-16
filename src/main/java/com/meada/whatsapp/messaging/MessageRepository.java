@@ -67,6 +67,16 @@ public class MessageRepository {
             + "do nothing "
             + "returning id, company_id";
 
+    // Conta as inbound de TODAS as conversas de um contato (camada 5.21 #82). JOIN
+    // messages → conversations pelo conversation_id, filtrando contact_id + direction='inbound'.
+    // Usado para detectar a 1ª mensagem do contato no histórico inteiro (não só na conversa atual):
+    // como o webhook persiste a inbound ANTES de disparar o evento, "primeira mensagem" significa
+    // count == 1 em produção.
+    private static final String COUNT_INBOUND_BY_CONTACT =
+        "select count(*) from messages m "
+            + "join conversations cv on cv.id = m.conversation_id "
+            + "where cv.contact_id = ? and m.direction = 'inbound'";
+
     private final JdbcTemplate jdbcTemplate;
 
     public MessageRepository(JdbcTemplate jdbcTemplate) {
@@ -122,5 +132,24 @@ public class MessageRepository {
         List<ConversationTurn> chronological = new ArrayList<>(recentFirst);
         Collections.reverse(chronological);
         return chronological;
+    }
+
+    /**
+     * Conta as mensagens inbound de um contato em TODO o histórico (todas as suas conversas).
+     * Usado pelo OutboundService (camada 5.21 #82) para detectar a 1ª mensagem do contato.
+     *
+     * <p>Semântica de "primeira mensagem": o webhook persiste a inbound ANTES de publicar o
+     * evento que o OutboundService processa — então, no momento do process(), a inbound atual
+     * já está na tabela e {@code count == 1} significa "esta é a primeira de todas". O caller
+     * trata {@code count <= 1} como primeira (defensivo contra o caso em que o teste/fluxo
+     * direto não pré-persistiu a inbound).
+     *
+     * @param contactId contato dono das conversas a contar
+     * @return número de mensagens inbound do contato em todo o histórico
+     */
+    public long countInboundForContact(UUID contactId) {
+        Objects.requireNonNull(contactId, "contactId must not be null");
+        Long count = jdbcTemplate.queryForObject(COUNT_INBOUND_BY_CONTACT, Long.class, contactId);
+        return count == null ? 0L : count;
     }
 }

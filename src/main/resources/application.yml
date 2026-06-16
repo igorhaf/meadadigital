@@ -148,6 +148,13 @@ invitations:
 appointments:
   reminder-check-ms: ${APPOINTMENTS_REMINDER_CHECK_MS:300000}
 
+# Engajamento (camada 5.21 #81). reactivation-cron: agenda (cron Spring) do ReactivationJob
+#   varrer contatos sem mensagem há >= reactivation_days dias e mandar a mensagem de reativação
+#   (uma vez por janela, controlado por contacts.reactivated_at). Default diário às 9h; o job só
+#   age sobre empresas com reactivation_days/message configurados, então não dispara em testes.
+engagement:
+  reactivation-cron: ${ENGAGEMENT_REACTIVATION_CRON:0 0 9 * * *}
+
 # Supabase. jwks-url SEM default (fail-fast): o filtro JWT do admin valida os tokens
 #   ES256 contra as chaves públicas servidas neste endpoint JWKS (o Supabase migrou de
 #   HS256/secret compartilhado para JWT Signing Keys assimétricas — ver JwksConfig e

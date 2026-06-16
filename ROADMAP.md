@@ -117,13 +117,13 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 - [x] 78. Audit log visível
 
 ### Engajamento
-- [ ] 81. Reativação automática
-- [ ] 82. Boas-vindas
+- [x] 81. Reativação automática
+- [x] 82. Boas-vindas
 
 ### UX painel
-- [ ] 83. Notificações tempo real
-- [ ] 84. Busca global
-- [ ] 88. Saved replies
+- [x] 83. Notificações tempo real
+- [x] 84. Busca global
+- [x] 88. Saved replies
 
 ### Compliance
 - [ ] 89. LGPD exclusão
