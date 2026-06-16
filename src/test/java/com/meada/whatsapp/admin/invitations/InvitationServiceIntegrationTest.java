@@ -72,6 +72,21 @@ class InvitationServiceIntegrationTest extends AbstractIntegrationTest {
             .isInstanceOf(InvalidInvitationEmailException.class);
     }
 
+    @Test
+    @DisplayName("createInvitation: max_admins atingido → PlanLimitExceededException (camada 5.20 #77)")
+    void createInvitation_planLimitReached_throws() {
+        UUID company = seedCompany("limit");
+        // limite de 1 admin; já existe 1 usuário → o total (1) >= max_admins (1) → estoura.
+        jdbcTemplate.update("update companies set max_admins = 1 where id = ?", company);
+        UUID existing = seedAuthUser();
+        jdbcTemplate.update(
+            "insert into users (id, company_id, email, role) values (?, ?, ?, 'admin')",
+            existing, company, "ja-existe@x.com");
+
+        assertThatThrownBy(() -> service.createInvitation(company, null, "novo@x.com"))
+            .isInstanceOf(PlanLimitExceededException.class);
+    }
+
     // ---- acceptInvitation: caminho feliz ------------------------------------
 
     @Test

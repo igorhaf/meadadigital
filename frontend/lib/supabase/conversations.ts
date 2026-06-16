@@ -41,13 +41,14 @@ export type ConversationWithContact = {
   complaintIntent: DetectedIntent | null
   extractedData: Record<string, unknown> | null
   lastMessageAt: string | null
+  teamId: string | null
   contactName: string | null
   contactPhone: string
 }
 
 const SELECT_WITH_CONTACT =
   'id, status, handled_by, marked_unread, scheduling_intent, cancellation_intent, '
-  + 'complaint_intent, extracted_data, last_message_at, '
+  + 'complaint_intent, extracted_data, last_message_at, team_id, '
   + 'contact:contacts(name, phone_number)'
 
 /** jsonb cru do scheduling_intent (snake_case, como o PostgREST devolve). */
@@ -103,6 +104,7 @@ type ConversationRow = {
   complaint_intent: DetectedIntentRow | null
   extracted_data: Record<string, unknown> | null
   last_message_at: string | null
+  team_id: string | null
   contact:
     | { name: string | null; phone_number: string }
     | { name: string | null; phone_number: string }[]
@@ -128,6 +130,7 @@ function toConversation(raw: unknown): ConversationWithContact {
     complaintIntent: toDetectedIntent(row.complaint_intent),
     extractedData: row.extracted_data ?? null,
     lastMessageAt: row.last_message_at,
+    teamId: row.team_id ?? null,
     contactName: contact?.name ?? null,
     contactPhone: contact?.phone_number ?? '',
   }
@@ -262,6 +265,31 @@ export async function clearSchedulingIntent(
   const { data, error } = await supabase
     .from('conversations')
     .update({ scheduling_intent: null })
+    .eq('id', id)
+    .select(SELECT_WITH_CONTACT)
+    .single()
+
+  if (error) {
+    throw error
+  }
+
+  return toConversation(data)
+}
+
+/**
+ * Atribui a conversa a um time (camada 5.20 #76) ou desatribui (teamId null → team_id null).
+ * UPDATE { team_id } via SDK + RLS (conversations_update: USING + WITH CHECK = company_id).
+ * O time precisa ser da mesma empresa (FK composta no banco — defesa em profundidade); o
+ * dropdown só oferece times da empresa (getMyTeams). Retorna a conversa atualizada.
+ */
+export async function setConversationTeam(
+  id: string,
+  teamId: string | null,
+): Promise<ConversationWithContact> {
+  const supabase = createClient()
+  const { data, error } = await supabase
+    .from('conversations')
+    .update({ team_id: teamId })
     .eq('id', id)
     .select(SELECT_WITH_CONTACT)
     .single()

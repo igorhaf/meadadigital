@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { getMe } from '@/lib/api/me'
+import { getMyTeams } from '@/lib/api/teams'
 import {
   addTagToConversation,
   getConversationTags,
@@ -19,6 +20,7 @@ import {
 import {
   clearSchedulingIntent,
   getConversation,
+  setConversationTeam,
   updateConversationHandledBy,
   updateConversationStatus,
 } from '@/lib/supabase/conversations'
@@ -118,6 +120,21 @@ export default function ConversationDetailPage({
     queryKey: ['my-tags'],
     queryFn: getMyTags,
     enabled: isTenant,
+  })
+
+  // Times da empresa (#76) para o seletor de atribuição. Mudam por ação do tenant na tela
+  // de Times — sem polling; o seletor relê quando a query invalida.
+  const { data: teams } = useQuery({
+    queryKey: ['my-teams'],
+    queryFn: getMyTeams,
+    enabled: isTenant,
+  })
+
+  // Atribui/desatribui a conversa a um time (#76). String vazia no <select> → null.
+  const teamMutation = useMutation({
+    mutationFn: (teamId: string | null) => setConversationTeam(id, teamId),
+    onSuccess: invalidateConversation,
+    onError: (err) => console.error('setConversationTeam failed:', err),
   })
 
   function invalidateTags() {
@@ -234,6 +251,28 @@ export default function ConversationDetailPage({
               Erro ao atualizar a conversa. Tente novamente.
             </p>
           )}
+
+          {/* Time (#76): atribui a conversa a um time/departamento. "Nenhum" desatribui. O
+              dropdown só mostra times da própria empresa (getMyTeams). */}
+          <div className="mb-4 flex items-center gap-2">
+            <label htmlFor="conversation-team" className="text-sm text-muted-foreground">
+              Time:
+            </label>
+            <select
+              id="conversation-team"
+              className="rounded-md border border-border px-3 py-1.5 text-sm"
+              value={conversation.teamId ?? ''}
+              disabled={teamMutation.isPending}
+              onChange={(e) => teamMutation.mutate(e.target.value || null)}
+            >
+              <option value="">nenhum</option>
+              {(teams ?? []).map((t) => (
+                <option key={t.id} value={t.id}>
+                  {t.name}
+                </option>
+              ))}
+            </select>
+          </div>
 
           {/* Possível agendamento (#29): só renderiza quando a IA detectou intent.
               "Marcar como tratado" zera scheduling_intent → seção e badge somem. */}

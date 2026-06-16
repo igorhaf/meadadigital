@@ -112,9 +112,9 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 
 ### Multi-tenant avançado
 - [x] 75. Hierarquia de roles (owner/admin/agent) (fase-5.17)
-- [ ] 76. Times/departamentos
-- [ ] 77. Limites por plano
-- [ ] 78. Audit log visível
+- [x] 76. Times/departamentos
+- [x] 77. Limites por plano
+- [x] 78. Audit log visível
 
 ### Engajamento
 - [ ] 81. Reativação automática

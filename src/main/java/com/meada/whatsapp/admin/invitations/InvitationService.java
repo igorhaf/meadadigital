@@ -57,6 +57,7 @@ public class InvitationService {
      * na inviteUrl).
      *
      * @throws InvalidInvitationEmailException email malformado
+     * @throws PlanLimitExceededException      companies.max_admins atingido (camada 5.20 #77)
      */
     public TenantInvitation createInvitation(UUID companyId, UUID invitedBy, String email) {
         Objects.requireNonNull(companyId, "companyId must not be null");
@@ -64,9 +65,39 @@ public class InvitationService {
         if (!EMAIL_PATTERN.matcher(normalized).matches()) {
             throw new InvalidInvitationEmailException();
         }
+        enforceAdminLimit(companyId);
         String token = generateToken();
         Instant expiresAt = Instant.now().plus(tokenValidityDays, ChronoUnit.DAYS);
         return repository.insert(companyId, normalized, token, invitedBy, expiresAt);
+    }
+
+    /**
+     * Aplica o limite de admins do plano (camada 5.20 #77). Se {@code companies.max_admins}
+     * não é null, soma os usuários atuais da empresa + os convites ainda ativos (não usados
+     * e não expirados — cada um vira um admin em potencial) e, se já >= max_admins, lança
+     * {@link PlanLimitExceededException}. max_admins null = ilimitado (no-op).
+     *
+     * <p>Contabilizar convites ativos junto evita estourar o limite por convites pendentes
+     * (N convites abertos poderiam virar N admins). Roda service_role (sem RLS); o WHERE
+     * por companyId isola.
+     */
+    private void enforceAdminLimit(UUID companyId) {
+        Integer maxAdmins = jdbcTemplate.queryForObject(
+            "select max_admins from companies where id = ?", Integer.class, companyId);
+        if (maxAdmins == null) {
+            return;   // sem limite definido = ilimitado
+        }
+        Integer currentUsers = jdbcTemplate.queryForObject(
+            "select count(*) from users where company_id = ?", Integer.class, companyId);
+        Integer activeInvites = jdbcTemplate.queryForObject(
+            "select count(*) from tenant_invitations "
+                + "where company_id = ? and used_at is null and expires_at > now()",
+            Integer.class, companyId);
+        int total = (currentUsers == null ? 0 : currentUsers)
+            + (activeInvites == null ? 0 : activeInvites);
+        if (total >= maxAdmins) {
+            throw new PlanLimitExceededException();
+        }
     }
 
     /**

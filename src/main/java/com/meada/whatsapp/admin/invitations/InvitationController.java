@@ -74,6 +74,10 @@ public class InvitationController {
         } catch (InvalidInvitationEmailException e) {
             return ResponseEntity.status(400)
                 .body(Map.of("error", "Bad Request", "reason", "invalid_email"));
+        } catch (PlanLimitExceededException e) {
+            // Limite de admins do plano atingido (camada 5.20 #77).
+            return ResponseEntity.status(409)
+                .body(Map.of("error", "Conflict", "reason", "plan_limit_exceeded"));
         }
     }
 

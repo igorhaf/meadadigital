@@ -119,6 +119,12 @@ function TenantDashboard() {
           <Link href="/dashboard/calendar">
             <Button variant="outline">Calendário</Button>
           </Link>
+          <Link href="/dashboard/teams">
+            <Button variant="outline">Times</Button>
+          </Link>
+          <Link href="/dashboard/audit">
+            <Button variant="outline">Auditoria</Button>
+          </Link>
           <ThemeToggle />
           <SignOutButton />
         </div>
