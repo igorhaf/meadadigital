@@ -25,6 +25,10 @@ type FaqForm = z.infer<typeof faqSchema>
  *  - faq presente → modo EDIÇÃO (pré-popula, chama updateFaq pelo id; companyId não é
  *    necessário no UPDATE — o RLS já garante que a FAQ é da empresa do tenant).
  *
+ * `initialQuestion` (camada 5.18 #54) só vale no modo CRIAÇÃO (faq ausente): pré-popula o
+ * campo Pergunta com o texto de uma sugestão da IA. Ignorado na edição (o faq manda).
+ * Callers antigos não passam — backward compatible.
+ *
  * O reset() num useEffect sincroniza o form quando o dialog abre OU o registro muda —
  * sem isso, o RHF manteria valores stale entre aberturas (ex.: abrir editar B logo após
  * fechar editar A mostraria os campos de A).
@@ -34,11 +38,13 @@ export function CreateFaqDialog({
   onClose,
   companyId,
   faq,
+  initialQuestion,
 }: {
   open: boolean
   onClose: () => void
   companyId: string
   faq?: Faq
+  initialQuestion?: string
 }) {
   const queryClient = useQueryClient()
   const [serverError, setServerError] = useState<string | null>(null)
@@ -55,10 +61,15 @@ export function CreateFaqDialog({
   // limpa. Depende de open também para repreencher ao reabrir o mesmo registro.
   useEffect(() => {
     if (open) {
-      reset({ question: faq?.question ?? '', answer: faq?.answer ?? '' })
+      // Edição: faq manda. Criação: usa initialQuestion (sugestão da IA) se houver, senão
+      // limpa. answer começa vazio na criação (faq?.answer ?? '').
+      reset({
+        question: faq?.question ?? initialQuestion ?? '',
+        answer: faq?.answer ?? '',
+      })
       setServerError(null)
     }
-  }, [open, faq, reset])
+  }, [open, faq, initialQuestion, reset])
 
   const mutation = useMutation({
     mutationFn: (values: FaqForm) =>

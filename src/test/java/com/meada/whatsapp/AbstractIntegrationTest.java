@@ -85,7 +85,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/16_tags.sql",
         "db/migrations/17_conversations_scheduling_intent.sql",
         "db/migrations/18_tenant_invitations.sql",
-        "db/migrations/19_roles_and_availability.sql"
+        "db/migrations/19_roles_and_availability.sql",
+        "db/migrations/20_ia_intelligence.sql"
     };
 
     /**

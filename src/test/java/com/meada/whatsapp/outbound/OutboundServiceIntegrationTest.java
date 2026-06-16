@@ -1,10 +1,13 @@
 package com.meada.whatsapp.outbound;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.meada.whatsapp.AbstractIntegrationTest;
 import com.meada.whatsapp.ai.AiException;
+import com.meada.whatsapp.ai.AiInsights;
 import com.meada.whatsapp.ai.AiProvider;
 import com.meada.whatsapp.ai.AiResponse;
 import com.meada.whatsapp.ai.AiTransientException;
+import com.meada.whatsapp.ai.DetectedIntent;
 import com.meada.whatsapp.ai.Prompt;
 import com.meada.whatsapp.ai.SchedulingIntent;
 import org.junit.jupiter.api.BeforeEach;
@@ -314,6 +317,62 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
             "select scheduling_intent from conversations where id = ?", CONV)
             .get("scheduling_intent");
         assertThat(intentCol).isNull();
+    }
+
+    // ---- insights da camada 5.18 (cancelamento/reclamação/extracted_data) -----
+
+    private static final ObjectMapper INSIGHTS_MAPPER = new ObjectMapper();
+
+    @Test
+    @DisplayName("AiResponse com complaintIntent → persiste complaint_intent E força handoff (#52)")
+    void complaintIntent_persistsAndForcesHandoff() {
+        DetectedIntent complaint = new DetectedIntent(
+            Instant.parse("2026-06-15T12:00:00Z"), "atraso no atendimento",
+            "esperei uma hora e ninguém me atendeu");
+        AiInsights insights = new AiInsights(null, complaint, null, null, null);
+        // caminho feliz (caso 6): a IA respondeu needsHuman=false, mas a reclamação força handoff.
+        fakeAi.enqueue(new AiResponse("Sinto muito pelo ocorrido.", false, null, 10, 5, 100L, null, insights));
+        fakeEvolution.enqueue("key-complaint");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);   // o reply foi enviado normalmente
+        assertThat(fakeEvolution.calls()).isEqualTo(1);
+        assertThat(countOutbound(CONV)).isEqualTo(1);
+        // #52: reclamação SEMPRE vira atendimento humano, independente do needsHuman da IA.
+        assertThat(handledByOf(CONV)).isEqualTo("human");
+
+        Map<String, Object> row = jdbcTemplate.queryForMap(
+            "select complaint_intent->>'summary' as summary, "
+                + "complaint_intent->>'raw_excerpt' as raw_excerpt, "
+                + "complaint_intent->>'detected_at' as detected_at "
+                + "from conversations where id = ?", CONV);
+        assertThat(row.get("summary")).isEqualTo("atraso no atendimento");
+        assertThat(row.get("raw_excerpt")).isEqualTo("esperei uma hora e ninguém me atendeu");
+        assertThat((String) row.get("detected_at")).startsWith("2026-06-15T12:00:00");
+    }
+
+    @Test
+    @DisplayName("AiResponse com extractedData → persiste em conversations.extracted_data")
+    void extractedData_persistsToConversation() {
+        com.fasterxml.jackson.databind.node.ObjectNode data = INSIGHTS_MAPPER.createObjectNode();
+        data.put("nome", "Ana");
+        data.put("email", "ana@ex.com");
+        AiInsights insights = new AiInsights(null, null, data, null, null);
+        fakeAi.enqueue(new AiResponse("Anotado, obrigado!", false, null, 10, 5, 100L, null, insights));
+        fakeEvolution.enqueue("key-extracted");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);
+        assertThat(handledByOf(CONV)).isEqualTo("ai");   // dados coletados NÃO forçam handoff
+        assertThat(countOutbound(CONV)).isEqualTo(1);
+
+        Map<String, Object> row = jdbcTemplate.queryForMap(
+            "select extracted_data->>'nome' as nome, extracted_data->>'email' as email "
+                + "from conversations where id = ?", CONV);
+        assertThat(row.get("nome")).isEqualTo("Ana");
+        assertThat(row.get("email")).isEqualTo("ana@ex.com");
     }
 
     // ---- gate de horário comercial (camada 5.4) -----------------------------

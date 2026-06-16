@@ -145,4 +145,82 @@ public class ContactRepository {
             .stream()
             .findFirst();
     }
+
+    /**
+     * Grava a memória de longo prazo do contato em {@code contact_memory} (camada 5.18 #55).
+     * Objeto livre (preferências, fatos persistentes). {@code ?::jsonb} casta a String JSON
+     * serializada no Java. updated_at = now() por coerência. Chamado pelo OutboundService só
+     * quando o AiResponse traz memory_update (a maioria das mensagens não traz).
+     *
+     * @param contactId  contato a atualizar (resolvido via ConversationRepository)
+     * @param memoryJsonb JSON da memória já serializado (não-null; o caller garante)
+     */
+    public void updateMemory(UUID contactId, String memoryJsonb) {
+        Objects.requireNonNull(contactId, "contactId must not be null");
+        Objects.requireNonNull(memoryJsonb, "memoryJsonb must not be null");
+        jdbcTemplate.update(
+            "update contacts set contact_memory = ?::jsonb, updated_at = now() where id = ?",
+            memoryJsonb, contactId);
+    }
+
+    /**
+     * Grava o tom detectado do contato em {@code detected_tone} (camada 5.18 #58):
+     * formal|informal|neutro|irritado (CHECK no schema). Chamado pelo OutboundService só
+     * quando o AiResponse traz detected_tone (tipicamente só na 1ª interação).
+     *
+     * @param contactId contato a atualizar
+     * @param tone      tom detectado (não-null; o caller garante e o CHECK do banco revalida)
+     */
+    public void updateDetectedTone(UUID contactId, String tone) {
+        Objects.requireNonNull(contactId, "contactId must not be null");
+        Objects.requireNonNull(tone, "tone must not be null");
+        jdbcTemplate.update(
+            "update contacts set detected_tone = ?, updated_at = now() where id = ?",
+            tone, contactId);
+    }
+
+    // contact_memory / detected_tone do contato dono de uma conversa (JOIN contacts ←
+    // conversations) — lidos pelo PromptBuilder para injetar a memória e ajustar o tom.
+    // contact_memory::text porque o PromptBuilder consome o jsonb como string crua.
+    private static final String FIND_MEMORY_BY_CONVERSATION =
+        "select c.contact_memory::text as contact_memory from contacts c "
+            + "join conversations cv on cv.contact_id = c.id "
+            + "where cv.id = ?";
+
+    private static final String FIND_TONE_BY_CONVERSATION =
+        "select c.detected_tone from contacts c "
+            + "join conversations cv on cv.contact_id = c.id "
+            + "where cv.id = ?";
+
+    /**
+     * Memória de longo prazo (jsonb como texto) do contato dono de uma conversa — o
+     * PromptBuilder injeta no contexto da IA. {@link Optional#empty()} quando a conversa/
+     * contato não existe; o valor pode ser null (coluna vazia) quando ainda não há memória.
+     *
+     * @return o contact_memory como String JSON, ou empty se não há linha.
+     */
+    public Optional<String> findMemoryByConversation(UUID conversationId) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        return jdbcTemplate.query(FIND_MEMORY_BY_CONVERSATION,
+                (rs, rowNum) -> rs.getString("contact_memory"), conversationId)
+            .stream()
+            .filter(Objects::nonNull)   // Stream.findFirst NPEia em elemento null (coluna vazia)
+            .findFirst();
+    }
+
+    /**
+     * Tom detectado do contato dono de uma conversa — o PromptBuilder usa para ajustar o
+     * estilo da resposta. {@link Optional#empty()} quando não há linha; o valor pode ser null
+     * quando o tom ainda não foi classificado.
+     *
+     * @return o detected_tone, ou empty se não há linha.
+     */
+    public Optional<String> findDetectedToneByConversation(UUID conversationId) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        return jdbcTemplate.query(FIND_TONE_BY_CONVERSATION,
+                (rs, rowNum) -> rs.getString("detected_tone"), conversationId)
+            .stream()
+            .filter(Objects::nonNull)   // Stream.findFirst NPEia em elemento null (coluna vazia)
+            .findFirst();
+    }
 }

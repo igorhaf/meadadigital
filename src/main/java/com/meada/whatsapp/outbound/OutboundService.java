@@ -3,9 +3,11 @@ package com.meada.whatsapp.outbound;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.meada.whatsapp.ai.AiException;
+import com.meada.whatsapp.ai.AiInsights;
 import com.meada.whatsapp.ai.AiProvider;
 import com.meada.whatsapp.ai.AiTransientException;
 import com.meada.whatsapp.ai.AiResponse;
+import com.meada.whatsapp.ai.DetectedIntent;
 import com.meada.whatsapp.ai.Prompt;
 import com.meada.whatsapp.ai.PromptBuilder;
 import com.meada.whatsapp.ai.SchedulingIntent;
@@ -172,9 +174,10 @@ public class OutboundService {
 
         if (aiResponse.needsHuman()) {
             if (hasReply) {
-                // caso 1: persiste a intent (#29) ANTES de enviar, manda a resposta-ponte,
-                // grava, depois flipa. Casos 2/3 (sem reply efetivo) NÃO persistem intent.
+                // caso 1: persiste a intent (#29) e os insights (5.18) ANTES de enviar, manda a
+                // resposta-ponte, grava, depois flipa. Casos 2/3 (sem reply efetivo) NÃO persistem.
                 persistSchedulingIntent(conversationId, aiResponse);
+                persistInsights(conversationId, aiResponse);
                 Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, aiResponse);
                 if (sendFailure.isPresent()) {
                     return sendFailure.get();   // falha de envio domina (casos 7/8/9) — já logado lá
@@ -195,8 +198,10 @@ public class OutboundService {
             return logOutcome(OutboundOutcome.FLIPPED_AI_BAD_REPLY, event, aiResponse, null);
         }
 
-        // caso 6: caminho feliz — persiste a intent (#29) ANTES de enviar, depois envia e grava.
+        // caso 6: caminho feliz — persiste a intent (#29) e os insights (5.18) ANTES de enviar,
+        // depois envia e grava.
         persistSchedulingIntent(conversationId, aiResponse);
+        persistInsights(conversationId, aiResponse);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, aiResponse);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -325,6 +330,85 @@ public class OutboundService {
             log.warn("outbound: failed to persist scheduling_intent for conversation {} ({})",
                 conversationId, e.getMessage());
         }
+    }
+
+    /**
+     * Persiste os insights OPCIONAIS da camada 5.18 (cancelamento #51, reclamação #52,
+     * extracted_data #53, memory_update #55, detected_tone #58). No-op quando nada foi
+     * detectado ({@code insights.hasAny() == false}) — caso da maioria das mensagens.
+     *
+     * <p>Cada sub-objeto presente é persistido na coluna correspondente. As detecções por
+     * conversa (cancelamento, reclamação, extracted_data) vão em conversations; as por contato
+     * (memory_update, detected_tone) precisam do contact_id, resolvido via
+     * {@link ConversationRepository#findContactIdByConversation}. Os DetectedIntent viram um
+     * ObjectNode explícito snake_case (detected_at, summary, raw_excerpt), como em
+     * {@link #persistSchedulingIntent}; extracted_data e memory_update (JsonNode livre) são
+     * escritos direto.
+     *
+     * <p>#52: quando há complaint_intent, FORÇA o handoff (handled_by='human') após persistir —
+     * reclamação sempre vira atendimento humano, independentemente do needsHuman da IA.
+     *
+     * <p>Falha de persistência NÃO derruba o atendimento: logamos warn e seguimos (a resposta
+     * ao cliente é mais importante que a marcação interna), igual ao persistSchedulingIntent.
+     */
+    private void persistInsights(UUID conversationId, AiResponse aiResponse) {
+        AiInsights insights = aiResponse.insights();
+        if (insights == null || !insights.hasAny()) {
+            return;
+        }
+        try {
+            if (insights.cancellationIntent() != null) {
+                conversationRepository.updateCancellationIntent(
+                    conversationId, detectedIntentJson(insights.cancellationIntent()));
+            }
+            if (insights.complaintIntent() != null) {
+                conversationRepository.updateComplaintIntent(
+                    conversationId, detectedIntentJson(insights.complaintIntent()));
+            }
+            if (insights.extractedData() != null) {
+                conversationRepository.updateExtractedData(
+                    conversationId, objectMapper.writeValueAsString(insights.extractedData()));
+            }
+
+            // Detecções por-contato (memory_update #55, detected_tone #58): precisam do contact_id.
+            if (insights.memoryUpdate() != null || insights.detectedTone() != null) {
+                Optional<UUID> contactId =
+                    conversationRepository.findContactIdByConversation(conversationId);
+                if (contactId.isPresent()) {
+                    if (insights.memoryUpdate() != null) {
+                        contactRepository.updateMemory(
+                            contactId.get(), objectMapper.writeValueAsString(insights.memoryUpdate()));
+                    }
+                    if (insights.detectedTone() != null) {
+                        contactRepository.updateDetectedTone(contactId.get(), insights.detectedTone());
+                    }
+                } else {
+                    log.warn("outbound: contact not found for conversation {} — memory/tone skipped",
+                        conversationId);
+                }
+            }
+
+            // #52: reclamação detectada SEMPRE força handoff (após persistir a marcação).
+            if (insights.complaintIntent() != null) {
+                conversationRepository.markHandledByHuman(conversationId);
+            }
+        } catch (Exception e) {
+            log.warn("outbound: failed to persist insights for conversation {} ({})",
+                conversationId, e.getMessage());
+        }
+    }
+
+    /**
+     * Serializa um {@link DetectedIntent} para JSON snake_case (detected_at, summary,
+     * raw_excerpt) — mesma técnica do persistSchedulingIntent: ObjectNode explícito para não
+     * acoplar o nome dos campos Java à forma do jsonb. detected_at em ISO-8601.
+     */
+    private String detectedIntentJson(DetectedIntent intent) throws Exception {
+        ObjectNode node = objectMapper.createObjectNode();
+        node.put("detected_at", intent.detectedAt().toString());
+        node.put("summary", intent.summary());        // put(String, null) → JSON null
+        node.put("raw_excerpt", intent.rawExcerpt());
+        return objectMapper.writeValueAsString(node);
     }
 
     /**

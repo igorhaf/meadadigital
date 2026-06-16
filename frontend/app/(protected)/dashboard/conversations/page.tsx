@@ -102,12 +102,25 @@ export default function ConversationsPage() {
       header: 'Tags',
       render: (c) => {
         const tags: Tag[] = tagsByConv?.[c.id] ?? []
-        if (tags.length === 0 && !c.markedUnread && !c.schedulingIntent) {
+        if (
+          tags.length === 0 &&
+          !c.markedUnread &&
+          !c.schedulingIntent &&
+          !c.complaintIntent
+        ) {
           return <span className="text-muted-foreground">—</span>
         }
         return (
           <div className="flex flex-wrap items-center gap-1">
             {c.markedUnread && <Badge variant="info">não lida</Badge>}
+            {c.complaintIntent && (
+              <span
+                title={c.complaintIntent.rawExcerpt}
+                className="inline-flex items-center rounded bg-red-100 px-2 py-0.5 text-xs font-medium text-red-700"
+              >
+                ⚠️ reclamação
+              </span>
+            )}
             {c.schedulingIntent && (
               <span
                 title={c.schedulingIntent.rawExcerpt}

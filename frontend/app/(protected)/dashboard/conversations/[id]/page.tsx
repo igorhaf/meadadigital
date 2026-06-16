@@ -277,6 +277,57 @@ export default function ConversationDetailPage({
             </div>
           )}
 
+          {/* Reclamação detectada (#52): box vermelho. A IA já forçou o handoff para humano
+              quando detectou — aqui é só a sinalização visual ao atendente. */}
+          {conversation.complaintIntent && (
+            <div className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4">
+              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-red-700">
+                ⚠️ Reclamação detectada
+              </h2>
+              <p className="text-sm">{conversation.complaintIntent.summary}</p>
+              <p className="mt-2 rounded bg-white/60 px-3 py-2 text-sm italic text-muted-foreground">
+                “{conversation.complaintIntent.rawExcerpt}”
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Detectado em{' '}
+                {new Date(conversation.complaintIntent.detectedAt).toLocaleString('pt-BR')}
+              </p>
+            </div>
+          )}
+
+          {/* Cancelamento detectado (#51): box âmbar. */}
+          {conversation.cancellationIntent && (
+            <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
+              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700">
+                🚫 Cancelamento
+              </h2>
+              <p className="text-sm">{conversation.cancellationIntent.summary}</p>
+              <p className="mt-2 rounded bg-white/60 px-3 py-2 text-sm italic text-muted-foreground">
+                “{conversation.cancellationIntent.rawExcerpt}”
+              </p>
+              <p className="mt-2 text-xs text-muted-foreground">
+                Detectado em{' '}
+                {new Date(conversation.cancellationIntent.detectedAt).toLocaleString('pt-BR')}
+              </p>
+            </div>
+          )}
+
+          {/* Dados coletados (#53): pares chave/valor do extracted_data, quando não-vazio. */}
+          {conversation.extractedData &&
+            Object.keys(conversation.extractedData).length > 0 && (
+              <div className="mb-4 rounded-xl border border-border p-4">
+                <h2 className="mb-2 text-sm font-medium">Dados coletados</h2>
+                <dl className="space-y-1 text-sm">
+                  {Object.entries(conversation.extractedData).map(([key, value]) => (
+                    <div key={key} className="flex gap-2">
+                      <dt className="text-muted-foreground">{key}:</dt>
+                      <dd>{String(value)}</dd>
+                    </div>
+                  ))}
+                </dl>
+              </div>
+            )}
+
           {/* Tags (#22): chips aplicados (com × para remover) + autocomplete para adicionar
               tag EXISTENTE (criar tag nova é só em /dashboard/tags). */}
           <div className="mb-4 rounded-xl border border-border p-4">

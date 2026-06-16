@@ -84,13 +84,13 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 ## Maratona pós-MVP (features #51+) — camada 5.17 em diante
 
 ### IA mais inteligente
-- [ ] 51. Intent de cancelamento
-- [ ] 52. Intent de reclamação (força handoff)
-- [ ] 53. Coleta de dados estruturados (extracted_data jsonb)
-- [ ] 54. Sugestões de FAQ
-- [ ] 55. Memória de longo prazo do contato (contact_memory jsonb)
+- [x] 51. Intent de cancelamento
+- [x] 52. Intent de reclamação (força handoff)
+- [x] 53. Coleta de dados estruturados (extracted_data jsonb)
+- [x] 54. Sugestões de FAQ
+- [x] 55. Memória de longo prazo do contato (contact_memory jsonb)
 - [ ] 57. Modo treinamento (melhorar resposta da IA)
-- [ ] 58. Tom dinâmico por perfil do contato
+- [x] 58. Tom dinâmico por perfil do contato
 
 ### Agendamento real
 - [ ] 59. Calendário visual

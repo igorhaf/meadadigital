@@ -175,4 +175,62 @@ class GeminiProviderTest {
         assertThat(r.reply()).isEqualTo("Sim, atendemos aos sábados.");
         assertThat(r.schedulingIntent()).isNull();
     }
+
+    @Test
+    @DisplayName("200 com insights (5.18): parseia cancellation/complaint/tone/extracted_data")
+    void responseWithInsights_parsesAllFields() {
+        server.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(geminiBody(
+                "{\"reply\":\"Entendo, vou verificar.\",\"needs_human\":false,\"reason\":\"\","
+                    + "\"cancellation_intent\":{\"summary\":\"quer cancelar o corte de amanhã\","
+                    + "\"raw_excerpt\":\"preciso cancelar meu horário de amanhã\"},"
+                    + "\"complaint_intent\":{\"summary\":\"atraso no atendimento\","
+                    + "\"raw_excerpt\":\"esperei uma hora e ninguém me atendeu\"},"
+                    + "\"detected_tone\":\"irritado\","
+                    + "\"extracted_data\":{\"nome\":\"Ana\",\"email\":\"ana@ex.com\"}}", 140, 25)));
+
+        AiResponse r = provider.generate(prompt);
+
+        assertThat(r.insights().hasAny()).isTrue();
+        // cancellation_intent: summary/raw_excerpt do modelo, detected_at do servidor.
+        assertThat(r.insights().cancellationIntent()).isNotNull();
+        assertThat(r.insights().cancellationIntent().summary())
+            .isEqualTo("quer cancelar o corte de amanhã");
+        assertThat(r.insights().cancellationIntent().rawExcerpt())
+            .isEqualTo("preciso cancelar meu horário de amanhã");
+        assertThat(r.insights().cancellationIntent().detectedAt()).isNotNull();
+        // complaint_intent
+        assertThat(r.insights().complaintIntent()).isNotNull();
+        assertThat(r.insights().complaintIntent().summary()).isEqualTo("atraso no atendimento");
+        assertThat(r.insights().complaintIntent().rawExcerpt())
+            .isEqualTo("esperei uma hora e ninguém me atendeu");
+        // detected_tone (enum)
+        assertThat(r.insights().detectedTone()).isEqualTo("irritado");
+        // extracted_data (objeto livre)
+        assertThat(r.insights().extractedData()).isNotNull();
+        assertThat(r.insights().extractedData().path("nome").asText()).isEqualTo("Ana");
+        assertThat(r.insights().extractedData().path("email").asText()).isEqualTo("ana@ex.com");
+    }
+
+    @Test
+    @DisplayName("200 sem insights: insights().hasAny() = false (maioria das respostas)")
+    void responseWithoutInsights_hasAnyFalse() {
+        server.enqueue(new MockResponse()
+            .setResponseCode(200)
+            .setHeader("Content-Type", "application/json")
+            .setBody(geminiBody(
+                "{\"reply\":\"Claro, posso ajudar.\",\"needs_human\":false,\"reason\":\"\"}", 70, 9)));
+
+        AiResponse r = provider.generate(prompt);
+
+        assertThat(r.reply()).isEqualTo("Claro, posso ajudar.");
+        assertThat(r.insights().hasAny()).isFalse();
+        assertThat(r.insights().cancellationIntent()).isNull();
+        assertThat(r.insights().complaintIntent()).isNull();
+        assertThat(r.insights().extractedData()).isNull();
+        assertThat(r.insights().memoryUpdate()).isNull();
+        assertThat(r.insights().detectedTone()).isNull();
+    }
 }

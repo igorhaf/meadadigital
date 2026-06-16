@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { HelpCircle, Pencil } from 'lucide-react'
+import { HelpCircle, Lightbulb, Pencil, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -13,6 +13,7 @@ import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getMe } from '@/lib/api/me'
+import { getFaqSuggestions } from '@/lib/supabase/faq-suggestions'
 import { getMyFaqs, setFaqActive, type Faq } from '@/lib/supabase/faqs'
 import { CreateFaqDialog } from './create-faq-dialog'
 
@@ -42,6 +43,8 @@ export default function FaqsPage() {
   const queryClient = useQueryClient()
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editingFaq, setEditingFaq] = useState<Faq | undefined>(undefined)
+  // Pergunta pré-preenchida ao abrir a criação a partir de uma sugestão da IA (5.18 #54).
+  const [initialQuestion, setInitialQuestion] = useState<string | undefined>(undefined)
 
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe })
   const isTenant = me?.role === 'tenant_admin'
@@ -67,6 +70,21 @@ export default function FaqsPage() {
     queryFn: getMyFaqs,
     enabled: isTenant, // só busca quando confirmado tenant (evita 0 rows para super-admin)
   })
+
+  // Sugestões da IA (5.18 #54): perguntas recentes de conversas que caíram para humano.
+  // Mesmo gate de tenant. Falha silenciosa (a seção apenas não aparece) — é auxiliar.
+  const { data: suggestions } = useQuery({
+    queryKey: ['faq-suggestions'],
+    queryFn: getFaqSuggestions,
+    enabled: isTenant,
+  })
+
+  // Abre a criação pré-preenchida com a pergunta da sugestão.
+  function openCreateFromSuggestion(content: string) {
+    setEditingFaq(undefined)
+    setInitialQuestion(content)
+    setDialogOpen(true)
+  }
 
   // Estado vazio elevado (5.8): lista carregada, sem erro, zero registros.
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
@@ -98,6 +116,7 @@ export default function FaqsPage() {
           <Button
             onClick={() => {
               setEditingFaq(undefined)
+              setInitialQuestion(undefined)
               setDialogOpen(true)
             }}
             disabled={!me?.companyId}
@@ -111,6 +130,39 @@ export default function FaqsPage() {
           <SignOutButton />
         </div>
       </div>
+      {(suggestions?.length ?? 0) > 0 && (
+        <div className="mb-6 rounded-lg border border-border bg-card p-4">
+          <div className="mb-3 flex items-center gap-2">
+            <Lightbulb className="size-4 text-muted-foreground" />
+            <h2 className="text-sm font-semibold">Sugestões da IA</h2>
+          </div>
+          <p className="mb-3 text-xs text-muted-foreground">
+            Perguntas recentes de clientes em conversas que passaram para atendimento humano —
+            candidatas a virar FAQ.
+          </p>
+          <ul className="space-y-2">
+            {suggestions!.map((s) => (
+              <li
+                key={s.conversationId + s.lastAt}
+                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
+              >
+                <span className="min-w-0 flex-1 truncate text-sm" title={s.content}>
+                  {s.content}
+                </span>
+                <Button
+                  variant="outline"
+                  className="h-7 shrink-0 px-2 text-xs"
+                  disabled={!me?.companyId}
+                  onClick={() => openCreateFromSuggestion(s.content)}
+                >
+                  <Plus className="size-3" />
+                  Criar FAQ
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       {isEmpty ? (
         <EmptyState
           icon={<HelpCircle />}
@@ -121,6 +173,7 @@ export default function FaqsPage() {
               <Button
                 onClick={() => {
                   setEditingFaq(undefined)
+                  setInitialQuestion(undefined)
                   setDialogOpen(true)
                 }}
               >
@@ -142,6 +195,7 @@ export default function FaqsPage() {
                 className="h-7 px-2 text-xs"
                 onClick={() => {
                   setEditingFaq(f)
+                  setInitialQuestion(undefined)
                   setDialogOpen(true)
                 }}
               >
@@ -166,9 +220,11 @@ export default function FaqsPage() {
           onClose={() => {
             setDialogOpen(false)
             setEditingFaq(undefined)
+            setInitialQuestion(undefined)
           }}
           companyId={me.companyId}
           faq={editingFaq}
+          initialQuestion={initialQuestion}
         />
       )}
     </div>

@@ -180,4 +180,68 @@ public class ConversationRepository {
             "update conversations set scheduling_intent = ?::jsonb, updated_at = now() where id = ?",
             intentJsonb, conversationId);
     }
+
+    /**
+     * Grava a intenção de cancelamento detectada pela IA em {@code cancellation_intent}
+     * (camada 5.18 #51). Mesmo contrato do {@link #updateSchedulingIntent}: chamado só quando
+     * o AiResponse traz a detecção (a maioria das mensagens NÃO detecta — evita UPDATE inútil).
+     *
+     * @param conversationId conversa a marcar
+     * @param intentJsonb    JSON da intent já serializado (não-null; o caller garante)
+     */
+    public void updateCancellationIntent(UUID conversationId, String intentJsonb) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        Objects.requireNonNull(intentJsonb, "intentJsonb must not be null");
+        jdbcTemplate.update(
+            "update conversations set cancellation_intent = ?::jsonb, updated_at = now() where id = ?",
+            intentJsonb, conversationId);
+    }
+
+    /**
+     * Grava a intenção de reclamação detectada pela IA em {@code complaint_intent}
+     * (camada 5.18 #52). Quando presente, o OutboundService FORÇA handoff (handled_by='human')
+     * logo após este UPDATE. Mesmo contrato dos demais updaters de intent.
+     *
+     * @param conversationId conversa a marcar
+     * @param intentJsonb    JSON da intent já serializado (não-null; o caller garante)
+     */
+    public void updateComplaintIntent(UUID conversationId, String intentJsonb) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        Objects.requireNonNull(intentJsonb, "intentJsonb must not be null");
+        jdbcTemplate.update(
+            "update conversations set complaint_intent = ?::jsonb, updated_at = now() where id = ?",
+            intentJsonb, conversationId);
+    }
+
+    /**
+     * Grava os dados estruturados coletados pela IA em {@code extracted_data}
+     * (camada 5.18 #53). Objeto livre (nome/email/cpf/etc.). Mesmo contrato dos demais
+     * updaters de intent: chamado só quando o AiResponse traz a detecção.
+     *
+     * @param conversationId conversa a marcar
+     * @param dataJsonb      JSON dos dados já serializado (não-null; o caller garante)
+     */
+    public void updateExtractedData(UUID conversationId, String dataJsonb) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        Objects.requireNonNull(dataJsonb, "dataJsonb must not be null");
+        jdbcTemplate.update(
+            "update conversations set extracted_data = ?::jsonb, updated_at = now() where id = ?",
+            dataJsonb, conversationId);
+    }
+
+    /**
+     * Resolve o {@code contact_id} dono de uma conversa — usado pelo OutboundService para
+     * persistir as detecções por-contato (contact_memory #55, detected_tone #58) que vivem
+     * em contacts, não em conversations.
+     *
+     * @return o id do contato, ou {@link Optional#empty()} se a conversa não existe.
+     */
+    public Optional<UUID> findContactIdByConversation(UUID conversationId) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        return jdbcTemplate.query(
+                "select contact_id from conversations where id = ?",
+                (rs, rowNum) -> (UUID) rs.getObject("contact_id"), conversationId)
+            .stream()
+            .findFirst();
+    }
 }

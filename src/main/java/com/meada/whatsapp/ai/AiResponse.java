@@ -32,16 +32,27 @@ public record AiResponse(
     int tokensIn,
     int tokensOut,
     long latencyMs,
-    SchedulingIntent schedulingIntent) {
+    SchedulingIntent schedulingIntent,
+    AiInsights insights) {
 
     /**
-     * Construtor de conveniência sem intent (schedulingIntent=null) — preserva a aridade
-     * histórica de 6 args para os call-sites que nunca detectam agendamento: o
-     * AiResponse sintético de fora-de-horário (OutboundService) e respostas de teste.
-     * O GeminiProvider usa o construtor canônico de 7 args quando há detecção.
+     * Construtor de conveniência sem intent nem insights — preserva a aridade histórica de
+     * 6 args (synthetic outside-hours, testes). insights = AiInsights.empty() (nunca null,
+     * para o OutboundService chamar hasAny() sem NPE).
      */
     public AiResponse(String reply, boolean needsHuman, String reason,
                       int tokensIn, int tokensOut, long latencyMs) {
-        this(reply, needsHuman, reason, tokensIn, tokensOut, latencyMs, null);
+        this(reply, needsHuman, reason, tokensIn, tokensOut, latencyMs, null, AiInsights.empty());
+    }
+
+    /**
+     * Construtor de 7 args (sem insights) — preserva os call-sites da 5.15 que passam só
+     * schedulingIntent. insights = empty.
+     */
+    public AiResponse(String reply, boolean needsHuman, String reason,
+                      int tokensIn, int tokensOut, long latencyMs,
+                      SchedulingIntent schedulingIntent) {
+        this(reply, needsHuman, reason, tokensIn, tokensOut, latencyMs, schedulingIntent,
+            AiInsights.empty());
     }
 }

@@ -128,12 +128,31 @@ public class GeminiProvider implements AiProvider {
     private Map<String, Object> responseSchema() {
         return Map.of(
             "type", "OBJECT",
-            "properties", Map.of(
+            "properties", new java.util.LinkedHashMap<>(Map.of(
                 "reply", Map.of("type", "STRING"),
                 "needs_human", Map.of("type", "BOOLEAN"),
                 "reason", Map.of("type", "STRING"),
-                "scheduling_intent", schedulingIntentSchema()),
+                "scheduling_intent", schedulingIntentSchema(),
+                "cancellation_intent", detectedIntentSchema(),
+                "complaint_intent", detectedIntentSchema(),
+                "extracted_data", Map.of("type", "OBJECT", "nullable", true),
+                "memory_update", Map.of("type", "OBJECT", "nullable", true),
+                "detected_tone", Map.of("type", "STRING",
+                    "enum", List.of("formal", "informal", "neutro", "irritado")))),
             "required", List.of("reply", "needs_human"));
+    }
+
+    /**
+     * Sub-objeto OPCIONAL de intent genérico (cancelamento #51, reclamação #52) — camada
+     * 5.18. summary + raw_excerpt; detected_at é fato do servidor (não no schema).
+     */
+    private Map<String, Object> detectedIntentSchema() {
+        return Map.of(
+            "type", "OBJECT",
+            "properties", Map.of(
+                "summary", Map.of("type", "STRING"),
+                "raw_excerpt", Map.of("type", "STRING")),
+            "required", List.of("summary", "raw_excerpt"));
     }
 
     /**
@@ -180,9 +199,10 @@ public class GeminiProvider implements AiProvider {
             int tokensOut = usage.path("candidatesTokenCount").asInt(0);
 
             SchedulingIntent schedulingIntent = parseSchedulingIntent(structured);
+            AiInsights insights = parseInsights(structured);
 
             return new AiResponse(reply, needsHuman, reason, tokensIn, tokensOut, latencyMs,
-                schedulingIntent);
+                schedulingIntent, insights);
         } catch (AiException e) {
             throw e;
         } catch (Exception e) {
@@ -208,5 +228,39 @@ public class GeminiProvider implements AiProvider {
         String urgency = intent.path("urgency").asText(null);
         String rawExcerpt = intent.path("raw_excerpt").asText(null);
         return new SchedulingIntent(Instant.now(), serviceHint, whenHint, urgency, rawExcerpt);
+    }
+
+    /**
+     * Extrai os sub-objetos OPCIONAIS da camada 5.18 (cancelamento #51, reclamação #52,
+     * extracted_data #53, memory_update #55, detected_tone #58). Cada um null quando
+     * ausente. Retorna AiInsights.empty() se nada veio (nunca null).
+     */
+    private AiInsights parseInsights(JsonNode structured) {
+        DetectedIntent cancellation = parseDetectedIntent(structured.path("cancellation_intent"));
+        DetectedIntent complaint = parseDetectedIntent(structured.path("complaint_intent"));
+        JsonNode extracted = optionalObject(structured.path("extracted_data"));
+        JsonNode memory = optionalObject(structured.path("memory_update"));
+        String tone = structured.path("detected_tone").asText(null);
+        if (tone != null && tone.isBlank()) {
+            tone = null;
+        }
+        return new AiInsights(cancellation, complaint, extracted, memory, tone);
+    }
+
+    /** Sub-objeto de DetectedIntent (cancelamento/reclamação), ou null se ausente. */
+    private DetectedIntent parseDetectedIntent(JsonNode node) {
+        if (node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        return new DetectedIntent(
+            Instant.now(), node.path("summary").asText(null), node.path("raw_excerpt").asText(null));
+    }
+
+    /** Retorna o JsonNode se for um objeto não-vazio; null caso contrário. */
+    private JsonNode optionalObject(JsonNode node) {
+        if (node.isMissingNode() || node.isNull() || !node.isObject() || node.isEmpty()) {
+            return null;
+        }
+        return node;
     }
 }

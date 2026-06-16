@@ -19,19 +19,35 @@ export type SchedulingIntent = {
   rawExcerpt: string
 }
 
+/**
+ * Intent genérico detectado pela IA (camada 5.18) — shape dos jsonb
+ * conversations.cancellation_intent (#51) e conversations.complaint_intent (#52). null
+ * quando não detectado. detectedAt é ISO string (fato do servidor); summary é o resumo
+ * curto; rawExcerpt é o trecho que disparou a detecção.
+ */
+export type DetectedIntent = {
+  detectedAt: string
+  summary: string
+  rawExcerpt: string
+}
+
 export type ConversationWithContact = {
   id: string
   status: string
   handledBy: string
   markedUnread: boolean
   schedulingIntent: SchedulingIntent | null
+  cancellationIntent: DetectedIntent | null
+  complaintIntent: DetectedIntent | null
+  extractedData: Record<string, unknown> | null
   lastMessageAt: string | null
   contactName: string | null
   contactPhone: string
 }
 
 const SELECT_WITH_CONTACT =
-  'id, status, handled_by, marked_unread, scheduling_intent, last_message_at, '
+  'id, status, handled_by, marked_unread, scheduling_intent, cancellation_intent, '
+  + 'complaint_intent, extracted_data, last_message_at, '
   + 'contact:contacts(name, phone_number)'
 
 /** jsonb cru do scheduling_intent (snake_case, como o PostgREST devolve). */
@@ -57,6 +73,25 @@ function toSchedulingIntent(raw: SchedulingIntentRow | null): SchedulingIntent |
   }
 }
 
+/** jsonb cru do cancellation_intent / complaint_intent (snake_case, como o PostgREST devolve). */
+type DetectedIntentRow = {
+  detected_at: string
+  summary: string
+  raw_excerpt: string
+}
+
+/** Mapeia o jsonb cru (snake_case) para DetectedIntent (camelCase). null → null. */
+function toDetectedIntent(raw: DetectedIntentRow | null): DetectedIntent | null {
+  if (!raw) {
+    return null
+  }
+  return {
+    detectedAt: raw.detected_at,
+    summary: raw.summary,
+    rawExcerpt: raw.raw_excerpt,
+  }
+}
+
 /** Linha crua de conversations vinda do PostgREST (snake_case + join possivelmente array). */
 type ConversationRow = {
   id: string
@@ -64,6 +99,9 @@ type ConversationRow = {
   handled_by: string
   marked_unread: boolean
   scheduling_intent: SchedulingIntentRow | null
+  cancellation_intent: DetectedIntentRow | null
+  complaint_intent: DetectedIntentRow | null
+  extracted_data: Record<string, unknown> | null
   last_message_at: string | null
   contact:
     | { name: string | null; phone_number: string }
@@ -86,6 +124,9 @@ function toConversation(raw: unknown): ConversationWithContact {
     handledBy: row.handled_by,
     markedUnread: row.marked_unread,
     schedulingIntent: toSchedulingIntent(row.scheduling_intent),
+    cancellationIntent: toDetectedIntent(row.cancellation_intent),
+    complaintIntent: toDetectedIntent(row.complaint_intent),
+    extractedData: row.extracted_data ?? null,
     lastMessageAt: row.last_message_at,
     contactName: contact?.name ?? null,
     contactPhone: contact?.phone_number ?? '',
