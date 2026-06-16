@@ -1,0 +1,15 @@
+# Build do backend (contexto = raiz). Exclui o que não precisa ir pro builder/dev.
+target/
+.git/
+.idea/
+*.iml
+# o frontend tem seu próprio build/contexto — não vai no contexto do backend.
+frontend/node_modules/
+frontend/.next/
+# segredos e docs locais nunca entram na imagem.
+.env
+.env.*
+CONTEXT.md
+# o sidecar tem build próprio.
+docker/embedding-sidecar/__pycache__/
+evolution-local/

@@ -140,6 +140,27 @@ paralelizar DENTRO da própria rodada, não de abrir sessões extras.
   `POST {SUPABASE_URL}/auth/v1/token?grant_type=password` → token ES256 → bater no
   backend ou no PostgREST (`/rest/v1/...`).
 
+## DevX local (Docker — fase 0.5)
+
+O dev local roda em **docker-compose** (a porta 80 era interceptada pelo Apache → 403 em
+`*.meadadigital.local`). Tudo em container **exceto o banco**, que continua no **Supabase
+remoto** (paridade com prod, tenants preservados).
+
+- **Subir:** `./scripts/meada-up.sh` — para o Apache (temporário, sem disable), `docker compose
+  up -d --build`, espera o backend. **Parar:** `./scripts/meada-down.sh`.
+- **Containers:** `backend` (Spring, `mvn spring-boot:run`, hot-reload via volume em `src/`),
+  `frontend` (Next `npm run dev`, hot-reload via volume), `embeddings` (sidecar Python 7080),
+  `caddy` (proxy reverso na porta 80, vhosts pros 5 subdomínios + `api.meadadigital.local`).
+- **URLs sem porta:** `http://processo.meadadigital.local` etc. (ver
+  `docs/MULTI_PROFILE_DEV.md` p/ `/etc/hosts`).
+- **Rede:** dentro do compose o backend fala com o sidecar por `embeddings:7080` e o browser
+  chama a API por `api.meadadigital.local` — ambos via override de `environment` no compose
+  (o `.env` NÃO é alterado). CORS inclui os subdomínios.
+- **Testes continuam no HOST** (`mvn -B test`): exigem Supabase real + Testcontainers (Docker),
+  fora do container do backend. É o gate de qualidade pré-commit (327 verde).
+- **Tenants reais persistem:** Empresa Alpha + igorhaf3/4/5 (legal/dental/sushi) vivem no
+  Supabase; nada é recriado ao subir/derrubar containers.
+
 ## Usuários de teste (apenas referencial — senhas só em comunicação direta)
 
 - **super-admin:** `igorhaf@gmail.com` (na allowlist `ADMIN_SUPER_ADMIN_EMAILS`).

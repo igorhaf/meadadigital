@@ -24,20 +24,44 @@ Fonte de verdade: `src/main/java/com/meada/whatsapp/profiles/ProfileType.java` +
 127.0.0.1 processo.meadadigital.local
 127.0.0.1 dental.meadadigital.local
 127.0.0.1 sushi.meadadigital.local
+127.0.0.1 api.meadadigital.local
 ```
 
 (no WSL/Linux: `sudo nano /etc/hosts`.)
 
-## Como rodar
+## Como rodar (Docker — caminho cravado, fase 0.5)
 
-- `cd frontend && npm run dev` (porta 3000).
-- Acesse:
-  - `http://meadadigital.local:3000` ou `http://localhost:3000` → **genérico** (login universal).
-  - `http://processo.meadadigital.local:3000` → **ProcessoBot** (login valida perfil `legal`).
-  - `http://dental.meadadigital.local:3000` → **DentalBot** (perfil `dental`).
-  - `http://sushi.meadadigital.local:3000` → **SushiBot** (perfil `sushi`).
-- O backend (porta 8095) é o mesmo para todos os subdomínios — o perfil viaja no header
-  `X-Meada-Subdomain` (apiFetch) e é resolvido por `companies.profile_id`.
+A stack inteira roda em containers (backend + frontend + sidecar de embeddings + Caddy como
+proxy reverso na porta 80). O **banco continua no Supabase remoto** (paridade com prod, tenants
+preservados). URLs **sem porta**.
+
+```bash
+./scripts/meada-up.sh     # para o Apache, sobe os containers, espera o backend
+# … desenvolve (hot-reload de .java/.tsx via volume) …
+./scripts/meada-down.sh   # derruba os containers
+```
+
+Acesse (sem porta — o Caddy resolve por subdomínio):
+- `http://meada.meadadigital.local` (ou `http://meadadigital.local`) → **genérico** (login universal).
+- `http://processo.meadadigital.local` → **ProcessoBot** (login valida perfil `legal`).
+- `http://dental.meadadigital.local` → **DentalBot** (perfil `dental`).
+- `http://sushi.meadadigital.local` → **SushiBot** (perfil `sushi`).
+- `http://api.meadadigital.local` → **backend / API**.
+
+O backend é o mesmo para todos os subdomínios — o perfil viaja no header `X-Meada-Subdomain`
+(apiFetch) e é resolvido por `companies.profile_id`.
+
+> **Modo legado (sem Docker, não-recomendado):** `./scripts/run-local.sh` (backend) +
+> `cd frontend && npm run dev` (porta 3000). Esbarra no Apache na porta 80; serve só p/ debug
+> pontual.
+
+## Troubleshooting
+
+- **403 em qualquer subdomínio?** Algo (provavelmente o Apache) ainda está na porta 80. Rode
+  `./scripts/meada-down.sh`, confira `sudo ss -tlnp | grep ':80 '` (deve estar livre ou ser o
+  Caddy), depois `./scripts/meada-up.sh`.
+- **Subdomínio não resolve?** Falta a entrada em `/etc/hosts` (ver acima).
+- **Backend não sobe?** `docker compose logs backend` — a 1ª subida compila o jar (~1-2min).
 
 ## Comportamento de match (login)
 

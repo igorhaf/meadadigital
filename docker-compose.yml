@@ -1,17 +1,71 @@
-# docker-compose do projeto Meada WhatsApp.
+# docker-compose do Meada WhatsApp — fase 0.5 (dockerização + DevX local).
 #
-# Por ora só o sidecar de embeddings (camada 5.13.a do bloco RAG). Serviços auxiliares
-# futuros (redis, vector db dedicado, etc) entram aqui. O BACKEND e o FRONTEND NÃO vivem
-# aqui — rodam no host (scripts/run-local.sh e npm run dev). O backend-host alcança o
-# sidecar via localhost:7080 (mesmo padrão do evolution-local/, que tem compose próprio).
+# Orquestra única do dev local: backend (Spring), frontend (Next), embeddings (sidecar Python)
+# e caddy (proxy reverso na porta 80). O BANCO é o Supabase REMOTO (não há Postgres aqui) —
+# lido do .env via env_file. Hot-reload por volumes mapeando o código-fonte.
+#
+# Subir:   ./scripts/meada-up.sh      (para o Apache, sobe os containers)
+# Parar:   ./scripts/meada-down.sh    (derruba os containers)
+#
+# Notas de rede:
+#  - O backend alcança o sidecar pelo NOME do serviço (embeddings:7080), não localhost
+#    (dentro do container, localhost é o próprio container). Override via environment abaixo.
+#  - NEXT_PUBLIC_API_URL é var de BROWSER (o navegador do usuário chama a API): aponta para
+#    http://api.meadadigital.local (Caddy resolve via /etc/hosts no host). Override aqui para
+#    não alterar o frontend/.env.local.
+#  - ADMIN_CORS_ALLOWED_ORIGINS inclui os subdomínios de produto (senão o browser é bloqueado).
 
 services:
-  embedding-sidecar:
-    build: ./docker/embedding-sidecar
-    container_name: embedding-sidecar
+  backend:
+    build:
+      context: .
+      target: dev
+    container_name: meada-backend
+    env_file: .env
+    environment:
+      # sidecar pelo nome do serviço (não localhost — ver nota de rede).
+      - KNOWLEDGE_EMBEDDING_ENDPOINT=http://embeddings:7080
+      # CORS: domínio-base + os 4 subdomínios de produto + legado localhost:3000.
+      - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://meada.meadadigital.local,http://processo.meadadigital.local,http://dental.meadadigital.local,http://sushi.meadadigital.local,http://localhost:3000
     ports:
-      - "7080:7080"
+      - "8095:8095"   # exposto p/ debugging host-side (o smoke E2E bate aqui direto também)
+    volumes:
+      - ./src:/app/src
+      - ./pom.xml:/app/pom.xml
+      - ./supabase:/app/supabase
+      - maven-cache:/root/.m2
+    extra_hosts:
+      # caso o backend precise alcançar algo no host (ex.: evolution-local na 8086).
+      - "host.docker.internal:host-gateway"
+    networks: [meada]
+
+  frontend:
+    build:
+      context: ./frontend
+      target: dev
+    container_name: meada-frontend
+    env_file: ./frontend/.env.local
+    environment:
+      # var de BROWSER: o navegador chama a API via Caddy (sem porta).
+      - NEXT_PUBLIC_API_URL=http://api.meadadigital.local
+      # hot-reload de FS dentro do Docker (o inotify nem sempre propaga via bind mount).
+      - WATCHPACK_POLLING=true
+    ports:
+      - "3000:3000"   # exposto p/ debugging host-side
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules   # volume anônimo: preserva o node_modules da imagem (não o do host)
+      - /app/.next           # idem para o cache de build
+    networks: [meada]
+    depends_on: [backend]
+
+  embeddings:
+    build:
+      context: ./docker/embedding-sidecar
+    container_name: meada-embeddings
     restart: unless-stopped
+    ports:
+      - "7080:7080"   # exposto p/ debugging host-side
     volumes:
       # Cache do modelo HuggingFace, persistente entre rebuilds (evita re-download).
       - embedding-models:/root/.cache/huggingface
@@ -22,6 +76,24 @@ services:
       retries: 3
       # start_period largo: o carregamento do modelo no boot leva alguns segundos.
       start_period: 90s
+    networks: [meada]
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: meada-caddy
+    ports:
+      - "80:80"
+    volumes:
+      - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+    networks: [meada]
+    depends_on: [frontend, backend]
+
+networks:
+  meada:
+    driver: bridge
 
 volumes:
+  maven-cache:
+  caddy-data:
   embedding-models:

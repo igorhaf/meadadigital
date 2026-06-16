@@ -1,0 +1,28 @@
+# Caddy — proxy reverso do dev local multi-perfil (fase 0.5). Escuta a porta 80 do host.
+# Cada subdomínio de produto cai no MESMO container frontend (Next decide o perfil pelo host,
+# via middleware x-meada-subdomain); api.meadadigital.local cai no backend.
+#
+# Nomes de serviço (frontend/backend) resolvem pela rede interna do docker-compose.
+
+{
+	# dev local: sem HTTPS automático (não há certificado pra *.meadadigital.local).
+	auto_https off
+	# sem o endpoint de admin do Caddy (não precisamos; reduz superfície).
+	admin off
+}
+
+# Frontend — domínio base + os 4 subdomínios de perfil.
+# Prefixo http:// EXPLÍCITO: força o Caddy a escutar a porta 80 (sem ele + auto_https off,
+# o Caddy bind só :443 e a 80 fica morta — connection reset).
+http://meadadigital.local,
+http://meada.meadadigital.local,
+http://processo.meadadigital.local,
+http://dental.meadadigital.local,
+http://sushi.meadadigital.local {
+	reverse_proxy frontend:3000
+}
+
+# Backend — API.
+http://api.meadadigital.local {
+	reverse_proxy backend:8095
+}

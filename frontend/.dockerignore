@@ -1,0 +1,9 @@
+# Build do frontend (contexto = frontend/). node_modules e .next são recriados na imagem
+# (npm ci / volumes anônimos no dev).
+node_modules/
+.next/
+.git/
+# segredos: o compose injeta via env_file; não devem ir na imagem.
+.env
+.env.*
+npm-debug.log*
