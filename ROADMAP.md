@@ -9,7 +9,7 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 - [x] 3. Painel admin separado (super-admin vs tenant-admin)
 - [x] 4. Super-admin cria empresas com paleta de tema customizada (fase-5.1.a)
 - [~] 5. Recuperação de senha por email (abandonada — reset via psql em dev)
-- [ ] 6. Convite de usuário extra pro tenant (multi-user por empresa)
+- [x] 6. Convite de usuário extra pro tenant (multi-user por empresa) (fase-5.16)
 - [x] 7. Logs de auditoria (fase-5.3)
 
 ## Conexão com WhatsApp

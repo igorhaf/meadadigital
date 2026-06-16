@@ -17,6 +17,9 @@ import java.util.UUID;
  *   <li>{@code role == TENANT_ADMIN} ⟹ {@code companyId != null} (resolvido do SELECT
  *       em public.users) E {@code paletteId} lido de {@code users.palette_id} na MESMA
  *       query (NOT NULL DEFAULT 'meada-default' no banco → nunca null).
+ *   <li>{@code role == INVITEE} ⟹ {@code companyId == null} (camada 5.16 #6: JWT válido
+ *       sem linha em public.users ainda; usado só no aceite de convite) E
+ *       {@code paletteId == "meada-default"} (constante; sem linha de onde ler).
  * </ul>
  * Não há validação dessa invariante no compact constructor de propósito: o filtro é o
  * único produtor e já a garante; uma assertion aqui seria custo recorrente no hot path

@@ -13,4 +13,12 @@ package com.meada.whatsapp.admin.security;
 public enum AdminRole {
     SUPER_ADMIN,
     TENANT_ADMIN,
+
+    /**
+     * JWT do Supabase Auth válido, mas SEM provisionamento em public.users (camada 5.16
+     * #6). Usado SÓ no fluxo de aceite de convite (POST /api/invitations/{token}/accept):
+     * o convidado acabou de criar conta no Auth e a linha em users só nasce no accept.
+     * companyId é null (ainda não pertence a nenhum tenant). Não tem acesso a /admin/**.
+     */
+    INVITEE,
 }

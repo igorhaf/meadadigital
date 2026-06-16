@@ -136,6 +136,12 @@ admin:
   super-admin-emails: ${ADMIN_SUPER_ADMIN_EMAILS:}
   cors-allowed-origins: ${ADMIN_CORS_ALLOWED_ORIGINS:http://localhost:3000}
 
+# Convites de admin extra (camada 5.16 #6). frontend-base-url compõe a inviteUrl que o
+#   admin copia (FRONTEND_BASE/invite/{token}). token-validity-days é a validade do convite.
+invitations:
+  frontend-base-url: ${INVITATIONS_FRONTEND_BASE_URL:http://localhost:3000}
+  token-validity-days: ${INVITATIONS_TOKEN_VALIDITY_DAYS:7}
+
 # Supabase. jwks-url SEM default (fail-fast): o filtro JWT do admin valida os tokens
 #   ES256 contra as chaves públicas servidas neste endpoint JWKS (o Supabase migrou de
 #   HS256/secret compartilhado para JWT Signing Keys assimétricas — ver JwksConfig e

@@ -110,6 +110,9 @@ function TenantDashboard() {
           <Link href="/dashboard/ai-settings">
             <Button variant="outline">IA</Button>
           </Link>
+          <Link href="/dashboard/team">
+            <Button variant="outline">Equipe</Button>
+          </Link>
           <ThemeToggle />
           <SignOutButton />
         </div>

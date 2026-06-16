@@ -83,7 +83,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/14_search_knowledge_chunks.sql",
         "db/migrations/15_conversations_marked_unread.sql",
         "db/migrations/16_tags.sql",
-        "db/migrations/17_conversations_scheduling_intent.sql"
+        "db/migrations/17_conversations_scheduling_intent.sql",
+        "db/migrations/18_tenant_invitations.sql"
     };
 
     /**
@@ -189,7 +190,7 @@ public abstract class AbstractIntegrationTest {
             TRUNCATE TABLE
               companies, users, whatsapp_instances, services, business_hours,
               faqs, documents, ai_settings, contacts, conversations, messages,
-              audit_log, tags, conversation_tags
+              audit_log, tags, conversation_tags, tenant_invitations
             RESTART IDENTITY CASCADE
             """);
     }

@@ -66,6 +66,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String BEARER_PREFIX = "Bearer ";
     public static final String AUTH_USER_ATTRIBUTE = "authenticatedUser";
 
+    // Aceite de convite (camada 5.16 #6): exige JWT válido, mas NÃO linha em public.users
+    // (o convidado acabou de criar conta no Auth; a linha nasce no accept). O filtro
+    // autentica este path como INVITEE, pulando resolveUser. Path: POST
+    // /api/invitations/{token}/accept — casado por prefixo + sufixo (token é livre).
+    private static final String INVITE_ACCEPT_PREFIX = "/api/invitations/";
+    private static final String INVITE_ACCEPT_SUFFIX = "/accept";
+
     private static final String SELECT_USER_DATA =
         "select company_id, palette_id from users where id = ?";
 
@@ -102,8 +109,21 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
      * preflight antes do CORS, quebrando todo request cross-origin do browser. */
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        return "OPTIONS".equals(request.getMethod())
-            || !request.getRequestURI().startsWith(ADMIN_PATH_PREFIX);
+        if ("OPTIONS".equals(request.getMethod())) {
+            return true;   // preflight CORS passa direto (ver javadoc acima)
+        }
+        // Filtra /admin/** E o aceite de convite (/api/invitations/{token}/accept). Demais
+        // rotas (webhook, lookup público do convite, health) passam sem filtro de auth.
+        return !request.getRequestURI().startsWith(ADMIN_PATH_PREFIX)
+            && !isInviteAccept(request);
+    }
+
+    /** POST /api/invitations/{token}/accept — o único path /api/ que este filtro autentica. */
+    private boolean isInviteAccept(HttpServletRequest request) {
+        String uri = request.getRequestURI();
+        return "POST".equals(request.getMethod())
+            && uri.startsWith(INVITE_ACCEPT_PREFIX)
+            && uri.endsWith(INVITE_ACCEPT_SUFFIX);
     }
 
     @Override
@@ -114,7 +134,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         try {
             String token = extractBearerToken(request);
             VerifiedClaims claims = parseAndVerify(token);
-            user = resolveUser(claims);
+            // Aceite de convite: JWT válido basta; NÃO resolve em public.users (a linha
+            // nasce no accept). INVITEE com companyId null. Demais paths (/admin/**)
+            // resolvem a identidade completa (super-admin allowlist ou tenant em users).
+            user = isInviteAccept(request)
+                ? new AuthenticatedUser(claims.email(), claims.userId(),
+                    AdminRole.INVITEE, null, "meada-default")
+                : resolveUser(claims);
         } catch (AuthRejectException e) {
             reject(request, response, e.status, e.reason);
             return;
