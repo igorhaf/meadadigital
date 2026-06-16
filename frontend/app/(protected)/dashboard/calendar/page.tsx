@@ -1,13 +1,13 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useMemo, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { PageSkeleton } from '@/components/ui/skeleton'
 import {
   getAppointments,
   updateAppointmentStatus,
@@ -111,25 +111,14 @@ export default function CalendarPage() {
   }
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <p className="text-sm text-muted-foreground">Redirecionando…</p>
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Calendário</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Calendário" description="Agendamentos da sua empresa, por mês." />
 
-      <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <Button
           variant="outline"
           className="h-8 px-3"
@@ -156,7 +145,7 @@ export default function CalendarPage() {
       {isError ? (
         <p className="text-sm text-destructive">Erro ao carregar agendamentos.</p>
       ) : (
-        <div className="grid grid-cols-7 gap-1 text-sm">
+        <Card className="grid grid-cols-7 gap-1 text-sm">
           {WEEKDAY_LABELS.map((w) => (
             <div key={w} className="py-1 text-center text-xs font-medium text-muted-foreground">
               {w}
@@ -187,12 +176,10 @@ export default function CalendarPage() {
               </button>
             )
           })}
-        </div>
+        </Card>
       )}
 
-      {isPending && isTenant && (
-        <p className="mt-4 text-sm text-muted-foreground">Carregando…</p>
-      )}
+      {isPending && isTenant && <PageSkeleton />}
 
       {selectedDay && (
         <div className="mt-6">

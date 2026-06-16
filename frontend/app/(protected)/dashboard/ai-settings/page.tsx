@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
+import { Card, Section } from '@/components/ui/card'
+import { PageSkeleton } from '@/components/ui/skeleton'
 import { getMe } from '@/lib/api/me'
 import { getMyAiSettings, upsertMyAiSettings } from '@/lib/supabase/ai_settings'
 
@@ -89,16 +90,14 @@ export default function AiSettingsPage() {
   })
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-3xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     return (
-      <div className="mx-auto max-w-3xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Configuração da IA</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar a configuração.</p>
+      <div className="space-y-4">
+        <PageHeader title="IA" />
+        <p className="text-sm text-destructive">Erro ao carregar a configuração.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -106,23 +105,20 @@ export default function AiSettingsPage() {
     )
   }
 
+  if (isPending) {
+    return <PageSkeleton />
+  }
+
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Configuração da IA</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="IA" description="Configure como a IA atende seus clientes" />
 
-      {isPending && <p className="text-sm text-muted-foreground">Carregando…</p>}
-
-      {!isPending && (
-        <div className="space-y-4 rounded-xl border border-border p-6">
+      {/* Tom e estilo — como a IA se comunica. */}
+      <Card>
+        <Section
+          title="Tom e estilo"
+          description="Como a IA fala com seus clientes (formalidade, tratamento, vocabulário)."
+        >
           <div>
             <label htmlFor="tone" className="mb-1 block text-sm font-medium">
               Tom de comunicação <span className="text-muted-foreground">(opcional)</span>
@@ -136,10 +132,18 @@ export default function AiSettingsPage() {
                 setSaved(false)
               }}
               placeholder="ex.: 'Cordial e profissional. Trate o cliente por você. Evite gírias.'"
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
             />
           </div>
+        </Section>
+      </Card>
 
+      {/* Regras e restrições — o que a IA deve/não deve fazer e quando passar para humano. */}
+      <Card>
+        <Section
+          title="Regras e restrições"
+          description="Limites e gatilhos que guiam o comportamento da IA."
+        >
           <div>
             <label htmlFor="systemRules" className="mb-1 block text-sm font-medium">
               Regras do sistema <span className="text-muted-foreground">(opcional)</span>
@@ -153,7 +157,7 @@ export default function AiSettingsPage() {
                 setSaved(false)
               }}
               placeholder="ex.: 'Sempre confirme dados de agendamento antes de gravar. Nunca prometa prazo sem antes consultar a agenda. Em caso de dúvida sobre preço, peça pra cliente aguardar e acione um humano.'"
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
             />
           </div>
 
@@ -170,7 +174,7 @@ export default function AiSettingsPage() {
                 setSaved(false)
               }}
               placeholder="ex.: 'Não envie áudio. Não dê descontos sem confirmação humana. Não compartilhe informações de outros clientes.'"
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
             />
           </div>
 
@@ -188,88 +192,98 @@ export default function AiSettingsPage() {
                 setSaved(false)
               }}
               placeholder="ex.: 'Quando o cliente pedir falar com pessoa humana, quando expressar irritação ou frustração, quando o assunto envolver reclamação formal ou jurídico.'"
-              className="w-full rounded-md border border-border px-3 py-2 text-sm"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
             />
           </div>
+        </Section>
+      </Card>
 
-          <div className="border-t border-border pt-4">
-            <h2 className="mb-3 text-sm font-semibold">Engajamento</h2>
-
-            <div className="mb-4">
-              <label htmlFor="welcomeMessage" className="mb-1 block text-sm font-medium">
-                Mensagem de boas-vindas <span className="text-muted-foreground">(opcional)</span>
-              </label>
-              <textarea
-                id="welcomeMessage"
-                rows={2}
-                maxLength={500}
-                value={welcomeMessage}
-                onChange={(e) => {
-                  setWelcomeMessage(e.target.value)
-                  setSaved(false)
-                }}
-                placeholder="ex.: 'Olá! Seja bem-vindo. Sou o atendente virtual e vou te ajudar com agendamentos e dúvidas.'"
-                className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Enviada automaticamente na primeira mensagem de cada cliente. Até 500 caracteres.
-              </p>
-            </div>
-
-            <div className="mb-4">
-              <label htmlFor="reactivationDays" className="mb-1 block text-sm font-medium">
-                Dias para reativação <span className="text-muted-foreground">(opcional)</span>
-              </label>
-              <input
-                id="reactivationDays"
-                type="number"
-                min={1}
-                value={reactivationDays}
-                onChange={(e) => {
-                  setReactivationDays(e.target.value)
-                  setSaved(false)
-                }}
-                placeholder="ex.: 30"
-                className="w-32 rounded-md border border-border px-3 py-2 text-sm"
-              />
-              <p className="mt-1 text-xs text-muted-foreground">
-                Clientes sem mensagem por esse número de dias recebem a mensagem de reativação.
-                Deixe vazio para desativar.
-              </p>
-            </div>
-
-            <div>
-              <label htmlFor="reactivationMessage" className="mb-1 block text-sm font-medium">
-                Mensagem de reativação <span className="text-muted-foreground">(opcional)</span>
-              </label>
-              <textarea
-                id="reactivationMessage"
-                rows={2}
-                value={reactivationMessage}
-                onChange={(e) => {
-                  setReactivationMessage(e.target.value)
-                  setSaved(false)
-                }}
-                placeholder="ex.: 'Sentimos sua falta! Que tal agendar um horário? Estamos à disposição.'"
-                className="w-full rounded-md border border-border px-3 py-2 text-sm"
-              />
-            </div>
+      {/* Boas-vindas — primeira mensagem automática a cada cliente novo. */}
+      <Card>
+        <Section
+          title="Boas-vindas"
+          description="Mensagem enviada automaticamente na primeira mensagem de cada cliente."
+        >
+          <div>
+            <label htmlFor="welcomeMessage" className="mb-1 block text-sm font-medium">
+              Mensagem de boas-vindas <span className="text-muted-foreground">(opcional)</span>
+            </label>
+            <textarea
+              id="welcomeMessage"
+              rows={2}
+              maxLength={500}
+              value={welcomeMessage}
+              onChange={(e) => {
+                setWelcomeMessage(e.target.value)
+                setSaved(false)
+              }}
+              placeholder="ex.: 'Olá! Seja bem-vindo. Sou o atendente virtual e vou te ajudar com agendamentos e dúvidas.'"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Enviada automaticamente na primeira mensagem de cada cliente. Até 500 caracteres.
+            </p>
           </div>
-        </div>
-      )}
+        </Section>
+      </Card>
+
+      {/* Reativação — reengajar clientes inativos há N dias. */}
+      <Card>
+        <Section
+          title="Reativação"
+          description="Reengaja clientes que ficaram sem conversar por um período."
+        >
+          <div>
+            <label htmlFor="reactivationDays" className="mb-1 block text-sm font-medium">
+              Dias para reativação <span className="text-muted-foreground">(opcional)</span>
+            </label>
+            <input
+              id="reactivationDays"
+              type="number"
+              min={1}
+              value={reactivationDays}
+              onChange={(e) => {
+                setReactivationDays(e.target.value)
+                setSaved(false)
+              }}
+              placeholder="ex.: 30"
+              className="w-32 rounded-md border border-border bg-card px-3 py-2 text-sm"
+            />
+            <p className="mt-1 text-xs text-muted-foreground">
+              Clientes sem mensagem por esse número de dias recebem a mensagem de reativação.
+              Deixe vazio para desativar.
+            </p>
+          </div>
+
+          <div>
+            <label htmlFor="reactivationMessage" className="mb-1 block text-sm font-medium">
+              Mensagem de reativação <span className="text-muted-foreground">(opcional)</span>
+            </label>
+            <textarea
+              id="reactivationMessage"
+              rows={2}
+              value={reactivationMessage}
+              onChange={(e) => {
+                setReactivationMessage(e.target.value)
+                setSaved(false)
+              }}
+              placeholder="ex.: 'Sentimos sua falta! Que tal agendar um horário? Estamos à disposição.'"
+              className="w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
+            />
+          </div>
+        </Section>
+      </Card>
 
       {mutation.isError && (
-        <p className="mt-3 text-sm text-destructive">Erro ao salvar. Tente novamente.</p>
+        <p className="text-sm text-destructive">Erro ao salvar. Tente novamente.</p>
       )}
-      {saved && <p className="mt-3 text-sm text-green-600">Salvo!</p>}
+      {saved && <p className="text-sm text-green-600">Salvo!</p>}
 
-      {!isPending && (
-        <div className="mt-4">
-          <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !me?.companyId}>
-            {mutation.isPending ? 'Salvando…' : 'Salvar'}
-          </Button>
-        </div>
-      )}
+      <div>
+        <Button onClick={() => mutation.mutate()} disabled={mutation.isPending || !me?.companyId}>
+          {mutation.isPending ? 'Salvando…' : 'Salvar'}
+        </Button>
+      </div>
     </div>
   )
 }

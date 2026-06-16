@@ -7,8 +7,7 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { KnowledgeUploadDialog } from '@/components/knowledge-upload-dialog'
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
@@ -99,17 +98,15 @@ export default function KnowledgePage() {
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     console.error('failed to load knowledge:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Conhecimento</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar documentos.</p>
+      <div className="space-y-4">
+        <PageHeader title="Conhecimento" />
+        <p className="text-sm text-destructive">Erro ao carregar documentos.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -118,20 +115,16 @@ export default function KnowledgePage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Conhecimento</h1>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Conhecimento"
+        description="Envie PDFs (manuais, catálogos, políticas) que a IA usa como contexto ao responder."
+        actions={
           <Button onClick={() => setDialogOpen(true)} disabled={!me?.companyId}>
             Enviar documento
           </Button>
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+        }
+      />
       {isEmpty ? (
         <EmptyState
           icon={<FileText />}

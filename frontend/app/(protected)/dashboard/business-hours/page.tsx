@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { PageSkeleton } from '@/components/ui/skeleton'
 import { getMe } from '@/lib/api/me'
 import {
   getMyBusinessHours,
@@ -104,16 +105,14 @@ export default function BusinessHoursPage() {
   }
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-3xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     return (
-      <div className="mx-auto max-w-3xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Horários</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar horários.</p>
+      <div className="space-y-4">
+        <PageHeader title="Horários" />
+        <p className="text-sm text-destructive">Erro ao carregar horários.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -121,24 +120,19 @@ export default function BusinessHoursPage() {
     )
   }
 
+  if (isPending) {
+    return <PageSkeleton />
+  }
+
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Horários de atendimento</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Horários"
+        description="Defina o horário de atendimento de cada dia da semana."
+      />
 
-      {isPending && <p className="text-sm text-muted-foreground">Carregando…</p>}
-
-      {!isPending && (
-        <div className="space-y-2 rounded-xl border border-border p-4">
-          {rows.map((r) => (
+      <Card className="space-y-2 p-4">
+        {rows.map((r) => (
             <div
               key={r.weekday}
               className="flex flex-wrap items-center gap-3 border-b border-border pb-2 last:border-0"
@@ -169,22 +163,19 @@ export default function BusinessHoursPage() {
               />
             </div>
           ))}
-        </div>
-      )}
+      </Card>
 
-      {validationError && <p className="mt-3 text-sm text-destructive">{validationError}</p>}
+      {validationError && <p className="text-sm text-destructive">{validationError}</p>}
       {mutation.isError && (
-        <p className="mt-3 text-sm text-destructive">Erro ao salvar. Recarregue e tente de novo.</p>
+        <p className="text-sm text-destructive">Erro ao salvar. Recarregue e tente de novo.</p>
       )}
-      {saved && <p className="mt-3 text-sm text-green-600">Salvo!</p>}
+      {saved && <p className="text-sm text-green-600">Salvo!</p>}
 
-      {!isPending && (
-        <div className="mt-4">
-          <Button onClick={onSave} disabled={mutation.isPending || !me?.companyId}>
-            {mutation.isPending ? 'Salvando…' : 'Salvar'}
-          </Button>
-        </div>
-      )}
+      <div>
+        <Button onClick={onSave} disabled={mutation.isPending || !me?.companyId}>
+          {mutation.isPending ? 'Salvando…' : 'Salvar'}
+        </Button>
+      </div>
     </div>
   )
 }

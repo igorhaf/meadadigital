@@ -74,7 +74,7 @@ export function RealtimeNotifications() {
       {toasts.map((t) => (
         <div
           key={t.id}
-          className="rounded-lg border border-border bg-white px-4 py-3 text-sm shadow-lg"
+          className="rounded-lg border border-border bg-popover text-popover-foreground px-4 py-3 text-sm shadow-lg"
         >
           {t.text}
         </div>

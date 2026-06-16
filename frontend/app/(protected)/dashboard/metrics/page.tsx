@@ -5,9 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
+import { Card, Section } from '@/components/ui/card'
+import { PageSkeleton } from '@/components/ui/skeleton'
 import { getMe } from '@/lib/api/me'
 import {
   downloadMetricsPdf,
@@ -20,11 +21,11 @@ import { getTenantMetrics, type MessagesByDay, type TenantMetrics } from '@/lib/
 /** Card de número grande com rótulo. */
 function MetricCard({ label, value }: { label: string; value: number }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <Card>
       <div className="text-3xl font-semibold tabular-nums">{value.toLocaleString('pt-BR')}</div>
       <div className="mt-1 text-sm text-muted-foreground">{label}</div>
       <div className="text-xs text-muted-foreground">últimos 30 dias</div>
-    </div>
+    </Card>
   )
 }
 
@@ -59,7 +60,7 @@ function MessagesChart({ data }: { data: MessagesByDay[] }) {
   const gridYs = [0, maxY / 2, maxY]
 
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
+    <Card>
       <div className="mb-3 flex items-center justify-between">
         <h2 className="text-sm font-medium">Mensagens por dia</h2>
         <div className="flex items-center gap-4 text-xs text-muted-foreground">
@@ -91,7 +92,7 @@ function MessagesChart({ data }: { data: MessagesByDay[] }) {
         <span>{data[Math.floor(n / 2)]?.day.slice(5)}</span>
         <span>{data[n - 1]?.day.slice(5)}</span>
       </div>
-    </div>
+    </Card>
   )
 }
 
@@ -121,8 +122,7 @@ function DeltaBadge({ delta }: { delta: number }) {
  */
 function ComparisonSection({ data }: { data: MetricsComparison }) {
   return (
-    <div className="rounded-xl border border-border bg-card p-5">
-      <h2 className="mb-4 text-sm font-medium">Comparação mês a mês</h2>
+    <Card>
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
         {COMPARISON_ROWS.map((r) => (
           <div
@@ -147,7 +147,7 @@ function ComparisonSection({ data }: { data: MetricsComparison }) {
       <p className="mt-3 text-xs text-muted-foreground">
         Mês calendário atual comparado ao anterior (variação = atual − anterior).
       </p>
-    </div>
+    </Card>
   )
 }
 
@@ -190,17 +190,15 @@ export default function MetricsPage() {
   }
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     console.error('failed to load metrics:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Métricas</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar métricas.</p>
+      <div className="space-y-6">
+        <PageHeader title="Métricas" />
+        <p className="text-sm text-destructive">Erro ao carregar métricas.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -208,26 +206,25 @@ export default function MetricsPage() {
     )
   }
 
+  if (isPending) {
+    return <PageSkeleton />
+  }
+
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Métricas</h1>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Métricas"
+        description="Volume de mensagens, conversas e desempenho da IA nos últimos 30 dias."
+        actions={
           <Button variant="outline" onClick={handleExportPdf} disabled={exporting}>
             {exporting ? 'Exportando…' : 'Exportar PDF'}
           </Button>
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
-
-      {isPending && <p className="text-sm text-muted-foreground">Carregando…</p>}
+        }
+      />
 
       {data && (
-        <div className="space-y-6">
+        <>
+          {/* Cards principais — números dos últimos 30 dias */}
           <div className="grid grid-cols-2 gap-4 md:grid-cols-4">
             <MetricCard label="Mensagens recebidas" value={data.messagesInbound30d} />
             <MetricCard label="Mensagens enviadas" value={data.messagesOutbound30d} />
@@ -235,42 +232,49 @@ export default function MetricsPage() {
             <MetricCard label="Contatos novos" value={data.contactsNew30d} />
           </div>
 
-          {comparison && <ComparisonSection data={comparison} />}
-
+          {/* Gráfico de mensagens por dia */}
           <MessagesChart data={data.messagesByDay} />
 
-          <div className="grid gap-6 md:grid-cols-2">
-            <div className="rounded-xl border border-border bg-card p-5">
-              <h2 className="mb-1 text-sm font-medium">Tempo médio de resposta da IA</h2>
-              <div className="text-3xl font-semibold tabular-nums">
-                {formatSeconds(data.avgResponseSeconds)}
-              </div>
-              <p className="mt-1 text-xs text-muted-foreground">
-                média entre a mensagem do cliente e a resposta da IA (últimos 30 dias)
-              </p>
-            </div>
+          {comparison && (
+            <Section title="Comparação mês a mês">
+              <ComparisonSection data={comparison} />
+            </Section>
+          )}
 
-            <div className="rounded-xl border border-border bg-card p-5">
-              <h2 className="mb-2 text-sm font-medium">FAQs ativas</h2>
-              {data.topFaqs.length === 0 ? (
-                <p className="text-sm text-muted-foreground">Nenhuma FAQ ativa.</p>
-              ) : (
-                <ol className="space-y-1 text-sm">
-                  {data.topFaqs.map((f, i) => (
-                    <li key={f.id} className="flex gap-2">
-                      <span className="text-muted-foreground">{i + 1}.</span>
-                      <span className="truncate">{f.question}</span>
-                    </li>
-                  ))}
-                </ol>
-              )}
-              <p className="mt-3 text-xs text-muted-foreground">
-                Ordem cronológica. O ranking por uso real fica para uma fase futura, quando
-                houver rastreamento de qual FAQ a IA usou em cada resposta.
-              </p>
+          <Section title="Desempenho e FAQs">
+            <div className="grid gap-6 md:grid-cols-2">
+              <Card>
+                <h2 className="mb-1 text-sm font-medium">Tempo médio de resposta da IA</h2>
+                <div className="text-3xl font-semibold tabular-nums">
+                  {formatSeconds(data.avgResponseSeconds)}
+                </div>
+                <p className="mt-1 text-xs text-muted-foreground">
+                  média entre a mensagem do cliente e a resposta da IA (últimos 30 dias)
+                </p>
+              </Card>
+
+              <Card>
+                <h2 className="mb-2 text-sm font-medium">FAQs ativas</h2>
+                {data.topFaqs.length === 0 ? (
+                  <p className="text-sm text-muted-foreground">Nenhuma FAQ ativa.</p>
+                ) : (
+                  <ol className="space-y-1 text-sm">
+                    {data.topFaqs.map((f, i) => (
+                      <li key={f.id} className="flex gap-2">
+                        <span className="text-muted-foreground">{i + 1}.</span>
+                        <span className="truncate">{f.question}</span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+                <p className="mt-3 text-xs text-muted-foreground">
+                  Ordem cronológica. O ranking por uso real fica para uma fase futura, quando
+                  houver rastreamento de qual FAQ a IA usou em cada resposta.
+                </p>
+              </Card>
             </div>
-          </div>
-        </div>
+          </Section>
+        </>
       )}
     </div>
   )

@@ -1,7 +1,6 @@
 import { redirect } from 'next/navigation'
 
-import { GlobalSearch } from '@/components/global-search'
-import { RealtimeNotifications } from '@/components/realtime-notifications'
+import { AppShell } from '@/components/layout/app-shell'
 import { ThemeProvider } from '@/components/theme-provider'
 import { createClient } from '@/lib/supabase/server'
 
@@ -53,9 +52,7 @@ export default async function ProtectedLayout({
 
   return (
     <ThemeProvider>
-      <GlobalSearch />
-      <RealtimeNotifications />
-      {children}
+      <AppShell>{children}</AppShell>
     </ThemeProvider>
   )
 }

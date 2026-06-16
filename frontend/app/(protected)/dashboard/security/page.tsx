@@ -2,14 +2,11 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { ShieldCheck } from 'lucide-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
-import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getAccessLogs, type AccessLogEntry } from '@/lib/api/access-logs'
@@ -75,27 +72,15 @@ export default function SecurityPage() {
   }
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Segurança e acessos</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
-
-      <p className="mb-4 text-sm text-muted-foreground">
-        Tentativas de login e mudanças de senha da sua empresa, mais recentes primeiro.
-      </p>
+    <div className="space-y-6">
+      <PageHeader
+        title="Segurança"
+        description="Tentativas de login e mudanças de senha da sua empresa, mais recentes primeiro."
+      />
 
       {isError ? (
         <p className="text-sm text-destructive">Erro ao carregar os acessos.</p>

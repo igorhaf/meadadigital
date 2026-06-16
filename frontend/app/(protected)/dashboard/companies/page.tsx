@@ -4,8 +4,7 @@ import { useQuery } from '@tanstack/react-query'
 import Link from 'next/link'
 import { useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
@@ -46,11 +45,8 @@ export default function CompaniesPage() {
   // a checagem de papel — o backend é a fonte de verdade da autorização.
   if (isError && error instanceof ApiError && error.status === 403) {
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Acesso restrito</h1>
-        <p className="mb-4 text-sm text-muted-foreground">
-          Esta área é restrita ao super-admin.
-        </p>
+      <div className="space-y-6">
+        <PageHeader title="Acesso restrito" description="Esta área é restrita ao super-admin." />
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -61,9 +57,9 @@ export default function CompaniesPage() {
   if (isError) {
     console.error('failed to load /admin/companies:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Empresas</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar empresas.</p>
+      <div className="space-y-6">
+        <PageHeader title="Empresas" />
+        <p className="text-sm text-destructive">Erro ao carregar empresas.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -72,15 +68,12 @@ export default function CompaniesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Empresas</h1>
-        <div className="flex items-center gap-2">
-          <Button onClick={() => setDialogOpen(true)}>Nova empresa</Button>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Empresas"
+        description="Todas as empresas cadastradas na plataforma."
+        actions={<Button onClick={() => setDialogOpen(true)}>Nova empresa</Button>}
+      />
       <DataTable<Company>
         data={data ?? []}
         columns={columns}

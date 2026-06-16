@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { Button } from './button';
+import { Skeleton } from './skeleton';
 
 export interface Column<T> {
   key: string;
@@ -51,7 +52,7 @@ export function DataTable<T extends { id: string }>({
             value={query}
             onChange={(e) => { setQuery(e.target.value); setPage(1); }}
             placeholder={searchPlaceholder}
-            className="border border-border rounded-md px-3 py-1.5 text-sm focus:outline-none focus:ring-2 focus:ring-ring w-64"
+            className="w-64 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           />
           {query && (
             <button
@@ -67,37 +68,41 @@ export function DataTable<T extends { id: string }>({
         </div>
       )}
 
-      <div className="bg-white rounded-xl border border-border shadow-sm overflow-hidden">
+      <div className="bg-card rounded-lg border border-border overflow-hidden">
         {loading ? (
-          <div className="p-6 text-sm text-muted-foreground animate-pulse">Carregando...</div>
+          <div className="space-y-3 p-6">
+            <Skeleton className="h-5 w-full" />
+            <Skeleton className="h-5 w-5/6" />
+            <Skeleton className="h-5 w-4/6" />
+          </div>
         ) : (
           <div className="overflow-x-auto">
             <table className="w-full text-sm">
               <thead>
-                <tr className="bg-muted/50">
+                <tr className="border-b border-border">
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      className={`text-left px-4 py-3 font-medium text-muted-foreground ${col.className ?? ''}`}
+                      className={`text-left px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground ${col.className ?? ''}`}
                     >
                       {col.header}
                     </th>
                   ))}
                   {actions && (
-                    <th className="text-left px-4 py-3 font-medium text-muted-foreground">Ações</th>
+                    <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Ações</th>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.id} className="border-t border-border hover:bg-muted/30">
+                  <tr key={row.id} className="border-t border-border first:border-t-0 hover:bg-muted/40">
                     {columns.map((col) => (
-                      <td key={col.key} className={`px-4 py-3 ${col.className ?? ''}`}>
+                      <td key={col.key} className={`px-4 py-3.5 ${col.className ?? ''}`}>
                         {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '—')}
                       </td>
                     ))}
                     {actions && (
-                      <td className="px-4 py-3">
+                      <td className="px-4 py-3.5">
                         <div className="flex items-center gap-2">{actions(row)}</div>
                       </td>
                     )}

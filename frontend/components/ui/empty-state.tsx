@@ -21,7 +21,7 @@ export function EmptyState({
   action?: ReactNode
 }) {
   return (
-    <div className="flex flex-col items-center justify-center gap-3 rounded-xl border border-border bg-white px-6 py-16 text-center shadow-sm">
+    <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-border bg-card px-6 py-16 text-center">
       <div className="text-muted-foreground [&_svg]:size-10" aria-hidden="true">
         {icon}
       </div>

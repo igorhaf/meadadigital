@@ -6,10 +6,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Section } from '@/components/ui/card'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getMe } from '@/lib/api/me'
@@ -74,40 +74,25 @@ export default function ContactsPage() {
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <p className="text-sm text-muted-foreground">Redirecionando…</p>
   }
 
   if (isError) {
     console.error('failed to load contacts:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Contatos</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar contatos.</p>
-        <Link href="/dashboard">
-          <Button variant="outline">Voltar ao dashboard</Button>
-        </Link>
+      <div className="space-y-6">
+        <PageHeader title="Contatos" />
+        <p className="text-sm text-destructive">Erro ao carregar contatos.</p>
       </div>
     )
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Contatos</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Contatos" />
       {!isEmpty && topContacts && topContacts.length > 0 && (
-        <div className="mb-6 rounded-xl border border-border bg-card p-5">
-          <h2 className="mb-3 text-sm font-medium">Mais ativos</h2>
-          <ol className="space-y-1.5 text-sm">
+        <Section title="Mais ativos">
+          <ol className="space-y-1.5 rounded-lg border border-border bg-card p-5 text-sm">
             {topContacts.map((c, i) => (
               <li key={c.contactId} className="flex items-center gap-2">
                 <span className="w-4 text-right text-muted-foreground">{i + 1}.</span>
@@ -121,7 +106,7 @@ export default function ContactsPage() {
               </li>
             ))}
           </ol>
-        </div>
+        </Section>
       )}
 
       {isEmpty ? (

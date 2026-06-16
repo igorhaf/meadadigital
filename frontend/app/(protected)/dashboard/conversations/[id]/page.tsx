@@ -5,11 +5,11 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { use, useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
+import { PageHeader } from '@/components/layout/page-header'
 import { TagChip } from '@/components/tag-color-picker'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { submitMessageFeedback } from '@/lib/api/feedback'
 import { getMe } from '@/lib/api/me'
 import { getMySavedReplies } from '@/lib/api/saved-replies'
@@ -209,43 +209,110 @@ export default function ConversationDetailPage({
   const mutationError = handledByMutation.isError || statusMutation.isError
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-3xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <p className="text-sm text-muted-foreground">Redirecionando…</p>
   }
 
   if (convError || msgError) {
     return (
-      <div className="mx-auto max-w-3xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Conversa</h1>
-        <p className="mb-4 text-sm text-destructive">
+      <div className="space-y-6">
+        <PageHeader
+          title="Conversa"
+          breadcrumb={[
+            { label: 'Conversas', href: '/dashboard/conversations' },
+            { label: 'Conversa' },
+          ]}
+        />
+        <p className="text-sm text-destructive">
           Erro ao carregar a conversa (ou ela não pertence à sua empresa).
         </p>
-        <Link href="/dashboard/conversations">
-          <Button variant="outline">Voltar às conversas</Button>
-        </Link>
       </div>
     )
   }
 
-  return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">
-          {conversation?.contactName ?? conversation?.contactPhone ?? 'Conversa'}
-        </h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/conversations">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+  const conversationLabel =
+    conversation?.contactName ?? conversation?.contactPhone ?? 'Conversa'
 
-      {conversation && (
-        <>
-          <div className="mb-3 flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+  return (
+    <div className="space-y-6">
+      <PageHeader
+        title={conversationLabel}
+        breadcrumb={[
+          { label: 'Conversas', href: '/dashboard/conversations' },
+          { label: conversationLabel },
+        ]}
+      />
+
+      {/* Layout 2 colunas no desktop: thread à esquerda, ações/sinais à direita.
+          Em telas menores o grid colapsa para 1 coluna (ações primeiro vêm depois,
+          via ordem do DOM). */}
+      <div className="grid gap-6 lg:grid-cols-[1fr_360px]">
+        {/* COLUNA ESQUERDA — thread de mensagens */}
+        <div className="space-y-3">
+          {page && page.total > page.messages.length && (
+            <p className="text-xs text-muted-foreground">
+              Mostrando últimas {page.messages.length} de {page.total} mensagens.
+            </p>
+          )}
+          <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+            {isPending && <p className="text-sm text-muted-foreground">Carregando…</p>}
+            {page?.messages.length === 0 && (
+              <p className="text-sm text-muted-foreground">Nenhuma mensagem nesta conversa.</p>
+            )}
+            {page?.messages.map((m) => {
+              const isInbound = m.direction === 'inbound'
+              // Feedback (#57): só nas respostas da IA (outbound + sender 'ai'); não nas do humano.
+              const isAiMessage = m.direction === 'outbound' && m.sender === 'ai'
+              const given = feedbackGiven[m.id]
+              return (
+                <div key={m.id} className={`flex ${isInbound ? 'justify-start' : 'justify-end'}`}>
+                  <div
+                    className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
+                      isInbound ? 'bg-muted' : 'bg-primary text-primary-foreground'
+                    }`}
+                  >
+                    <p>{m.content}</p>
+                    <div className="mt-1 flex items-center justify-between gap-2">
+                      <p
+                        className={`text-[10px] ${
+                          isInbound ? 'text-muted-foreground' : 'text-primary-foreground/70'
+                        }`}
+                      >
+                        {m.sender} · {new Date(m.createdAt).toLocaleString('pt-BR')}
+                      </p>
+                      {isAiMessage && (
+                        <span className="flex shrink-0 items-center gap-1">
+                          <button
+                            type="button"
+                            title="Boa resposta"
+                            aria-label="Marcar como boa resposta"
+                            onClick={() => sendFeedback(m.id, 'good')}
+                            className={`text-xs leading-none ${given === 'good' ? 'opacity-100' : 'opacity-50 hover:opacity-90'}`}
+                          >
+                            👍
+                          </button>
+                          <button
+                            type="button"
+                            title="Resposta ruim (com correção opcional)"
+                            aria-label="Marcar como resposta ruim"
+                            onClick={() => sendFeedback(m.id, 'bad')}
+                            className={`text-xs leading-none ${given === 'bad' ? 'opacity-100' : 'opacity-50 hover:opacity-90'}`}
+                          >
+                            👎
+                          </button>
+                        </span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+
+        {/* COLUNA DIREITA — ações, sinais detectados, tags, time e respostas prontas */}
+        {conversation && (
+        <div className="space-y-4">
+          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
             <span>{conversation.contactPhone}</span>
             <Badge variant={conversation.status === 'open' ? 'success' : 'danger'}>
               {conversation.status}
@@ -256,7 +323,7 @@ export default function ConversationDetailPage({
           </div>
 
           {/* Ações (4.7): trocar atendente e abrir/fechar */}
-          <div className="mb-4 flex flex-wrap gap-2">
+          <div className="flex flex-wrap gap-2">
             {conversation.handledBy === 'ai' ? (
               <Button
                 variant="outline"
@@ -294,14 +361,14 @@ export default function ConversationDetailPage({
           </div>
 
           {mutationError && (
-            <p className="mb-3 text-sm text-destructive">
+            <p className="text-sm text-destructive">
               Erro ao atualizar a conversa. Tente novamente.
             </p>
           )}
 
           {/* Time (#76): atribui a conversa a um time/departamento. "Nenhum" desatribui. O
               dropdown só mostra times da própria empresa (getMyTeams). */}
-          <div className="mb-4 flex items-center gap-2">
+          <div className="flex items-center gap-2">
             <label htmlFor="conversation-team" className="text-sm text-muted-foreground">
               Time:
             </label>
@@ -324,7 +391,7 @@ export default function ConversationDetailPage({
           {/* Possível agendamento (#29): só renderiza quando a IA detectou intent.
               "Marcar como tratado" zera scheduling_intent → seção e badge somem. */}
           {conversation.schedulingIntent && (
-            <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
               <div className="mb-2 flex items-center justify-between">
                 <h2 className="flex items-center gap-2 text-sm font-medium">
                   🗓️ Possível agendamento
@@ -353,7 +420,7 @@ export default function ConversationDetailPage({
                   <dd>{conversation.schedulingIntent.serviceHint || 'não informado'}</dd>
                 </div>
               </dl>
-              <p className="mt-2 rounded bg-white/60 px-3 py-2 text-sm italic text-muted-foreground">
+              <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm italic text-muted-foreground">
                 “{conversation.schedulingIntent.rawExcerpt}”
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
@@ -366,12 +433,12 @@ export default function ConversationDetailPage({
           {/* Reclamação detectada (#52): box vermelho. A IA já forçou o handoff para humano
               quando detectou — aqui é só a sinalização visual ao atendente. */}
           {conversation.complaintIntent && (
-            <div className="mb-4 rounded-xl border border-red-300 bg-red-50 p-4">
-              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-red-700">
+            <div className="rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-500/40 dark:bg-red-500/10">
+              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
                 ⚠️ Reclamação detectada
               </h2>
               <p className="text-sm">{conversation.complaintIntent.summary}</p>
-              <p className="mt-2 rounded bg-white/60 px-3 py-2 text-sm italic text-muted-foreground">
+              <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm italic text-muted-foreground">
                 “{conversation.complaintIntent.rawExcerpt}”
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
@@ -383,12 +450,12 @@ export default function ConversationDetailPage({
 
           {/* Cancelamento detectado (#51): box âmbar. */}
           {conversation.cancellationIntent && (
-            <div className="mb-4 rounded-xl border border-amber-300 bg-amber-50 p-4">
-              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700">
+            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
+              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
                 🚫 Cancelamento
               </h2>
               <p className="text-sm">{conversation.cancellationIntent.summary}</p>
-              <p className="mt-2 rounded bg-white/60 px-3 py-2 text-sm italic text-muted-foreground">
+              <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm italic text-muted-foreground">
                 “{conversation.cancellationIntent.rawExcerpt}”
               </p>
               <p className="mt-2 text-xs text-muted-foreground">
@@ -401,7 +468,7 @@ export default function ConversationDetailPage({
           {/* Dados coletados (#53): pares chave/valor do extracted_data, quando não-vazio. */}
           {conversation.extractedData &&
             Object.keys(conversation.extractedData).length > 0 && (
-              <div className="mb-4 rounded-xl border border-border p-4">
+              <Card className="p-4">
                 <h2 className="mb-2 text-sm font-medium">Dados coletados</h2>
                 <dl className="space-y-1 text-sm">
                   {Object.entries(conversation.extractedData).map(([key, value]) => (
@@ -411,12 +478,12 @@ export default function ConversationDetailPage({
                     </div>
                   ))}
                 </dl>
-              </div>
+              </Card>
             )}
 
           {/* Tags (#22): chips aplicados (com × para remover) + autocomplete para adicionar
               tag EXISTENTE (criar tag nova é só em /dashboard/tags). */}
-          <div className="mb-4 rounded-xl border border-border p-4">
+          <Card className="p-4">
             <h2 className="mb-2 text-sm font-medium">Tags</h2>
             <div className="mb-3 flex flex-wrap items-center gap-1.5">
               {(appliedTags ?? []).length === 0 ? (
@@ -465,12 +532,12 @@ export default function ConversationDetailPage({
                 )}
               </p>
             )}
-          </div>
+          </Card>
 
           {/* Respostas prontas (#88): lista os textos reutilizáveis da empresa. Como ainda
               não há envio manual, a ação é copiar o corpo para a área de transferência
               (feedback "copiado" por ~1.5s). Catálogo é gerido em /dashboard/saved-replies. */}
-          <div className="mb-4 rounded-xl border border-border p-4">
+          <Card className="p-4">
             <h2 className="mb-2 text-sm font-medium">Respostas prontas</h2>
             {(savedReplies ?? []).length === 0 ? (
               <p className="text-xs text-muted-foreground">
@@ -499,69 +566,9 @@ export default function ConversationDetailPage({
                 ))}
               </ul>
             )}
-          </div>
-        </>
-      )}
-
-      {page && page.total > page.messages.length && (
-        <p className="mb-2 text-xs text-muted-foreground">
-          Mostrando últimas {page.messages.length} de {page.total} mensagens.
-        </p>
-      )}
-
-      <div className="space-y-2 rounded-xl border border-border p-4">
-        {isPending && <p className="text-sm text-muted-foreground">Carregando…</p>}
-        {page?.messages.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhuma mensagem nesta conversa.</p>
+          </Card>
+        </div>
         )}
-        {page?.messages.map((m) => {
-          const isInbound = m.direction === 'inbound'
-          // Feedback (#57): só nas respostas da IA (outbound + sender 'ai'); não nas do humano.
-          const isAiMessage = m.direction === 'outbound' && m.sender === 'ai'
-          const given = feedbackGiven[m.id]
-          return (
-            <div key={m.id} className={`flex ${isInbound ? 'justify-start' : 'justify-end'}`}>
-              <div
-                className={`max-w-[75%] rounded-lg px-3 py-2 text-sm ${
-                  isInbound ? 'bg-muted' : 'bg-primary text-primary-foreground'
-                }`}
-              >
-                <p>{m.content}</p>
-                <div className="mt-1 flex items-center justify-between gap-2">
-                  <p
-                    className={`text-[10px] ${
-                      isInbound ? 'text-muted-foreground' : 'text-primary-foreground/70'
-                    }`}
-                  >
-                    {m.sender} · {new Date(m.createdAt).toLocaleString('pt-BR')}
-                  </p>
-                  {isAiMessage && (
-                    <span className="flex shrink-0 items-center gap-1">
-                      <button
-                        type="button"
-                        title="Boa resposta"
-                        aria-label="Marcar como boa resposta"
-                        onClick={() => sendFeedback(m.id, 'good')}
-                        className={`text-xs leading-none ${given === 'good' ? 'opacity-100' : 'opacity-50 hover:opacity-90'}`}
-                      >
-                        👍
-                      </button>
-                      <button
-                        type="button"
-                        title="Resposta ruim (com correção opcional)"
-                        aria-label="Marcar como resposta ruim"
-                        onClick={() => sendFeedback(m.id, 'bad')}
-                        className={`text-xs leading-none ${given === 'bad' ? 'opacity-100' : 'opacity-50 hover:opacity-90'}`}
-                      >
-                        👎
-                      </button>
-                    </span>
-                  )}
-                </div>
-              </div>
-            </div>
-          )
-        })}
       </div>
     </div>
   )

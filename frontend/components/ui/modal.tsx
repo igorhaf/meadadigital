@@ -31,7 +31,7 @@ export function Modal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 px-4">
       <div
-        className={`bg-white rounded-xl border border-border shadow-xl w-full ${widths[size]} p-6 relative max-h-[90vh] overflow-y-auto`}
+        className={`bg-card text-card-foreground rounded-xl border border-border shadow-xl w-full ${widths[size]} p-6 relative max-h-[90vh] overflow-y-auto`}
       >
         <button
           onClick={onClose}

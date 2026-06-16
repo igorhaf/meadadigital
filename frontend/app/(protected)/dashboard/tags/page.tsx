@@ -7,9 +7,8 @@ import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
 import { CreateTagDialog } from '@/components/create-tag-dialog'
-import { SignOutButton } from '@/components/sign-out-button'
+import { PageHeader } from '@/components/layout/page-header'
 import { TagChip } from '@/components/tag-color-picker'
-import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -65,17 +64,15 @@ export default function TagsPage() {
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     console.error('failed to load tags:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Tags</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar tags.</p>
+      <div className="space-y-4">
+        <PageHeader title="Tags" />
+        <p className="text-sm text-destructive">Erro ao carregar tags.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -84,10 +81,11 @@ export default function TagsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Tags</h1>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Tags"
+        description="Crie etiquetas coloridas para organizar suas conversas."
+        actions={
           <Button
             onClick={() => {
               setEditingTag(undefined)
@@ -97,13 +95,8 @@ export default function TagsPage() {
           >
             Nova tag
           </Button>
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+        }
+      />
       {isEmpty ? (
         <EmptyState
           icon={<TagIcon />}

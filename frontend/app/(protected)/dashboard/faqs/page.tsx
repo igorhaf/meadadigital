@@ -6,10 +6,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, Section } from '@/components/ui/card'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getMe } from '@/lib/api/me'
@@ -90,17 +90,15 @@ export default function FaqsPage() {
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     console.error('failed to load faqs:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">FAQs</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar FAQs.</p>
+      <div className="space-y-4">
+        <PageHeader title="FAQs" />
+        <p className="text-sm text-destructive">Erro ao carregar FAQs.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -109,10 +107,11 @@ export default function FaqsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">FAQs</h1>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="FAQs"
+        description="A IA usa as FAQs como conhecimento ao responder seus clientes."
+        actions={
           <Button
             onClick={() => {
               setEditingFaq(undefined)
@@ -123,45 +122,38 @@ export default function FaqsPage() {
           >
             Nova FAQ
           </Button>
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+        }
+      />
       {(suggestions?.length ?? 0) > 0 && (
-        <div className="mb-6 rounded-lg border border-border bg-card p-4">
-          <div className="mb-3 flex items-center gap-2">
-            <Lightbulb className="size-4 text-muted-foreground" />
-            <h2 className="text-sm font-semibold">Sugestões da IA</h2>
-          </div>
-          <p className="mb-3 text-xs text-muted-foreground">
-            Perguntas recentes de clientes em conversas que passaram para atendimento humano —
-            candidatas a virar FAQ.
-          </p>
-          <ul className="space-y-2">
-            {suggestions!.map((s) => (
-              <li
-                key={s.conversationId + s.lastAt}
-                className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
-              >
-                <span className="min-w-0 flex-1 truncate text-sm" title={s.content}>
-                  {s.content}
-                </span>
-                <Button
-                  variant="outline"
-                  className="h-7 shrink-0 px-2 text-xs"
-                  disabled={!me?.companyId}
-                  onClick={() => openCreateFromSuggestion(s.content)}
+        <Card>
+          <Section
+            title="Sugestões da IA"
+            description="Perguntas recentes de clientes em conversas que passaram para atendimento humano — candidatas a virar FAQ."
+            actions={<Lightbulb className="size-4 text-muted-foreground" />}
+          >
+            <ul className="space-y-2">
+              {suggestions!.map((s) => (
+                <li
+                  key={s.conversationId + s.lastAt}
+                  className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
                 >
-                  <Plus className="size-3" />
-                  Criar FAQ
-                </Button>
-              </li>
-            ))}
-          </ul>
-        </div>
+                  <span className="min-w-0 flex-1 truncate text-sm" title={s.content}>
+                    {s.content}
+                  </span>
+                  <Button
+                    variant="outline"
+                    className="h-7 shrink-0 px-2 text-xs"
+                    disabled={!me?.companyId}
+                    onClick={() => openCreateFromSuggestion(s.content)}
+                  >
+                    <Plus className="size-3" />
+                    Criar FAQ
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        </Card>
       )}
       {isEmpty ? (
         <EmptyState

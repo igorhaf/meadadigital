@@ -9,8 +9,7 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -138,17 +137,15 @@ export default function SavedRepliesPage() {
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     console.error('failed to load saved replies:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Respostas prontas</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar respostas prontas.</p>
+      <div className="space-y-4">
+        <PageHeader title="Respostas prontas" />
+        <p className="text-sm text-destructive">Erro ao carregar respostas prontas.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -157,18 +154,12 @@ export default function SavedRepliesPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Respostas prontas</h1>
-        <div className="flex items-center gap-2">
-          <Button onClick={openCreate}>Nova resposta</Button>
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Respostas prontas"
+        description="Textos reutilizáveis para responder seus clientes mais rápido."
+        actions={<Button onClick={openCreate}>Nova resposta</Button>}
+      />
 
       {isEmpty ? (
         <EmptyState

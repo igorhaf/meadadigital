@@ -6,8 +6,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
@@ -59,17 +58,15 @@ export default function TeamsPage() {
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   if (isError) {
     console.error('failed to load teams:', error)
     return (
-      <div className="mx-auto max-w-5xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Times</h1>
-        <p className="mb-4 text-sm text-destructive">Erro ao carregar times.</p>
+      <div className="space-y-6">
+        <PageHeader title="Times" />
+        <p className="text-sm text-destructive">Erro ao carregar times.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>
         </Link>
@@ -78,10 +75,11 @@ export default function TeamsPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Times</h1>
-        <div className="flex items-center gap-2">
+    <div className="space-y-6">
+      <PageHeader
+        title="Times"
+        description="Times e departamentos (ex.: Suporte, Vendas) para organizar quem cuida de cada conversa."
+        actions={
           <Button
             onClick={() => {
               setEditingTeam(undefined)
@@ -90,13 +88,8 @@ export default function TeamsPage() {
           >
             Novo time
           </Button>
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+        }
+      />
 
       {isEmpty ? (
         <EmptyState

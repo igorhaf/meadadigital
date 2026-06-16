@@ -1,23 +1,22 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
+import { BarChart3, CalendarDays, MessagesSquare, Users } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useEffect } from 'react'
+import { useEffect, type ComponentType } from 'react'
 
-import { ConversationsNavLink } from '@/components/conversations-nav-link'
+import { PageHeader } from '@/components/layout/page-header'
 import { OnboardingBanner } from '@/components/onboarding-banner'
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
-import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
+import { PageSkeleton } from '@/components/ui/skeleton'
 import { getMe } from '@/lib/api/me'
 import { getMyCompany } from '@/lib/supabase/companies'
 
 /**
  * Hub do dashboard após login. Roteia por PAPEL:
  *  - super_admin → redireciona para /dashboard/companies (sua home funcional);
- *  - tenant_admin → placeholder "área restrita ao super-admin" (tela própria do tenant
- *    é 4.3+).
+ *  - tenant_admin → hub de "Início" com atalhos rápidos para as telas de atendimento.
  *
  * O redirect usa useEffect + router.replace (NÃO no render): chamar router.replace
  * durante o render quebra ("Cannot update a component while rendering") — o useEffect
@@ -39,20 +38,14 @@ export default function DashboardPage() {
   }, [isSuperAdmin, router])
 
   if (isPending) {
-    return <div className="mx-auto max-w-3xl p-8 text-sm text-muted-foreground">Carregando…</div>
+    return <PageSkeleton />
   }
 
   if (isError) {
     console.error('failed to load /admin/me:', error)
     return (
-      <div className="mx-auto max-w-3xl p-8">
-        <div className="mb-6 flex items-center justify-between">
-          <h1 className="text-xl font-semibold">Dashboard</h1>
-          <div className="flex items-center gap-2">
-            <ThemeToggle />
-            <SignOutButton />
-          </div>
-        </div>
+      <div className="space-y-6">
+        <PageHeader title="Início" />
         <p className="text-sm text-destructive">
           Erro ao carregar perfil. Tente sair e entrar de novo.
         </p>
@@ -62,112 +55,83 @@ export default function DashboardPage() {
 
   if (isSuperAdmin) {
     // useEffect acima já disparou o replace; este render é só o tick intermediário.
-    return <div className="mx-auto max-w-3xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
+    return <p className="text-sm text-muted-foreground">Redirecionando…</p>
   }
 
   // tenant_admin
   return <TenantDashboard />
 }
 
+/** Atalhos rápidos do hub — cada um leva a uma tela cheia da área de atendimento. */
+const SHORTCUTS: {
+  href: string
+  title: string
+  description: string
+  icon: ComponentType<{ className?: string }>
+}[] = [
+  {
+    href: '/dashboard/conversations',
+    title: 'Conversas',
+    description: 'Acompanhe e responda os atendimentos em andamento.',
+    icon: MessagesSquare,
+  },
+  {
+    href: '/dashboard/calendar',
+    title: 'Agenda',
+    description: 'Veja os horários e compromissos agendados.',
+    icon: CalendarDays,
+  },
+  {
+    href: '/dashboard/contacts',
+    title: 'Contatos',
+    description: 'Gerencie as pessoas que falam com a sua empresa.',
+    icon: Users,
+  },
+  {
+    href: '/dashboard/metrics',
+    title: 'Métricas',
+    description: 'Volume de conversas, FAQs e tempo médio de resposta.',
+    icon: BarChart3,
+  },
+]
+
 /**
- * Tela do tenant-admin: mostra os dados da PRÓPRIA empresa, lidos via Supabase SDK + RLS
- * (getMyCompany). O isolamento é do banco — o tenant nunca vê empresa de outro tenant.
- * CRUD de services/faqs/etc. e lista de usuários ficam para a 4.4.
+ * Tela do tenant-admin: hub "Início" com visão geral e atalhos rápidos. Os dados da
+ * empresa são lidos via Supabase SDK + RLS (getMyCompany) só para personalizar o
+ * subtítulo — o isolamento é do banco, o tenant nunca vê empresa de outro tenant.
  */
 function TenantDashboard() {
-  const { data: company, isPending, isError } = useQuery({
+  const { data: company } = useQuery({
     queryKey: ['my-company'],
     queryFn: getMyCompany,
   })
 
+  const description = company
+    ? `Visão geral do atendimento de ${company.name}`
+    : 'Visão geral do seu atendimento'
+
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Minha empresa</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/services">
-            <Button variant="outline">Serviços</Button>
-          </Link>
-          <Link href="/dashboard/faqs">
-            <Button variant="outline">FAQs</Button>
-          </Link>
-          <ConversationsNavLink />
-          <Link href="/dashboard/contacts">
-            <Button variant="outline">Contatos</Button>
-          </Link>
-          <Link href="/dashboard/metrics">
-            <Button variant="outline">Métricas</Button>
-          </Link>
-          <Link href="/dashboard/knowledge">
-            <Button variant="outline">Conhecimento</Button>
-          </Link>
-          <Link href="/dashboard/tags">
-            <Button variant="outline">Tags</Button>
-          </Link>
-          <Link href="/dashboard/business-hours">
-            <Button variant="outline">Horários</Button>
-          </Link>
-          <Link href="/dashboard/ai-settings">
-            <Button variant="outline">IA</Button>
-          </Link>
-          <Link href="/dashboard/team">
-            <Button variant="outline">Equipe</Button>
-          </Link>
-          <Link href="/dashboard/availability">
-            <Button variant="outline">Disponibilidade</Button>
-          </Link>
-          <Link href="/dashboard/calendar">
-            <Button variant="outline">Calendário</Button>
-          </Link>
-          <Link href="/dashboard/teams">
-            <Button variant="outline">Times</Button>
-          </Link>
-          <Link href="/dashboard/audit">
-            <Button variant="outline">Auditoria</Button>
-          </Link>
-          <Link href="/dashboard/saved-replies">
-            <Button variant="outline">Respostas prontas</Button>
-          </Link>
-          <Link href="/dashboard/security">
-            <Button variant="outline">Segurança</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader title="Início" description={description} />
 
       {/* Onboarding (#46): banner discreto enquanto a empresa não configurou 3 dos 4
           passos. enabled = true aqui (TenantDashboard só renderiza para tenant_admin). */}
       <OnboardingBanner enabled />
 
-      {isPending && <p className="text-sm text-muted-foreground">Carregando…</p>}
-
-      {isError && (
-        <p className="text-sm text-destructive">Erro ao carregar os dados da empresa.</p>
-      )}
-
-      {company && (
-        <dl className="space-y-3 rounded-xl border border-border p-6">
-          <div>
-            <dt className="text-xs uppercase text-muted-foreground">Nome</dt>
-            <dd className="text-sm font-medium">{company.name}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase text-muted-foreground">Slug</dt>
-            <dd className="text-sm font-medium">{company.slug}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase text-muted-foreground">Status</dt>
-            <dd className="text-sm font-medium">{company.status}</dd>
-          </div>
-          <div>
-            <dt className="text-xs uppercase text-muted-foreground">Criada em</dt>
-            <dd className="text-sm font-medium">
-              {new Date(company.createdAt).toLocaleString('pt-BR')}
-            </dd>
-          </div>
-        </dl>
-      )}
+      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {SHORTCUTS.map((s) => {
+          const Icon = s.icon
+          return (
+            <Link key={s.href} href={s.href} className="block">
+              <Card className="h-full transition-colors hover:border-foreground/20 hover:bg-muted/40">
+                <Icon className="mb-3 h-5 w-5 text-muted-foreground" />
+                <h2 className="text-base font-semibold text-foreground">{s.title}</h2>
+                <p className="mt-1 text-sm text-muted-foreground">{s.description}</p>
+              </Card>
+            </Link>
+          )
+        })}
+      </div>
     </div>
   )
 }

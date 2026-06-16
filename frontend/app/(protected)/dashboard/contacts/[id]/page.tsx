@@ -5,10 +5,10 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { use, useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card, Section } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
 import { eraseContact, exportContactData } from '@/lib/api/lgpd'
 import { getMe } from '@/lib/api/me'
@@ -125,40 +125,37 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
   })
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-3xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <p className="text-sm text-muted-foreground">Redirecionando…</p>
   }
 
   if (contactError) {
     return (
-      <div className="mx-auto max-w-3xl p-8">
-        <h1 className="mb-2 text-xl font-semibold">Contato</h1>
-        <p className="mb-4 text-sm text-destructive">
+      <div className="space-y-6">
+        <PageHeader
+          title="Contato"
+          breadcrumb={[{ label: 'Contatos', href: '/dashboard/contacts' }, { label: 'Contato' }]}
+        />
+        <p className="text-sm text-destructive">
           Erro ao carregar o contato (ou ele não pertence à sua empresa).
         </p>
-        <Link href="/dashboard/contacts">
-          <Button variant="outline">Voltar aos contatos</Button>
-        </Link>
       </div>
     )
   }
 
+  const contactLabel = contact?.name ?? contact?.phoneNumber ?? 'Contato'
+
   return (
-    <div className="mx-auto max-w-3xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">{contact?.name ?? contact?.phoneNumber ?? 'Contato'}</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard/contacts">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title={contactLabel}
+        breadcrumb={[
+          { label: 'Contatos', href: '/dashboard/contacts' },
+          { label: contactLabel },
+        ]}
+      />
 
       {contact && (
-        <div className="space-y-4 rounded-xl border border-border p-6">
+        <Card className="space-y-4">
           <div>
             <label htmlFor="name" className="mb-1 block text-sm font-medium">
               Nome
@@ -228,11 +225,11 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               responde automaticamente.
             </p>
           )}
-        </div>
+        </Card>
       )}
 
       {contact && (
-        <div className="mt-6 space-y-3 rounded-xl border border-destructive/40 p-6">
+        <Card className="space-y-3 border-destructive/40">
           <div>
             <h2 className="text-base font-semibold">Privacidade (LGPD)</h2>
             <p className="mt-1 text-xs text-muted-foreground">
@@ -256,11 +253,11 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             </Button>
           </div>
           {exportError && <p className="text-sm text-destructive">{exportError}</p>}
-        </div>
+        </Card>
       )}
 
-      <h2 className="mt-8 mb-3 text-lg font-semibold">Conversas</h2>
-      <div className="space-y-2 rounded-xl border border-border p-4">
+      <Section title="Conversas">
+      <div className="space-y-2 rounded-lg border border-border bg-card p-4">
         {conversations == null && <p className="text-sm text-muted-foreground">Carregando…</p>}
         {conversations?.length === 0 && (
           <p className="text-sm text-muted-foreground">Nenhuma conversa com este contato.</p>
@@ -283,6 +280,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
           </Link>
         ))}
       </div>
+      </Section>
 
       <Modal
         open={eraseOpen}

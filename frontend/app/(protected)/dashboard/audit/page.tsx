@@ -2,14 +2,13 @@
 
 import { useQuery } from '@tanstack/react-query'
 import { ScrollText } from 'lucide-react'
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
 
-import { SignOutButton } from '@/components/sign-out-button'
-import { ThemeToggle } from '@/components/theme-toggle'
+import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
+import { Card } from '@/components/ui/card'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getAuditLogs, type AuditLogEntry } from '@/lib/api/audit'
@@ -100,68 +99,62 @@ export default function AuditPage() {
   }
 
   if (me && !isTenant) {
-    return (
-      <div className="mx-auto max-w-5xl p-8 text-sm text-muted-foreground">Redirecionando…</div>
-    )
+    return <div className="text-sm text-muted-foreground">Redirecionando…</div>
   }
 
   return (
-    <div className="mx-auto max-w-5xl p-8">
-      <div className="mb-6 flex items-center justify-between">
-        <h1 className="text-xl font-semibold">Histórico de alterações</h1>
-        <div className="flex items-center gap-2">
-          <Link href="/dashboard">
-            <Button variant="outline">Voltar</Button>
-          </Link>
-          <ThemeToggle />
-          <SignOutButton />
-        </div>
-      </div>
+    <div className="space-y-6">
+      <PageHeader
+        title="Auditoria"
+        description="Histórico de ações sensíveis (criar/editar/remover dados) da sua empresa."
+      />
 
-      <form onSubmit={applyFilters} className="mb-4 flex flex-wrap items-end gap-2">
-        <div>
-          <label htmlFor="filter-entity" className="mb-1 block text-xs font-medium">
-            Entidade
-          </label>
-          <input
-            id="filter-entity"
-            type="text"
-            placeholder="ex.: service"
-            value={entity}
-            onChange={(e) => setEntity(e.target.value)}
-            className="rounded-md border border-border px-3 py-1.5 text-sm"
-          />
-        </div>
-        <div>
-          <label htmlFor="filter-action" className="mb-1 block text-xs font-medium">
-            Ação
-          </label>
-          <input
-            id="filter-action"
-            type="text"
-            placeholder="ex.: created"
-            value={action}
-            onChange={(e) => setAction(e.target.value)}
-            className="rounded-md border border-border px-3 py-1.5 text-sm"
-          />
-        </div>
-        <Button type="submit" variant="outline">
-          Filtrar
-        </Button>
-        {(applied.entity || applied.action) && (
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => {
-              setEntity('')
-              setAction('')
-              setApplied({ entity: '', action: '' })
-            }}
-          >
-            Limpar
+      <Card>
+        <form onSubmit={applyFilters} className="flex flex-wrap items-end gap-2">
+          <div>
+            <label htmlFor="filter-entity" className="mb-1 block text-xs font-medium">
+              Entidade
+            </label>
+            <input
+              id="filter-entity"
+              type="text"
+              placeholder="ex.: service"
+              value={entity}
+              onChange={(e) => setEntity(e.target.value)}
+              className="rounded-md border border-border px-3 py-1.5 text-sm"
+            />
+          </div>
+          <div>
+            <label htmlFor="filter-action" className="mb-1 block text-xs font-medium">
+              Ação
+            </label>
+            <input
+              id="filter-action"
+              type="text"
+              placeholder="ex.: created"
+              value={action}
+              onChange={(e) => setAction(e.target.value)}
+              className="rounded-md border border-border px-3 py-1.5 text-sm"
+            />
+          </div>
+          <Button type="submit" variant="outline">
+            Filtrar
           </Button>
-        )}
-      </form>
+          {(applied.entity || applied.action) && (
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setEntity('')
+                setAction('')
+                setApplied({ entity: '', action: '' })
+              }}
+            >
+              Limpar
+            </Button>
+          )}
+        </form>
+      </Card>
 
       {isError ? (
         <p className="text-sm text-destructive">Erro ao carregar o histórico.</p>
