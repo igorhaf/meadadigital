@@ -7,6 +7,7 @@ import com.meada.whatsapp.ai.AiInsights;
 import com.meada.whatsapp.ai.AiProvider;
 import com.meada.whatsapp.ai.AiResponse;
 import com.meada.whatsapp.ai.AiTransientException;
+import com.meada.whatsapp.ai.AppointmentAction;
 import com.meada.whatsapp.ai.DetectedIntent;
 import com.meada.whatsapp.ai.Prompt;
 import com.meada.whatsapp.ai.SchedulingIntent;
@@ -22,6 +23,7 @@ import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 
 import java.time.Instant;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.ZoneId;
@@ -329,7 +331,7 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
         DetectedIntent complaint = new DetectedIntent(
             Instant.parse("2026-06-15T12:00:00Z"), "atraso no atendimento",
             "esperei uma hora e ninguém me atendeu");
-        AiInsights insights = new AiInsights(null, complaint, null, null, null);
+        AiInsights insights = new AiInsights(null, complaint, null, null, null, null);
         // caminho feliz (caso 6): a IA respondeu needsHuman=false, mas a reclamação força handoff.
         fakeAi.enqueue(new AiResponse("Sinto muito pelo ocorrido.", false, null, 10, 5, 100L, null, insights));
         fakeEvolution.enqueue("key-complaint");
@@ -358,7 +360,7 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
         com.fasterxml.jackson.databind.node.ObjectNode data = INSIGHTS_MAPPER.createObjectNode();
         data.put("nome", "Ana");
         data.put("email", "ana@ex.com");
-        AiInsights insights = new AiInsights(null, null, data, null, null);
+        AiInsights insights = new AiInsights(null, null, data, null, null, null);
         fakeAi.enqueue(new AiResponse("Anotado, obrigado!", false, null, 10, 5, 100L, null, insights));
         fakeEvolution.enqueue("key-extracted");
 
@@ -373,6 +375,37 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
                 + "from conversations where id = ?", CONV);
         assertThat(row.get("nome")).isEqualTo("Ana");
         assertThat(row.get("email")).isEqualTo("ana@ex.com");
+    }
+
+    // ---- appointment action (camada 5.19 #60) -------------------------------
+
+    @Test
+    @DisplayName("AiResponse com appointmentAction 'book' em slot válido → cria appointment do contato")
+    void appointmentAction_book_createsAppointment() {
+        // Semeia uma janela de disponibilidade ATIVA cobrindo um horário futuro (daqui 7 dias,
+        // 10:00 local SP, dentro de 09:00–12:00 no weekday dessa data). O AppointmentService
+        // valida contra essa janela antes de inserir.
+        LocalDate targetDate = LocalDate.now(ZoneId.of("America/Sao_Paulo")).plusDays(7);
+        LocalDateTime targetLocal = LocalDateTime.of(targetDate, LocalTime.of(10, 0));
+        int weekday = targetDate.getDayOfWeek().getValue() % 7;
+        jdbcTemplate.update(
+            "insert into availability_slots (company_id, weekday, starts_at, ends_at, slot_minutes, active) "
+                + "values (?, ?, '09:00'::time, '12:00'::time, 30, true)", COMPANY, weekday);
+
+        AppointmentAction action = new AppointmentAction("book", targetLocal.toString(), "Corte");
+        AiInsights insights = new AiInsights(null, null, null, null, null, action);
+        fakeAi.enqueue(new AiResponse("Agendado! Te espero.", false, null, 10, 5, 100L, null, insights));
+        fakeEvolution.enqueue("key-appt");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);
+        assertThat(countOutbound(CONV)).isEqualTo(1);   // o reply foi enviado normalmente
+
+        long appts = jdbcTemplate.queryForObject(
+            "select count(*) from appointments where company_id = ? and contact_id = ? and status = 'scheduled'",
+            Long.class, COMPANY, CONTACT);
+        assertThat(appts).isEqualTo(1);
     }
 
     // ---- gate de horário comercial (camada 5.4) -----------------------------

@@ -93,12 +93,12 @@ Lista de 50 features para o MVP funcional do SaaS de atendimento WhatsApp+IA agn
 - [x] 58. Tom dinâmico por perfil do contato
 
 ### Agendamento real
-- [ ] 59. Calendário visual
-- [ ] 60. IA agenda de fato
+- [x] 59. Calendário visual
+- [x] 60. IA agenda de fato
 - [x] 61. Slots de disponibilidade (fase-5.17)
 - [ ] 62. Integração Google Calendar
-- [ ] 63. Lembretes automáticos
-- [ ] 64. Remarcar/cancelar via WhatsApp
+- [x] 63. Lembretes automáticos
+- [x] 64. Remarcar/cancelar via WhatsApp
 
 ### Análise
 - [ ] 65. Dashboard exportável PDF

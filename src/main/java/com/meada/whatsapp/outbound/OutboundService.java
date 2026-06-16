@@ -11,6 +11,7 @@ import com.meada.whatsapp.ai.DetectedIntent;
 import com.meada.whatsapp.ai.Prompt;
 import com.meada.whatsapp.ai.PromptBuilder;
 import com.meada.whatsapp.ai.SchedulingIntent;
+import com.meada.whatsapp.appointments.AppointmentService;
 import com.meada.whatsapp.messaging.BusinessHours;
 import com.meada.whatsapp.messaging.BusinessHoursRepository;
 import com.meada.whatsapp.messaging.ContactRepository;
@@ -75,6 +76,7 @@ public class OutboundService {
     private final BusinessHoursRepository businessHoursRepository;
     private final BusinessHoursGate businessHoursGate;
     private final ObjectMapper objectMapper;
+    private final AppointmentService appointmentService;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -100,7 +102,8 @@ public class OutboundService {
                            OutboundRetryProperties retryProps,
                            BusinessHoursRepository businessHoursRepository,
                            BusinessHoursGate businessHoursGate,
-                           ObjectMapper objectMapper) {
+                           ObjectMapper objectMapper,
+                           AppointmentService appointmentService) {
         this.conversationRepository = conversationRepository;
         this.contactRepository = contactRepository;
         this.whatsappInstanceRepository = whatsappInstanceRepository;
@@ -112,6 +115,7 @@ public class OutboundService {
         this.businessHoursRepository = businessHoursRepository;
         this.businessHoursGate = businessHoursGate;
         this.objectMapper = objectMapper;
+        this.appointmentService = appointmentService;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
         // o invariante backoffs.size() == maxAttempts-1 em cada chamada.
@@ -177,7 +181,7 @@ public class OutboundService {
                 // caso 1: persiste a intent (#29) e os insights (5.18) ANTES de enviar, manda a
                 // resposta-ponte, grava, depois flipa. Casos 2/3 (sem reply efetivo) NÃO persistem.
                 persistSchedulingIntent(conversationId, aiResponse);
-                persistInsights(conversationId, aiResponse);
+                persistInsights(event.companyId(), conversationId, aiResponse);
                 Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, aiResponse);
                 if (sendFailure.isPresent()) {
                     return sendFailure.get();   // falha de envio domina (casos 7/8/9) — já logado lá
@@ -201,7 +205,7 @@ public class OutboundService {
         // caso 6: caminho feliz — persiste a intent (#29) e os insights (5.18) ANTES de enviar,
         // depois envia e grava.
         persistSchedulingIntent(conversationId, aiResponse);
-        persistInsights(conversationId, aiResponse);
+        persistInsights(event.companyId(), conversationId, aiResponse);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, aiResponse);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -348,10 +352,14 @@ public class OutboundService {
      * <p>#52: quando há complaint_intent, FORÇA o handoff (handled_by='human') após persistir —
      * reclamação sempre vira atendimento humano, independentemente do needsHuman da IA.
      *
+     * <p>#60/#64: quando há appointmentAction (book/reschedule/cancel), aplica a ação sobre
+     * appointments via {@link AppointmentService#applyAppointmentAction} — que valida janela/
+     * conflito e NUNCA lança (best-effort; o reply ao cliente já segue independente do agendamento).
+     *
      * <p>Falha de persistência NÃO derruba o atendimento: logamos warn e seguimos (a resposta
      * ao cliente é mais importante que a marcação interna), igual ao persistSchedulingIntent.
      */
-    private void persistInsights(UUID conversationId, AiResponse aiResponse) {
+    private void persistInsights(UUID companyId, UUID conversationId, AiResponse aiResponse) {
         AiInsights insights = aiResponse.insights();
         if (insights == null || !insights.hasAny()) {
             return;
@@ -391,6 +399,13 @@ public class OutboundService {
             // #52: reclamação detectada SEMPRE força handoff (após persistir a marcação).
             if (insights.complaintIntent() != null) {
                 conversationRepository.markHandledByHuman(conversationId);
+            }
+
+            // #60/#64: ação de agendamento da IA (book/reschedule/cancel). applyAppointmentAction
+            // valida janela/conflito e NUNCA lança — mas fica dentro do try por simetria/defesa.
+            if (insights.appointmentAction() != null) {
+                appointmentService.applyAppointmentAction(
+                    companyId, conversationId, insights.appointmentAction());
             }
         } catch (Exception e) {
             log.warn("outbound: failed to persist insights for conversation {} ({})",

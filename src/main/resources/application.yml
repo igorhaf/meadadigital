@@ -142,6 +142,12 @@ invitations:
   frontend-base-url: ${INVITATIONS_FRONTEND_BASE_URL:http://localhost:3000}
   token-validity-days: ${INVITATIONS_TOKEN_VALIDITY_DAYS:7}
 
+# Agendamentos (camada 5.19 #63). reminder-check-ms: intervalo (fixedDelay) do ReminderJob
+#   varrer os agendamentos due e mandar lembretes de 24h/2h. Grande por padrão (5min); o job
+#   só age sobre linhas due, então não dispara efeitos em testes.
+appointments:
+  reminder-check-ms: ${APPOINTMENTS_REMINDER_CHECK_MS:300000}
+
 # Supabase. jwks-url SEM default (fail-fast): o filtro JWT do admin valida os tokens
 #   ES256 contra as chaves públicas servidas neste endpoint JWKS (o Supabase migrou de
 #   HS256/secret compartilhado para JWT Signing Keys assimétricas — ver JwksConfig e

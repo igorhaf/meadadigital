@@ -22,16 +22,18 @@ public record AiInsights(
     DetectedIntent complaintIntent,
     JsonNode extractedData,
     JsonNode memoryUpdate,
-    String detectedTone) {
+    String detectedTone,
+    AppointmentAction appointmentAction) {
 
     /** Insights vazio (nenhuma detecção) — evita null no AiResponse quando nada veio. */
     public static AiInsights empty() {
-        return new AiInsights(null, null, null, null, null);
+        return new AiInsights(null, null, null, null, null, null);
     }
 
     /** true se algum campo foi detectado (vale a pena persistir). */
     public boolean hasAny() {
         return cancellationIntent != null || complaintIntent != null
-            || extractedData != null || memoryUpdate != null || detectedTone != null;
+            || extractedData != null || memoryUpdate != null || detectedTone != null
+            || appointmentAction != null;
     }
 }

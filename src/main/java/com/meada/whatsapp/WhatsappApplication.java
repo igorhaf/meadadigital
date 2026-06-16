@@ -3,6 +3,7 @@ package com.meada.whatsapp;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
+import org.springframework.scheduling.annotation.EnableScheduling;
 
 /**
  * Ponto de entrada do backend Meada WhatsApp.
@@ -15,9 +16,14 @@ import org.springframework.boot.context.properties.ConfigurationPropertiesScan;
  *
  * @ConfigurationPropertiesScan registra os records @ConfigurationProperties do
  * pacote (ex. OutboundRetryProperties) como beans, sem precisar enumerá-los.
+ *
+ * @EnableScheduling liga o agendamento de tarefas do Spring (camada 5.19 #63) — o
+ * ReminderJob roda em @Scheduled(fixedDelay). O intervalo é grande por padrão e o job
+ * só age sobre linhas DUE (agendamentos futuros próximos), então não dispara em testes.
  */
 @SpringBootApplication
 @ConfigurationPropertiesScan
+@EnableScheduling
 public class WhatsappApplication {
 
     public static void main(String[] args) {

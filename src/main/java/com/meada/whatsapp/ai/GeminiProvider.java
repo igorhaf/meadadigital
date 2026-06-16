@@ -138,8 +138,23 @@ public class GeminiProvider implements AiProvider {
                 "extracted_data", Map.of("type", "OBJECT", "nullable", true),
                 "memory_update", Map.of("type", "OBJECT", "nullable", true),
                 "detected_tone", Map.of("type", "STRING",
-                    "enum", List.of("formal", "informal", "neutro", "irritado")))),
+                    "enum", List.of("formal", "informal", "neutro", "irritado")),
+                "appointment_action", appointmentActionSchema())),
             "required", List.of("reply", "needs_human"));
+    }
+
+    /**
+     * Sub-objeto OPCIONAL de ação de agendamento (camada 5.19 #60/#64). kind enum
+     * book|reschedule|cancel; when_iso (ISO local) só p/ book/reschedule; service_hint livre.
+     */
+    private Map<String, Object> appointmentActionSchema() {
+        return Map.of(
+            "type", "OBJECT",
+            "properties", Map.of(
+                "kind", Map.of("type", "STRING", "enum", List.of("book", "reschedule", "cancel")),
+                "when_iso", Map.of("type", "STRING", "nullable", true),
+                "service_hint", Map.of("type", "STRING", "nullable", true)),
+            "required", List.of("kind"));
     }
 
     /**
@@ -244,7 +259,21 @@ public class GeminiProvider implements AiProvider {
         if (tone != null && tone.isBlank()) {
             tone = null;
         }
-        return new AiInsights(cancellation, complaint, extracted, memory, tone);
+        AppointmentAction appointment = parseAppointmentAction(structured.path("appointment_action"));
+        return new AiInsights(cancellation, complaint, extracted, memory, tone, appointment);
+    }
+
+    /** Sub-objeto appointment_action (camada 5.19), ou null se ausente/sem kind. */
+    private AppointmentAction parseAppointmentAction(JsonNode node) {
+        if (node.isMissingNode() || node.isNull()) {
+            return null;
+        }
+        String kind = node.path("kind").asText(null);
+        if (kind == null || kind.isBlank()) {
+            return null;
+        }
+        return new AppointmentAction(
+            kind, node.path("when_iso").asText(null), node.path("service_hint").asText(null));
     }
 
     /** Sub-objeto de DetectedIntent (cancelamento/reclamação), ou null se ausente. */

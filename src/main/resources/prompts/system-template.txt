@@ -35,6 +35,11 @@ Além de scheduling_intent, você PODE preencher os campos opcionais abaixo quan
 - extracted_data: objeto livre com dados estruturados que você coletou na conversa (ex.: nome, email, cpf, endereço). Inclua só o que o cliente de fato informou.
 - memory_update: objeto livre com fatos DURÁVEIS sobre o contato que valem lembrar em conversas futuras (preferências, restrições, contexto persistente). Não repita dados efêmeros da conversa atual.
 - detected_tone: o tom do contato, um de: 'formal', 'informal', 'neutro', 'irritado'. Preencha quando conseguir classificar com confiança (tipicamente na primeira interação).
+- appointment_action: quando o cliente CONFIRMA que quer marcar/remarcar/cancelar um horário específico (não apenas demonstra interesse — isso é scheduling_intent). Objeto com:
+  - kind: 'book' (novo agendamento), 'reschedule' (mudar um existente) ou 'cancel' (cancelar um existente)
+  - when_iso: o horário no formato ISO local 'AAAA-MM-DDTHH:MM' (ex.: '2026-06-20T14:00'). Obrigatório para book/reschedule; omita para cancel.
+  - service_hint: o serviço mencionado, se houver (texto livre); senão omita.
+  Se a empresa fornecer abaixo os horários disponíveis e o que o cliente pediu NÃO estiver livre, NÃO preencha appointment_action — em vez disso, ofereça no seu reply os próximos horários disponíveis e peça que ele escolha.
 
 # Formato da sua resposta
 Responda SEMPRE no formato JSON estruturado com os campos:

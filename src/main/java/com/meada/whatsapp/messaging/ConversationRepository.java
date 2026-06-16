@@ -244,4 +244,20 @@ public class ConversationRepository {
             .stream()
             .findFirst();
     }
+
+    /**
+     * Resolve o {@code whatsapp_instance_id} de uma conversa — usado pelo ReminderJob (camada
+     * 5.19 #63) para descobrir por qual instância mandar o lembrete (as credenciais da Evolution
+     * são per-instância). Optional vazio se a conversa não existe.
+     *
+     * @return o id da instância, ou {@link Optional#empty()} se a conversa não existe.
+     */
+    public Optional<UUID> findInstanceIdByConversation(UUID conversationId) {
+        Objects.requireNonNull(conversationId, "conversationId must not be null");
+        return jdbcTemplate.query(
+                "select whatsapp_instance_id from conversations where id = ?",
+                (rs, rowNum) -> (UUID) rs.getObject("whatsapp_instance_id"), conversationId)
+            .stream()
+            .findFirst();
+    }
 }
