@@ -11,7 +11,7 @@
 	admin off
 }
 
-# Frontend — domínio base + os 7 subdomínios de perfil.
+# Frontend — domínio base + os 8 subdomínios de perfil.
 # Prefixo http:// EXPLÍCITO: força o Caddy a escutar a porta 80 (sem ele + auto_https off,
 # o Caddy bind só :443 e a 80 fica morta — connection reset).
 http://meadadigital.local,
@@ -21,7 +21,8 @@ http://dental.meadadigital.local,
 http://sushi.meadadigital.local,
 http://mesa.meadadigital.local,
 http://salao.meadadigital.local,
-http://pousada.meadadigital.local {
+http://pousada.meadadigital.local,
+http://academia.meadadigital.local {
 	reverse_proxy frontend:3000
 }
 

@@ -29,7 +29,8 @@ public enum ProfileType {
     SUSHI("sushi", "SushiBot", "sushi", "tijolo"),
     RESTAURANT("restaurant", "MesaBot", "mesa", "tijolo"),
     SALON("salon", "SalãoBot", "salao", "orquidea"),
-    POUSADA("pousada", "PousadaBot", "pousada", "oceano");
+    POUSADA("pousada", "PousadaBot", "pousada", "oceano"),
+    ACADEMIA("academia", "AcademiaBot", "academia", "pinheiro");
 
     private final String id;
     private final String productName;

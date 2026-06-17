@@ -31,15 +31,16 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
     }
 
     @Test
-    @DisplayName("GET /admin/profiles → catálogo com os 7 perfis (super-admin)")
+    @DisplayName("GET /admin/profiles → catálogo com os 8 perfis (super-admin)")
     void profiles_catalog() throws Exception {
         mockMvc.perform(get("/admin/profiles").header("Authorization", "Bearer " + superToken()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(7))
+            .andExpect(jsonPath("$.items.length()").value(8))
             .andExpect(jsonPath("$.items[?(@.id == 'legal')].productName").value("ProcessoBot"))
             .andExpect(jsonPath("$.items[?(@.id == 'restaurant')].productName").value("MesaBot"))
             .andExpect(jsonPath("$.items[?(@.id == 'salon')].productName").value("SalãoBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'pousada')].productName").value("PousadaBot"));
+            .andExpect(jsonPath("$.items[?(@.id == 'pousada')].productName").value("PousadaBot"))
+            .andExpect(jsonPath("$.items[?(@.id == 'academia')].productName").value("AcademiaBot"));
     }
 
     @Test

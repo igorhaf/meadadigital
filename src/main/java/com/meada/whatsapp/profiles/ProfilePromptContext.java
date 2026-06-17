@@ -27,6 +27,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.dental.DentalContextCache dentalContextCache;
     private final com.meada.whatsapp.profiles.salon.SalonContextCache salonContextCache;
     private final com.meada.whatsapp.profiles.pousada.PousadaContextCache pousadaContextCache;
+    private final com.meada.whatsapp.profiles.academia.AcademiaContextCache academiaContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -35,6 +36,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.dental.DentalContextCache dentalContextCache,
                                 com.meada.whatsapp.profiles.salon.SalonContextCache salonContextCache,
                                 com.meada.whatsapp.profiles.pousada.PousadaContextCache pousadaContextCache,
+                                com.meada.whatsapp.profiles.academia.AcademiaContextCache academiaContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -42,6 +44,7 @@ public class ProfilePromptContext {
         this.dentalContextCache = dentalContextCache;
         this.salonContextCache = salonContextCache;
         this.pousadaContextCache = pousadaContextCache;
+        this.academiaContextCache = academiaContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -70,6 +73,16 @@ public class ProfilePromptContext {
             + "um). NUNCA recomende serviço que o cliente não pediu, NUNCA opine sobre a aparência do "
             + "cliente, e não prometa resultado estético. Fale como 'vou ver a disponibilidade', 'que "
             + "tal X com a profissional Y?'.";
+
+    private static final String ACADEMIA =
+        "Você é atendente de uma academia. Tom acolhedor-motivador SEM promessa de resultado "
+            + "corporal, SEM julgamento estético, SEM prescrever treino (você não é educador físico). "
+            + "Conheça os planos cadastrados e as aulas semanais com vagas disponíveis. Quando o "
+            + "cliente pedir matrícula, pergunte qual plano interessa e qual(is) aula(s) ele quer "
+            + "fazer (mostre dia + horário + vagas restantes). Se ele perguntar sobre treino "
+            + "específico, prescrição, dieta ou avaliação física, recuse com gentileza e explique que "
+            + "isso é com o professor presencialmente. Confirme plano + aulas + nome antes de "
+            + "matricular.";
 
     private static final String POUSADA =
         "Você é atendente de uma pousada. Tom acolhedor, sereno, sem promessa exagerada. Conheça os "
@@ -100,6 +113,7 @@ public class ProfilePromptContext {
             case RESTAURANT -> RESTAURANT;
             case SALON -> SALON;
             case POUSADA -> POUSADA;
+            case ACADEMIA -> ACADEMIA;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -162,6 +176,13 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + pousadaContextCache.contextSegment(companyId, contactId);
+        }
+        if ("academia".equals(profileId)) {
+            // academia (7.7): persona + planos + aulas com vagas + matrícula atual do contato (anti-
+            // dupla). Resolve o contato pela conversa.
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + academiaContextCache.contextSegment(companyId, contactId);
         }
         return persona;
     }

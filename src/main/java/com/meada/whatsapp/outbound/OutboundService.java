@@ -92,6 +92,8 @@ public class OutboundService {
     private final com.meada.whatsapp.profiles.salon.appointments.AgendamentoConfirmHandler agendamentoConfirmHandler;
     // Camada 7.6 (perfil pousada): pós-processa a tag <reserva_pousada> — cria a reserva e remove a tag.
     private final com.meada.whatsapp.profiles.pousada.reservations.ReservaPousadaConfirmHandler reservaPousadaConfirmHandler;
+    // Camada 7.7 (perfil academia): pós-processa a tag <matricula> — cria a matrícula e remove a tag.
+    private final com.meada.whatsapp.profiles.academia.memberships.MatriculaConfirmHandler matriculaConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -132,6 +134,7 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.dental.appointments.ConsultaConfirmHandler consultaConfirmHandler,
                            com.meada.whatsapp.profiles.salon.appointments.AgendamentoConfirmHandler agendamentoConfirmHandler,
                            com.meada.whatsapp.profiles.pousada.reservations.ReservaPousadaConfirmHandler reservaPousadaConfirmHandler,
+                           com.meada.whatsapp.profiles.academia.memberships.MatriculaConfirmHandler matriculaConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -154,6 +157,7 @@ public class OutboundService {
         this.consultaConfirmHandler = consultaConfirmHandler;
         this.agendamentoConfirmHandler = agendamentoConfirmHandler;
         this.reservaPousadaConfirmHandler = reservaPousadaConfirmHandler;
+        this.matriculaConfirmHandler = matriculaConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -259,6 +263,8 @@ public class OutboundService {
         toSend = maybeProcessSalonAppointment(event, conversationId, toSend);
         // Camada 7.6 (perfil pousada): pós-processa a tag <reserva_pousada> — cria a reserva e remove a tag.
         toSend = maybeProcessPousadaReservation(event, conversationId, toSend);
+        // Camada 7.7 (perfil academia): pós-processa a tag <matricula> — cria a matrícula e remove a tag.
+        toSend = maybeProcessMatricula(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -478,6 +484,32 @@ public class OutboundService {
                 event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = reservaPousadaConfirmHandler.stripReservaPousadaTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil academia (camada 7.7): se o tenant é academia e a resposta da IA
+     * contém a tag {@code <matricula>}, cria a matrícula (MatriculaConfirmHandler resolve o contato)
+     * e devolve um AiResponse SEM a tag. Para outro perfil, ou sem tag, devolve o original. Espelho
+     * de {@link #maybeProcessPousadaReservation}. Best-effort.
+     */
+    private AiResponse maybeProcessMatricula(MessageInboundProcessedEvent event,
+                                             UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !matriculaConfirmHandler.hasMatriculaTag(reply)) {
+            return aiResponse;
+        }
+        if (!"academia".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            matriculaConfirmHandler.parseAndCreate(
+                event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = matriculaConfirmHandler.stripMatriculaTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

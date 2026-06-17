@@ -12,6 +12,7 @@ import {
   CalendarClock,
   ClipboardList,
   Clock,
+  Dumbbell,
   HelpCircle,
   Home,
   LayoutDashboard,
@@ -172,6 +173,9 @@ export function getNavForProfile(profileId: string | null | undefined): NavGroup
   if (profileId === 'pousada') {
     return [POUSADA_GROUP, ...NAV_GROUPS]
   }
+  if (profileId === 'academia') {
+    return [ACADEMIA_GROUP, ...NAV_GROUPS]
+  }
   return NAV_GROUPS
 }
 
@@ -232,5 +236,16 @@ const POUSADA_GROUP: NavGroup = {
     { label: 'Quartos', href: '/dashboard/rooms', icon: BedDouble },
     { label: 'Reservas', href: '/dashboard/pousada-reservations', icon: CalendarClock },
     { label: 'Configurações', href: '/dashboard/pousada-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil academia (camada 7.7). */
+const ACADEMIA_GROUP: NavGroup = {
+  heading: 'Academia',
+  items: [
+    { label: 'Planos', href: '/dashboard/academia-plans', icon: Dumbbell },
+    { label: 'Aulas', href: '/dashboard/academia-classes', icon: CalendarClock },
+    { label: 'Matrículas', href: '/dashboard/academia-memberships', icon: ClipboardList },
+    { label: 'Configurações', href: '/dashboard/academia-settings', icon: Settings },
   ],
 }

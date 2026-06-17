@@ -463,6 +463,56 @@ calcula o total (diária × noites) e reserva.
   auto-transição.
 - Guia operacional do tenant: `docs/PERFIL_POUSADA.md`.
 
+## Perfil Academia (AcademiaBot, camada 7.7)
+
+Sétimo perfil vertical real. O tenant academia (`profile_id='academia'`) vira um produto de
+ACADEMIA/STUDIO de fitness: gerencia planos mensais e aulas semanais recorrentes, matricula alunos
+(assinatura), registra pagamentos manuais, e a IA atende clientes via WhatsApp oferecendo planos +
+aulas com vaga.
+
+- **EVOLUÇÃO ESTRUTURAL MAIS PROFUNDA — primeira SM com RECORRÊNCIA INDEFINIDA:** a matrícula é uma
+  ASSINATURA (`status` ativa-até-cancelar), não um evento pontual (slot) nem um intervalo finito
+  (pousada). Uma matrícula ocupa N vagas em N aulas semanais recorrentes (junction
+  `academia_membership_classes`). O conflito é por CAPACITY por aula (`capacity - count(matrículas
+  não-canceladas naquela aula) > 0`), validado transacionalmente no INSERT.
+- **Modelo:** `academia_plans` + `academia_classes` (dia da semana 0=domingo..6, hora, duração,
+  capacity, modalidade) + `academia_config` (horário) + `academia_memberships` (assinatura) +
+  `academia_membership_classes` (junction com snapshot da aula) + `academia_payments` (manual).
+  Migration 36.
+- **Status hardcoded** (`AcademiaMembershipStatus` ↔ TS, parity test): `ativa ⇄ suspensa`; ambas →
+  `cancelada` (terminal). Só **ativa** (boas-vindas, com o plano) e **cancelada** (despedida)
+  notificam; **suspensa** silenciosa. CANCELADA materializa `end_date` e libera vagas. **SUSPENSA
+  MANTÉM ocupando a vaga** (decisão cravada: pausa curta; pra liberar, cancelar) — o count de vaga
+  filtra por `status <> 'cancelada'`.
+- **Anti-dupla matrícula:** UNIQUE INDEX `uniq_active_membership_per_contact` (company, contact)
+  WHERE status='ativa' — impede 2 matrículas ativas pro mesmo contato. O service também valida via
+  `findActiveByContact` (→ 409 already_active).
+- **Snapshots:** matrícula congela `plan_name` + `plan_monthly_cents` + `student_name`/`phone`;
+  junction congela `class_name` + `day_of_week` + `start_time` + `duration` + `modality`. Mudar
+  plano/aula depois NÃO altera matrículas existentes.
+- **Pagamento manual** (`academia_payments`): registro mensal com UNIQUE (membership,
+  reference_month) → 409 duplicate_payment. Só em matrícula ativa. Summary = último mês pago +
+  meses em aberto (meses decorridos desde start_date − pagamentos). SEM cobrança automática
+  (Stripe é #50, fase futura); SEM cálculo de inadimplência.
+- **Tag `<matricula>`** (namespace exclusivo): `<matricula>{"plan_id","class_ids":[...],
+  "student_name","notes"}</matricula>`. `MatriculaConfirmHandler` parseia, resolve contato, cria.
+  OutboundService: `maybeProcessMatricula`.
+- **Persona ACADEMIA nova:** tom acolhedor-motivador, **NUNCA prescreve treino/dieta/avaliação
+  física (não é educador físico — recusa com gentileza), NUNCA julga, sem promessa de resultado
+  corporal**. Contexto via `AcademiaContextCache` (TTL 60s — aulas mudam pouco): planos ativos,
+  aulas ativas com VAGAS RESTANTES em tempo real, matrícula atual do contato (anti-dupla na IA).
+- **Aluno NÃO é entidade própria** (igual salon/pousada — rotatividade). Histórico via contact +
+  memberships. `student_name`/`student_phone` snapshots.
+- **LGPD:** `notes` administrativo, sem dados de saúde do aluno.
+- **Guard:** `AcademiaProfileGuard`. `JwtAuthenticationFilter` autentica `/api/academia/**` (além de
+  sushi/legal/restaurant/dental/salon/pousada).
+- **Sidebar:** `getNavForProfile('academia')` injeta "Academia" (Planos/Aulas/Matrículas/
+  Configurações). Telas `/dashboard/academia-{plans,classes,memberships,settings}`.
+- **NÃO TEM:** treino prescrito, ficha de exercícios, avaliação física, balança/wearables,
+  pagamento real (Stripe #50), foto, catraca biométrica, fidelidade, multi-unidade, scheduler de
+  cobrança/lembrete.
+- Guia operacional do tenant: `docs/PERFIL_ACADEMIA.md`.
+
 ## Estado das camadas
 
 - **1 — Schema multi-tenant:** FECHADA. 11 tabelas, RLS, FKs compostas anti-cross-tenant.
