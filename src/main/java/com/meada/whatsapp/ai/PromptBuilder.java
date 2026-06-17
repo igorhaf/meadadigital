@@ -117,11 +117,12 @@ public class PromptBuilder {
         String rulesValue = settings.map(AiSettings::systemRules).orElse(null);
         String restrictionsValue = settings.map(AiSettings::restrictions).orElse(null);
 
-        // Persona por perfil (camada 7.0): prefixo de voz do "produto" (legal/dental/sushi),
-        // concatenado ANTES do prompt base. generic → "" (o template já é o comportamento
+        // Persona por perfil (camada 7.0) + contexto do tenant (camada 7.1): prefixo de voz do
+        // "produto" (legal/dental/sushi) — e, para sushi, o cardápio+config+instruções de pedido.
+        // Concatenado ANTES do prompt base. generic → "" (o template já é o comportamento
         // genérico). NÃO substitui o template — só antecede.
-        String profileSegment =
-            profilePromptContext.segmentFor(companyProfileRepository.findProfileId(companyId));
+        String profileSegment = profilePromptContext.segmentFor(
+            companyProfileRepository.findProfileId(companyId), companyId);
 
         String systemPrompt = profileSegment + template
             .replace("{{tone}}", tone)

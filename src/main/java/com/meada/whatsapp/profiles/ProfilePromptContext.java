@@ -1,6 +1,9 @@
 package com.meada.whatsapp.profiles;
 
+import com.meada.whatsapp.profiles.sushi.SushiMenuCache;
 import org.springframework.stereotype.Component;
+
+import java.util.UUID;
 
 /**
  * Segmento de persona do system prompt por perfil (camada 7.0). Cada perfil vertical injeta,
@@ -8,12 +11,18 @@ import org.springframework.stereotype.Component;
  * "produto" a sua voz — sem substituir nada do prompt genérico (que continua intacto como
  * fallback).
  *
- * <p>Esta SM entrega só o TOM (persona). As regras/ferramentas específicas de cada perfil
- * (peças jurídicas, fluxo odonto, cardápio sushi) vêm em SM-B/C/D. generic → segmento vazio
- * (o prompt base já é o comportamento genérico).
+ * <p>A persona base (TOM) veio na SM-A (camada 7.0). A partir da SM-B (camada 7.1), o perfil
+ * sushi também injeta o CARDÁPIO + config + instruções de pedido (via {@link SushiMenuCache},
+ * cacheado 60s) após a persona — é o que torna a IA um atendente de restaurante real.
  */
 @Component
 public class ProfilePromptContext {
+
+    private final SushiMenuCache sushiMenuCache;
+
+    public ProfilePromptContext(SushiMenuCache sushiMenuCache) {
+        this.sushiMenuCache = sushiMenuCache;
+    }
 
     private static final String LEGAL =
         "Você é o assistente virtual de um escritório de advocacia. Tom formal e respeitoso, "
@@ -50,5 +59,18 @@ public class ProfilePromptContext {
             return "";
         }
         return "# Persona (" + profile.productName() + ")\n" + body + "\n\n";
+    }
+
+    /**
+     * Segmento de perfil COM contexto do tenant (camada 7.1). Para sushi, anexa o cardápio +
+     * config + instruções de pedido (cacheado 60s) DEPOIS da persona — a IA vira atendente do
+     * restaurante real do tenant. Para os demais perfis, é igual ao {@link #segmentFor(String)}.
+     */
+    public String segmentFor(String profileId, UUID companyId) {
+        String persona = segmentFor(profileId);
+        if (!"sushi".equals(profileId) || companyId == null) {
+            return persona;
+        }
+        return persona + sushiMenuCache.menuSegment(companyId);
     }
 }

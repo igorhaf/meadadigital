@@ -4,7 +4,7 @@ import { MessagesSquare } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
-import { NAV_GROUPS } from './nav-config'
+import { getNavForProfile } from './nav-config'
 import { cn } from '@/lib/utils'
 
 /**
@@ -25,15 +25,19 @@ function isActive(pathname: string, href: string): boolean {
  */
 export function SidebarNav({
   role,
+  profileId,
   onNavigate,
 }: {
   role: 'super_admin' | 'tenant_admin' | undefined
+  profileId?: string | null
   onNavigate?: () => void
 }) {
   const pathname = usePathname()
   const isSuperAdmin = role === 'super_admin'
 
-  const groups = NAV_GROUPS.filter((g) =>
+  // Nav por perfil (camada 7.1): o sushi ganha "Restaurante" (Cardápio/Pedidos). Filtra por
+  // papel: grupo superAdminOnly só para super_admin; demais só para tenant.
+  const groups = getNavForProfile(profileId).filter((g) =>
     g.superAdminOnly ? isSuperAdmin : !isSuperAdmin,
   )
 
@@ -92,15 +96,17 @@ export function SidebarBrand({ productName = 'Meada' }: { productName?: string }
 export function Sidebar({
   role,
   productName,
+  profileId,
 }: {
   role: 'super_admin' | 'tenant_admin' | undefined
   productName?: string
+  profileId?: string | null
 }) {
   return (
     <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-background md:flex">
       <SidebarBrand productName={productName} />
       <div className="flex-1 overflow-y-auto">
-        <SidebarNav role={role} />
+        <SidebarNav role={role} profileId={profileId} />
       </div>
     </aside>
   )

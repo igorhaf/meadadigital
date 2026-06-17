@@ -34,8 +34,8 @@ export function AppShell({ children }: { children: ReactNode }) {
       <GlobalSearch />
       <RealtimeNotifications />
 
-      {/* Sidebar desktop — productName muda por perfil (camada 7.0). */}
-      <Sidebar role={me?.role} productName={me?.productName} />
+      {/* Sidebar desktop — productName + nav mudam por perfil (camada 7.0/7.1). */}
+      <Sidebar role={me?.role} productName={me?.productName} profileId={me?.profileId} />
 
       {/* Drawer mobile */}
       {drawerOpen && (
@@ -58,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <SidebarNav role={me?.role} onNavigate={() => setDrawerOpen(false)} />
+              <SidebarNav role={me?.role} profileId={me?.profileId} onNavigate={() => setDrawerOpen(false)} />
             </div>
           </div>
         </div>

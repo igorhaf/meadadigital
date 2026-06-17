@@ -103,6 +103,13 @@
             <artifactId>pdfbox</artifactId>
             <version>3.0.3</version>
         </dependency>
+
+        <!-- Caffeine: cache em memória do cardápio do sushi (camada 7.1) — TTL 60s + invalidação
+             explícita ao mutar items. Versão gerenciada pelo BOM do spring-boot-starter-parent. -->
+        <dependency>
+            <groupId>com.github.ben-manes.caffeine</groupId>
+            <artifactId>caffeine</artifactId>
+        </dependency>
     </dependencies>
 
     <build>

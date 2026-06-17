@@ -80,6 +80,10 @@ public class OutboundService {
     private final AppointmentService appointmentService;
     private final AiSettingsRepository aiSettingsRepository;
     private final com.meada.whatsapp.admin.health.ErrorLogger errorLogger;
+    // Camada 7.1 (perfil sushi): pós-processa a resposta da IA para extrair a tag <pedido>,
+    // criar o pedido e remover a tag antes de enviar ao cliente. Só age para profile_id='sushi'.
+    private final com.meada.whatsapp.profiles.CompanyProfileRepository companyProfileRepository;
+    private final com.meada.whatsapp.profiles.sushi.orders.OrderConfirmHandler orderConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -114,6 +118,8 @@ public class OutboundService {
                            AppointmentService appointmentService,
                            AiSettingsRepository aiSettingsRepository,
                            com.meada.whatsapp.admin.health.ErrorLogger errorLogger,
+                           com.meada.whatsapp.profiles.CompanyProfileRepository companyProfileRepository,
+                           com.meada.whatsapp.profiles.sushi.orders.OrderConfirmHandler orderConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -130,6 +136,8 @@ public class OutboundService {
         this.appointmentService = appointmentService;
         this.aiSettingsRepository = aiSettingsRepository;
         this.errorLogger = errorLogger;
+        this.companyProfileRepository = companyProfileRepository;
+        this.orderConfirmHandler = orderConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -222,7 +230,10 @@ public class OutboundService {
         maybeSendWelcome(event, conversationId);
         persistSchedulingIntent(conversationId, aiResponse);
         persistInsights(event.companyId(), conversationId, aiResponse);
-        Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, aiResponse);
+        // Camada 7.1 (perfil sushi): pós-processa a tag <pedido> — cria o pedido e remove a tag
+        // do texto antes de enviar. Só age para o perfil sushi; demais perfis seguem intactos.
+        AiResponse toSend = maybeProcessSushiOrder(event, conversationId, aiResponse);
+        Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
         }
@@ -292,6 +303,39 @@ public class OutboundService {
             log.warn("outbound: failed to send welcome for conversation {} ({})",
                 conversationId, e.getMessage());
         }
+    }
+
+    /**
+     * Pós-processamento do perfil sushi (camada 7.1): se o tenant é sushi e a resposta da IA
+     * contém a tag {@code <pedido>}, cria o pedido (OrderConfirmHandler) e devolve um AiResponse
+     * com o texto SEM a tag (para não enviá-la ao cliente). Para qualquer outro perfil, ou sem
+     * tag, devolve o aiResponse original inalterado.
+     *
+     * <p>Best-effort: falha em criar o pedido NÃO impede o envio da mensagem (o handler já loga e
+     * retorna empty). A tag só é removida quando há tag — se o handler não criar pedido mas a tag
+     * existir (item inválido), ainda assim removemos a tag (o cliente não pode ver JSON cru).
+     */
+    private AiResponse maybeProcessSushiOrder(MessageInboundProcessedEvent event,
+                                              UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !orderConfirmHandler.hasOrderTag(reply)) {
+            return aiResponse;   // sem tag → caminho comum (maioria das mensagens).
+        }
+        if (!"sushi".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;   // tag num perfil não-sushi: não interpretamos (defensivo).
+        }
+        // Resolve o contato da conversa para criar o pedido.
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            orderConfirmHandler.parseAndCreate(
+                event.companyId(), conversationId, contactId.get(), reply);
+        }
+        // Remove a tag do texto de qualquer forma (o cliente nunca vê o JSON), preservando as
+        // métricas da IA (tokens/latency) num AiResponse equivalente.
+        String stripped = orderConfirmHandler.stripOrderTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
     }
 
     /**

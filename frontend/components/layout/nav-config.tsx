@@ -6,6 +6,7 @@ import {
   Building2,
   Calendar,
   CalendarCheck,
+  ClipboardList,
   Clock,
   HelpCircle,
   Home,
@@ -20,6 +21,7 @@ import {
   ShieldCheck,
   Sparkles,
   Tag,
+  UtensilsCrossed,
   UserCog,
   Users,
   UserPlus,
@@ -141,8 +143,20 @@ export const NAV_GROUPS: NavGroup[] = [
  * só esta função muda. O título do produto NÃO vem daqui — vem do GET /admin/me (productName),
  * renderizado pelo SidebarBrand.
  */
-export function getNavForProfile(_profileId: string | null | undefined): NavGroup[] {
-  // Estrutura aberta: hoje todos os perfis compartilham o mesmo nav. SM-B/C/D adicionam
-  // grupos condicionais por _profileId aqui.
+export function getNavForProfile(profileId: string | null | undefined): NavGroup[] {
+  // Perfil sushi (camada 7.1): ganha o grupo "Restaurante" (Cardápio + Pedidos) no topo.
+  // Demais perfis seguem com o nav padrão.
+  if (profileId === 'sushi') {
+    return [SUSHI_GROUP, ...NAV_GROUPS]
+  }
   return NAV_GROUPS
+}
+
+/** Grupo de navegação exclusivo do perfil sushi (camada 7.1). */
+const SUSHI_GROUP: NavGroup = {
+  heading: 'Restaurante',
+  items: [
+    { label: 'Cardápio', href: '/dashboard/menu', icon: UtensilsCrossed },
+    { label: 'Pedidos', href: '/dashboard/orders', icon: ClipboardList },
+  ],
 }

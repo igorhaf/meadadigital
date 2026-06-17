@@ -203,6 +203,39 @@ Dois perfis, duas vias:
   `x-meada-subdomain`; `localhost`/domínio-base = 'meada' (universal, login universal). Dev
   local: ver `docs/MULTI_PROFILE_DEV.md` (entradas de `/etc/hosts`).
 
+## Perfil Sushi (SushiBot, camada 7.1)
+
+Primeiro perfil vertical real depois da fundação multi-perfil (SM-A). O tenant sushi
+(`profile_id='sushi'`) vira um produto de restaurante: gerencia cardápio, a IA atende clientes
+em linguagem livre via WhatsApp, e os pedidos viram um Kanban.
+
+- **Fluxo de pedido por mensagem LIVRE:** o cliente pede em texto natural; a IA interpreta,
+  monta o carrinho NA CONVERSA (sem entidade própria — a IA relê o histórico a cada turno) e,
+  na confirmação, emite a tag `<pedido>{...}</pedido>`.
+- **Tag `<pedido>` em texto livre, NÃO tool calling do Gemini:** a Gemini API trata tool calling
+  e `responseSchema` como mutuamente exclusivos, e o fluxo de outbound já usa `responseSchema`
+  (needs_human/intent). A persona do SushiBot instrui a IA a terminar a confirmação com a tag;
+  o `OrderConfirmHandler` parseia via regex, cria o pedido e o `OutboundService` REMOVE a tag
+  antes de enviar a mensagem ao cliente. O `total_cents` da tag é DESCARTADO — o backend
+  recalcula a partir do cardápio (defesa contra a IA chutar total).
+- **Status e transições (cravadas):** `recebido → preparo → saiu_pra_entrega → entregue`;
+  `cancelado` é terminal alternativo (de qualquer não-terminal). Transição inválida → 409
+  `invalid_status_transition`. Cada transição dispara notificação outbound automática (texto fixo
+  por status; configurável no futuro).
+- **Cardápio:** só texto (foto bloqueada por SERVICE_ROLE_KEY ausente — ver RISKS.md). Categorias
+  hardcoded e materializadas (`SushiCategory.java` ↔ `sushi-categories.ts`, `SushiCategoryParityTest`).
+- **Cache de cardápio:** o bloco de cardápio+config injetado no prompt é cacheado (Caffeine, TTL
+  60s) por company em `SushiMenuCache`; o `SushiMenuService` INVALIDA explicitamente ao gravar/
+  atualizar/excluir um item — a IA vê a mudança na hora.
+- **Snapshot no pedido:** `sushi_order_items` guarda preço+nome do momento do pedido. Alterar/
+  excluir um item no cardápio NÃO altera pedidos passados.
+- **Guard de perfil:** `SushiProfileGuard.requireSushi` — endpoints `/api/sushi/**` retornam 403
+  `forbidden_wrong_profile` para tenant de outro perfil. O `JwtAuthenticationFilter` autentica
+  `/api/sushi/**` (tenant), além de `/admin/**`.
+- **Sidebar:** `getNavForProfile('sushi')` injeta o grupo "Restaurante" (Cardápio + Pedidos);
+  outros perfis não veem.
+- Guia operacional do tenant: `docs/PERFIL_SUSHI.md`.
+
 ## Estado das camadas
 
 - **1 — Schema multi-tenant:** FECHADA. 11 tabelas, RLS, FKs compostas anti-cross-tenant.
