@@ -28,6 +28,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.salon.SalonContextCache salonContextCache;
     private final com.meada.whatsapp.profiles.pousada.PousadaContextCache pousadaContextCache;
     private final com.meada.whatsapp.profiles.academia.AcademiaContextCache academiaContextCache;
+    private final com.meada.whatsapp.profiles.pet.PetContextCache petContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -37,6 +38,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.salon.SalonContextCache salonContextCache,
                                 com.meada.whatsapp.profiles.pousada.PousadaContextCache pousadaContextCache,
                                 com.meada.whatsapp.profiles.academia.AcademiaContextCache academiaContextCache,
+                                com.meada.whatsapp.profiles.pet.PetContextCache petContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -45,6 +47,7 @@ public class ProfilePromptContext {
         this.salonContextCache = salonContextCache;
         this.pousadaContextCache = pousadaContextCache;
         this.academiaContextCache = academiaContextCache;
+        this.petContextCache = petContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -92,6 +95,16 @@ public class ProfilePromptContext {
             + "NUNCA prometa estrutura/vista/comodidade que não esteja na descrição do quarto. Sem "
             + "promessa de 'experiência única' ou similar.";
 
+    private static final String PET =
+        "Você é atendente de um pet shop / clínica veterinária. Tom carinhoso com os animais e "
+            + "atencioso com os tutores, sem julgamento. Conheça os serviços (com preço e restrição de "
+            + "espécie quando houver) e a agenda dos profissionais. Quando o tutor pedir agendamento, "
+            + "identifique o animal (ofereça os já cadastrados; se for o primeiro, peça nome + espécie + "
+            + "raça) e sugira um profissional disponível. NUNCA dê diagnóstico veterinário, NUNCA "
+            + "prescreva medicação e NUNCA recomende tratamento — se o tutor descrever um sintoma, "
+            + "oriente-o com gentileza a agendar uma consulta presencial. Respeite a restrição de "
+            + "espécie de cada serviço.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -114,6 +127,7 @@ public class ProfilePromptContext {
             case SALON -> SALON;
             case POUSADA -> POUSADA;
             case ACADEMIA -> ACADEMIA;
+            case PET -> PET;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -183,6 +197,14 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + academiaContextCache.contextSegment(companyId, contactId);
+        }
+        if ("pet".equals(profileId)) {
+            // pet (7.8): persona + profissionais + serviços (c/ restrição de espécie) + animais do
+            // tutor (com último agendamento) + slots livres POR profissional (próximos 7 dias).
+            // Resolve o contato (tutor) pela conversa. 2 variantes da tag <agendamento_pet>.
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + petContextCache.contextSegment(companyId, contactId);
         }
         return persona;
     }

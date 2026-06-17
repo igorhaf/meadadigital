@@ -25,8 +25,8 @@ services:
     environment:
       # sidecar pelo nome do serviço (não localhost — ver nota de rede).
       - KNOWLEDGE_EMBEDDING_ENDPOINT=http://embeddings:7080
-      # CORS: domínio-base + os 4 subdomínios de produto + legado localhost:3000.
-      - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://meada.meadadigital.local,http://processo.meadadigital.local,http://dental.meadadigital.local,http://sushi.meadadigital.local,http://localhost:3000
+      # CORS: domínio-base + os 8 subdomínios de produto + legado localhost:3000.
+      - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://meada.meadadigital.local,http://processo.meadadigital.local,http://dental.meadadigital.local,http://sushi.meadadigital.local,http://mesa.meadadigital.local,http://salao.meadadigital.local,http://pousada.meadadigital.local,http://academia.meadadigital.local,http://pet.meadadigital.local,http://localhost:3000
     ports:
       - "8095:8095"   # exposto p/ debugging host-side (o smoke E2E bate aqui direto também)
     volumes:

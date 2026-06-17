@@ -83,6 +83,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String SALON_PATH_PREFIX = "/api/salon/";
     private static final String POUSADA_PATH_PREFIX = "/api/pousada/";
     private static final String ACADEMIA_PATH_PREFIX = "/api/academia/";
+    private static final String PET_PATH_PREFIX = "/api/pet/";
 
     // Junta a company para checar suspensão da empresa no mesmo SELECT (camada 6.1/6.2).
     // u.suspended / u.deleted_at: suspensão e soft-delete do usuário. c.status: 'suspended'
@@ -146,6 +147,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             && !uri.startsWith(SALON_PATH_PREFIX)
             && !uri.startsWith(POUSADA_PATH_PREFIX)
             && !uri.startsWith(ACADEMIA_PATH_PREFIX)
+            && !uri.startsWith(PET_PATH_PREFIX)
             && !isInviteAccept(request);
     }
 

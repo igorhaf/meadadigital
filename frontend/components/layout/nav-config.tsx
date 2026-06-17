@@ -22,6 +22,7 @@ import {
   MessageSquareText,
   Package,
   Palette,
+  PawPrint,
   Scale,
   Scissors,
   ScrollText,
@@ -176,6 +177,9 @@ export function getNavForProfile(profileId: string | null | undefined): NavGroup
   if (profileId === 'academia') {
     return [ACADEMIA_GROUP, ...NAV_GROUPS]
   }
+  if (profileId === 'pet') {
+    return [PET_GROUP, ...NAV_GROUPS]
+  }
   return NAV_GROUPS
 }
 
@@ -247,5 +251,18 @@ const ACADEMIA_GROUP: NavGroup = {
     { label: 'Aulas', href: '/dashboard/academia-classes', icon: CalendarClock },
     { label: 'Matrículas', href: '/dashboard/academia-memberships', icon: ClipboardList },
     { label: 'Configurações', href: '/dashboard/academia-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil pet (camada 7.8). "Pet Shop". Rotas /dashboard/pet-*
+ * distintas (professionals/services do salon usam /dashboard/professionals e /dashboard/salon-*). */
+const PET_GROUP: NavGroup = {
+  heading: 'Pet Shop',
+  items: [
+    { label: 'Profissionais', href: '/dashboard/pet-professionals', icon: Stethoscope },
+    { label: 'Serviços', href: '/dashboard/pet-services', icon: Wand2 },
+    { label: 'Animais', href: '/dashboard/pet-animals', icon: PawPrint },
+    { label: 'Agenda', href: '/dashboard/pet-appointments', icon: CalendarClock },
+    { label: 'Configurações', href: '/dashboard/pet-settings', icon: Settings },
   ],
 }

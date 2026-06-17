@@ -94,6 +94,7 @@ public class OutboundService {
     private final com.meada.whatsapp.profiles.pousada.reservations.ReservaPousadaConfirmHandler reservaPousadaConfirmHandler;
     // Camada 7.7 (perfil academia): pós-processa a tag <matricula> — cria a matrícula e remove a tag.
     private final com.meada.whatsapp.profiles.academia.memberships.MatriculaConfirmHandler matriculaConfirmHandler;
+    private final com.meada.whatsapp.profiles.pet.appointments.AgendamentoPetConfirmHandler agendamentoPetConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -135,6 +136,7 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.salon.appointments.AgendamentoConfirmHandler agendamentoConfirmHandler,
                            com.meada.whatsapp.profiles.pousada.reservations.ReservaPousadaConfirmHandler reservaPousadaConfirmHandler,
                            com.meada.whatsapp.profiles.academia.memberships.MatriculaConfirmHandler matriculaConfirmHandler,
+                           com.meada.whatsapp.profiles.pet.appointments.AgendamentoPetConfirmHandler agendamentoPetConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -158,6 +160,7 @@ public class OutboundService {
         this.agendamentoConfirmHandler = agendamentoConfirmHandler;
         this.reservaPousadaConfirmHandler = reservaPousadaConfirmHandler;
         this.matriculaConfirmHandler = matriculaConfirmHandler;
+        this.agendamentoPetConfirmHandler = agendamentoPetConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -265,6 +268,8 @@ public class OutboundService {
         toSend = maybeProcessPousadaReservation(event, conversationId, toSend);
         // Camada 7.7 (perfil academia): pós-processa a tag <matricula> — cria a matrícula e remove a tag.
         toSend = maybeProcessMatricula(event, conversationId, toSend);
+
+        toSend = maybeProcessPetAppointment(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -510,6 +515,33 @@ public class OutboundService {
                 event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = matriculaConfirmHandler.stripMatriculaTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'pet' (camada 7.8) e a resposta da IA contenha a tag
+     * {@code <agendamento_pet>}, cria o agendamento (AgendamentoPetConfirmHandler resolve o tutor e,
+     * no modo new_animal, cadastra o animal antes) e devolve um AiResponse com a tag removida; senão
+     * devolve o aiResponse original. Espelho de {@link #maybeProcessMatricula}. Tag distinta de
+     * {@code <agendamento>} (salon). Best-effort.
+     */
+    private AiResponse maybeProcessPetAppointment(MessageInboundProcessedEvent event,
+                                                  UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !agendamentoPetConfirmHandler.hasAgendamentoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"pet".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            agendamentoPetConfirmHandler.parseAndCreate(
+                event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = agendamentoPetConfirmHandler.stripAgendamentoTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

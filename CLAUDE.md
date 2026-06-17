@@ -513,6 +513,55 @@ aulas com vaga.
   cobrança/lembrete.
 - Guia operacional do tenant: `docs/PERFIL_ACADEMIA.md`.
 
+## Perfil Pet/PetBot (camada 7.8)
+
+OITAVO e ÚLTIMO perfil vertical da fila planejada — FECHA o catálogo dos 8 perfis. O tenant pet
+(`profile_id='pet'`) vira um produto de PET SHOP / clínica veterinária: gerencia profissionais e
+serviços (banho, tosa, consulta), cadastra os ANIMAIS de cada tutor, e a IA atende os tutores via
+WhatsApp agendando na agenda de cada profissional.
+
+- **EVOLUÇÃO ESTRUTURAL — ANIMAL como SUB-ENTIDADE de um contato (tutor):** diferente de todos os
+  perfis anteriores (cujo "cliente" era o próprio contato), aqui o agendamento é para um ANIMAL, e o
+  animal pertence a um tutor (contato do WhatsApp). `pet_animals` tem `contact_id NOT NULL` (FK
+  restrict). Um tutor pode ter N animais. O conflito de agenda é **POR PROFISSIONAL** (igual salon).
+- **Modelo:** `pet_professionals` + `pet_services` (com `species_restriction` nullable 'cao'|'gato'|
+  'outro') + `pet_config` (horário 09:00–19:00 default) + `pet_animals` (sub-entidade: name, species,
+  breed, sex, birth_year, active) + `pet_appointments` (snapshots de tutor+animal+prof+service).
+  Migration 37. `end_at` materializado no INSERT (não generated).
+- **SPECIES MATCH (regra cravada):** um serviço com `species_restriction` só aceita animal daquela
+  espécie — `svc.speciesRestriction() != null && !equals(animal.species())` → `SpeciesMismatchException`
+  (400 species_mismatch). A IA respeita a restrição; o backend reforça.
+- **Status hardcoded** (`PetAppointmentStatus` ↔ `pet-appointment-status.ts`, parity test):
+  `agendado → confirmado, cancelado`; `confirmado → realizado, cancelado, falta`; resto terminal.
+  Só **confirmado** e **cancelado** notificam o tutor (texto fixo defensivo); demais silenciosos.
+- **Tag `<agendamento_pet>` (namespace exclusivo) com 2 MODOS** — a novidade do handler:
+  `animal_id` (animal já cadastrado) OU `new_animal:{name,species,breed}` (cadastra o animal como
+  sub-entidade do tutor da conversa E agenda, no mesmo turno). `AgendamentoPetConfirmHandler` parseia,
+  resolve o tutor pela conversa, cria. OutboundService: `maybeProcessPetAppointment`.
+- **Persona PET nova:** tom carinhoso com o animal, atencioso com o tutor, **NUNCA dá diagnóstico
+  veterinário, NUNCA prescreve medicação, NUNCA recomenda tratamento** — sintoma → orienta consulta
+  presencial. Contexto via `PetContextCache` (TTL 20s): profissionais ativos, serviços (com restrição
+  de espécie), ANIMAIS DO TUTOR (com último agendamento), slots livres por profissional (7 dias).
+- **Snapshots:** o agendamento congela tutor (name/phone do contact do animal) + animal (name/species)
+  + professional_name + service_name/category/price/duration. Arquivar/editar depois NÃO altera
+  agendamentos passados.
+- **Excluir vs arquivar:** animal/profissional/serviço com agendamento → 409 (`animal_in_use`,
+  `professional_in_use`, `service_in_use`); o caminho preferido é arquivar (active=false).
+- **LGPD:** `notes` do animal é administrativo, SEM dado clínico/prontuário.
+- **Guard:** `PetProfileGuard`. `JwtAuthenticationFilter` autentica `/api/pet/**` (além de
+  sushi/legal/restaurant/dental/salon/pousada/academia).
+- **Sidebar:** `getNavForProfile('pet')` injeta "Pet Shop" (Profissionais/Serviços/Animais/Agenda/
+  Configurações). Telas `/dashboard/pet-{professionals,services,animals,appointments,settings}`.
+- **NÃO TEM:** prontuário/histórico clínico, vacinas/vermífugo com agenda, prescrição, internação,
+  pacote/plano de banho recorrente (assinatura — academia já fez), foto do pet, pagamento real,
+  scheduler de lembrete.
+- Guia operacional do tenant: `docs/PERFIL_PET.md`.
+
+> **Catálogo dos 8 perfis verticais COMPLETO** (sushi 7.1 · legal 7.2 · restaurant 7.3 · dental 7.4 ·
+> salon 7.5 · pousada 7.6 · academia 7.7 · pet 7.8). Cada um escapou de uma limitação do modelo
+> anterior: slot pontual → intervalo de dias → recorrência indefinida (assinatura) → sub-entidade
+> (animal do tutor). Próximos perfis, se houver, partem deste alicerce.
+
 ## Estado das camadas
 
 - **1 — Schema multi-tenant:** FECHADA. 11 tabelas, RLS, FKs compostas anti-cross-tenant.

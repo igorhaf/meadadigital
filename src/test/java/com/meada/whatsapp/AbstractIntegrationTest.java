@@ -102,7 +102,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/33_dental.sql",
         "db/migrations/34_salon.sql",
         "db/migrations/35_pousada.sql",
-        "db/migrations/36_academia.sql"
+        "db/migrations/36_academia.sql",
+        "db/migrations/37_pet.sql"
     };
 
     /**
@@ -220,7 +221,8 @@ public abstract class AbstractIntegrationTest {
               salon_appointments, salon_config, salon_offerings, salon_professionals,
               pousada_reservations, pousada_config, pousada_rooms,
               academia_payments, academia_membership_classes, academia_memberships,
-              academia_config, academia_classes, academia_plans
+              academia_config, academia_classes, academia_plans,
+              pet_appointments, pet_animals, pet_config, pet_services, pet_professionals
             RESTART IDENTITY CASCADE
             """);
     }
