@@ -17,6 +17,7 @@ export const PROFILES = [
   { id: 'sushi', productName: 'SushiBot', subdomain: 'sushi', defaultPaletteId: 'tijolo' },
   { id: 'restaurant', productName: 'MesaBot', subdomain: 'mesa', defaultPaletteId: 'tijolo' },
   { id: 'salon', productName: 'SalãoBot', subdomain: 'salao', defaultPaletteId: 'orquidea' },
+  { id: 'pousada', productName: 'PousadaBot', subdomain: 'pousada', defaultPaletteId: 'oceano' },
 ] as const
 
 export type Profile = (typeof PROFILES)[number]

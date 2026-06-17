@@ -26,6 +26,7 @@ public class ProfilePromptContext {
     private final ReservationContextCache reservationContextCache;
     private final com.meada.whatsapp.profiles.dental.DentalContextCache dentalContextCache;
     private final com.meada.whatsapp.profiles.salon.SalonContextCache salonContextCache;
+    private final com.meada.whatsapp.profiles.pousada.PousadaContextCache pousadaContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -33,12 +34,14 @@ public class ProfilePromptContext {
                                 ReservationContextCache reservationContextCache,
                                 com.meada.whatsapp.profiles.dental.DentalContextCache dentalContextCache,
                                 com.meada.whatsapp.profiles.salon.SalonContextCache salonContextCache,
+                                com.meada.whatsapp.profiles.pousada.PousadaContextCache pousadaContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
         this.reservationContextCache = reservationContextCache;
         this.dentalContextCache = dentalContextCache;
         this.salonContextCache = salonContextCache;
+        this.pousadaContextCache = pousadaContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -68,6 +71,14 @@ public class ProfilePromptContext {
             + "cliente, e não prometa resultado estético. Fale como 'vou ver a disponibilidade', 'que "
             + "tal X com a profissional Y?'.";
 
+    private static final String POUSADA =
+        "Você é atendente de uma pousada. Tom acolhedor, sereno, sem promessa exagerada. Conheça os "
+            + "quartos cadastrados (nome, capacidade, preço-diária, descrição). Quando o cliente pedir "
+            + "reserva, pergunte número de hóspedes + datas de check-in e check-out + ajude a escolher "
+            + "um quarto que comporte o grupo. Calcule o total (diária × noites) antes de confirmar. "
+            + "NUNCA prometa estrutura/vista/comodidade que não esteja na descrição do quarto. Sem "
+            + "promessa de 'experiência única' ou similar.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -88,6 +99,7 @@ public class ProfilePromptContext {
             case SUSHI -> SUSHI;
             case RESTAURANT -> RESTAURANT;
             case SALON -> SALON;
+            case POUSADA -> POUSADA;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -143,6 +155,13 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + salonContextCache.contextSegment(companyId, contactId);
+        }
+        if ("pousada".equals(profileId)) {
+            // pousada (7.6): persona + quartos + política + histórico + disponibilidade por quarto
+            // (próximos 30 dias, intervalos livres). Resolve o contato pela conversa.
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + pousadaContextCache.contextSegment(companyId, contactId);
         }
         return persona;
     }

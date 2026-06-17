@@ -420,6 +420,49 @@ profissionais, verifica disponibilidade e agenda.
   scheduler de auto-transição, foto (bloqueador SERVICE_ROLE_KEY).
 - Guia operacional do tenant: `docs/PERFIL_SALAO.md`.
 
+## Perfil Pousada (PousadaBot, camada 7.6)
+
+Sexto perfil vertical real (sushi/legal/restaurant/dental/salon/pousada). O tenant pousada
+(`profile_id='pousada'`) vira um produto de HOSPEDAGEM: gerencia quartos e reservas, e a IA atende
+hóspedes via WhatsApp com tom acolhedor-turístico, mostra quartos por número de pessoas + datas,
+calcula o total (diária × noites) e reserva.
+
+- **EVOLUÇÃO ESTRUTURAL — primeira SM que escapa do padrão "slot de horas":** a reserva é um
+  INTERVALO DE DIAS (`check_in_date`/`check_out_date` como DATE, não timestamptz — é dia, não
+  instante). O conflito é overlap de intervalos HALF-OPEN `[check_in, check_out)` por quarto:
+  `NOT (existing.check_out <= new.check_in OR existing.check_in >= new.check_out)`. **Check-out de
+  uma reserva e check-in de outra NO MESMO DIA não conflitam** (o quarto rotaciona) — consequência
+  natural do intervalo half-open.
+- **Modelo:** `pousada_rooms` (catálogo: capacity + nightly_rate_cents) + `pousada_config`
+  (check-in/check-out time + cancellation_policy texto livre) + `pousada_reservations`. Migration 35.
+- **nights e total_cents materializados no INSERT** (`nights = check_out - check_in`; `total =
+  nightly_rate × nights`). Snapshots de `room_name`/`nightly_rate_cents`/`capacity_snapshot` —
+  mudar preço/capacidade do quarto depois NÃO altera reservas passadas.
+- **Validações no service:** `check_out > check_in` (não aceita 0 noites); `check_in >= hoje` (fuso
+  America/Sao_Paulo); `guests_count <= room.capacity`. Conflito re-verificado na transação (defesa
+  race).
+- **Status hardcoded** (`PousadaReservationStatus` 6 estados ↔ TS, parity test): `reservado →
+  confirmado → checked_in → checked_out`; `reservado/confirmado → cancelado`; `confirmado →
+  no_show`. Só **confirmado** (com quarto/datas/total) e **cancelado** notificam; demais silenciosos.
+- **Tag `<reserva_pousada>`** (NAMESPACE distinto de `<reserva>` do RestaurantBot!): o
+  `ReservaPousadaConfirmHandler` parseia, resolve o contato, cria. OutboundService:
+  `maybeProcessPousadaReservation`.
+- **Persona POUSADA nova:** tom acolhedor-sereno, **NUNCA promete estrutura/vista/comodidade não
+  cadastrada na descrição do quarto**, sem "experiência única". Contexto dinâmico via
+  `PousadaContextCache` (TTL 30s): quartos ativos, política, histórico do contato, DISPONIBILIDADE
+  por quarto nos próximos 30 dias (intervalos LIVRES entre reservas ativas).
+- **Cliente NÃO é entidade própria** (igual salon — hóspedes rotativos). Histórico via contact +
+  reservations. guest_name/guest_phone snapshots.
+- **LGPD:** `notes` é administrativo, sem RG/CPF/documento.
+- **Guard:** `PousadaProfileGuard`. `JwtAuthenticationFilter` autentica `/api/pousada/**` (além de
+  sushi/legal/restaurant/dental/salon).
+- **Sidebar:** `getNavForProfile('pousada')` injeta "Pousada" (Quartos/Reservas/Configurações). Telas
+  `/dashboard/rooms`, `/dashboard/pousada-reservations`, `/dashboard/pousada-settings`.
+- **NÃO TEM:** tarifa sazonal/promocional, pagamento/sinal, foto, hóspede acompanhante como entidade,
+  políticas com aceite de RG/CPF, Booking/Airbnb, fidelidade, café/serviços extras, scheduler de
+  auto-transição.
+- Guia operacional do tenant: `docs/PERFIL_POUSADA.md`.
+
 ## Estado das camadas
 
 - **1 — Schema multi-tenant:** FECHADA. 11 tabelas, RLS, FKs compostas anti-cross-tenant.

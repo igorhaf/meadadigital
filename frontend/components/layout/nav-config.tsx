@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   Armchair,
   BarChart3,
+  BedDouble,
   BookOpen,
   Briefcase,
   Building2,
@@ -168,6 +169,9 @@ export function getNavForProfile(profileId: string | null | undefined): NavGroup
   if (profileId === 'salon') {
     return [SALON_GROUP, ...NAV_GROUPS]
   }
+  if (profileId === 'pousada') {
+    return [POUSADA_GROUP, ...NAV_GROUPS]
+  }
   return NAV_GROUPS
 }
 
@@ -218,5 +222,15 @@ const SALON_GROUP: NavGroup = {
     { label: 'Serviços', href: '/dashboard/salon-services', icon: Wand2 },
     { label: 'Agenda', href: '/dashboard/salon-appointments', icon: CalendarClock },
     { label: 'Configurações', href: '/dashboard/salon-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil pousada (camada 7.6). */
+const POUSADA_GROUP: NavGroup = {
+  heading: 'Pousada',
+  items: [
+    { label: 'Quartos', href: '/dashboard/rooms', icon: BedDouble },
+    { label: 'Reservas', href: '/dashboard/pousada-reservations', icon: CalendarClock },
+    { label: 'Configurações', href: '/dashboard/pousada-settings', icon: Settings },
   ],
 }
