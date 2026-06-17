@@ -3,6 +3,7 @@ import {
   AlertTriangle,
   BarChart3,
   BookOpen,
+  Briefcase,
   Building2,
   Calendar,
   CalendarCheck,
@@ -17,6 +18,7 @@ import {
   MessageSquareText,
   Package,
   Palette,
+  Scale,
   ScrollText,
   ShieldCheck,
   Sparkles,
@@ -144,10 +146,12 @@ export const NAV_GROUPS: NavGroup[] = [
  * renderizado pelo SidebarBrand.
  */
 export function getNavForProfile(profileId: string | null | undefined): NavGroup[] {
-  // Perfil sushi (camada 7.1): ganha o grupo "Restaurante" (Cardápio + Pedidos) no topo.
-  // Demais perfis seguem com o nav padrão.
+  // Perfil vertical (camada 7.1/7.2): grupo próprio no topo. Demais perfis seguem o nav padrão.
   if (profileId === 'sushi') {
     return [SUSHI_GROUP, ...NAV_GROUPS]
+  }
+  if (profileId === 'legal') {
+    return [LEGAL_GROUP, ...NAV_GROUPS]
   }
   return NAV_GROUPS
 }
@@ -158,5 +162,14 @@ const SUSHI_GROUP: NavGroup = {
   items: [
     { label: 'Cardápio', href: '/dashboard/menu', icon: UtensilsCrossed },
     { label: 'Pedidos', href: '/dashboard/orders', icon: ClipboardList },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil legal (camada 7.2). */
+const LEGAL_GROUP: NavGroup = {
+  heading: 'Escritório',
+  items: [
+    { label: 'Clientes', href: '/dashboard/clients', icon: Briefcase },
+    { label: 'Processos', href: '/dashboard/cases', icon: Scale },
   ],
 }

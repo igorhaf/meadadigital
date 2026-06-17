@@ -236,6 +236,39 @@ em linguagem livre via WhatsApp, e os pedidos viram um Kanban.
   outros perfis não veem.
 - Guia operacional do tenant: `docs/PERFIL_SUSHI.md`.
 
+## Perfil Legal (ProcessoBot, camada 7.2)
+
+Segundo perfil vertical real (depois do SushiBot). O tenant legal (`profile_id='legal'`) vira
+um produto de escritório de advocacia: gerencia clientes e processos, e a IA atende clientes
+consultando os processos deles.
+
+- **Cliente DESACOPLADO de contact:** `legal_clients` é catálogo próprio (name obrigatório;
+  email/phone/document/contact_id opcionais). O escritório cadastra o cliente antes do WhatsApp;
+  `contact_id` (nullable) liga ao contato — a IA resolve `contact → legal_client → processos`.
+- **CNJ validado mód 97** (Resolução CNJ 65/2008) no `LegalCnjValidator` — regex NÃO basta, o DV
+  depende dos demais campos. Storage sem máscara (20 dígitos, UNIQUE por company); display
+  formatado `NNNNNNN-DD.AAAA.J.TR.OOOO`. (Nota: os CNJs "reais" do prompt da SM-C não passavam
+  no mód 97 — os testes/seed usam números com DV computado pelo próprio algoritmo.)
+- **Status hardcoded materializado** (`LegalCaseStatus` ↔ `legal-case-status.ts`,
+  `LegalCaseStatusParityTest`): ativo/suspenso/arquivado/encerrado. Transição LIVRE (o advogado
+  pode reativar arquivado). Mudança de status notifica o cliente (texto fixo defensivo, só
+  suspenso/arquivado/encerrado; ativo silencioso) via `LegalCaseNotifier` (resolve contact via
+  o legal_client; pula em silêncio se não houver vínculo WhatsApp).
+- **Andamentos** (`legal_case_updates`): registro MANUAL pelo advogado (title/body/occurred_at).
+  NÃO disparam notificação (andamento técnico ≠ comunicação). Sem cálculo de prazo/scheduler
+  nesta SM — fase futura.
+- **IA injeta os processos do cliente identificado pelo telefone:**
+  `ProfilePromptContext.segmentFor(profileId, companyId, conversationId)` — o legal resolve a
+  conversa → contato → cliente → processos+andamentos e injeta no prompt; telefone desconhecido →
+  bloco que orienta a IA a pedir identificação. Cache `LegalCaseContextCache` (Caffeine 60s,
+  invalidação explícita ao mutar cliente/processo). O sushi ignora o conversationId.
+- **Guard:** `LegalProfileGuard` (403 forbidden_wrong_profile). `JwtAuthenticationFilter`
+  autentica `/api/legal/**` (além de `/admin/**` e `/api/sushi/**`).
+- **OutboundService NÃO foi tocado** (decisão cravada — legal não tem tag equivalente ao
+  `<pedido>` do sushi; o cliente só pergunta, não confirma pedido).
+- **Sidebar:** `getNavForProfile('legal')` injeta o grupo "Escritório" (Clientes + Processos).
+- Guia operacional do tenant: `docs/PERFIL_LEGAL.md`.
+
 ## Estado das camadas
 
 - **1 — Schema multi-tenant:** FECHADA. 11 tabelas, RLS, FKs compostas anti-cross-tenant.

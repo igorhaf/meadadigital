@@ -1,5 +1,7 @@
 package com.meada.whatsapp.profiles;
 
+import com.meada.whatsapp.messaging.ConversationRepository;
+import com.meada.whatsapp.profiles.legal.LegalCaseContextCache;
 import com.meada.whatsapp.profiles.sushi.SushiMenuCache;
 import org.springframework.stereotype.Component;
 
@@ -19,9 +21,15 @@ import java.util.UUID;
 public class ProfilePromptContext {
 
     private final SushiMenuCache sushiMenuCache;
+    private final LegalCaseContextCache legalCaseContextCache;
+    private final ConversationRepository conversationRepository;
 
-    public ProfilePromptContext(SushiMenuCache sushiMenuCache) {
+    public ProfilePromptContext(SushiMenuCache sushiMenuCache,
+                                LegalCaseContextCache legalCaseContextCache,
+                                ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
+        this.legalCaseContextCache = legalCaseContextCache;
+        this.conversationRepository = conversationRepository;
     }
 
     private static final String LEGAL =
@@ -61,16 +69,35 @@ public class ProfilePromptContext {
         return "# Persona (" + profile.productName() + ")\n" + body + "\n\n";
     }
 
-    /**
-     * Segmento de perfil COM contexto do tenant (camada 7.1). Para sushi, anexa o cardápio +
-     * config + instruções de pedido (cacheado 60s) DEPOIS da persona — a IA vira atendente do
-     * restaurante real do tenant. Para os demais perfis, é igual ao {@link #segmentFor(String)}.
-     */
+    /** Compat (sem conversationId): usado por chamadas que não têm a conversa. */
     public String segmentFor(String profileId, UUID companyId) {
+        return segmentFor(profileId, companyId, null);
+    }
+
+    /**
+     * Segmento de perfil COM contexto do tenant (camada 7.1/7.2). Após a persona:
+     * <ul>
+     *   <li>sushi (7.1): anexa o cardápio + config + instruções de pedido (cache 60s). IGNORA
+     *       conversationId.</li>
+     *   <li>legal (7.2): resolve a conversa → contato → cliente jurídico → processos, e anexa o
+     *       contexto de processos do cliente identificado (cache 60s por contato). Se o telefone
+     *       não casa com nenhum cliente, o bloco orienta a IA a pedir identificação.</li>
+     *   <li>demais: só a persona.</li>
+     * </ul>
+     */
+    public String segmentFor(String profileId, UUID companyId, UUID conversationId) {
         String persona = segmentFor(profileId);
-        if (!"sushi".equals(profileId) || companyId == null) {
+        if (companyId == null) {
             return persona;
         }
-        return persona + sushiMenuCache.menuSegment(companyId);
+        if ("sushi".equals(profileId)) {
+            return persona + sushiMenuCache.menuSegment(companyId);
+        }
+        if ("legal".equals(profileId)) {
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + legalCaseContextCache.contextSegment(companyId, contactId);
+        }
+        return persona;
     }
 }
