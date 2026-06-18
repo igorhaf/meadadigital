@@ -25,6 +25,8 @@ public final class AdminAction {
     public static final String PLAN_CREATED = "PLAN_CREATED";
     public static final String PLAN_UPDATED = "PLAN_UPDATED";
     public static final String PLAN_DELETED = "PLAN_DELETED";
+    // Camada 9.0 — feature flags por nicho: o root liga/desliga uma feature de um perfil.
+    public static final String PROFILE_FEATURE_TOGGLED = "PROFILE_FEATURE_TOGGLED";
 
     /** Tipos de alvo (target_type). */
     public static final String TARGET_COMPANY = "company";
@@ -33,4 +35,5 @@ public final class AdminAction {
     public static final String TARGET_NOTE = "note";
     public static final String TARGET_ANNOUNCEMENT = "announcement";
     public static final String TARGET_PLAN = "plan";
+    public static final String TARGET_PROFILE_FEATURE = "profile_feature";
 }

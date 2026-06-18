@@ -105,7 +105,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/36_academia.sql",
         "db/migrations/37_pet.sql",
         "db/migrations/38_oficina.sql",
-        "db/migrations/39_nutri.sql"
+        "db/migrations/39_nutri.sql",
+        "db/migrations/40_profile_features.sql"
     };
 
     /**
@@ -226,7 +227,8 @@ public abstract class AbstractIntegrationTest {
               academia_config, academia_classes, academia_plans,
               pet_appointments, pet_animals, pet_config, pet_services, pet_professionals,
               os_items, service_orders, os_vehicles, os_config, os_mechanics,
-              nutri_appointments, nutri_plans, nutri_patients, nutri_config, nutri_professionals
+              nutri_appointments, nutri_plans, nutri_patients, nutri_config, nutri_professionals,
+              profile_features
             RESTART IDENTITY CASCADE
             """);
     }

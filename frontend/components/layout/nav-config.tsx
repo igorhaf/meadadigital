@@ -35,6 +35,7 @@ import {
   Sparkles,
   Stethoscope,
   Tag,
+  ToggleRight,
   Wand2,
   UtensilsCrossed,
   UserCog,
@@ -144,6 +145,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Anúncios', href: '/dashboard/announcements', icon: Megaphone },
       { label: 'Planos', href: '/dashboard/plans', icon: Package },
       { label: 'Paletas', href: '/dashboard/palettes', icon: Palette },
+      { label: 'Features', href: '/dashboard/profile-features', icon: ToggleRight },
     ],
   },
 ]
@@ -157,8 +159,18 @@ export const NAV_GROUPS: NavGroup[] = [
  * getNavForProfile em vez de NAV_GROUPS diretamente, e quando um perfil ganhar itens próprios,
  * só esta função muda. O título do produto NÃO vem daqui — vem do GET /admin/me (productName),
  * renderizado pelo SidebarBrand.
+ *
+ * <p>{@code features} (camada 9.0 — plumbing): mapa de feature flags resolvidas do nicho
+ * ({key → enabled}, de /admin/me.features). Threadado aqui agora pra que a SM-M só precise
+ * adicionar UM item de nav atrás de {@code features?.cms === true} — ex.:
+ * {@code if (features?.cms) groups.push({ heading: 'Site', items: [{ label: 'Página', href: '/dashboard/cms', icon: Globe }] })}.
+ * Esta SM-L NÃO adiciona item de CMS — só passa o parâmetro pronto.
  */
-export function getNavForProfile(profileId: string | null | undefined): NavGroup[] {
+export function getNavForProfile(
+  profileId: string | null | undefined,
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars -- plumbing p/ SM-M (gate hasFeature('cms'))
+  features?: Record<string, boolean>,
+): NavGroup[] {
   // Perfil vertical (camada 7.1/7.2): grupo próprio no topo. Demais perfis seguem o nav padrão.
   if (profileId === 'sushi') {
     return [SUSHI_GROUP, ...NAV_GROUPS]

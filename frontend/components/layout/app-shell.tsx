@@ -34,8 +34,9 @@ export function AppShell({ children }: { children: ReactNode }) {
       <GlobalSearch />
       <RealtimeNotifications />
 
-      {/* Sidebar desktop — productName + nav mudam por perfil (camada 7.0/7.1). */}
-      <Sidebar role={me?.role} productName={me?.productName} profileId={me?.profileId} />
+      {/* Sidebar desktop — productName + nav mudam por perfil (camada 7.0/7.1). features (9.0):
+          plumbing pra SM-M gatear itens de nav por feature flag. */}
+      <Sidebar role={me?.role} productName={me?.productName} profileId={me?.profileId} features={me?.features} />
 
       {/* Drawer mobile */}
       {drawerOpen && (
@@ -58,7 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
               </Button>
             </div>
             <div className="flex-1 overflow-y-auto">
-              <SidebarNav role={me?.role} profileId={me?.profileId} onNavigate={() => setDrawerOpen(false)} />
+              <SidebarNav role={me?.role} profileId={me?.profileId} features={me?.features} onNavigate={() => setDrawerOpen(false)} />
             </div>
           </div>
         </div>

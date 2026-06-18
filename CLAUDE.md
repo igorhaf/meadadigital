@@ -670,6 +670,45 @@ IA atende pacientes via WhatsApp — agenda consultas e ENTREGA o plano que o nu
   toca dev/prod.
 - Guia operacional do tenant: `docs/PERFIL_NUTRI.md`.
 
+## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
+
+Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**
+(página pessoal por tenant); a SM-L só entrega a INFRA + o gate — o CMS real vem na SM-M.
+
+- **Feature é HARDCODED** (`ProfileFeature` enum Java ↔ `frontend/lib/profiles/profile-feature.ts`,
+  `ProfileFeatureParityTest`) — mesmo padrão dos status. Membro inicial: `CMS` (key `'cms'`, label
+  "Página pessoal (CMS)"). Adicionar feature = editar os 2 arquivos + estender a CHECK de
+  `profile_features.feature_key` (migration) + rodar a paridade.
+- **Perfis seguem HARDCODED** (`ProfileType`); NÃO há tabela de perfis. A grade é COMPUTADA: itera
+  `ProfileType.allActive()` × `ProfileFeature.allActive()` e sobrepõe as linhas do banco.
+- **Tabela `profile_features`** (migration 40) guarda SÓ os DESVIOS do default. **Ausência de linha =
+  OFF** — o resolver (`ProfileFeatureService`) trata como false. **Default de toda feature = OFF**
+  (opt-in explícito do root: tem nicho sem site, então off-pra-todos é o estado natural). PK
+  `(profile_id, feature_key)`, `enabled`, `updated_at`, `updated_by`.
+- **SEM CHECK de `profile_id`** na tabela (não acopla a cada perfil futuro) — validação APP-LEVEL no
+  controller (`profile_id ∈ ProfileType`, `feature_key ∈ ProfileFeature` → 400 `unknown_profile`/
+  `unknown_feature`). CHECK de `feature_key` no conjunto conhecido (`in ('cms')`) é OK (features são
+  poucas; cada nova é migration+enum+parity deliberados).
+- **Tabela de PLATAFORMA** (espelha `public.plans`): `enable+force RLS`, só `grant all ... service_role`
+  (sem grant a `authenticated`). O TENANT NÃO lê a tabela direto — recebe o resolvido via
+  `GET /admin/me.features` (mapa `{key → enabled}` do seu nicho). O root opera via Spring/service_role.
+- **Authz dos endpoints root:** a MESMA dos demais `/admin/*` de plataforma — `user.role() ==
+  AdminRole.SUPER_ADMIN`, inline (`notSuperAdmin(user)` → 403 `forbidden_not_super_admin`). Sem role
+  nova. `GET /admin/profile-features` (grade) + `PUT /admin/profile-features/{profileId}/{featureKey}`
+  `{enabled}` (upsert + audita `PROFILE_FEATURE_TOGGLED` em `admin_action_log` + invalida cache).
+- **Gate `ProfileFeatureGuard.requireFeature(user, ProfileFeature)`** → resolve o perfil do company,
+  checa `enabledFor`; OFF → `FeatureDisabledException` (→ 403 `feature_disabled`). É onde a SM-M
+  pendura o CMS: `requireFeature(user, ProfileFeature.CMS)` no início dos endpoints do CMS.
+- **Cache** Caffeine TTL 20s keyed por `profileId`, invalidado em todo `setFlag` (igual aos context
+  caches dos perfis). `enabledFor`/`resolvedMap` leem do cache.
+- **Frontend:** root tem a tela-grade `/dashboard/profile-features` (grupo "Plataforma",
+  `superAdminOnly`) — linhas=nichos, colunas=features, célula=toggle (PUT). Tenant: `me.features` +
+  `hasFeature(me, key)` em `lib/api/me.ts`; `getNavForProfile(profileId, features)` recebe `features`
+  como **plumbing** (threadado de `/admin/me` via app-shell→sidebar) — a SM-M só adiciona UM item de
+  nav atrás de `features?.cms === true`. Esta SM NÃO adiciona item de CMS.
+- **Pendência:** SM-M = CMS real (telas + endpoints atrás do `requireFeature(CMS)` + item de nav).
+- Doc: `docs/FEATURE_FLAGS.md`.
+
 ## Estado das camadas
 
 - **1 — Schema multi-tenant:** FECHADA. 11 tabelas, RLS, FKs compostas anti-cross-tenant.

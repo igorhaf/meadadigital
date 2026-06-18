@@ -23,8 +23,16 @@ export type Me = {
   profileId: string | null
   // Label do "produto" do perfil ("Meada" | "ProcessoBot" | …). Exibido no topo do sidebar.
   productName: string
+  // Feature flags resolvidas do nicho (camada 9.0): { key → enabled }. Ausência = false (default
+  // OFF). Vazio para super-admin. O root liga/desliga em /dashboard/profile-features.
+  features: Record<string, boolean>
 }
 
 export async function getMe(): Promise<Me> {
   return apiFetch<Me>('/admin/me')
+}
+
+/** Helper: a feature `key` está ligada para o nicho deste usuário? Ausência = false. */
+export function hasFeature(me: Me | undefined | null, key: string): boolean {
+  return me?.features?.[key] === true
 }
