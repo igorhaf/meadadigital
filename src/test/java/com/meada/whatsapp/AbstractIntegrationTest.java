@@ -109,7 +109,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/40_profile_features.sql",
         "db/migrations/41_cms.sql",
         "db/migrations/42_cms_multipage.sql",
-        "db/migrations/43_barbearia.sql"
+        "db/migrations/43_barbearia.sql",
+        "db/migrations/44_platform_company.sql"
     };
 
     /**

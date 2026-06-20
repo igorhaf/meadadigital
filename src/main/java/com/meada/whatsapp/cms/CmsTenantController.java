@@ -1,6 +1,7 @@
 package com.meada.whatsapp.cms;
 
 import com.fasterxml.jackson.databind.JsonNode;
+import com.meada.whatsapp.admin.security.AdminRole;
 import com.meada.whatsapp.admin.security.AuthenticatedUser;
 import com.meada.whatsapp.admin.security.JwtAuthenticationFilter;
 import com.meada.whatsapp.cms.CmsService.DomainTakenException;
@@ -11,6 +12,7 @@ import com.meada.whatsapp.cms.CmsService.NoDomainException;
 import com.meada.whatsapp.cms.CmsService.PageNotFoundException;
 import com.meada.whatsapp.cms.CmsService.PageSlugTakenException;
 import com.meada.whatsapp.cms.CmsService.TooManyPagesException;
+import com.meada.whatsapp.profiles.PlatformCompany;
 import com.meada.whatsapp.profiles.ProfileFeature;
 import com.meada.whatsapp.profiles.features.ProfileFeatureGuard;
 import com.meada.whatsapp.profiles.features.ProfileFeatureGuard.FeatureDisabledException;
@@ -28,26 +30,40 @@ import java.util.Map;
 import java.util.UUID;
 
 /**
- * CMS do TENANT (SM-N), multi-página. Tudo atrás do gate {@link ProfileFeatureGuard#requireFeature}
- * (403 feature_disabled se o nicho não tem CMS). Gerencia o SITE (publicar, tema, domínio +
- * verificação de posse) e as PÁGINAS (CRUD, home).
+ * CMS do TENANT (SM-N) E do ROOT (CMS-root, B1), multi-página. Para o TENANT, tudo atrás do gate
+ * {@link ProfileFeatureGuard#requireFeature} (403 feature_disabled se o nicho não tem CMS). Para o
+ * SUPER-ADMIN (que NÃO tem company), o CMS é EMBUTIDO — sempre ligado, sem passar pela grade de
+ * feature flags — e opera sobre a COMPANY-ÂNCORA da plataforma ({@link PlatformCompany}, o "Meada"
+ * do root, migration 44). Gerencia o SITE (publicar, tema, domínio + verificação de posse) e as
+ * PÁGINAS (CRUD, home).
  */
 @RestController
 public class CmsTenantController {
 
     private final CmsService service;
     private final ProfileFeatureGuard featureGuard;
+    private final PlatformCompany platformCompany;
 
-    public CmsTenantController(CmsService service, ProfileFeatureGuard featureGuard) {
+    public CmsTenantController(CmsService service, ProfileFeatureGuard featureGuard,
+                               PlatformCompany platformCompany) {
         this.service = service;
         this.featureGuard = featureGuard;
+        this.platformCompany = platformCompany;
     }
 
     private static ResponseEntity<Object> error(int status, String error, String reason) {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
+    /**
+     * Resolve a company do CMS + autoriza. SUPER-ADMIN (sem company) → company-âncora da plataforma,
+     * CMS embutido (sem checar feature flag). TENANT → sua company, atrás do
+     * {@code requireFeature(CMS)} (403 feature_disabled se o nicho não tem CMS).
+     */
     private UUID gate(AuthenticatedUser user) {
+        if (user.role() == AdminRole.SUPER_ADMIN) {
+            return platformCompany.companyId();
+        }
         return featureGuard.requireFeature(user, ProfileFeature.CMS);
     }
 
