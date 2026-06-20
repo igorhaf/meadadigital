@@ -9,7 +9,7 @@ import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
-import { BlockEditor } from '@/components/cms/block-editor'
+import { CmsBlockCanvas } from '@/components/cms/cms-block-canvas'
 import {
   createCmsPage,
   deleteCmsPage,
@@ -24,13 +24,7 @@ import {
   type CmsPage,
   type CmsSiteView,
 } from '@/lib/api/cms'
-import {
-  CMS_BLOCK_TYPES,
-  blockTypeLabel,
-  defaultProps,
-  type CmsBlock,
-  type CmsBlockTypeId,
-} from '@/lib/cms/cms-block-type'
+import { type CmsBlock } from '@/lib/cms/cms-block-type'
 
 function newId(): string {
   return 'b-' + Math.random().toString(36).slice(2, 10)
@@ -50,7 +44,6 @@ export default function CmsEditorPage() {
   const [title, setTitle] = useState('')
   const [blocks, setBlocks] = useState<CmsBlock[]>([])
   const [pagePublished, setPagePublished] = useState(false)
-  const [dragIdx, setDragIdx] = useState<number | null>(null)
   const [savedAt, setSavedAt] = useState<string | null>(null)
 
   const [domain, setDomain] = useState('')
@@ -152,21 +145,6 @@ export default function CmsEditorPage() {
     )
   }
 
-  function addBlock(type: CmsBlockTypeId) {
-    setBlocks((bs) => [...bs, { id: newId(), type, props: defaultProps(type) } as CmsBlock])
-  }
-  function move(i: number, dir: -1 | 1) {
-    setBlocks((bs) => {
-      const j = i + dir
-      if (j < 0 || j >= bs.length) return bs
-      const copy = [...bs]; [copy[i], copy[j]] = [copy[j], copy[i]]; return copy
-    })
-  }
-  function onDrop(target: number) {
-    if (dragIdx === null || dragIdx === target) return
-    setBlocks((bs) => { const copy = [...bs]; const [m] = copy.splice(dragIdx, 1); copy.splice(target, 0, m); return copy })
-    setDragIdx(null)
-  }
 
   return (
     <div className="space-y-6">
@@ -253,36 +231,13 @@ export default function CmsEditorPage() {
               </Section>
 
               <div className="mt-4 space-y-3">
-                <div className="flex flex-wrap items-center gap-2">
-                  <span className="text-sm font-medium">Blocos</span>
-                  <span className="text-xs text-muted-foreground">arraste para reordenar (ou ↑ ↓)</span>
-                </div>
-                {blocks.length === 0 && (
-                  <p className="rounded-lg border border-dashed border-border p-6 text-center text-sm text-muted-foreground">Nenhum bloco ainda.</p>
-                )}
-                {blocks.map((b, i) => (
-                  <div key={b.id} draggable onDragStart={() => setDragIdx(i)} onDragOver={(e) => e.preventDefault()} onDrop={() => onDrop(i)}
-                    className="rounded-lg border border-border bg-card p-4">
-                    <div className="mb-3 flex items-center justify-between gap-2">
-                      <div className="flex items-center gap-2">
-                        <span className="cursor-grab text-muted-foreground" aria-hidden>⠿</span>
-                        <span className="font-medium">{blockTypeLabel(b.type)}</span>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button type="button" variant="outline" className="h-7 w-7 p-0 text-xs" disabled={i === 0} onClick={() => move(i, -1)} aria-label="Subir">↑</Button>
-                        <Button type="button" variant="outline" className="h-7 w-7 p-0 text-xs" disabled={i === blocks.length - 1} onClick={() => move(i, 1)} aria-label="Descer">↓</Button>
-                        <Button type="button" variant="outline" className="h-7 px-2 text-xs" onClick={() => setBlocks((bs) => bs.filter((_, idx) => idx !== i))}>Remover</Button>
-                      </div>
-                    </div>
-                    <BlockEditor block={b} onChange={(nb) => setBlocks((bs) => bs.map((old, idx) => (idx === i ? nb : old)))} />
-                  </div>
-                ))}
-                <div className="flex flex-wrap items-center gap-2 rounded-lg border border-dashed border-border p-3">
-                  <span className="text-xs font-medium text-muted-foreground">Adicionar bloco:</span>
-                  {CMS_BLOCK_TYPES.map((t) => (
-                    <Button key={t.id} type="button" variant="outline" className="h-8 px-3 text-xs" onClick={() => addBlock(t.id)}>+ {t.label}</Button>
-                  ))}
-                </div>
+                <span className="text-sm font-medium">Blocos</span>
+                <CmsBlockCanvas
+                  blocks={blocks}
+                  setBlocks={setBlocks}
+                  theme={{ primaryColor, dark }}
+                  newId={newId}
+                />
                 <div className="flex items-center gap-3">
                   <Button disabled={savePageMut.isPending} onClick={() => savePageMut.mutate()}>
                     {savePageMut.isPending ? 'Salvando…' : 'Salvar página'}

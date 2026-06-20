@@ -13,11 +13,16 @@ import java.util.Optional;
  * garante a paridade). Adicionar um tipo = editar os 2 arquivos + o editor/render do frontend +
  * rodar a paridade. Tipos iniciais:
  * <ul>
- *   <li>{@code hero} — título + subtítulo + botão (label/href).</li>
+ *   <li>{@code hero} — título + subtítulo + botão (label/href) + badge/imagem/2º botão.</li>
  *   <li>{@code text} — conteúdo livre em markdown.</li>
  *   <li>{@code services} — título + lista de itens (name, description, price).</li>
  *   <li>{@code contact} — telefone/WhatsApp, endereço, horário + botão.</li>
  * </ul>
+ *
+ * <p>Catálogo ampliado (estilo alegria): blocos de conteúdo (stats, feature_grid, image_text_split,
+ * steps, columns), de marketing (banner_strip, marquee, quote, cta) e de pacotes (packages). As props
+ * de todos são JSONB livre — adicionar campo a um bloco não toca o backend; só adicionar TIPO novo
+ * (como estes) exige editar este enum + o mirror TS + o render + rodar a paridade.
  */
 public enum CmsBlockType {
     HERO("hero"),
@@ -27,7 +32,17 @@ public enum CmsBlockType {
     GALLERY("gallery"),
     FAQ("faq"),
     TESTIMONIALS("testimonials"),
-    MAP("map");
+    MAP("map"),
+    BANNER_STRIP("banner_strip"),
+    STATS("stats"),
+    FEATURE_GRID("feature_grid"),
+    IMAGE_TEXT_SPLIT("image_text_split"),
+    STEPS("steps"),
+    COLUMNS("columns"),
+    PACKAGES("packages"),
+    MARQUEE("marquee"),
+    QUOTE("quote"),
+    CTA("cta");
 
     private final String id;
 

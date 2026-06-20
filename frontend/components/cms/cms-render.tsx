@@ -1,35 +1,85 @@
 import type {
+  BannerStripProps,
   CmsBlock,
+  ColumnsProps,
   ContactProps,
+  CtaProps,
   FaqProps,
+  FeatureGridProps,
   GalleryProps,
   HeroProps,
+  ImageTextSplitProps,
   MapProps,
+  MarqueeProps,
+  PackagesProps,
+  QuoteProps,
   ServicesProps,
+  StatsProps,
+  StepsProps,
   TestimonialsProps,
   TextProps,
 } from '@/lib/cms/cms-block-type'
 import type { CmsNavItem, CmsTheme } from '@/lib/cms/public-fetch'
 
 /**
- * Renderizador PÚBLICO do CMS (SM-N). Server component: recebe a view (title+blocks+theme+nav) e
- * renderiza os 8 tipos de bloco. Tema: cor primária (CSS var) + modo claro/escuro. Navegação entre
- * páginas no topo. Markdown do bloco 'text' é mínimo (parágrafos por linha em branco).
+ * Renderizador do CMS (SM-N / catálogo ampliado). Renderiza os 18 tipos de bloco. Tema: cor primária
+ * (CSS var `--cms-primary`) + modo claro/escuro. Os blocos usam `var(--cms-primary)` e tons neutros
+ * (sem cor hardcoded) pra herdar o tema do tenant.
+ *
+ * ⚠️ CLIENT-SAFE — este arquivo é importado TANTO pelo server (CmsRender em /p/) QUANTO pelo editor
+ * client (cms-block-canvas usa `renderCmsBlock`/`cmsShellStyle` no preview ao vivo). NÃO importar
+ * `next/headers`, `cookies()`, `next/image` ou qualquer API server-only aqui — quebraria o editor.
  *
  * navBase: base das URLs de nav. Em /p/{slug} é "/p/{slug}"; sob domínio custom é "" (raiz),
  * porque o middleware reescreve a raiz pro tenant.
  */
 
+// ---- helpers ----------------------------------------------------------------
+
+/** Estilo-casca do site: injeta --cms-primary + fundo/cor conforme o tema. Compartilhado entre o
+ * render público (CmsRender) e o preview do editor — garante que o preview bate com o /p/. */
+export function cmsShellStyle(theme: CmsTheme | null): React.CSSProperties {
+  const primary = theme?.primaryColor || '#0f172a'
+  const dark = theme?.dark === true
+  return {
+    ['--cms-primary' as string]: primary,
+    background: dark ? '#0b1120' : '#ffffff',
+    color: dark ? '#e2e8f0' : '#0f172a',
+  }
+}
+
+// ---- blocos originais (8) ---------------------------------------------------
+
 function HeroBlock({ props }: { props: HeroProps }) {
   return (
-    <section className="px-6 py-20 text-center" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
-      {props.title && <h1 className="mx-auto max-w-3xl text-4xl font-bold tracking-tight">{props.title}</h1>}
-      {props.subtitle && <p className="mx-auto mt-4 max-w-2xl text-lg opacity-90">{props.subtitle}</p>}
-      {props.buttonLabel && props.buttonHref && (
-        <a href={props.buttonHref} className="mt-8 inline-block rounded-md bg-white px-6 py-3 font-medium text-slate-900 hover:bg-slate-100">
-          {props.buttonLabel}
-        </a>
-      )}
+    <section className="relative overflow-hidden px-6 py-20 text-center" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
+      <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:text-left">
+        <div>
+          {props.badge && (
+            <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium uppercase tracking-widest">
+              {props.badge}
+            </span>
+          )}
+          {props.title && <h1 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">{props.title}</h1>}
+          {props.subtitle && <p className="mx-auto mt-4 max-w-2xl text-lg opacity-90 md:mx-0">{props.subtitle}</p>}
+          <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
+            {props.buttonLabel && props.buttonHref && (
+              <a href={props.buttonHref} className="inline-block rounded-md bg-white px-6 py-3 font-medium text-slate-900 hover:bg-slate-100">
+                {props.buttonLabel}
+              </a>
+            )}
+            {props.secondaryButtonLabel && props.secondaryButtonHref && (
+              <a href={props.secondaryButtonHref} className="inline-block rounded-md px-6 py-3 font-medium text-white ring-1 ring-white/40 hover:bg-white/10">
+                {props.secondaryButtonLabel}
+              </a>
+            )}
+          </div>
+        </div>
+        {props.imageUrl && (
+          /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
+          <img src={props.imageUrl} alt={props.title || ''} className="w-full rounded-3xl shadow-2xl md:aspect-[4/3] md:object-cover" />
+        )}
+      </div>
     </section>
   )
 }
@@ -152,7 +202,246 @@ function MapBlock({ props }: { props: MapProps }) {
   )
 }
 
-function renderBlock(b: CmsBlock) {
+// ---- catálogo ampliado (10) — re-tematizado pra var(--cms-primary) + tons neutros ----
+
+function BannerStripBlock({ props }: { props: BannerStripProps }) {
+  if (!props.message) return null
+  return (
+    <div className="px-6 py-3 text-center text-sm" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
+      <span className="font-medium">{props.message}</span>
+      {props.buttonLabel && props.buttonHref && (
+        <a href={props.buttonHref} className="ml-3 font-semibold underline underline-offset-2 hover:no-underline">
+          {props.buttonLabel} →
+        </a>
+      )}
+    </div>
+  )
+}
+
+function StatsBlock({ props }: { props: StatsProps }) {
+  return (
+    <section style={{ background: 'var(--cms-primary)', color: '#fff' }}>
+      <div className="mx-auto grid max-w-6xl grid-cols-2 gap-6 px-6 py-12 md:grid-cols-4">
+        {(props.items ?? []).map((it, i) => (
+          <div key={i} className="text-center">
+            <div className="text-3xl font-bold md:text-4xl">{it.value}</div>
+            <div className="mt-1 text-xs uppercase tracking-widest opacity-80 md:text-sm">{it.label}</div>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function FeatureGridBlock({ props }: { props: FeatureGridProps }) {
+  return (
+    <section className="mx-auto max-w-6xl px-6 py-16">
+      {(props.title || props.eyebrow) && (
+        <div className="mb-10 max-w-2xl">
+          {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+          {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
+        </div>
+      )}
+      <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3">
+        {(props.items ?? []).map((it, i) => (
+          <div key={i} className="rounded-2xl border border-black/10 p-6 shadow-sm">
+            {it.icon && <div className="mb-3 text-3xl">{it.icon}</div>}
+            <h3 className="font-semibold">{it.title}</h3>
+            <p className="mt-1 text-sm opacity-70">{it.description}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function ImageTextSplitBlock({ props }: { props: ImageTextSplitProps }) {
+  const reverse = props.reverse === true
+  return (
+    <section className="mx-auto max-w-6xl px-6 py-16">
+      <div className={`grid items-center gap-12 md:grid-cols-2 ${reverse ? 'md:[direction:rtl]' : ''}`}>
+        <div className="md:[direction:ltr]">
+          {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+          {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
+          {props.body && <p className="mt-4 whitespace-pre-line opacity-80">{props.body}</p>}
+          {props.buttonLabel && props.buttonHref && (
+            <a href={props.buttonHref} className="mt-6 inline-block rounded-md px-6 py-3 font-medium text-white" style={{ background: 'var(--cms-primary)' }}>
+              {props.buttonLabel}
+            </a>
+          )}
+        </div>
+        {props.imageUrl && (
+          <div className="md:[direction:ltr]">
+            {/* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */}
+            <img src={props.imageUrl} alt={props.title || ''} className="aspect-[4/3] w-full rounded-3xl object-cover shadow-xl" />
+          </div>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function StepsBlock({ props }: { props: StepsProps }) {
+  return (
+    <section className="px-6 py-16" style={{ background: 'rgba(0,0,0,0.04)' }}>
+      <div className="mx-auto max-w-6xl">
+        {(props.title || props.eyebrow) && (
+          <div className="mx-auto mb-12 max-w-2xl text-center">
+            {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+            {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
+          </div>
+        )}
+        <div className="grid gap-6 md:grid-cols-3">
+          {(props.items ?? []).map((step, i) => (
+            <div key={i} className="rounded-2xl border border-black/10 bg-white/60 p-6">
+              <div className="text-5xl font-black" style={{ color: 'var(--cms-primary)' }}>{step.number || `0${i + 1}`}</div>
+              <h3 className="mt-3 font-semibold">{step.title}</h3>
+              <p className="mt-2 text-sm opacity-70">{step.description}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function ColumnsBlock({ props }: { props: ColumnsProps }) {
+  const items = props.items ?? []
+  const colsClass = items.length === 4 ? 'md:grid-cols-4' : items.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
+  return (
+    <section className="mx-auto max-w-6xl px-6 py-16">
+      {(props.title || props.eyebrow) && (
+        <div className="mb-10 max-w-2xl">
+          {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+          {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
+        </div>
+      )}
+      <div className={`grid gap-5 ${colsClass}`}>
+        {items.map((it, i) => (
+          <div key={i} className="rounded-2xl border border-black/10 p-6">
+            {it.icon && <div className="text-3xl">{it.icon}</div>}
+            <h3 className="mt-3 font-semibold">{it.title}</h3>
+            <p className="mt-2 text-sm opacity-70">{it.body}</p>
+          </div>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function PackagesBlock({ props }: { props: PackagesProps }) {
+  return (
+    <section className="px-6 py-16" style={{ background: 'rgba(0,0,0,0.04)' }}>
+      <div className="mx-auto max-w-6xl">
+        {(props.title || props.eyebrow) && (
+          <div className="mb-10 max-w-2xl">
+            {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+            {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
+            {props.subtitle && <p className="mt-2 opacity-70">{props.subtitle}</p>}
+          </div>
+        )}
+        <div className="grid gap-6 md:grid-cols-3">
+          {(props.items ?? []).map((p, i) => (
+            <div key={i} className={`overflow-hidden rounded-2xl bg-white shadow-sm ${p.popular ? 'ring-2' : 'ring-1 ring-black/10'}`}
+              style={p.popular ? { ['--tw-ring-color' as string]: 'var(--cms-primary)' } : undefined}>
+              {p.imageUrl && (
+                /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
+                <img src={p.imageUrl} alt={p.name} className="aspect-[4/3] w-full object-cover" />
+              )}
+              <div className="p-6 text-slate-900">
+                {p.popular && <div className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>Mais escolhido</div>}
+                <h3 className="text-xl font-bold">{p.name}</h3>
+                {p.description && <p className="mt-2 text-sm opacity-70">{p.description}</p>}
+                {p.price && <div className="mt-4 text-3xl font-bold tabular-nums">{p.price}</div>}
+                {p.buttonLabel && (
+                  <a href={p.buttonHref || '#'} className="mt-6 inline-block w-full rounded-xl py-2.5 text-center font-semibold text-white" style={{ background: 'var(--cms-primary)' }}>
+                    {p.buttonLabel}
+                  </a>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  )
+}
+
+function MarqueeBlock({ props }: { props: MarqueeProps }) {
+  const items = props.items ?? []
+  if (items.length === 0) return null
+  return (
+    <section style={{ background: 'var(--cms-primary)', color: '#fff' }}>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 py-6 text-sm">
+        {props.label && <span className="text-xs uppercase tracking-widest opacity-70">{props.label}</span>}
+        {items.map((it, i) => (
+          <span key={i} className="inline-flex items-center gap-2 font-medium tracking-tight">
+            {it.name}
+            {i < items.length - 1 && <span className="opacity-40">✦</span>}
+          </span>
+        ))}
+      </div>
+    </section>
+  )
+}
+
+function QuoteBlock({ props }: { props: QuoteProps }) {
+  if (!props.text) return null
+  return (
+    <section className="mx-auto max-w-4xl px-6 py-16 text-center">
+      <p className="text-2xl font-medium leading-snug md:text-3xl">“{props.text}”</p>
+      {props.author && (
+        <div className="mt-6 text-sm opacity-70">
+          <div className="font-semibold opacity-100">{props.author}</div>
+          {props.role && <div>{props.role}</div>}
+        </div>
+      )}
+    </section>
+  )
+}
+
+function CtaBlock({ props }: { props: CtaProps }) {
+  return (
+    <section className="px-6 py-16 text-center" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
+      <div className="mx-auto max-w-4xl">
+        {props.title && <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{props.title}</h2>}
+        {props.subtitle && <p className="mx-auto mt-4 max-w-2xl opacity-90">{props.subtitle}</p>}
+        {props.buttonLabel && props.buttonHref && (
+          <a href={props.buttonHref} className="mt-8 inline-block rounded-md bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-100">
+            {props.buttonLabel}
+          </a>
+        )}
+      </div>
+    </section>
+  )
+}
+
+// ---- registry + dispatch ----------------------------------------------------
+
+/** Mapa type → componente. Usado pelo dispatch (render público) e exposto pro editor. */
+export const blockComponents = {
+  hero: HeroBlock,
+  text: TextBlock,
+  services: ServicesBlock,
+  contact: ContactBlock,
+  gallery: GalleryBlock,
+  faq: FaqBlock,
+  testimonials: TestimonialsBlock,
+  map: MapBlock,
+  banner_strip: BannerStripBlock,
+  stats: StatsBlock,
+  feature_grid: FeatureGridBlock,
+  image_text_split: ImageTextSplitBlock,
+  steps: StepsBlock,
+  columns: ColumnsBlock,
+  packages: PackagesBlock,
+  marquee: MarqueeBlock,
+  quote: QuoteBlock,
+  cta: CtaBlock,
+} as const
+
+/** Renderiza um bloco (com key = block.id). Compartilhado entre CmsRender (público) e o editor. */
+export function renderCmsBlock(b: CmsBlock): React.ReactElement | null {
   switch (b.type) {
     case 'hero': return <HeroBlock key={b.id} props={b.props} />
     case 'text': return <TextBlock key={b.id} props={b.props} />
@@ -162,6 +451,16 @@ function renderBlock(b: CmsBlock) {
     case 'faq': return <FaqBlock key={b.id} props={b.props} />
     case 'testimonials': return <TestimonialsBlock key={b.id} props={b.props} />
     case 'map': return <MapBlock key={b.id} props={b.props} />
+    case 'banner_strip': return <BannerStripBlock key={b.id} props={b.props} />
+    case 'stats': return <StatsBlock key={b.id} props={b.props} />
+    case 'feature_grid': return <FeatureGridBlock key={b.id} props={b.props} />
+    case 'image_text_split': return <ImageTextSplitBlock key={b.id} props={b.props} />
+    case 'steps': return <StepsBlock key={b.id} props={b.props} />
+    case 'columns': return <ColumnsBlock key={b.id} props={b.props} />
+    case 'packages': return <PackagesBlock key={b.id} props={b.props} />
+    case 'marquee': return <MarqueeBlock key={b.id} props={b.props} />
+    case 'quote': return <QuoteBlock key={b.id} props={b.props} />
+    case 'cta': return <CtaBlock key={b.id} props={b.props} />
     default: return null
   }
 }
@@ -179,15 +478,8 @@ export function CmsRender({
   nav: CmsNavItem[]
   navBase: string
 }) {
-  const primary = theme?.primaryColor || '#0f172a'
-  const dark = theme?.dark === true
-  const shell: React.CSSProperties = {
-    ['--cms-primary' as string]: primary,
-    background: dark ? '#0b1120' : '#ffffff',
-    color: dark ? '#e2e8f0' : '#0f172a',
-  }
   return (
-    <main className="min-h-screen" style={shell}>
+    <main className="min-h-screen" style={cmsShellStyle(theme)}>
       {nav.length > 1 && (
         <nav className="flex flex-wrap items-center justify-center gap-4 border-b border-black/10 px-6 py-4 text-sm">
           {nav.map((n) => (
@@ -197,7 +489,7 @@ export function CmsRender({
           ))}
         </nav>
       )}
-      {blocks.map(renderBlock)}
+      {blocks.map(renderCmsBlock)}
       {blocks.length === 0 && (
         <div className="flex min-h-[50vh] items-center justify-center opacity-50">
           <p>{title || 'Página em construção.'}</p>
