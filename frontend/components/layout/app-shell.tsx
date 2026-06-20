@@ -11,6 +11,8 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { getMe } from '@/lib/api/me'
 import { Sidebar, SidebarBrand, SidebarNav } from './sidebar'
+import { SidebarProvider } from './sidebar-context'
+import { SidebarTab } from './sidebar-tab'
 import { UserDropdown } from './user-dropdown'
 
 /**
@@ -30,13 +32,18 @@ export function AppShell({ children }: { children: ReactNode }) {
   const [drawerOpen, setDrawerOpen] = useState(false)
 
   return (
+    <SidebarProvider>
     <div className="flex min-h-screen bg-background">
       <GlobalSearch />
       <RealtimeNotifications />
 
-      {/* Sidebar desktop — productName + nav mudam por perfil (camada 7.0/7.1). features (9.0):
+      {/* Sidebar desktop COLAPSÁVEL — productName + nav mudam por perfil (camada 7.0/7.1).
+          push (padrão): empurra o conteúdo, clique-toggle. cms: overlay por hover. features (9.0):
           plumbing pra SM-M gatear itens de nav por feature flag. */}
       <Sidebar role={me?.role} productName={me?.productName} profileId={me?.profileId} features={me?.features} />
+
+      {/* Aba-balão (desktop): clique-toggle (push) ou hover-peek (cms). Sempre visível. */}
+      <SidebarTab />
 
       {/* Drawer mobile */}
       {drawerOpen && (
@@ -94,5 +101,6 @@ export function AppShell({ children }: { children: ReactNode }) {
         </main>
       </div>
     </div>
+    </SidebarProvider>
   )
 }

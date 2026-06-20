@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
 import { getNavForProfile } from './nav-config'
+import { useSidebar } from './sidebar-context'
 import { cn } from '@/lib/utils'
 
 /**
@@ -93,8 +94,14 @@ export function SidebarBrand({ productName = 'Meada' }: { productName?: string }
 }
 
 /**
- * Sidebar fixo do desktop (>= md). Largura fixa, borda à direita, scroll próprio. No mobile
- * fica escondido (o drawer via Sheet assume — ver AppShell).
+ * Sidebar do desktop (>= md), COLAPSÁVEL (ver {@link useSidebar}). Dois modos:
+ *
+ * - **push**: faz parte do fluxo flex; aberto = `w-64` (empurra o conteúdo), fechado = `w-0` (some).
+ * - **cms**: `position: fixed` por cima do conteúdo (OVERLAY, não reflui o editor); aparece/some por
+ *   hover (peek). No fluxo flex ele ocupa `w-0` (não empurra nada).
+ *
+ * A largura interna do painel é sempre 16rem; o colapso é por `w-0 + overflow-hidden` no wrapper.
+ * No mobile fica escondido (o drawer do AppShell assume).
  */
 export function Sidebar({
   role,
@@ -107,11 +114,26 @@ export function Sidebar({
   profileId?: string | null
   features?: Record<string, boolean>
 }) {
+  const { mode, open, onHoverEnter, onHoverLeave } = useSidebar()
+  const overlay = mode === 'cms'
+
   return (
-    <aside className="hidden w-64 shrink-0 flex-col border-r border-border bg-background md:flex">
-      <SidebarBrand productName={productName} />
-      <div className="flex-1 overflow-y-auto">
-        <SidebarNav role={role} profileId={profileId} features={features} />
+    <aside
+      onMouseEnter={onHoverEnter}
+      onMouseLeave={onHoverLeave}
+      className={cn(
+        'hidden shrink-0 overflow-hidden border-border bg-background transition-[width] duration-200 ease-out md:flex md:flex-col',
+        open ? 'w-64 border-r' : 'w-0 border-r-0',
+        // modo CMS: sai do fluxo e flutua por cima (overlay). w-0 acima garante que não empurra nada.
+        overlay && 'fixed inset-y-0 left-0 z-50 shadow-xl',
+      )}
+    >
+      {/* painel de 16rem fixo: o colapso é só no wrapper (w-0), o conteúdo não "esmaga" */}
+      <div className="flex h-full w-64 flex-col">
+        <SidebarBrand productName={productName} />
+        <div className="flex-1 overflow-y-auto">
+          <SidebarNav role={role} profileId={profileId} features={features} />
+        </div>
       </div>
     </aside>
   )
