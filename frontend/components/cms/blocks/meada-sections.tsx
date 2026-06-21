@@ -4,6 +4,7 @@ import {
 } from 'lucide-react'
 
 import type { MeadaCtaProps, MeadaPortfolioProps, MeadaServicesProps } from '@/lib/cms/cms-block-type'
+import { slotOutlineStyle } from '@/lib/cms/slot-highlight'
 
 /**
  * Seções da marca Meada (preset meada-dark) — réplicas FIÉIS das seções do meada-page
@@ -103,23 +104,25 @@ export function MeadaPortfolio({ props }: { props: MeadaPortfolioProps }) {
 }
 
 // ---- CTA ----
-export function MeadaCta({ props }: { props: MeadaCtaProps }) {
+export function MeadaCta({ props, activeSlot }: { props: MeadaCtaProps; activeSlot?: string }) {
   return (
     <section style={{ padding: '11rem 4rem', position: 'relative', overflow: 'hidden' }}>
       <div style={{ position: 'absolute', top: '-25%', right: '-5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(59,130,246,0.22) 0%, transparent 65%)', borderRadius: '50%', filter: 'blur(70px)' }} />
       <div style={{ position: 'absolute', bottom: '-25%', left: '5%', width: '600px', height: '600px', background: 'radial-gradient(circle, rgba(139,92,246,0.18) 0%, transparent 65%)', borderRadius: '50%', filter: 'blur(70px)' }} />
       <div style={{ maxWidth: '780px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
-        <h2 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', fontWeight: 900, lineHeight: 1.15, marginBottom: '2rem' }}>
-          {props.titlePrefix}{' '}
-          <span style={{ backgroundImage: 'linear-gradient(125deg, #60a5fa, #a855f7, #ec4899)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>{props.gradientText}</span>
-        </h2>
-        {props.subtitle && <p style={{ fontSize: '18px', color: 'rgb(203,213,225)', lineHeight: 1.85, maxWidth: '560px', margin: '0 auto 3.5rem' }}>{props.subtitle}</p>}
+        <div data-slot="content" style={slotOutlineStyle(activeSlot, 'content')}>
+          <h2 style={{ fontSize: 'clamp(2.2rem, 5vw, 3.8rem)', fontWeight: 900, lineHeight: 1.15, marginBottom: '2rem' }}>
+            {props.titlePrefix}{' '}
+            <span style={{ backgroundImage: 'linear-gradient(125deg, #60a5fa, #a855f7, #ec4899)', backgroundClip: 'text', WebkitBackgroundClip: 'text', color: 'transparent' }}>{props.gradientText}</span>
+          </h2>
+          {props.subtitle && <p style={{ fontSize: '18px', color: 'rgb(203,213,225)', lineHeight: 1.85, maxWidth: '560px', margin: '0 auto 3.5rem' }}>{props.subtitle}</p>}
+        </div>
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           {props.primaryLabel && (
-            <a href={props.primaryHref || '#'} style={{ padding: '13px 32px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', borderRadius: '12px', color: 'white', fontWeight: 600, fontSize: '15px', textDecoration: 'none', display: 'inline-block', boxShadow: '0 8px 24px rgba(59,130,246,0.3)' }}>{props.primaryLabel}</a>
+            <a href={props.primaryHref || '#'} data-slot="buttonPrimary" style={{ padding: '13px 32px', background: 'linear-gradient(135deg, #3b82f6, #6366f1)', borderRadius: '12px', color: 'white', fontWeight: 600, fontSize: '15px', textDecoration: 'none', display: 'inline-block', boxShadow: '0 8px 24px rgba(59,130,246,0.3)', ...slotOutlineStyle(activeSlot, 'buttonPrimary') }}>{props.primaryLabel}</a>
           )}
           {props.secondaryLabel && (
-            <a href={props.secondaryHref || '#'} style={{ padding: '13px 32px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', display: 'inline-block' }}>{props.secondaryLabel}</a>
+            <a href={props.secondaryHref || '#'} data-slot="buttonSecondary" style={{ padding: '13px 32px', background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.12)', borderRadius: '12px', color: 'rgba(255,255,255,0.75)', fontWeight: 600, fontSize: '15px', textDecoration: 'none', display: 'inline-block', ...slotOutlineStyle(activeSlot, 'buttonSecondary') }}>{props.secondaryLabel}</a>
           )}
         </div>
       </div>

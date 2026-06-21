@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils'
+import { slotRing } from '@/lib/cms/slot-highlight'
 import type {
   BannerStripProps,
   CmsBlock,
@@ -74,8 +75,8 @@ export function cmsShellStyle(theme: CmsTheme | null): React.CSSProperties {
  * (destaque hierárquico). No /p/ público é undefined → ring nunca aparece; data-slot é atributo inerte
  * (não muda layout/CSS), então o render visível é idêntico ao de produção. */
 function HeroBlock({ props, activeSlot }: { props: HeroProps; activeSlot?: string }) {
-  // anel de destaque pra sub-parte ativa — local, sem CSS global, some no público (activeSlot undefined).
-  const ringIf = (slot: string) => activeSlot === slot ? 'ring-2 ring-white ring-offset-2 ring-offset-[color:var(--cms-primary)] rounded-lg' : ''
+  // anel de destaque pra sub-parte ativa — helper compartilhado; fundo do hero é primário → ring branco.
+  const ringIf = (slot: string) => slotRing(activeSlot, slot)
   return (
     <section className="relative overflow-hidden px-6 py-20 text-center" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
       <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:text-left">
@@ -229,13 +230,13 @@ function MapBlock({ props }: { props: MapProps }) {
 
 // ---- catálogo ampliado (10) — re-tematizado pra var(--cms-primary) + tons neutros ----
 
-function BannerStripBlock({ props }: { props: BannerStripProps }) {
+function BannerStripBlock({ props, activeSlot }: { props: BannerStripProps; activeSlot?: string }) {
   if (!props.message) return null
   return (
     <div className="px-6 py-3 text-center text-sm" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
-      <span className="font-medium">{props.message}</span>
+      <span data-slot="message" className={cn('font-medium', slotRing(activeSlot, 'message'))}>{props.message}</span>
       {props.buttonLabel && props.buttonHref && (
-        <a href={props.buttonHref} className="ml-3 font-semibold underline underline-offset-2 hover:no-underline">
+        <a href={props.buttonHref} data-slot="button" className={cn('ml-3 font-semibold underline underline-offset-2 hover:no-underline', slotRing(activeSlot, 'button'))}>
           {props.buttonLabel} →
         </a>
       )}
@@ -280,17 +281,17 @@ function FeatureGridBlock({ props }: { props: FeatureGridProps }) {
   )
 }
 
-function ImageTextSplitBlock({ props }: { props: ImageTextSplitProps }) {
+function ImageTextSplitBlock({ props, activeSlot }: { props: ImageTextSplitProps; activeSlot?: string }) {
   const reverse = props.reverse === true
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
       <div className={`grid items-center gap-12 md:grid-cols-2 ${reverse ? 'md:[direction:rtl]' : ''}`}>
-        <div className="md:[direction:ltr]">
+        <div className={cn('md:[direction:ltr]', slotRing(activeSlot, 'content', false))} data-slot="content">
           {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
           {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
           {props.body && <p className="mt-4 whitespace-pre-line opacity-80">{props.body}</p>}
           {props.buttonLabel && props.buttonHref && (
-            <a href={props.buttonHref} className="mt-6 inline-block rounded-md px-6 py-3 font-medium text-white" style={{ background: 'var(--cms-primary)' }}>
+            <a href={props.buttonHref} data-slot="button" className={cn('mt-6 inline-block rounded-md px-6 py-3 font-medium text-white', slotRing(activeSlot, 'button', false))} style={{ background: 'var(--cms-primary)' }}>
               {props.buttonLabel}
             </a>
           )}
@@ -298,7 +299,7 @@ function ImageTextSplitBlock({ props }: { props: ImageTextSplitProps }) {
         {props.imageUrl && (
           <div className="md:[direction:ltr]">
             {/* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */}
-            <img src={props.imageUrl} alt={props.title || ''} className="aspect-[4/3] w-full rounded-3xl object-cover shadow-xl" />
+            <img src={props.imageUrl} alt={props.title || ''} data-slot="image" className={cn('aspect-[4/3] w-full rounded-3xl object-cover shadow-xl', slotRing(activeSlot, 'image', false))} />
           </div>
         )}
       </div>
@@ -425,14 +426,16 @@ function QuoteBlock({ props }: { props: QuoteProps }) {
   )
 }
 
-function CtaBlock({ props }: { props: CtaProps }) {
+function CtaBlock({ props, activeSlot }: { props: CtaProps; activeSlot?: string }) {
   return (
     <section className="px-6 py-16 text-center" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
       <div className="mx-auto max-w-4xl">
-        {props.title && <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{props.title}</h2>}
-        {props.subtitle && <p className="mx-auto mt-4 max-w-2xl opacity-90">{props.subtitle}</p>}
+        <div data-slot="content" className={cn(slotRing(activeSlot, 'content'))}>
+          {props.title && <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{props.title}</h2>}
+          {props.subtitle && <p className="mx-auto mt-4 max-w-2xl opacity-90">{props.subtitle}</p>}
+        </div>
         {props.buttonLabel && props.buttonHref && (
-          <a href={props.buttonHref} className="mt-8 inline-block rounded-md bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-100">
+          <a href={props.buttonHref} data-slot="button" className={cn('mt-8 inline-block rounded-md bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-100', slotRing(activeSlot, 'button'))}>
             {props.buttonLabel}
           </a>
         )}
@@ -484,22 +487,22 @@ export function renderCmsBlock(b: CmsBlock, opts?: { activeSlot?: string }): Rea
     case 'faq': return <FaqBlock key={b.id} props={b.props} />
     case 'testimonials': return <TestimonialsBlock key={b.id} props={b.props} />
     case 'map': return <MapBlock key={b.id} props={b.props} />
-    case 'banner_strip': return <BannerStripBlock key={b.id} props={b.props} />
+    case 'banner_strip': return <BannerStripBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
     case 'stats': return <StatsBlock key={b.id} props={b.props} />
     case 'feature_grid': return <FeatureGridBlock key={b.id} props={b.props} />
-    case 'image_text_split': return <ImageTextSplitBlock key={b.id} props={b.props} />
+    case 'image_text_split': return <ImageTextSplitBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
     case 'steps': return <StepsBlock key={b.id} props={b.props} />
     case 'columns': return <ColumnsBlock key={b.id} props={b.props} />
     case 'packages': return <PackagesBlock key={b.id} props={b.props} />
     case 'marquee': return <MarqueeBlock key={b.id} props={b.props} />
     case 'quote': return <QuoteBlock key={b.id} props={b.props} />
-    case 'cta': return <CtaBlock key={b.id} props={b.props} />
+    case 'cta': return <CtaBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
     case 'meada_hero': return <MeadaHero key={b.id} props={b.props} />
     case 'meada_services': return <MeadaServices key={b.id} props={b.props} />
     case 'meada_portfolio': return <MeadaPortfolio key={b.id} props={b.props} />
-    case 'meada_cta': return <MeadaCta key={b.id} props={b.props} />
-    case 'meada_navbar': return <MeadaNavbar key={b.id} props={b.props} />
-    case 'meada_footer': return <MeadaFooter key={b.id} props={b.props} />
+    case 'meada_cta': return <MeadaCta key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'meada_navbar': return <MeadaNavbar key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'meada_footer': return <MeadaFooter key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
     default: return null
   }
 }
