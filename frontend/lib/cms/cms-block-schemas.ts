@@ -308,6 +308,67 @@ export const blockSchemas: Record<CmsBlockTypeId, BlockSchema> = {
       { key: 'chatMessage', label: 'Chat — 1ª mensagem', type: 'textarea' },
     ],
   },
+
+  meada_services: {
+    type: 'meada_services', label: 'Meada · Serviços', emoji: '🧩',
+    description: 'Grade de serviços (cards com ícone colorido), fiel ao meada-page.',
+    fields: [
+      { key: 'eyebrow', label: 'Etiqueta superior', type: 'text' },
+      { key: 'title', label: 'Título', type: 'text' },
+      { key: 'items', label: 'Serviços', type: 'repeater', itemLabel: 'serviço', itemSchema: [
+        { key: 'icon', label: 'Ícone', type: 'select', options: [
+          { value: 'Code', label: 'Code (desenvolvimento)' },
+          { value: 'Cloud', label: 'Cloud (nuvem)' },
+          { value: 'Heart', label: 'Heart (suporte)' },
+          { value: 'Smartphone', label: 'Smartphone (mobile)' },
+          { value: 'Layers', label: 'Layers (design)' },
+          { value: 'BarChart3', label: 'BarChart (APIs)' },
+          { value: 'Cpu', label: 'Cpu' }, { value: 'Globe', label: 'Globe' },
+          { value: 'Rocket', label: 'Rocket' }, { value: 'Sparkles', label: 'Sparkles' },
+          { value: 'Star', label: 'Star' }, { value: 'Target', label: 'Target' },
+        ] },
+        { key: 'color', label: 'Cor (hex)', type: 'text', placeholder: '#60a5fa' },
+        { key: 'title', label: 'Título', type: 'text' },
+        { key: 'description', label: 'Descrição', type: 'textarea' },
+        { key: 'linkLabel', label: 'Link — texto', type: 'text' },
+        { key: 'linkHref', label: 'Link — destino', type: 'url' },
+      ] },
+    ],
+  },
+
+  meada_portfolio: {
+    type: 'meada_portfolio', label: 'Meada · Portfólio', emoji: '🗂️',
+    description: 'Grade de projetos curados (imagem por URL, categoria, tags), fiel ao meada-page.',
+    fields: [
+      { key: 'eyebrow', label: 'Etiqueta superior', type: 'text' },
+      { key: 'title', label: 'Título', type: 'text' },
+      { key: 'linkLabel', label: 'Link "ver todos" — texto', type: 'text' },
+      { key: 'linkHref', label: 'Link "ver todos" — destino', type: 'url' },
+      { key: 'items', label: 'Projetos', type: 'repeater', itemLabel: 'projeto', itemSchema: [
+        { key: 'name', label: 'Nome', type: 'text' },
+        { key: 'category', label: 'Categoria (badge)', type: 'text', placeholder: 'Website' },
+        { key: 'description', label: 'Descrição curta', type: 'textarea' },
+        { key: 'imageUrl', label: 'URL da imagem (thumb)', type: 'url' },
+        { key: 'accentColor', label: 'Cor de destaque (hex)', type: 'text', placeholder: '#3b82f6' },
+        { key: 'tags', label: 'Tags (separadas por vírgula)', type: 'text', placeholder: 'Next.js, Tailwind, API' },
+        { key: 'href', label: 'Link do projeto', type: 'url' },
+      ] },
+    ],
+  },
+
+  meada_cta: {
+    type: 'meada_cta', label: 'Meada · Chamada final', emoji: '🚀',
+    description: 'Bloco final com glow + título em gradiente e 2 botões, fiel ao meada-page.',
+    fields: [
+      { key: 'titlePrefix', label: 'Título — início', type: 'text' },
+      { key: 'gradientText', label: 'Título — trecho em gradiente', type: 'text' },
+      { key: 'subtitle', label: 'Subtítulo', type: 'textarea' },
+      { key: 'primaryLabel', label: 'Botão principal — texto', type: 'text' },
+      { key: 'primaryHref', label: 'Botão principal — link', type: 'url' },
+      { key: 'secondaryLabel', label: 'Botão secundário — texto', type: 'text' },
+      { key: 'secondaryHref', label: 'Botão secundário — link', type: 'url' },
+    ],
+  },
 }
 
 /** Schema de um tipo (ou undefined se desconhecido). */

@@ -44,7 +44,10 @@ public enum CmsBlockType {
     QUOTE("quote"),
     CTA("cta"),
     // Blocos da marca Meada (preset meada-dark) — identidade visual própria (não tematizáveis):
-    MEADA_HERO("meada_hero");
+    MEADA_HERO("meada_hero"),
+    MEADA_SERVICES("meada_services"),
+    MEADA_PORTFOLIO("meada_portfolio"),
+    MEADA_CTA("meada_cta");
 
     private final String id;
 

@@ -30,6 +30,9 @@ export const CMS_BLOCK_TYPES = [
   { id: 'quote', label: 'Citação' },
   { id: 'cta', label: 'Chamada final (CTA)' },
   { id: 'meada_hero', label: 'Meada · Hero' },
+  { id: 'meada_services', label: 'Meada · Serviços' },
+  { id: 'meada_portfolio', label: 'Meada · Portfólio' },
+  { id: 'meada_cta', label: 'Meada · Chamada final' },
 ] as const
 
 export type CmsBlockTypeId = (typeof CMS_BLOCK_TYPES)[number]['id']
@@ -122,6 +125,25 @@ export type MeadaHeroProps = {
   chatMessage: string
 }
 
+/** Serviço do bloco meada_services. icon = nome lucide (Code, Cloud, Heart, Smartphone, Layers,
+ * BarChart3…); color = cor de destaque do card. */
+export type MeadaServiceItem = { icon: string; color: string; title: string; description: string; linkLabel: string; linkHref: string }
+export type MeadaServicesProps = { eyebrow: string; title: string; items: MeadaServiceItem[] }
+
+/** Item do portfólio (curado — imagens por URL). category = badge; accentColor = cor; tags csv. */
+export type MeadaPortfolioItem = { name: string; category: string; description: string; imageUrl: string; accentColor: string; tags: string; href: string }
+export type MeadaPortfolioProps = { eyebrow: string; title: string; linkLabel: string; linkHref: string; items: MeadaPortfolioItem[] }
+
+export type MeadaCtaProps = {
+  titlePrefix: string
+  gradientText: string
+  subtitle: string
+  primaryLabel: string
+  primaryHref: string
+  secondaryLabel: string
+  secondaryHref: string
+}
+
 export type CmsBlock =
   | { id: string; type: 'hero'; props: HeroProps }
   | { id: string; type: 'text'; props: TextProps }
@@ -142,6 +164,9 @@ export type CmsBlock =
   | { id: string; type: 'quote'; props: QuoteProps }
   | { id: string; type: 'cta'; props: CtaProps }
   | { id: string; type: 'meada_hero'; props: MeadaHeroProps }
+  | { id: string; type: 'meada_services'; props: MeadaServicesProps }
+  | { id: string; type: 'meada_portfolio'; props: MeadaPortfolioProps }
+  | { id: string; type: 'meada_cta'; props: MeadaCtaProps }
 
 /** Props default ao adicionar um bloco novo do tipo dado. */
 export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
@@ -214,6 +239,37 @@ export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
         terminalCaptionRight: '~ 2-6 sem',
         chatTitle: 'Assistente Meada',
         chatMessage: 'Olá! 👋 Sou o assistente da Meada Digital. Como posso te ajudar hoje?',
+      }
+    case 'meada_services':
+      return {
+        eyebrow: 'Capacidades',
+        title: 'Tudo o Que Você Precisa para Crescer',
+        items: [
+          { icon: 'Code', color: '#60a5fa', title: 'Desenvolvimento Personalizado', description: 'Sites e sistemas feitos sob medida, do institucional ao mais complexo.', linkLabel: 'Saiba mais →', linkHref: '/servicos/desenvolvimento' },
+          { icon: 'Cloud', color: '#a855f7', title: 'Infraestrutura em Nuvem', description: 'Deploy, CI/CD, monitoramento e escalabilidade sem dores de cabeça.', linkLabel: 'Saiba mais →', linkHref: '/servicos/nuvem' },
+          { icon: 'Heart', color: '#ec4899', title: 'Manutenção & Suporte', description: 'Acompanhamento contínuo, evolução de funcionalidades e correções com prazo previsível.', linkLabel: 'Saiba mais →', linkHref: '/contato' },
+          { icon: 'Smartphone', color: '#22d3ee', title: 'Design Mobile First', description: 'Experiências nativas e fluidas em qualquer dispositivo e tamanho de tela.', linkLabel: 'Saiba mais →', linkHref: '/servicos/mobile' },
+          { icon: 'Layers', color: '#34d399', title: 'Design & UX', description: 'Interfaces bonitas e funcionais. Do wireframe ao Design System completo.', linkLabel: 'Saiba mais →', linkHref: '/servicos/design-ux' },
+          { icon: 'BarChart3', color: '#f97316', title: 'APIs & Integrações', description: 'Pagamentos, CRMs, ERPs e qualquer sistema conectado em uma arquitetura coesa.', linkLabel: 'Saiba mais →', linkHref: '/servicos/apis-integracoes' },
+        ],
+      }
+    case 'meada_portfolio':
+      return {
+        eyebrow: 'Portfolio',
+        title: 'Soluções Prontas para Usar',
+        linkLabel: 'Ver todos os projetos →',
+        linkHref: '/portfolio',
+        items: [],
+      }
+    case 'meada_cta':
+      return {
+        titlePrefix: 'Pronto para',
+        gradientText: 'Transformar seu Negócio?',
+        subtitle: 'Do site institucional ao sistema completo. Sem enrolação, com prazo claro e resultado.',
+        primaryLabel: 'Agendar Consultoria',
+        primaryHref: '/contato',
+        secondaryLabel: 'Ver Produtos',
+        secondaryHref: '/produtos',
       }
   }
 }
