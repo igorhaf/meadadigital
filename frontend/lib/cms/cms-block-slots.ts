@@ -75,6 +75,12 @@ export function slotsForType(type: string): SlotDef[] {
   return BLOCK_SLOTS[type as CmsBlockTypeId] ?? []
 }
 
+/** Os fields de REPEATER de um schema (a 2ª família de sub-nós: services.items, gallery.images…).
+ * Derivado direto do schema (type:'repeater') — não há mapa a manter em sync. `fields` = blockSchema.fields. */
+export function repeaterFieldsOf<T extends { type: string }>(fields: T[]): T[] {
+  return fields.filter((f) => f.type === 'repeater')
+}
+
 /**
  * Salvaguarda contra "prop fantasma": para um tipo, os keys de todos os slots devem ser disjuntos entre
  * si e estar TODOS contidos em `schemaKeys` (os keys do blockSchema). Devolve a lista de problemas

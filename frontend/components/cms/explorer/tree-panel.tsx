@@ -25,17 +25,21 @@ import {
   Footprints,
   Layout,
   Box,
+  List,
 } from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import { cn } from '@/lib/utils'
 import { blockSchema } from '@/lib/cms/cms-block-schemas'
-import { slotsForType } from '@/lib/cms/cms-block-slots'
+import { slotsForType, repeaterFieldsOf } from '@/lib/cms/cms-block-slots'
+import { getItems, itemTitle } from '@/lib/cms/repeater-ops'
 import { blockTypeLabel, type CmsRow } from '@/lib/cms/cms-block-type'
 
 /** Prefixo da chave de expansão de BLOCO no Set `expanded` (que também guarda rowIds). Isola o
  * namespace: rowId vs bloco-expandido nunca colidem, mesmo sendo ambos ids únicos. */
 export const blockExpandKey = (blockId: string) => `blk:${blockId}`
+/** Chave de expansão de um GRUPO repeater (ex. services.items) no Set `expanded` — namespace próprio. */
+export const repeaterExpandKey = (blockId: string, fieldKey: string) => `rep:${blockId}:${fieldKey}`
 
 /**
  * Painel "explorer" do page builder (árvore root → linhas → colunas → blocos). Substitui a lista flat
@@ -64,6 +68,7 @@ export type Selection =
   | { kind: 'column'; rowId: string; colId: string }
   | { kind: 'block'; rowId: string; colId: string; blockId: string }
   | { kind: 'slot'; rowId: string; colId: string; blockId: string; slotId: string }
+  | { kind: 'item'; rowId: string; colId: string; blockId: string; fieldKey: string; itemIndex: number }
   | null
 
 export type TreePanelProps = {
@@ -84,6 +89,10 @@ export type TreePanelProps = {
   onAddBlock: (rowId: string, colId: string) => void
   onMoveBlock: (rowId: string, colId: string, blockId: string, dir: -1 | 1) => void
   onRemoveBlock: (rowId: string, colId: string, blockId: string) => void
+  // itens de repeater (2ª família de sub-nós: services.items, gallery.images…)
+  onAddItem: (rowId: string, colId: string, blockId: string, fieldKey: string) => void
+  onMoveItem: (rowId: string, colId: string, blockId: string, fieldKey: string, itemIndex: number, dir: -1 | 1) => void
+  onRemoveItem: (rowId: string, colId: string, blockId: string, fieldKey: string, itemIndex: number) => void
   // drag-drop (Fase 4) — reordenar linhas/colunas, mover bloco entre colunas. Os ↑↓✕ continuam como fallback.
   onReorderRow: (dragId: string, targetId: string) => void
   onReorderColumn: (rowId: string, dragColId: string, targetColId: string) => void
@@ -308,11 +317,12 @@ export function TreePanel(p: TreePanelProps) {
                               const s = blockSchema(b.type)
                               const bSel = sel?.kind === 'block' && sel.blockId === b.id
                               const BlockIcon = BLOCK_ICONS[b.type] ?? Box
-                              // SLOTS: macros (ex. hero) declaram sub-partes. Bloco com slots vira expansível;
-                              // os demais 23 continuam folha (sem chevron). Expansão keyed por blk:id.
+                              // SLOTS (partes fixas) + REPEATERS (listas: services.items…). Bloco vira
+                              // expansível se tem qualquer um; os demais continuam folha. Key blk:id.
                               const slots = slotsForType(b.type)
-                              const hasSlots = slots.length > 0
-                              const bOpen = hasSlots && p.expanded.has(blockExpandKey(b.id))
+                              const repeaters = repeaterFieldsOf(s?.fields ?? [])
+                              const expandable = slots.length > 0 || repeaters.length > 0
+                              const bOpen = expandable && p.expanded.has(blockExpandKey(b.id))
                               return (
                                 <div key={b.id}>
                                   <div
@@ -322,8 +332,8 @@ export function TreePanel(p: TreePanelProps) {
                                     onDragEnd={endDrag}
                                     className={nodeRow(bSel, false)}>
                                     <GripVertical className={grip} aria-hidden />
-                                    {hasSlots ? (
-                                      // macro: chevron que expande os slots (mesmo padrão da linha)
+                                    {expandable ? (
+                                      // macro: chevron que expande slots + repeaters (mesmo padrão da linha)
                                       <button type="button" onClick={() => p.onToggle(blockExpandKey(b.id))} aria-label={bOpen ? 'Recolher' : 'Expandir'}
                                         className="grid size-4 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-muted">
                                         <ChevronRight className={cn('size-3.5 transition-transform', bOpen && 'rotate-90')} aria-hidden />
@@ -360,6 +370,56 @@ export function TreePanel(p: TreePanelProps) {
                                               <SlotIcon className={cn('size-3.5 shrink-0', slotSel ? 'text-primary' : 'text-muted-foreground')} aria-hidden />
                                               <span className="truncate">{slot.label}</span>
                                             </button>
+                                          </div>
+                                        )
+                                      })}
+
+                                      {/* REPEATERS (2ª família): cada lista do schema vira um grupo
+                                          expansível → itens com ↑↓✕ + "adicionar". Profundidade 1 extra. */}
+                                      {repeaters.map((rep) => {
+                                        const items = getItems(b.props as Record<string, unknown>, rep.key)
+                                        const repOpen = p.expanded.has(repeaterExpandKey(b.id, rep.key))
+                                        const itemLabel = rep.itemLabel ?? 'item'
+                                        return (
+                                          <div key={rep.key}>
+                                            {/* nó-grupo do repeater */}
+                                            <div className={nodeRow(false, false)}>
+                                              <button type="button" onClick={() => p.onToggle(repeaterExpandKey(b.id, rep.key))} aria-label={repOpen ? 'Recolher' : 'Expandir'}
+                                                className="grid size-4 shrink-0 place-items-center rounded-sm text-muted-foreground hover:bg-muted">
+                                                <ChevronRight className={cn('size-3.5 transition-transform', repOpen && 'rotate-90')} aria-hidden />
+                                              </button>
+                                              <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                                                <List className="size-3.5 shrink-0 text-muted-foreground" aria-hidden />
+                                                <span className="truncate">{rep.label}</span>
+                                                <span className="shrink-0 text-[10px] tabular-nums text-muted-foreground/70">{items.length}</span>
+                                              </span>
+                                            </div>
+                                            {/* itens do repeater */}
+                                            {repOpen && (
+                                              <div className={rail}>
+                                                {items.map((it, ii) => {
+                                                  const itemSel = sel?.kind === 'item' && sel.blockId === b.id && sel.fieldKey === rep.key && sel.itemIndex === ii
+                                                  return (
+                                                    <div key={ii} data-selected={itemSel} className={nodeRow(itemSel, false)}>
+                                                      <span className={chevronSlot} aria-hidden />
+                                                      <button type="button" onClick={() => p.onSelect({ kind: 'item', rowId: row.id, colId: col.id, blockId: b.id, fieldKey: rep.key, itemIndex: ii })}
+                                                        className="flex min-w-0 flex-1 items-center gap-1.5 text-left">
+                                                        <Box className={cn('size-3.5 shrink-0', itemSel ? 'text-primary' : 'text-muted-foreground')} aria-hidden />
+                                                        <span className="truncate">{itemTitle(it, rep.itemSchema, itemLabel, ii)}</span>
+                                                      </button>
+                                                      <NodeButtons onUp={() => p.onMoveItem(row.id, col.id, b.id, rep.key, ii, -1)} onDown={() => p.onMoveItem(row.id, col.id, b.id, rep.key, ii, 1)}
+                                                        onRemove={() => p.onRemoveItem(row.id, col.id, b.id, rep.key, ii)} upDisabled={ii === 0} downDisabled={ii === items.length - 1}
+                                                        removeLabel={`Excluir ${itemLabel}`} />
+                                                    </div>
+                                                  )
+                                                })}
+                                                <button type="button" onClick={() => p.onAddItem(row.id, col.id, b.id, rep.key)} className={addLink}>
+                                                  <span className={chevronSlot} aria-hidden />
+                                                  <Plus className="size-3.5 shrink-0" aria-hidden />
+                                                  <span className="truncate">{itemLabel}</span>
+                                                </button>
+                                              </div>
+                                            )}
                                           </div>
                                         )
                                       })}

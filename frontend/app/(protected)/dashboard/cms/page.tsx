@@ -34,6 +34,7 @@ import {
 import { columnSchema, rowSchema } from '@/lib/cms/container-schemas'
 import { allBlockSchemas, blockSchema } from '@/lib/cms/cms-block-schemas'
 import { slotsForType, validateSlotKeys, BLOCK_SLOTS } from '@/lib/cms/cms-block-slots'
+import { addItem, getItems, moveItem, removeItem, updateItem } from '@/lib/cms/repeater-ops'
 import type { CmsBlock, CmsBlockTypeId, CmsColumnWidth, CmsRow, CmsRowProps } from '@/lib/cms/cms-block-type'
 import {
   createCmsPage,
@@ -138,8 +139,15 @@ export default function CmsEditorPage() {
     const block = col.blocks.find((b) => b.id === selection.blockId)
     if (!block) { setSelection(null); return }
     if (selection.kind === 'block') return
-    // kind === 'slot': além do bloco existir, o slotId tem que ser um slot válido do tipo do bloco.
-    if (!slotsForType(block.type).some((s) => s.id === selection.slotId)) setSelection(null)
+    if (selection.kind === 'slot') {
+      // slotId tem que ser um slot válido do tipo do bloco.
+      if (!slotsForType(block.type).some((s) => s.id === selection.slotId)) setSelection(null)
+      return
+    }
+    // kind === 'item': o fieldKey tem que ser um repeater do schema E o índice existir no array.
+    const items = getItems(block.props as Record<string, unknown>, selection.fieldKey)
+    const isRepeater = blockSchema(block.type)?.fields.some((f) => f.key === selection.fieldKey && f.type === 'repeater')
+    if (!isRepeater || selection.itemIndex < 0 || selection.itemIndex >= items.length) setSelection(null)
   }, [tree, selection])
 
   // Escape fecha o painel direito.
@@ -241,6 +249,37 @@ export default function CmsEditorPage() {
     if (selection?.kind === 'block' && selection.blockId === blockId) setSelection(null)
   }
 
+  // ---- itens de repeater (2ª família) — operam no array props[fieldKey] e gravam via updateBlockProps.
+  function withBlock(rowId: string, colId: string, blockId: string, fn: (block: CmsBlock) => CmsBlock['props']): void {
+    setTree((t) => {
+      const block = t.find((r) => r.id === rowId)?.columns.find((c) => c.id === colId)?.blocks.find((b) => b.id === blockId)
+      if (!block) return t
+      return updateBlockProps(t, rowId, colId, blockId, fn(block))
+    })
+  }
+  function repItemSchema(type: string, fieldKey: string) {
+    return blockSchema(type)?.fields.find((f) => f.key === fieldKey)?.itemSchema
+  }
+  function handleAddItem(rowId: string, colId: string, blockId: string, fieldKey: string) {
+    withBlock(rowId, colId, blockId, (block) => {
+      const items = getItems(block.props as Record<string, unknown>, fieldKey)
+      return { ...block.props, [fieldKey]: addItem(items, repItemSchema(block.type, fieldKey)) } as CmsBlock['props']
+    })
+  }
+  function handleMoveItem(rowId: string, colId: string, blockId: string, fieldKey: string, itemIndex: number, dir: -1 | 1) {
+    withBlock(rowId, colId, blockId, (block) => {
+      const items = getItems(block.props as Record<string, unknown>, fieldKey)
+      return { ...block.props, [fieldKey]: moveItem(items, itemIndex, dir) } as CmsBlock['props']
+    })
+  }
+  function handleRemoveItem(rowId: string, colId: string, blockId: string, fieldKey: string, itemIndex: number) {
+    withBlock(rowId, colId, blockId, (block) => {
+      const items = getItems(block.props as Record<string, unknown>, fieldKey)
+      return { ...block.props, [fieldKey]: removeItem(items, itemIndex) } as CmsBlock['props']
+    })
+    if (selection?.kind === 'item' && selection.blockId === blockId && selection.fieldKey === fieldKey && selection.itemIndex === itemIndex) setSelection(null)
+  }
+
   // catálogo escolhe o bloco e cria coluna (na linha) ou empilha bloco (na coluna).
   function pickFromCatalog(type: CmsBlockTypeId) {
     if (!catalogTarget) return
@@ -284,13 +323,16 @@ export default function CmsEditorPage() {
   // nós selecionados resolvidos a partir da árvore (pro painel direito).
   const selRow = selection ? tree.find((r) => r.id === selection.rowId) ?? null : null
   const selCol = selRow && selection && 'colId' in selection ? selRow.columns.find((c) => c.id === selection.colId) ?? null : null
-  // selBlock resolve tanto no modo bloco quanto no modo slot (o slot vive dentro de um bloco).
-  const selBlock = selCol && (selection?.kind === 'block' || selection?.kind === 'slot')
+  // selBlock resolve nos modos bloco/slot/item (slot e item vivem dentro de um bloco).
+  const selBlock = selCol && (selection?.kind === 'block' || selection?.kind === 'slot' || selection?.kind === 'item')
     ? selCol.blocks.find((b) => b.id === selection.blockId) ?? null : null
   const selBlockSchema = selBlock ? blockSchema(selBlock.type) : undefined
   // SlotDef selecionado (modo slot): qual partição de props o painel filtra.
   const selSlotDef = selBlock && selection?.kind === 'slot'
     ? slotsForType(selBlock.type).find((s) => s.id === selection.slotId) ?? null : null
+  // Repeater-field selecionado (modo item): o FieldDef do repeater (tem itemSchema/itemLabel).
+  const selItemField = selBlock && selection?.kind === 'item'
+    ? selBlockSchema?.fields.find((f) => f.key === selection.fieldKey && f.type === 'repeater') ?? null : null
 
   return (
     <div className="flex h-full flex-col">
@@ -354,6 +396,9 @@ export default function CmsEditorPage() {
               onReorderRow={(dragId, targetId) => setTree((t) => reorderRow(t, dragId, targetId))}
               onReorderColumn={(rowId, dragColId, targetColId) => setTree((t) => reorderColumn(t, rowId, dragColId, targetColId))}
               onMoveBlockAcross={(from, to) => setTree((t) => moveBlockAcross(t, from, to))}
+              onAddItem={handleAddItem}
+              onMoveItem={handleMoveItem}
+              onRemoveItem={handleRemoveItem}
             />
           </div>
         </aside>
@@ -494,6 +539,43 @@ export default function CmsEditorPage() {
                       field={f}
                       value={(selBlock.props as Record<string, unknown>)[f.key]}
                       onChange={(v) => setTree((t) => updateBlockProps(t, selRow!.id, selCol!.id, selBlock.id, { ...selBlock.props, [f.key]: v } as CmsBlock['props']))}
+                    />
+                  ))}
+                </div>
+              </>
+              )
+            })()}
+
+            {/* MODO ITEM — um item de um repeater (ex. um serviço de services.items). Edita os campos do
+                itemSchema do item, gravando props[fieldKey][itemIndex] via updateItem + updateBlockProps. */}
+            {selection.kind === 'item' && selBlock && selItemField && (() => {
+              const items = getItems(selBlock.props as Record<string, unknown>, selection.fieldKey)
+              const item = items[selection.itemIndex] ?? {}
+              const itemLabel = selItemField.itemLabel ?? 'item'
+              return (
+              <>
+                <div className="flex items-center justify-between border-b border-border px-4 py-3">
+                  <span className="flex items-center gap-2 font-medium capitalize">{itemLabel} {selection.itemIndex + 1}</span>
+                  <button type="button" onClick={() => setSelection(null)} aria-label="Fechar"><X className="size-4" /></button>
+                </div>
+                <div className="space-y-3 p-4">
+                  <p className="text-xs text-muted-foreground">
+                    Item de <span className="font-medium">{selItemField.label}</span>.{' '}
+                    <button type="button" className="text-primary underline-offset-2 hover:underline"
+                      onClick={() => setSelection({ kind: 'block', rowId: selRow!.id, colId: selCol!.id, blockId: selBlock.id })}>
+                      Editar bloco inteiro
+                    </button>
+                  </p>
+                  {(selItemField.itemSchema ?? []).map((f) => (
+                    <FieldRenderer
+                      key={f.key}
+                      field={f}
+                      value={(item as Record<string, unknown>)[f.key]}
+                      onChange={(v) => {
+                        const nextItem = { ...(item as Record<string, unknown>), [f.key]: v }
+                        const nextArr = updateItem(items, selection.itemIndex, nextItem)
+                        setTree((t) => updateBlockProps(t, selRow!.id, selCol!.id, selBlock.id, { ...selBlock.props, [selection.fieldKey]: nextArr } as CmsBlock['props']))
+                      }}
                     />
                   ))}
                 </div>
