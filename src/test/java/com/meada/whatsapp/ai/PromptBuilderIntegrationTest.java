@@ -137,33 +137,33 @@ class PromptBuilderIntegrationTest extends AbstractIntegrationTest {
     // ---- persona por perfil (camada 7.0) ------------------------------------
 
     @Test
-    @DisplayName("perfil legal: systemPrompt traz a persona ProcessoBot (advocacia) ANTES do base")
+    @DisplayName("perfil legal: systemPrompt traz a persona Legal (advocacia) ANTES do base")
     void profileLegal_injectsPersona() {
         jdbcTemplate.update("update companies set profile_id = 'legal' where id = ?", COMPANY);
         String sys = promptBuilder.build(COMPANY, CONV, "Oi").systemPrompt();
-        assertThat(sys).contains("Persona (ProcessoBot)");
+        assertThat(sys).contains("Persona (Legal)");
         assertThat(sys).contains("escritório de advocacia");
         assertThat(sys).contains("consultar o advogado responsável");
         // persona vem ANTES do prompt base (o template começa com "# Tom").
-        assertThat(sys.indexOf("Persona (ProcessoBot)")).isLessThan(sys.indexOf("# Tom"));
+        assertThat(sys.indexOf("Persona (Legal)")).isLessThan(sys.indexOf("# Tom"));
     }
 
     @Test
-    @DisplayName("perfil dental: systemPrompt traz a persona DentalBot (odonto)")
+    @DisplayName("perfil dental: systemPrompt traz a persona Dental (odonto)")
     void profileDental_injectsPersona() {
         jdbcTemplate.update("update companies set profile_id = 'dental' where id = ?", COMPANY);
         String sys = promptBuilder.build(COMPANY, CONV, "Oi").systemPrompt();
-        assertThat(sys).contains("Persona (DentalBot)");
+        assertThat(sys).contains("Persona (Dental)");
         assertThat(sys).contains("clínica odontológica");
         assertThat(sys).contains("NUNCA dê diagnóstico");
     }
 
     @Test
-    @DisplayName("perfil sushi: systemPrompt traz a persona SushiBot (restaurante)")
+    @DisplayName("perfil sushi: systemPrompt traz a persona Sushi (restaurante)")
     void profileSushi_injectsPersona() {
         jdbcTemplate.update("update companies set profile_id = 'sushi' where id = ?", COMPANY);
         String sys = promptBuilder.build(COMPANY, CONV, "Oi").systemPrompt();
-        assertThat(sys).contains("Persona (SushiBot)");
+        assertThat(sys).contains("Persona (Sushi)");
         assertThat(sys).contains("restaurante de sushi");
         assertThat(sys).contains("endereço de entrega");
     }

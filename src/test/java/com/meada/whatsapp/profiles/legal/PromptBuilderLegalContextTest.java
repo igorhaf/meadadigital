@@ -54,7 +54,7 @@ class PromptBuilderLegalContextTest extends AbstractIntegrationTest {
         UUID conv = seedConversation(true);
         Prompt prompt = promptBuilder.build(COMPANY, conv, "Como está meu processo?");
         String sys = prompt.systemPrompt();
-        assertThat(sys).contains("Persona (ProcessoBot)");
+        assertThat(sys).contains("Persona (Legal)");
         assertThat(sys).contains("DADOS DO CLIENTE");
         assertThat(sys).contains("Joana Réu");
         assertThat(sys).contains("Ação Trabalhista vs ACME");
@@ -65,7 +65,7 @@ class PromptBuilderLegalContextTest extends AbstractIntegrationTest {
     void unidentified_asksToIdentify() {
         UUID conv = seedConversation(false);
         String sys = promptBuilder.build(COMPANY, conv, "Oi").systemPrompt();
-        assertThat(sys).contains("Persona (ProcessoBot)");
+        assertThat(sys).contains("Persona (Legal)");
         assertThat(sys).contains("CLIENTE NÃO IDENTIFICADO");
     }
 }

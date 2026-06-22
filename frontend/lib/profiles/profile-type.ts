@@ -12,18 +12,18 @@
  */
 export const PROFILES = [
   { id: 'generic', productName: 'Meada', subdomain: 'meada', defaultPaletteId: 'meada-default' },
-  { id: 'legal', productName: 'ProcessoBot', subdomain: 'processo', defaultPaletteId: 'indigo' },
-  { id: 'dental', productName: 'DentalBot', subdomain: 'dental', defaultPaletteId: 'celeste' },
-  { id: 'sushi', productName: 'SushiBot', subdomain: 'sushi', defaultPaletteId: 'tijolo' },
-  { id: 'restaurant', productName: 'MesaBot', subdomain: 'mesa', defaultPaletteId: 'tijolo' },
-  { id: 'salon', productName: 'SalãoBot', subdomain: 'salao', defaultPaletteId: 'orquidea' },
-  { id: 'pousada', productName: 'PousadaBot', subdomain: 'pousada', defaultPaletteId: 'oceano' },
-  { id: 'academia', productName: 'AcademiaBot', subdomain: 'academia', defaultPaletteId: 'pinheiro' },
-  { id: 'pet', productName: 'PetBot', subdomain: 'pet', defaultPaletteId: 'coral' },
-  { id: 'oficina', productName: 'OficinaBot', subdomain: 'oficina', defaultPaletteId: 'aco' },
-  { id: 'nutri', productName: 'NutriBot', subdomain: 'nutri', defaultPaletteId: 'salvia' },
-  { id: 'barbearia', productName: 'BarbeariaBot', subdomain: 'barbearia', defaultPaletteId: 'grafite' },
-  { id: 'eventos', productName: 'EventosBot', subdomain: 'eventos', defaultPaletteId: 'ambar' },
+  { id: 'legal', productName: 'Legal', subdomain: 'processo', defaultPaletteId: 'indigo' },
+  { id: 'dental', productName: 'Dental', subdomain: 'dental', defaultPaletteId: 'celeste' },
+  { id: 'sushi', productName: 'Sushi', subdomain: 'sushi', defaultPaletteId: 'tijolo' },
+  { id: 'restaurant', productName: 'Restaurante', subdomain: 'mesa', defaultPaletteId: 'tijolo' },
+  { id: 'salon', productName: 'Salão', subdomain: 'salao', defaultPaletteId: 'orquidea' },
+  { id: 'pousada', productName: 'Pousada', subdomain: 'pousada', defaultPaletteId: 'oceano' },
+  { id: 'academia', productName: 'Academia', subdomain: 'academia', defaultPaletteId: 'pinheiro' },
+  { id: 'pet', productName: 'Pet', subdomain: 'pet', defaultPaletteId: 'coral' },
+  { id: 'oficina', productName: 'Oficina', subdomain: 'oficina', defaultPaletteId: 'aco' },
+  { id: 'nutri', productName: 'Nutri', subdomain: 'nutri', defaultPaletteId: 'salvia' },
+  { id: 'barbearia', productName: 'Barbearia', subdomain: 'barbearia', defaultPaletteId: 'grafite' },
+  { id: 'eventos', productName: 'Eventos', subdomain: 'eventos', defaultPaletteId: 'ambar' },
 ] as const
 
 export type Profile = (typeof PROFILES)[number]

@@ -17,6 +17,7 @@ import {
   HelpCircle,
   Home,
   LayoutDashboard,
+  LayoutGrid,
   ListOrdered,
   Mail,
   Megaphone,
@@ -38,7 +39,6 @@ import {
   Sparkles,
   Stethoscope,
   Tag,
-  ToggleRight,
   Wand2,
   UtensilsCrossed,
   UserCog,
@@ -148,7 +148,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'Anúncios', href: '/dashboard/announcements', icon: Megaphone },
       { label: 'Planos', href: '/dashboard/plans', icon: Package },
       { label: 'Paletas', href: '/dashboard/palettes', icon: Palette },
-      { label: 'Features', href: '/dashboard/profile-features', icon: ToggleRight },
+      { label: 'Nichos', href: '/dashboard/profile-features', icon: LayoutGrid },
       // Site do Meada (CMS-root, B1): o CMS é EMBUTIDO pro root — sempre visível, sem feature flag.
       // Aponta pra /dashboard/cms; o backend mira a company-âncora da plataforma p/ o super-admin.
       { label: 'Site', href: '/dashboard/cms', icon: Globe },

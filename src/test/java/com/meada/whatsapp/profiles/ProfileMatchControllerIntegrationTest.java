@@ -36,16 +36,16 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
         mockMvc.perform(get("/admin/profiles").header("Authorization", "Bearer " + superToken()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.items.length()").value(13))
-            .andExpect(jsonPath("$.items[?(@.id == 'legal')].productName").value("ProcessoBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'restaurant')].productName").value("MesaBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'salon')].productName").value("SalãoBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'pousada')].productName").value("PousadaBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'academia')].productName").value("AcademiaBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'pet')].productName").value("PetBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'oficina')].productName").value("OficinaBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'nutri')].productName").value("NutriBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'barbearia')].productName").value("BarbeariaBot"))
-            .andExpect(jsonPath("$.items[?(@.id == 'eventos')].productName").value("EventosBot"));
+            .andExpect(jsonPath("$.items[?(@.id == 'legal')].productName").value("Legal"))
+            .andExpect(jsonPath("$.items[?(@.id == 'restaurant')].productName").value("Restaurante"))
+            .andExpect(jsonPath("$.items[?(@.id == 'salon')].productName").value("Salão"))
+            .andExpect(jsonPath("$.items[?(@.id == 'pousada')].productName").value("Pousada"))
+            .andExpect(jsonPath("$.items[?(@.id == 'academia')].productName").value("Academia"))
+            .andExpect(jsonPath("$.items[?(@.id == 'pet')].productName").value("Pet"))
+            .andExpect(jsonPath("$.items[?(@.id == 'oficina')].productName").value("Oficina"))
+            .andExpect(jsonPath("$.items[?(@.id == 'nutri')].productName").value("Nutri"))
+            .andExpect(jsonPath("$.items[?(@.id == 'barbearia')].productName").value("Barbearia"))
+            .andExpect(jsonPath("$.items[?(@.id == 'eventos')].productName").value("Eventos"));
     }
 
     @Test
@@ -55,7 +55,7 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
                 .header("Authorization", "Bearer " + superToken()))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.match").value(true))
-            .andExpect(jsonPath("$.productName").value("DentalBot"));
+            .andExpect(jsonPath("$.productName").value("Dental"));
     }
 
     @Test
@@ -66,7 +66,7 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
                 .header("Authorization", "Bearer " + t))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.match").value(true))
-            .andExpect(jsonPath("$.productName").value("ProcessoBot"));
+            .andExpect(jsonPath("$.productName").value("Legal"));
     }
 
     @Test
@@ -78,7 +78,7 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.match").value(false))
             .andExpect(jsonPath("$.expectedSubdomain").value("processo"))
-            .andExpect(jsonPath("$.expectedProductName").value("ProcessoBot"));
+            .andExpect(jsonPath("$.expectedProductName").value("Legal"));
     }
 
     @Test
