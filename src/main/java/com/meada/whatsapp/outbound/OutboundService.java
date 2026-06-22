@@ -107,6 +107,9 @@ public class OutboundService {
     // Camada 8.2 (perfil eventos): pós-processa <proposta_evento> (abre proposta) e <aprovacao_proposta> (muta estado).
     private final com.meada.whatsapp.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler;
     private final com.meada.whatsapp.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler;
+    // Camada 8.3 (perfil estetica): pós-processa <agendamento_estetica> (agenda, consome saldo) e <compra_pacote> (cria pacote pendente).
+    private final com.meada.whatsapp.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler;
+    private final com.meada.whatsapp.profiles.estetica.packages.CompraPacoteConfirmHandler compraPacoteConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -157,6 +160,8 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.barbearia.queue.EntrarFilaHandler entrarFilaHandler,
                            com.meada.whatsapp.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler,
                            com.meada.whatsapp.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler,
+                           com.meada.whatsapp.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler,
+                           com.meada.whatsapp.profiles.estetica.packages.CompraPacoteConfirmHandler compraPacoteConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -189,6 +194,8 @@ public class OutboundService {
         this.entrarFilaHandler = entrarFilaHandler;
         this.propostaEventoConfirmHandler = propostaEventoConfirmHandler;
         this.aprovacaoPropostaHandler = aprovacaoPropostaHandler;
+        this.agendamentoEsteticaConfirmHandler = agendamentoEsteticaConfirmHandler;
+        this.compraPacoteConfirmHandler = compraPacoteConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -312,6 +319,10 @@ public class OutboundService {
         // estado da proposta orçada. Encadeados (perfil é único; só um age).
         toSend = maybeProcessPropostaEvento(event, conversationId, toSend);
         toSend = maybeProcessAprovacaoProposta(event, conversationId, toSend);
+        // Camada 8.3 (perfil estetica): <agendamento_estetica> agenda (consome saldo de pacote);
+        // <compra_pacote> registra a intenção de compra (pacote pendente). Encadeados (perfil único).
+        toSend = maybeProcessAgendamentoEstetica(event, conversationId, toSend);
+        toSend = maybeProcessCompraPacote(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -781,6 +792,57 @@ public class OutboundService {
         }
         aprovacaoPropostaHandler.parseAndApply(event.companyId(), conversationId, reply);
         String stripped = aprovacaoPropostaHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'estetica' (camada 8.3) e a resposta da IA contenha a tag
+     * {@code <agendamento_estetica>}, AGENDA a sessão (AgendamentoEsteticaConfirmHandler resolve o
+     * contato; se houver package_id, CONSOME 1 sessão do pacote transacionalmente) e devolve um
+     * AiResponse com a tag removida; senão devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessAgendamentoEstetica(MessageInboundProcessedEvent event,
+                                                       UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !agendamentoEsteticaConfirmHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"estetica".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            agendamentoEsteticaConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = agendamentoEsteticaConfirmHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'estetica' (camada 8.3) e a resposta da IA contenha a tag
+     * {@code <compra_pacote>}, registra a INTENÇÃO de compra de um pacote (CompraPacoteConfirmHandler
+     * cria o pacote em 'pendente' com o PREÇO DO CATÁLOGO — a IA não inventa valor) e devolve um
+     * AiResponse com a tag removida; senão devolve o original. A clínica confirma o pagamento depois.
+     * Best-effort.
+     */
+    private AiResponse maybeProcessCompraPacote(MessageInboundProcessedEvent event,
+                                                UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !compraPacoteConfirmHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"estetica".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            compraPacoteConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = compraPacoteConfirmHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

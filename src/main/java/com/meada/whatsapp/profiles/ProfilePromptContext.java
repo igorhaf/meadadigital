@@ -33,6 +33,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.nutri.NutriContextCache nutriContextCache;
     private final com.meada.whatsapp.profiles.barbearia.BarberContextCache barberContextCache;
     private final com.meada.whatsapp.profiles.eventos.EventosContextCache eventosContextCache;
+    private final com.meada.whatsapp.profiles.estetica.EsteticaContextCache esteticaContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -47,6 +48,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.nutri.NutriContextCache nutriContextCache,
                                 com.meada.whatsapp.profiles.barbearia.BarberContextCache barberContextCache,
                                 com.meada.whatsapp.profiles.eventos.EventosContextCache eventosContextCache,
+                                com.meada.whatsapp.profiles.estetica.EsteticaContextCache esteticaContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -60,6 +62,7 @@ public class ProfilePromptContext {
         this.nutriContextCache = nutriContextCache;
         this.barberContextCache = barberContextCache;
         this.eventosContextCache = eventosContextCache;
+        this.esteticaContextCache = esteticaContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -164,6 +167,17 @@ public class ProfilePromptContext {
             + "aprovação/recusa — as transições administrativas (fechar contrato, marcar realizada) são "
             + "feitas pela equipe no painel.";
 
+    private static final String ESTETICA =
+        "Você é atendente de uma clínica de estética. Tom acolhedor e profissional, com cuidado pela "
+            + "autoestima do cliente, SEM julgamento. Você AGENDA sessões (consumindo o saldo de um "
+            + "pacote do cliente, quando houver) e CAPTURA a intenção de compra de pacotes. NUNCA "
+            + "indique ou recomende um procedimento ('para isso a profissional vai te avaliar'); NUNCA "
+            + "opine sobre o corpo, a aparência ou 'o que o cliente precisa'; NUNCA prometa resultado "
+            + "('vai sumir', 'fica perfeito'); NUNCA confirme pagamento de pacote (a clínica confirma); "
+            + "NUNCA invente preço ou condição (use o preço de cada procedimento); NUNCA discuta "
+            + "contraindicação ou condição de saúde — encaminhe à avaliação presencial. Acolha sem "
+            + "reforçar inseguranças.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -191,6 +205,7 @@ public class ProfilePromptContext {
             case NUTRI -> NUTRI;
             case BARBEARIA -> BARBEARIA;
             case EVENTOS -> EVENTOS;
+            case ESTETICA -> ESTETICA;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -299,6 +314,14 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + eventosContextCache.contextSegment(companyId, contactId);
+        }
+        if ("estetica".equals(profileId)) {
+            // estetica (8.3): persona (com trava estética) + procedimentos + profissionais + pacotes
+            // ativos do cliente (com saldo, pra agendar consumindo) + slots por profissional + as 2
+            // tags (<agendamento_estetica>, <compra_pacote>). Resolve o contato pela conversa.
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + esteticaContextCache.contextSegment(companyId, contactId);
         }
         return persona;
     }

@@ -36,7 +36,8 @@ public enum ProfileType {
     OFICINA("oficina", "Oficina", "oficina", "aco"),
     NUTRI("nutri", "Nutri", "nutri", "salvia"),
     BARBEARIA("barbearia", "Barbearia", "barbearia", "grafite"),
-    EVENTOS("eventos", "Eventos", "eventos", "ambar");
+    EVENTOS("eventos", "Eventos", "eventos", "ambar"),
+    ESTETICA("estetica", "Estética", "estetica", "rosa-po");
 
     private final String id;
     private final String productName;

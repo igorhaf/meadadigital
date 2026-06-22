@@ -13,6 +13,7 @@ import {
   ClipboardList,
   Clock,
   Dumbbell,
+  Gem,
   Globe,
   HelpCircle,
   Home,
@@ -200,6 +201,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'nutri') return [NUTRI_GROUP, ...NAV_GROUPS]
   if (profileId === 'barbearia') return [BARBEARIA_GROUP, ...NAV_GROUPS]
   if (profileId === 'eventos') return [EVENTOS_GROUP, ...NAV_GROUPS]
+  if (profileId === 'estetica') return [ESTETICA_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -337,5 +339,18 @@ const EVENTOS_GROUP: NavGroup = {
     { label: 'Cerimonialistas', href: '/dashboard/eventos-planners', icon: PartyPopper },
     { label: 'Propostas', href: '/dashboard/eventos-proposals', icon: ClipboardList },
     { label: 'Configurações', href: '/dashboard/eventos-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil estetica (camada 8.3). "Estética". Rotas
+ * /dashboard/estetica-*. Pacotes é a tela da escapada (saldo de sessões que decrementa). */
+const ESTETICA_GROUP: NavGroup = {
+  heading: 'Estética',
+  items: [
+    { label: 'Profissionais', href: '/dashboard/estetica-professionals', icon: Stethoscope },
+    { label: 'Procedimentos', href: '/dashboard/estetica-procedures', icon: Sparkles },
+    { label: 'Pacotes', href: '/dashboard/estetica-packages', icon: Gem },
+    { label: 'Agenda', href: '/dashboard/estetica-appointments', icon: CalendarClock },
+    { label: 'Configurações', href: '/dashboard/estetica-settings', icon: Settings },
   ],
 }

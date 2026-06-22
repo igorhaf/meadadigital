@@ -111,7 +111,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/42_cms_multipage.sql",
         "db/migrations/43_barbearia.sql",
         "db/migrations/44_platform_company.sql",
-        "db/migrations/45_eventos.sql"
+        "db/migrations/45_eventos.sql",
+        "db/migrations/46_estetica.sql"
     };
 
     /**
@@ -241,6 +242,8 @@ public abstract class AbstractIntegrationTest {
               nutri_appointments, nutri_plans, nutri_patients, nutri_config, nutri_professionals,
               barber_queue_tickets, barber_appointments, barber_config, barber_services, barber_barbers,
               event_timeline_items, event_proposal_items, event_proposals, event_config, event_planners,
+              aesthetic_session_notes, aesthetic_appointments, aesthetic_packages,
+              aesthetic_procedures, aesthetic_professionals, aesthetic_config,
               profile_features, cms_pages, cms_sites
             RESTART IDENTITY CASCADE
             """);

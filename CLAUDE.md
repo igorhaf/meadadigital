@@ -800,6 +800,66 @@ IA atende clientes via WhatsApp com tom prestativo-consultivo de organizador de 
   foto/mood board (bloqueador SERVICE_ROLE_KEY), lista de convidados/RSVP/mesa. Fases futuras.
 - Guia operacional do tenant: `docs/PERFIL_EVENTOS.md`.
 
+## Perfil Estética (EsteticaBot, camada 8.3)
+
+DÉCIMO TERCEIRO perfil vertical real (14º contando generic). O tenant estetica
+(`profile_id='estetica'`) vira um produto de CLÍNICA DE ESTÉTICA (facial/corporal, drenagem, limpeza
+de pele, depilação a laser): gerencia profissionais e procedimentos, vende PACOTES de sessões,
+agenda sessões (consumindo o saldo do pacote) e registra a ficha de cada sessão. É o perfil mais
+completo até agora — combina três eixos + uma escapada nova.
+
+- **CLONA a AGENDA do SALON (7.5):** conflito POR `professional_id` (`findConflict` transacional,
+  janela half-open), duração por procedimento, snapshots (professional_name/procedure_name/
+  duration_minutes), `end_at` materializado no INSERT (lição timestamptz+interval). Cliente NÃO é
+  entidade (continua o contact; snapshots guest_name/phone).
+- **ESCAPADA ESTRUTURAL — PACOTE MULTI-SESSÃO COM SALDO QUE DECREMENTA (`aesthetic_packages`):**
+  primeiro nicho com saldo pré-pago consumível. O cliente compra um pacote de N sessões de um
+  procedimento; cada agendamento pode CONSUMIR 1 sessão. `sessions_remaining` é MATERIALIZADO (=
+  total − used) e re-derivado na MESMA transação do agendamento (defesa de corrida: o UPDATE de
+  consumo é condicional `where status='ativo' and sessions_remaining > 0` — fecha a janela no banco).
+  Primeiro nicho em que um agendamento mexe num contador pré-pago de OUTRA entidade
+  transacionalmente. **Esgotar** (remaining→0) muta o pacote pra `esgotado`; **cancelar** um
+  agendamento que consumiu DEVOLVE a sessão (used−1, e `esgotado`→`ativo`). Agendamento AVULSO
+  (package_id null) não mexe em saldo.
+- **FICHA/EVOLUÇÃO TEXTUAL por sessão (`aesthetic_session_notes`):** 1:1 com o agendamento (área
+  tratada / parâmetros do aparelho / observações — texto livre). NÃO editável se o agendamento está
+  cancelado. SEM FOTO (bloqueador SERVICE_ROLE_KEY). LGPD: registro administrativo-estético, NÃO
+  prontuário médico (dado clínico sensível é fase futura com cripto at-rest).
+- **Modelo (migration 46):** `aesthetic_professionals` + `aesthetic_procedures` (duration +
+  `unit_price_cents` = preço de UMA sessão) + `aesthetic_config` (horário + slot) +
+  `aesthetic_packages` (a escapada) + `aesthetic_appointments` (+ `package_id` nullable +
+  `consumed_session`) + `aesthetic_session_notes` (ficha 1:1).
+- **DOIS status hardcoded materializados** (cada um com parity test Java↔TS):
+  `AestheticAppointmentStatus` (clone salon: agendado→confirmado/cancelado; confirmado→realizado/
+  cancelado/falta) e `AestheticPackageStatus` (NOVO: pendente→ativo/cancelado; ativo→esgotado/
+  expirado/cancelado — mas `esgotado` NÃO é destino MANUAL, é materializado pelo backend; a
+  reabertura `esgotado`→`ativo` ao devolver sessão também é do backend, fora da máquina manual).
+  Notificam: appointment **confirmado/cancelado**; package **ativo** (boas-vindas).
+- **A IA NÃO inventa preço (regra de ouro):** na compra de pacote, `total_cents = total_sessions ×
+  unit_price` do procedimento no catálogo — a tag NÃO carrega preço. A IA NÃO confirma pagamento (o
+  pacote nasce `pendente`; só o tenant ativa, e a ativação libera o agendamento que consome saldo).
+- **TRAVA ESTÉTICA (persona):** a IA NUNCA indica/recomenda procedimento, NUNCA opina sobre o corpo/
+  aparência, NUNCA promete resultado, NUNCA discute contraindicação/condição de saúde (encaminha à
+  avaliação). Espelho da trava clínica do dental/nutri, adaptada.
+- **Duas TAGS distintas** (namespace próprio): `<agendamento_estetica>` agenda (com `package_id`
+  opcional → consome saldo) — `AgendamentoEsteticaConfirmHandler`; `<compra_pacote>` registra a
+  intenção de compra (pacote `pendente`, preço do catálogo) — `CompraPacoteConfirmHandler`.
+  OutboundService: `maybeProcessAgendamentoEstetica` + `maybeProcessCompraPacote` (encadeados após os
+  outros perfis; perfil é único, só um age).
+- **Persona ESTETICA + contexto** (`EsteticaContextCache` TTL 20s): procedimentos (com preço de
+  sessão), profissionais, PACOTES ATIVOS do cliente com saldo (pra IA agendar consumindo o package_id
+  certo), slots por profissional (7 dias), + as 2 tags. Invalidação em toda mutação.
+- **Guard:** `EsteticaProfileGuard` (403 forbidden_wrong_profile). `JwtAuthenticationFilter` autentica
+  `/api/estetica/**` (além dos 12 perfis anteriores).
+- **Sidebar:** `getNavForProfile('estetica')` injeta "Estética" (Profissionais/Procedimentos/Pacotes/
+  Agenda/Configurações). Telas `/dashboard/estetica-{professionals,procedures,packages,appointments,
+  settings}` — a de Pacotes é a tela da escapada (saldo). Paleta `rosa-po`. POST manual de
+  agendamento é avulso (não consome pacote — o consumo é via IA na conversa).
+- **NÃO TEM nesta SM:** foto antes/depois, prontuário/anamnese estruturada (dado sensível — fase
+  futura com cripto), pagamento real do pacote (Stripe #50), assinatura/recorrência de pacote
+  (academia cobre recorrência), comissão de profissional, estoque, multi-unidade. Fases futuras.
+- Guia operacional do tenant: `docs/PERFIL_ESTETICA.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**
