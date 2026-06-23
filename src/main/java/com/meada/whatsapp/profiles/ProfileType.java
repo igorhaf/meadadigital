@@ -88,4 +88,17 @@ public enum ProfileType {
     public static List<ProfileType> allActive() {
         return List.of(values());
     }
+
+    /**
+     * True se o slug colide com um subdomínio RESERVADO de nicho (ex.: "sushi", "comida").
+     * Usado na criação/edição de empresa: o slug do tenant É o subdomínio dele, então nenhuma
+     * empresa pode usar um slug igual ao subdomínio de um perfil — senão a desambiguação
+     * nicho-vs-empresa do middleware ficaria indeterminada. Case-insensitive, trim.
+     */
+    public static boolean isReservedSubdomain(String slug) {
+        if (slug == null) {
+            return false;
+        }
+        return bySubdomain(slug.trim().toLowerCase()).isPresent();
+    }
 }

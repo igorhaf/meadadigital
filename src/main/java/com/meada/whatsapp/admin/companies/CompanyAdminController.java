@@ -130,6 +130,11 @@ public class CompanyAdminController {
         if (notSuperAdmin(user)) {
             return forbidden();
         }
+        // O slug do tenant É o subdomínio dele: não pode colidir com um subdomínio de nicho
+        // reservado (camada de roteamento de domínios). 409 distinto do slug_already_exists.
+        if (com.meada.whatsapp.profiles.ProfileType.isReservedSubdomain(request.slug())) {
+            return error(409, "Conflict", "slug_reserved_niche");
+        }
         try {
             CompanyResponse created = repository.insert(
                 request.name(), request.slug(), request.paletteId());
@@ -156,6 +161,10 @@ public class CompanyAdminController {
         if (request.profileId() != null && !request.profileId().isBlank()
                 && com.meada.whatsapp.profiles.ProfileType.fromId(request.profileId()).isEmpty()) {
             return error(400, "Bad Request", "invalid_profile_id");
+        }
+        // slug não pode colidir com subdomínio de nicho reservado (igual ao POST).
+        if (com.meada.whatsapp.profiles.ProfileType.isReservedSubdomain(request.slug())) {
+            return error(409, "Conflict", "slug_reserved_niche");
         }
         try {
             service.update(id, request, user.userId());

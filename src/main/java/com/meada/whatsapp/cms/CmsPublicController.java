@@ -83,5 +83,19 @@ public class CmsPublicController {
             ? ResponseEntity.ok().build()
             : ResponseEntity.status(404).build();
     }
+
+    /**
+     * Resolução pública de {empresa}.meadadigital.com (roteamento de domínios): o middleware do
+     * frontend consulta aqui pra decidir — empresa existe? tem CMS publicado (→ /p)? senão, qual o
+     * subdomínio do nicho dela (→ login do nicho)? Sempre 200 (exists=false quando não há empresa
+     * ativa com esse slug). SEM auth (rota /public/).
+     */
+    @GetMapping("/public/companies/resolve/{slug}")
+    public ResponseEntity<Object> resolveCompany(@PathVariable String slug) {
+        return service.resolvePublicCompany(slug)
+            .<ResponseEntity<Object>>map(ResponseEntity::ok)
+            .orElseGet(() -> ResponseEntity.ok(
+                new CmsService.CompanyResolve(false, null, null, false)));
+    }
 }
 

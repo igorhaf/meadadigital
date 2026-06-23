@@ -62,6 +62,27 @@ public class CmsSiteRepository {
             .stream().findFirst().orElse(null);
     }
 
+    /** Linha de resolução pública por slug: perfil + status + se há site publicado. */
+    public record PublicCompanyRow(String profileId, String status, boolean hasCms) {}
+
+    /**
+     * Resolução pública por slug (roteamento de domínios): a empresa existe? qual o perfil? tem
+     * CMS publicado? Um SELECT com LEFT JOIN em cms_sites (has_cms = site existe E published).
+     * Optional vazio se não há empresa com esse slug.
+     */
+    public Optional<PublicCompanyRow> resolveBySlug(String slug) {
+        return jdbcTemplate.query(
+                "select c.profile_id, c.status, "
+                    + "coalesce(s.published, false) as has_cms "
+                    + "from companies c "
+                    + "left join cms_sites s on s.company_id = c.id "
+                    + "where c.slug = ?",
+                (rs, rn) -> new PublicCompanyRow(
+                    rs.getString("profile_id"), rs.getString("status"), rs.getBoolean("has_cms")),
+                slug)
+            .stream().findFirst();
+    }
+
     /** Site publicado por domínio VERIFICADO (resolução pública por host custom). */
     public Optional<CmsSite> findByVerifiedDomain(String domain) {
         return jdbcTemplate.query(SELECT + "where s.domain = ? and s.domain_verified = true and s.published = true",

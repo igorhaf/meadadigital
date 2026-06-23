@@ -1,7 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-import { subdomainFromHost, isMeadaHost, SUBDOMAIN_HEADER } from '@/lib/profiles/subdomain'
+import {
+  subdomainFromHost,
+  isMeadaHost,
+  rawSubdomain,
+  isNicheSubdomain,
+  baseUrl,
+  nicheLoginUrl,
+  SUBDOMAIN_HEADER,
+} from '@/lib/profiles/subdomain'
+import { resolveCompany } from '@/lib/profiles/resolve-company'
 
 /**
  * Middleware de sessão Supabase. ÚNICA responsabilidade: refrescar o token a cada
@@ -43,6 +52,37 @@ export async function middleware(request: NextRequest) {
     const sub = path.replace(/^\/+|\/+$/g, '') // tira barras das pontas
     url.pathname = sub ? `/p/by-domain/${hostname}/${sub}` : `/p/by-domain/${hostname}`
     return NextResponse.rewrite(url)
+  }
+
+  // {empresa}.meadadigital.com (roteamento de domínios): um subdomínio Meada que NÃO é nicho
+  // conhecido é candidato a EMPRESA (o slug é o subdomínio). Resolve no backend (cache 60s):
+  //  - não existe / suspensa → redirect pra raiz (meadadigital.com);
+  //  - tem CMS publicado → render público por slug (/p/{slug});
+  //  - sem CMS → redirect pro login do NICHO da empresa ({perfil}.meadadigital.com/login).
+  // Nichos conhecidos (sushi, comida, ...) NÃO entram aqui — seguem o login do nicho abaixo.
+  const candidate = rawSubdomain(host)
+  if (
+    isMeadaHost(host) &&
+    candidate &&
+    candidate !== 'www' &&
+    !isNicheSubdomain(candidate) &&
+    !path.startsWith('/api') &&
+    !path.startsWith('/_next') &&
+    !path.startsWith('/public') &&
+    !path.startsWith('/p/')
+  ) {
+    const r = await resolveCompany(candidate)
+    if (!r.exists) {
+      return NextResponse.redirect(baseUrl(request.nextUrl, host))
+    }
+    if (r.hasCms) {
+      const url = request.nextUrl.clone()
+      const rest = path.replace(/^\/+|\/+$/g, '')
+      url.pathname = rest ? `/p/${candidate}/${rest}` : `/p/${candidate}`
+      return NextResponse.rewrite(url)
+    }
+    // empresa sem CMS → login do nicho dela
+    return NextResponse.redirect(nicheLoginUrl(request.nextUrl, host, r.profileSubdomain ?? 'meada'))
   }
 
   // Subdomain detection (camada 7.0): resolve o perfil pelo host e injeta como header de

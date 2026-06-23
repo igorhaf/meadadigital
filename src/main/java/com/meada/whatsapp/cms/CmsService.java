@@ -262,6 +262,32 @@ public class CmsService {
         return siteRepository.findByVerifiedDomain(domain.trim().toLowerCase()).isPresent();
     }
 
+    // ---- resolução pública por slug (roteamento de domínios) -----------------
+
+    /** Resultado da resolução de {empresa}.dominio: existe? perfil? subdomínio do perfil? tem CMS? */
+    public record CompanyResolve(boolean exists, String profileId,
+                                 String profileSubdomain, boolean hasCms) {}
+
+    /**
+     * Resolve um slug de subdomínio para uma empresa (roteamento {empresa}.meadadigital.com).
+     * Empresa suspensa é tratada como inexistente (não serve site nem login). Mapeia o
+     * profile_id para o subdomínio do nicho (destino do redirect "login do nicho" quando sem CMS).
+     * Optional vazio = não há empresa ativa com esse slug → o middleware manda pra raiz.
+     */
+    public Optional<CompanyResolve> resolvePublicCompany(String slug) {
+        if (slug == null || slug.isBlank()) {
+            return Optional.empty();
+        }
+        return siteRepository.resolveBySlug(slug.trim().toLowerCase())
+            .filter(r -> !"suspended".equals(r.status()))
+            .map(r -> {
+                String profSub = com.meada.whatsapp.profiles.ProfileType.fromId(r.profileId())
+                    .map(com.meada.whatsapp.profiles.ProfileType::subdomain)
+                    .orElse("meada");
+                return new CompanyResolve(true, r.profileId(), profSub, r.hasCms());
+            });
+    }
+
     // ---- helpers -------------------------------------------------------------
 
     private String normalizeSlug(String raw) {
