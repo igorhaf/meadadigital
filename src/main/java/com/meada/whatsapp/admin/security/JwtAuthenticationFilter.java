@@ -3,6 +3,7 @@ package com.meada.whatsapp.admin.security;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.JOSEException;
 import com.nimbusds.jose.JWSAlgorithm;
+import com.nimbusds.jose.jwk.source.ImmutableSecret;
 import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.BadJOSEException;
 import com.nimbusds.jose.proc.JWSVerificationKeySelector;
@@ -25,6 +26,7 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.text.ParseException;
 import java.util.List;
 import java.util.Map;
@@ -113,16 +115,30 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     public JwtAuthenticationFilter(AdminProperties adminProperties,
                                    JWKSource<SecurityContext> jwkSource,
+                                   @Value("${supabase.jwt-secret:}") String jwtSecret,
                                    JdbcTemplate jdbcTemplate,
                                    ObjectMapper objectMapper) {
         this.jdbcTemplate = jdbcTemplate;
         this.objectMapper = objectMapper;
-        // Processor que verifica a assinatura ES256 selecionando a chave pública pela kid
-        // do token (via JWKSource) E valida claims (exp/nbf) pelo DefaultJWTClaimsVerifier
-        // padrão do nimbus — com tolerância a clock skew, que a validação manual não tinha.
-        // exp expirado vira BadJWTException, mapeada para token_expired em parseAndVerify.
+        // Processor que verifica a assinatura E valida claims (exp/nbf) pelo
+        // DefaultJWTClaimsVerifier padrão do nimbus — com tolerância a clock skew, que a
+        // validação manual não tinha. exp expirado vira BadJWTException, mapeada para
+        // token_expired em parseAndVerify.
         DefaultJWTProcessor<SecurityContext> processor = new DefaultJWTProcessor<>();
-        processor.setJWSKeySelector(new JWSVerificationKeySelector<>(JWSAlgorithm.ES256, jwkSource));
+        if (jwtSecret != null && !jwtSecret.isBlank()) {
+            // DEV LOCAL (STAGE=local + Supabase CLI): GoTrue local assina HS256 com secret
+            // simétrico (sem JWKS/ES256). Verifica HS256 via ImmutableSecret JWKSource.
+            // O jwkSource ES256 de prod fica injetado mas inerte. Ver application.yml.
+            JWKSource<SecurityContext> hmacSource =
+                new ImmutableSecret<>(jwtSecret.getBytes(StandardCharsets.UTF_8));
+            processor.setJWSKeySelector(
+                new JWSVerificationKeySelector<>(JWSAlgorithm.HS256, hmacSource));
+            log.warn("JWT em modo HS256 (dev local) — NÃO usar em produção");
+        } else {
+            // PROD: ES256 selecionando a chave pública pela kid do token (via JWKSource/JWKS).
+            processor.setJWSKeySelector(
+                new JWSVerificationKeySelector<>(JWSAlgorithm.ES256, jwkSource));
+        }
         this.jwtProcessor = processor;
         // allowlist normalizada (lowercase) uma vez no boot; null-safe se a key faltar no YAML.
         this.allowlistLower = Objects.requireNonNullElse(
