@@ -2,16 +2,25 @@ import { headers } from 'next/headers'
 import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
+import { CmsRender } from '@/components/cms/cms-render'
+import { fetchHomeBySlug } from '@/lib/cms/public-fetch'
 import { SUBDOMAIN_HEADER, isUniversalSubdomain } from '@/lib/profiles/subdomain'
 
 /**
+ * Slug do tenant generic que representa o SITE INSTITUCIONAL do Meada. A raiz do domínio-base
+ * (meadadigital.com) serve o CMS DESTE tenant — editado na área administrativa como qualquer
+ * outro tenant (transparente). Trocar este slug = trocar qual company é "o Meada".
+ */
+const MEADA_INSTITUTIONAL_SLUG = 'meadashow'
+
+/**
  * Raiz do host.
- * - {nicho}.meadadigital.com/ → login do nicho (spec #1): subdomínio de nicho não tem landing,
- *   vai direto pro /login (que renderiza o branding daquele nicho).
- * - meadadigital.com/ (domínio-base, subdomínio 'meada') → LANDING pública do Meada (spec #3).
+ * - {nicho}.meadadigital.com/ → login do nicho (spec #1).
+ * - meadadigital.com/ (domínio-base) → CMS do tenant institucional do Meada (editado no painel,
+ *   igual aos tenants). Se esse CMS ainda não estiver publicado, cai numa landing mínima de
+ *   fallback (a raiz nunca fica quebrada).
  *
- * O middleware injeta x-meada-subdomain. Subdomínio de empresa ({empresa}.meadadigital.com) é
- * tratado ANTES, no middleware (CMS ou redirect), e não chega aqui.
+ * Subdomínio de empresa ({empresa}.meadadigital.com) é tratado ANTES, no middleware.
  */
 export default async function Home() {
   const sub = (await headers()).get(SUBDOMAIN_HEADER) ?? 'meada'
@@ -19,6 +28,21 @@ export default async function Home() {
     redirect('/login')
   }
 
+  // Domínio-base → serve o CMS institucional do Meada (mesma maquinaria dos tenants).
+  const view = await fetchHomeBySlug(MEADA_INSTITUTIONAL_SLUG)
+  if (view) {
+    return (
+      <CmsRender
+        title={view.title}
+        blocks={view.blocks}
+        theme={view.theme}
+        nav={view.nav}
+        navBase=""
+      />
+    )
+  }
+
+  // Fallback: CMS institucional ainda não publicado.
   return (
     <main className="flex min-h-screen flex-col items-center justify-center gap-8 px-6 text-center">
       <div className="space-y-4">

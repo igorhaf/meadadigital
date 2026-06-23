@@ -45,7 +45,10 @@ public class AdminCorsConfig {
     @Bean
     public FilterRegistrationBean<CorsFilter> corsFilter() {
         CorsConfiguration config = new CorsConfiguration();
-        config.setAllowedOrigins(allowedOrigins);
+        // setAllowedOriginPatterns (não setAllowedOrigins): aceita curinga de subdomínio
+        // (ex.: http://*.meadadigital.local) além de origens exatas. Válido porque
+        // allowCredentials=false. Necessário desde que o front roda em N subdomínios na porta 80.
+        config.setAllowedOriginPatterns(allowedOrigins);
         config.setAllowedMethods(List.of("GET", "POST", "PUT", "PATCH", "DELETE", "OPTIONS"));
         config.setAllowedHeaders(List.of("*"));
         config.setAllowCredentials(false);
