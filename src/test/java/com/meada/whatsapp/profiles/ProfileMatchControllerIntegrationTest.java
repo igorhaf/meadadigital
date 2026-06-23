@@ -61,10 +61,10 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
     }
 
     @Test
-    @DisplayName("tenant legal acessando 'processo' → match true")
+    @DisplayName("tenant legal acessando 'juridico' → match true")
     void tenantMatchesOwnSubdomain() throws Exception {
         String t = seedTenantWithProfile(UUID.randomUUID(), TENANT_ADMIN_EMAIL, "legal");
-        mockMvc.perform(get("/admin/me/profile-match?subdomain=processo")
+        mockMvc.perform(get("/admin/me/profile-match?subdomain=juridico")
                 .header("Authorization", "Bearer " + t))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.match").value(true))
@@ -72,14 +72,14 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
     }
 
     @Test
-    @DisplayName("tenant legal acessando 'dental' → match false + expectedSubdomain=processo")
+    @DisplayName("tenant legal acessando 'dental' → match false + expectedSubdomain=juridico")
     void tenantMismatchReturnsExpected() throws Exception {
         String t = seedTenantWithProfile(UUID.randomUUID(), TENANT_ADMIN_EMAIL, "legal");
         mockMvc.perform(get("/admin/me/profile-match?subdomain=dental")
                 .header("Authorization", "Bearer " + t))
             .andExpect(status().isOk())
             .andExpect(jsonPath("$.match").value(false))
-            .andExpect(jsonPath("$.expectedSubdomain").value("processo"))
+            .andExpect(jsonPath("$.expectedSubdomain").value("juridico"))
             .andExpect(jsonPath("$.expectedProductName").value("Legal"));
     }
 

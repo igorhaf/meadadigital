@@ -2,7 +2,7 @@ import { getProfileBySubdomain, GENERIC_PROFILE, type Profile } from '@/lib/prof
 
 /**
  * Resolução de subdomínio (camada 7.0). Meada se apresenta como N produtos por subdomínio:
- * processo.meadadigital.local → ProcessoBot, etc. localhost e o domínio-base (sem subdomínio)
+ * juridico.meadadigital.local → Legal, etc. localhost e o domínio-base (sem subdomínio)
  * caem para 'meada' (genérico/universal): login universal, comportamento atual.
  *
  * <p>O middleware injeta o header 'x-meada-subdomain' no server; no client (login, apiFetch)
@@ -21,7 +21,7 @@ export function subdomainFromHost(host: string | null | undefined): string {
 
   const parts = hostname.split('.')
   // "meadadigital.local" (2 partes, sem subdomínio) → genérico.
-  // "processo.meadadigital.local" (3+ partes) → primeiro segmento.
+  // "juridico.meadadigital.local" (3+ partes) → primeiro segmento.
   if (parts.length <= 2) return 'meada'
   const first = parts[0]
   // se o primeiro segmento não é um perfil conhecido, trata como genérico (defensivo).

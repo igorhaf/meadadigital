@@ -25,7 +25,7 @@ import java.util.Optional;
  */
 public enum ProfileType {
     GENERIC("generic", "Meada", "meada", "meada-default"),
-    LEGAL("legal", "Legal", "processo", "indigo"),
+    LEGAL("legal", "Legal", "juridico", "indigo"),
     DENTAL("dental", "Dental", "dental", "celeste"),
     SUSHI("sushi", "Sushi", "sushi", "tijolo"),
     RESTAURANT("restaurant", "Restaurante", "mesa", "tijolo"),
@@ -76,7 +76,7 @@ public enum ProfileType {
         return Arrays.stream(values()).filter(p -> p.id.equals(id)).findFirst();
     }
 
-    /** Resolve um perfil pelo subdomínio (ex.: "processo" → LEGAL). Optional vazio se inválido. */
+    /** Resolve um perfil pelo subdomínio (ex.: "juridico" → LEGAL). Optional vazio se inválido. */
     public static Optional<ProfileType> bySubdomain(String subdomain) {
         if (subdomain == null) {
             return Optional.empty();

@@ -32,7 +32,7 @@ Fonte de verdade: `src/main/java/com/meada/whatsapp/profiles/ProfileType.java` +
 ```
 127.0.0.1 meadadigital.local
 127.0.0.1 meada.meadadigital.local
-127.0.0.1 processo.meadadigital.local
+127.0.0.1 juridico.meadadigital.local
 127.0.0.1 dental.meadadigital.local
 127.0.0.1 sushi.meadadigital.local
 127.0.0.1 mesa.meadadigital.local
@@ -65,7 +65,7 @@ preservados). URLs **sem porta**.
 
 Acesse (sem porta — o Caddy resolve por subdomínio):
 - `http://meada.meadadigital.local` (ou `http://meadadigital.local`) → **genérico** (login universal).
-- `http://processo.meadadigital.local` → **ProcessoBot** (login valida perfil `legal`).
+- `http://juridico.meadadigital.local` → **Legal** (login valida perfil `legal`).
 - `http://dental.meadadigital.local` → **DentalBot** (perfil `dental`).
 - `http://sushi.meadadigital.local` → **SushiBot** (perfil `sushi`).
 - `http://mesa.meadadigital.local` → **MesaBot** (perfil `restaurant`).

@@ -12,7 +12,7 @@
  */
 export const PROFILES = [
   { id: 'generic', productName: 'Meada', subdomain: 'meada', defaultPaletteId: 'meada-default' },
-  { id: 'legal', productName: 'Legal', subdomain: 'processo', defaultPaletteId: 'indigo' },
+  { id: 'legal', productName: 'Legal', subdomain: 'juridico', defaultPaletteId: 'indigo' },
   { id: 'dental', productName: 'Dental', subdomain: 'dental', defaultPaletteId: 'celeste' },
   { id: 'sushi', productName: 'Sushi', subdomain: 'sushi', defaultPaletteId: 'tijolo' },
   { id: 'restaurant', productName: 'Restaurante', subdomain: 'mesa', defaultPaletteId: 'tijolo' },
@@ -36,7 +36,7 @@ export function getProfile(id: string): Profile | undefined {
   return PROFILES.find((p) => p.id === id)
 }
 
-/** Resolve um perfil pelo subdomínio (ex.: "processo" → legal). undefined se inválido. */
+/** Resolve um perfil pelo subdomínio (ex.: "juridico" → legal). undefined se inválido. */
 export function getProfileBySubdomain(sub: string): Profile | undefined {
   return PROFILES.find((p) => p.subdomain === sub)
 }

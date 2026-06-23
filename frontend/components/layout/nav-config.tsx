@@ -216,8 +216,8 @@ const CMS_GROUP: NavGroup = {
 const SUSHI_GROUP: NavGroup = {
   heading: 'Restaurante',
   items: [
-    { label: 'Cardápio', href: '/dashboard/menu', icon: UtensilsCrossed },
-    { label: 'Pedidos', href: '/dashboard/orders', icon: ClipboardList },
+    { label: 'Cardápio', href: '/dashboard/sushi-menu', icon: UtensilsCrossed },
+    { label: 'Pedidos', href: '/dashboard/sushi-orders', icon: ClipboardList },
   ],
 }
 
@@ -357,7 +357,7 @@ const ESTETICA_GROUP: NavGroup = {
 }
 
 /** Grupo de navegação exclusivo do perfil comida (delivery iFood-style). "Comida". Rotas
- * /dashboard/comida-* (distintas de /menu e /orders, que são do sushi/genérico). */
+ * /dashboard/comida-* (todos os nichos seguem o padrão {nicho}-*, inclusive o sushi). */
 const COMIDA_GROUP: NavGroup = {
   heading: 'Comida',
   items: [

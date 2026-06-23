@@ -9,10 +9,18 @@ const nextConfig: NextConfig = {
   allowedDevOrigins: [
     'meadadigital.local',
     'meada.meadadigital.local',
-    'processo.meadadigital.local',
+    'juridico.meadadigital.local',
     'dental.meadadigital.local',
     'sushi.meadadigital.local',
   ],
+  // Compat: o sushi foi alinhado ao padrão {nicho}-* (sushi-menu/sushi-orders). Redireciona as
+  // rotas genéricas antigas (bookmark/histórico) pras novas. 308 permanente.
+  async redirects() {
+    return [
+      { source: '/dashboard/menu', destination: '/dashboard/sushi-menu', permanent: true },
+      { source: '/dashboard/orders', destination: '/dashboard/sushi-orders', permanent: true },
+    ]
+  },
 };
 
 export default nextConfig;

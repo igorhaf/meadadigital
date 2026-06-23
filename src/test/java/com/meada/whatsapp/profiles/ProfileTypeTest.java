@@ -40,7 +40,7 @@ class ProfileTypeTest {
     @Test
     @DisplayName("bySubdomain resolve subdomínio válido e vazio para inválido")
     void bySubdomain() {
-        assertThat(ProfileType.bySubdomain("processo")).contains(ProfileType.LEGAL);
+        assertThat(ProfileType.bySubdomain("juridico")).contains(ProfileType.LEGAL);
         assertThat(ProfileType.bySubdomain("dental")).contains(ProfileType.DENTAL);
         assertThat(ProfileType.bySubdomain("inexistente")).isEmpty();
         assertThat(ProfileType.bySubdomain(null)).isEmpty();

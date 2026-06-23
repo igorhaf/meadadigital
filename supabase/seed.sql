@@ -100,3 +100,59 @@ insert into public.conversations (id, company_id, contact_id, whatsapp_instance_
 values ('c0000000-0000-0000-0000-000000000071', 'c8000000-0000-0000-0000-000000000016',
         'c0000000-0000-0000-0000-000000000071', 'c0000000-0000-0000-0000-000000000071', 'open', 'ai')
 on conflict (id) do nothing;
+
+-- ========================================================================
+-- 3) UM TENANT DE EXEMPLO POR NICHO (roteamento de domínios)
+-- Cada nicho ganha 1 company com slug navegável ({slug}.meadadigital.local).
+-- CMS ALTERNADO: with_cms=true → cms_sites publicado + cms_pages home publicada
+-- (cai na página pública /p/{slug}); with_cms=false → sem CMS (cai no login do nicho).
+-- Slugs NUNCA colidem com subdomínio de nicho (validação slug_reserved_niche).
+-- NÃO cria usuário logável por tenant — serve ao smoke de roteamento (público).
+-- ========================================================================
+do $$
+declare
+  t record;
+  cid uuid;
+begin
+  for t in
+    select * from (values
+      ('sushilegal',   'Sushi Legal',        'sushi',      true),
+      ('sorrisolegal', 'Sorriso Legal',      'dental',     false),
+      ('juridicopro',  'Jurídico Pro',       'legal',      true),
+      ('mesafarta',    'Mesa Farta',         'restaurant', false),
+      ('belezapura',   'Beleza Pura',        'salon',      true),
+      ('recantoaltos', 'Recanto dos Altos',  'pousada',    false),
+      ('corpoemforma', 'Corpo em Forma',     'academia',   true),
+      ('patanuvem',    'Pata na Nuvem',      'pet',        false),
+      ('motorforte',   'Motor Forte',        'oficina',    true),
+      ('nutrevida',    'Nutre Vida',         'nutri',      false),
+      ('navalhaouro',  'Navalha de Ouro',    'barbearia',  true),
+      ('festamax',     'Festa Max',          'eventos',    false),
+      ('glowestetica', 'Glow Estética',      'estetica',   true),
+      ('meadashow',    'Meada Show',         'generic',    true)
+    ) as v(slug, name, profile_id, with_cms)
+  loop
+    -- company idempotente por slug
+    insert into public.companies (name, slug, profile_id)
+    values (t.name, t.slug, t.profile_id)
+    on conflict (slug) do update set name = excluded.name, profile_id = excluded.profile_id
+    returning id into cid;
+    if cid is null then
+      select id into cid from public.companies where slug = t.slug;
+    end if;
+
+    if t.with_cms then
+      insert into public.cms_sites (company_id, published)
+      values (cid, true)
+      on conflict (company_id) do update set published = true;
+
+      insert into public.cms_pages (company_id, page_slug, title, blocks, is_home, published)
+      values (cid, 'home', t.name,
+        jsonb_build_array(jsonb_build_object(
+          'id', 'hero-1', 'type', 'hero',
+          'props', jsonb_build_object('title', t.name, 'subtitle', 'Bem-vindo!'))),
+        true, true)
+      on conflict do nothing;
+    end if;
+  end loop;
+end $$;
