@@ -98,7 +98,9 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
       const win = window.open('about:blank', '_blank')
       try {
         const { tokenHash } = await impersonateCompany(id)
-        const url = `/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=email&next=/dashboard`
+        // URL ABSOLUTA no host atual do admin: garante que a nova aba (about:blank)
+        // resolva o /auth/confirm no MESMO domínio onde o cookie de sessão será gravado.
+        const url = `${window.location.origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=email&next=/dashboard`
         if (win) win.location.href = url
         else window.open(url, '_blank') // fallback se o popup inicial falhou
       } catch (e) {

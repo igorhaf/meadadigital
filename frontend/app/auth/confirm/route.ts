@@ -21,11 +21,18 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL('/login?error=missing_token', request.url))
   }
 
+  // Base do redirect = host REAL do request (header Host), não request.url (que internamente
+  // pode ser localhost atrás do proxy/porta 80). Sem isso, o redirect levaria pra localhost —
+  // outro domínio — e o cookie de sessão (setado no host atual) não acompanharia → cai no login.
+  const host = request.headers.get('host') ?? new URL(request.url).host
+  const proto = request.headers.get('x-forwarded-proto') ?? 'http'
+  const origin = `${proto}://${host}`
+
   const supabase = await createClient()
   const { error } = await supabase.auth.verifyOtp({ type, token_hash: tokenHash })
   if (error) {
-    return NextResponse.redirect(new URL('/login?error=invalid_link', request.url))
+    return NextResponse.redirect(new URL('/login?error=invalid_link', origin))
   }
 
-  return NextResponse.redirect(new URL(next, request.url))
+  return NextResponse.redirect(new URL(next, origin))
 }
