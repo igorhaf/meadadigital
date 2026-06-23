@@ -28,6 +28,7 @@ import type { CmsNavItem, CmsTheme } from '@/lib/cms/public-fetch'
 import { MeadaHero } from '@/components/cms/blocks/meada-hero'
 import { MeadaCta, MeadaPortfolio, MeadaServices } from '@/components/cms/blocks/meada-sections'
 import { MeadaFooter, MeadaNavbar } from '@/components/cms/blocks/meada-chrome'
+import { NichesGrid } from '@/components/cms/blocks/niches-grid'
 
 /**
  * Renderizador do CMS (SM-N / catálogo ampliado). Renderiza os 18 tipos de bloco. Tema: cor primária
@@ -472,6 +473,7 @@ export const blockComponents = {
   meada_cta: MeadaCta,
   meada_navbar: MeadaNavbar,
   meada_footer: MeadaFooter,
+  niches_grid: NichesGrid,
 } as const
 
 /** Renderiza um bloco (com key = block.id). Compartilhado entre CmsRender (público) e o editor. */
@@ -503,6 +505,7 @@ export function renderCmsBlock(b: CmsBlock, opts?: { activeSlot?: string }): Rea
     case 'meada_cta': return <MeadaCta key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
     case 'meada_navbar': return <MeadaNavbar key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
     case 'meada_footer': return <MeadaFooter key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'niches_grid': return <NichesGrid key={b.id} props={b.props} />
     default: return null
   }
 }

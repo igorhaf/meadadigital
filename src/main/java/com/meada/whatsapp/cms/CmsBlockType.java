@@ -49,7 +49,8 @@ public enum CmsBlockType {
     MEADA_PORTFOLIO("meada_portfolio"),
     MEADA_CTA("meada_cta"),
     MEADA_NAVBAR("meada_navbar"),
-    MEADA_FOOTER("meada_footer");
+    MEADA_FOOTER("meada_footer"),
+    NICHES_GRID("niches_grid");
 
     private final String id;
 

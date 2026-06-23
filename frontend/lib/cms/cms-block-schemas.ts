@@ -404,6 +404,19 @@ export const blockSchemas: Record<CmsBlockTypeId, BlockSchema> = {
       { key: 'copyright', label: 'Copyright (sem o ano)', type: 'text' },
     ],
   },
+
+  niches_grid: {
+    type: 'niches_grid', label: 'Meada · Grade de Nichos', emoji: '🗂️',
+    description: 'Grade AUTO-POPULADA dos nichos (produtos do Meada). Os cards vêm do banco; o destaque e a ordem são geridos no painel de Nichos. Editar aqui (etiqueta/título/modo) afeta a grade inteira.',
+    fields: [
+      { key: 'eyebrow', label: 'Etiqueta superior', type: 'text' },
+      { key: 'title', label: 'Título', type: 'text' },
+      { key: 'mode', label: 'Quais nichos mostrar', type: 'select', options: [
+        { value: 'featured', label: 'Apenas destaques (home)' },
+        { value: 'all', label: 'Todos, na ordem (produtos)' },
+      ] },
+    ],
+  },
 }
 
 /** Schema de um tipo (ou undefined se desconhecido). */

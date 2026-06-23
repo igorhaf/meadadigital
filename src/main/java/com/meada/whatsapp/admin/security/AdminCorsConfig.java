@@ -57,6 +57,9 @@ public class AdminCorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         source.registerCorsConfiguration("/admin/**", config);
         source.registerCorsConfiguration("/api/**", config);
+        // /public/** é chamado CLIENT-SIDE pelo browser em alguns casos (ex.: o bloco niches_grid
+        // do CMS faz fetch de /public/niches a partir de meadadigital.local) → precisa de CORS.
+        source.registerCorsConfiguration("/public/**", config);
 
         FilterRegistrationBean<CorsFilter> bean =
             new FilterRegistrationBean<>(new CorsFilter(source));

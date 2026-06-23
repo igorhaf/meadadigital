@@ -35,6 +35,7 @@ export const CMS_BLOCK_TYPES = [
   { id: 'meada_cta', label: 'Meada · Chamada final' },
   { id: 'meada_navbar', label: 'Meada · Navbar' },
   { id: 'meada_footer', label: 'Meada · Rodapé' },
+  { id: 'niches_grid', label: 'Meada · Grade de Nichos' },
 ] as const
 
 export type CmsBlockTypeId = (typeof CMS_BLOCK_TYPES)[number]['id']
@@ -165,6 +166,17 @@ export type MeadaFooterProps = {
   copyright: string
 }
 
+/**
+ * Grade de nichos (produtos do Meada) — bloco AUTO-POPULADO: não tem lista de cards nas props.
+ * Renderiza os nichos vindos do banco (/public/niches). mode 'featured' = só os destaques (home);
+ * 'all' = todos na ordem (/produtos). Editar este bloco (eyebrow/title/mode) afeta a grade inteira.
+ */
+export type NichesGridProps = {
+  eyebrow: string
+  title: string
+  mode: 'featured' | 'all'
+}
+
 export type CmsBlock =
   | { id: string; type: 'hero'; props: HeroProps }
   | { id: string; type: 'text'; props: TextProps }
@@ -190,6 +202,7 @@ export type CmsBlock =
   | { id: string; type: 'meada_cta'; props: MeadaCtaProps }
   | { id: string; type: 'meada_navbar'; props: MeadaNavbarProps }
   | { id: string; type: 'meada_footer'; props: MeadaFooterProps }
+  | { id: string; type: 'niches_grid'; props: NichesGridProps }
 
 /** Props default ao adicionar um bloco novo do tipo dado. */
 export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
@@ -332,6 +345,12 @@ export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
           ] },
         ],
         copyright: '© Meada Agência Digital. Todos os direitos reservados.',
+      }
+    case 'niches_grid':
+      return {
+        eyebrow: 'Produtos',
+        title: 'Soluções por nicho',
+        mode: 'featured',
       }
   }
 }
