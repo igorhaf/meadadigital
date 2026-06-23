@@ -19,6 +19,10 @@ perfil tem seu subdomínio; em dev local você simula isso com `/etc/hosts` + su
 | `pet`      | PetBot        | `pet`      | `coral`        |
 | `oficina`  | OficinaBot    | `oficina`  | `aco`          |
 | `nutri`    | NutriBot      | `nutri`    | `salvia`       |
+| `barbearia`| BarbeariaBot  | `barbearia`| `grafite`      |
+| `eventos`  | EventosBot    | `eventos`  | `ambar`        |
+| `estetica` | EsteticaBot   | `estetica` | `rosa-po`      |
+| `comida`   | Comida        | `comida`   | `terracota`    |
 
 Fonte de verdade: `src/main/java/com/meada/whatsapp/profiles/ProfileType.java` +
 `frontend/lib/profiles/profile-type.ts` (paridade garantida pelo `ProfileTypeParityTest`).
@@ -38,6 +42,10 @@ Fonte de verdade: `src/main/java/com/meada/whatsapp/profiles/ProfileType.java` +
 127.0.0.1 pet.meadadigital.local
 127.0.0.1 oficina.meadadigital.local
 127.0.0.1 nutri.meadadigital.local
+127.0.0.1 barbearia.meadadigital.local
+127.0.0.1 eventos.meadadigital.local
+127.0.0.1 estetica.meadadigital.local
+127.0.0.1 comida.meadadigital.local
 127.0.0.1 api.meadadigital.local
 ```
 
@@ -67,6 +75,10 @@ Acesse (sem porta — o Caddy resolve por subdomínio):
 - `http://pet.meadadigital.local` → **PetBot** (perfil `pet`).
 - `http://oficina.meadadigital.local` → **OficinaBot** (perfil `oficina`).
 - `http://nutri.meadadigital.local` → **NutriBot** (perfil `nutri`).
+- `http://barbearia.meadadigital.local` → **BarbeariaBot** (perfil `barbearia`).
+- `http://eventos.meadadigital.local` → **EventosBot** (perfil `eventos`).
+- `http://estetica.meadadigital.local` → **EsteticaBot** (perfil `estetica`).
+- `http://comida.meadadigital.local` → **Comida** (perfil `comida`).
 - `http://api.meadadigital.local` → **backend / API**.
 
 O backend é o mesmo para todos os subdomínios — o perfil viaja no header `X-Meada-Subdomain`
@@ -108,6 +120,7 @@ O backend é o mesmo para todos os subdomínios — o perfil viaja no header `X-
 | `igorhaf12@gmail.com`| `bofo-meca-oleo` | Nutri Modelo                  | nutri      |
 | `igorhaf14@gmail.com`| `bofo-meca-oleo` | Eventos Modelo                | eventos    |
 | `igorhaf15@gmail.com`| `bofo-meca-oleo` | Estética Modelo               | estetica   |
+| `igorhaf16@gmail.com`| `bofo-meca-oleo` | Comida Modelo                 | comida     |
 
 (Seed em `/tmp/seed-multi-profile.sql` — não versionado; roda via psql.)
 

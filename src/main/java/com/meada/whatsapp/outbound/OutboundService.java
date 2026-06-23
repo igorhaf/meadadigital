@@ -110,6 +110,10 @@ public class OutboundService {
     // Camada 8.3 (perfil estetica): pós-processa <agendamento_estetica> (agenda, consome saldo) e <compra_pacote> (cria pacote pendente).
     private final com.meada.whatsapp.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler;
     private final com.meada.whatsapp.profiles.estetica.packages.CompraPacoteConfirmHandler compraPacoteConfirmHandler;
+    // Camada 8.4 (perfil comida): pós-processa a tag <pedido_comida> — cria o pedido (nasce 'aguardando')
+    // e remove a tag antes de enviar ao cliente. Só age para profile_id='comida'. O aceite/recusa é
+    // ação HUMANA no painel (não há handler de aceite — é o ponto central da ESCAPADA 1 do delivery).
+    private final com.meada.whatsapp.profiles.comida.orders.PedidoComidaConfirmHandler pedidoComidaConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -162,6 +166,7 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler,
                            com.meada.whatsapp.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler,
                            com.meada.whatsapp.profiles.estetica.packages.CompraPacoteConfirmHandler compraPacoteConfirmHandler,
+                           com.meada.whatsapp.profiles.comida.orders.PedidoComidaConfirmHandler pedidoComidaConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -196,6 +201,7 @@ public class OutboundService {
         this.aprovacaoPropostaHandler = aprovacaoPropostaHandler;
         this.agendamentoEsteticaConfirmHandler = agendamentoEsteticaConfirmHandler;
         this.compraPacoteConfirmHandler = compraPacoteConfirmHandler;
+        this.pedidoComidaConfirmHandler = pedidoComidaConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -323,6 +329,9 @@ public class OutboundService {
         // <compra_pacote> registra a intenção de compra (pacote pendente). Encadeados (perfil único).
         toSend = maybeProcessAgendamentoEstetica(event, conversationId, toSend);
         toSend = maybeProcessCompraPacote(event, conversationId, toSend);
+        // Camada 8.4 (perfil comida): <pedido_comida> cria o pedido de delivery (nasce 'aguardando' —
+        // o restaurante aceita/recusa no painel, não a IA). Encadeado (perfil é único; só um age).
+        toSend = maybeProcessPedidoComida(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -843,6 +852,38 @@ public class OutboundService {
             compraPacoteConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = compraPacoteConfirmHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil comida (camada 8.4): se o tenant é comida e a resposta da IA
+     * contém a tag {@code <pedido_comida>}, cria o pedido de delivery (PedidoComidaConfirmHandler
+     * resolve o contato, recalcula o total descartando o da IA, e snapshota as opções/adicionais
+     * escolhidos) e devolve um AiResponse com o texto SEM a tag. Para outro perfil, ou sem tag,
+     * devolve o aiResponse original. Espelho de {@link #maybeProcessSushiOrder}.
+     *
+     * <p>O pedido nasce em 'aguardando' — o aceite/recusa é AÇÃO HUMANA no painel (ESCAPADA 1), NÃO
+     * existe handler de aceite da IA. Best-effort: falha em criar o pedido (item/opção inválida) NÃO
+     * impede o envio (o handler loga e retorna empty). A tag é removida sempre que existir — o cliente
+     * não pode ver JSON cru.
+     */
+    private AiResponse maybeProcessPedidoComida(MessageInboundProcessedEvent event,
+                                                UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !pedidoComidaConfirmHandler.hasOrderTag(reply)) {
+            return aiResponse;
+        }
+        if (!"comida".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            pedidoComidaConfirmHandler.parseAndCreate(
+                event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = pedidoComidaConfirmHandler.stripOrderTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

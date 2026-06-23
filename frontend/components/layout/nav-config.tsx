@@ -202,6 +202,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'barbearia') return [BARBEARIA_GROUP, ...NAV_GROUPS]
   if (profileId === 'eventos') return [EVENTOS_GROUP, ...NAV_GROUPS]
   if (profileId === 'estetica') return [ESTETICA_GROUP, ...NAV_GROUPS]
+  if (profileId === 'comida') return [COMIDA_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -352,5 +353,16 @@ const ESTETICA_GROUP: NavGroup = {
     { label: 'Pacotes', href: '/dashboard/estetica-packages', icon: Gem },
     { label: 'Agenda', href: '/dashboard/estetica-appointments', icon: CalendarClock },
     { label: 'Configurações', href: '/dashboard/estetica-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil comida (delivery iFood-style). "Comida". Rotas
+ * /dashboard/comida-* (distintas de /menu e /orders, que são do sushi/genérico). */
+const COMIDA_GROUP: NavGroup = {
+  heading: 'Comida',
+  items: [
+    { label: 'Cardápio', href: '/dashboard/comida-menu', icon: UtensilsCrossed },
+    { label: 'Pedidos', href: '/dashboard/comida-orders', icon: ClipboardList },
+    { label: 'Configurações', href: '/dashboard/comida-settings', icon: Settings },
   ],
 }

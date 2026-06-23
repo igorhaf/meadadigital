@@ -34,6 +34,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.barbearia.BarberContextCache barberContextCache;
     private final com.meada.whatsapp.profiles.eventos.EventosContextCache eventosContextCache;
     private final com.meada.whatsapp.profiles.estetica.EsteticaContextCache esteticaContextCache;
+    private final com.meada.whatsapp.profiles.comida.ComidaMenuCache comidaMenuCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -49,6 +50,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.barbearia.BarberContextCache barberContextCache,
                                 com.meada.whatsapp.profiles.eventos.EventosContextCache eventosContextCache,
                                 com.meada.whatsapp.profiles.estetica.EsteticaContextCache esteticaContextCache,
+                                com.meada.whatsapp.profiles.comida.ComidaMenuCache comidaMenuCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -63,6 +65,7 @@ public class ProfilePromptContext {
         this.barberContextCache = barberContextCache;
         this.eventosContextCache = eventosContextCache;
         this.esteticaContextCache = esteticaContextCache;
+        this.comidaMenuCache = comidaMenuCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -178,6 +181,14 @@ public class ProfilePromptContext {
             + "contraindicação ou condição de saúde — encaminhe à avaliação presencial. Acolha sem "
             + "reforçar inseguranças.";
 
+    private static final String COMIDA =
+        "Você é atendente de um serviço de delivery de comida. Tom ágil e simpático. Conheça o "
+            + "cardápio (itens, opções/adicionais e seus valores) e a taxa de entrega. Monte o pedido "
+            + "com as opções escolhidas, confirme SEMPRE com o valor total e o endereço de entrega, e "
+            + "avise que o pedido vai para confirmação do restaurante. NUNCA invente item, opção ou "
+            + "preço que não esteja no cardápio; NUNCA aceite ou recuse o pedido (isso é o restaurante "
+            + "quem faz); o total é recalculado pelo sistema.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -206,6 +217,7 @@ public class ProfilePromptContext {
             case BARBEARIA -> BARBEARIA;
             case EVENTOS -> EVENTOS;
             case ESTETICA -> ESTETICA;
+            case COMIDA -> COMIDA;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -322,6 +334,12 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + esteticaContextCache.contextSegment(companyId, contactId);
+        }
+        if ("comida".equals(profileId)) {
+            // comida (8.4): persona + cardápio (itens, opções/adicionais com deltas) + taxa/mínimo +
+            // instruções da tag <pedido_comida>. IGNORA conversationId (o contexto é o cardápio, igual
+            // sushi). O pedido nasce 'aguardando' (gate de aceite humano no painel — ESCAPADA 1).
+            return persona + comidaMenuCache.menuSegment(companyId);
         }
         return persona;
     }
