@@ -59,4 +59,19 @@ public class CompanyAdminRepository {
     public CompanyResponse insert(String name, String slug, String paletteId) {
         return jdbcTemplate.queryForObject(INSERT, ROW_MAPPER, name, slug, paletteId);
     }
+
+    /**
+     * Email do usuário-admin "owner" da empresa (mais antigo, ativo) — alvo do "entrar como
+     * empresa" do super-admin. null se a empresa não tem admin elegível (suspensos/excluídos
+     * são ignorados). Determinístico (order by created_at) p/ sempre escolher o mesmo.
+     */
+    public String findOwnerEmail(UUID companyId) {
+        return jdbcTemplate.query(
+                "select email from users where company_id = ? and role = 'admin' "
+                    + "and suspended = false and deleted_at is null "
+                    + "order by created_at asc limit 1",
+                (rs, rn) -> rs.getString("email"),
+                companyId)
+            .stream().findFirst().orElse(null);
+    }
 }

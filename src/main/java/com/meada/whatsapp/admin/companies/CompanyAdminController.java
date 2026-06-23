@@ -49,12 +49,14 @@ public class CompanyAdminController {
     private final CompanyAdminRepository repository;
     private final CompanyAdminService service;
     private final AuditLogger auditLogger;
+    private final SupabaseAdminClient supabaseAdmin;
 
     public CompanyAdminController(CompanyAdminRepository repository, CompanyAdminService service,
-                                  AuditLogger auditLogger) {
+                                  AuditLogger auditLogger, SupabaseAdminClient supabaseAdmin) {
         this.repository = repository;
         this.service = service;
         this.auditLogger = auditLogger;
+        this.supabaseAdmin = supabaseAdmin;
     }
 
     /** Resposta padronizada {error, reason} (mesmo shape do filtro e do 403). */
@@ -212,6 +214,38 @@ public class CompanyAdminController {
         } catch (CompanyStatusConflictException e) {
             return error(409, "Conflict", e.reason());
         }
+    }
+
+    // ---- POST entrar como empresa (impersonation) ----------------------------
+
+    /**
+     * "Entrar no admin desta empresa" (super-admin only): gera um magic link (token de uso
+     * único) para o usuário-admin owner da empresa, que o frontend troca por uma sessão
+     * Supabase real em /auth/confirm. Auditado (impersonated). 503 se a Admin API não está
+     * configurada (sem service_role key); 409 se a empresa não tem admin elegível.
+     */
+    @PostMapping("/admin/companies/{id}/impersonate")
+    public ResponseEntity<Object> impersonate(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id) {
+        if (notSuperAdmin(user)) {
+            return forbidden();
+        }
+        if (!supabaseAdmin.enabled()) {
+            return error(503, "Service Unavailable", "impersonation_unavailable");
+        }
+        String email = repository.findOwnerEmail(id);
+        if (email == null) {
+            return error(409, "Conflict", "company_has_no_admin");
+        }
+        String tokenHash;
+        try {
+            tokenHash = supabaseAdmin.generateMagicLinkTokenHash(email);
+        } catch (RuntimeException e) {
+            return error(502, "Bad Gateway", "impersonation_link_failed");
+        }
+        auditLogger.log(id, user.userId(), "impersonated", "company", id, Map.of("as_email", email));
+        return ResponseEntity.ok(Map.of("tokenHash", tokenHash, "email", email));
     }
 
     // ---- DELETE (hard delete) ------------------------------------------------

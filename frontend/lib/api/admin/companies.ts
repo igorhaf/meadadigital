@@ -127,6 +127,18 @@ export async function deleteCompany(id: string): Promise<void> {
   return apiFetch<void>(`/admin/companies/${id}`, { method: 'DELETE' })
 }
 
+/** Resposta do "entrar como empresa": token de uso único + email do admin alvo. */
+export type ImpersonateResult = { tokenHash: string; email: string }
+
+/**
+ * POST /admin/companies/{id}/impersonate — super-admin entra no admin da empresa.
+ * Devolve o tokenHash de um magic link; o chamador abre /auth/confirm?token_hash=…
+ * numa nova aba pra estabelecer a sessão do tenant.
+ */
+export async function impersonateCompany(id: string): Promise<ImpersonateResult> {
+  return apiFetch<ImpersonateResult>(`/admin/companies/${id}/impersonate`, { method: 'POST' })
+}
+
 /** GET /admin/companies/{id}/notes — notas internas, mais recentes primeiro. */
 export async function listNotes(id: string): Promise<AdminNote[]> {
   return apiFetch<AdminNote[]>(`/admin/companies/${id}/notes`)

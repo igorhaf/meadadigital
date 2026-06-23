@@ -17,6 +17,7 @@ import {
   deleteCompany,
   deleteNote,
   getCompany,
+  impersonateCompany,
   listNotes,
   reactivateCompany,
   suspendCompany,
@@ -89,6 +90,33 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
     },
   })
 
+  // "Acessar admin" (impersonation): abre a nova aba JÁ no clique (síncrono — senão o
+  // browser bloqueia o popup), depois aponta ela pro /auth/confirm com o token do magic
+  // link assim que o backend responde.
+  const impersonateMut = useMutation({
+    mutationFn: async () => {
+      const win = window.open('about:blank', '_blank')
+      try {
+        const { tokenHash } = await impersonateCompany(id)
+        const url = `/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=email&next=/dashboard`
+        if (win) win.location.href = url
+        else window.open(url, '_blank') // fallback se o popup inicial falhou
+      } catch (e) {
+        if (win) win.close()
+        throw e
+      }
+    },
+    onError: (err) => {
+      setActionError(
+        err instanceof ApiError && err.reason === 'company_has_no_admin'
+          ? 'Esta empresa não tem um admin para acessar.'
+          : err instanceof ApiError && err.reason === 'impersonation_unavailable'
+            ? 'Acesso como empresa não está disponível neste ambiente.'
+            : 'Erro ao acessar o admin da empresa. Tente novamente.',
+      )
+    },
+  })
+
   const deleteMut = useMutation({
     mutationFn: () => deleteCompany(id),
     onSuccess: () => {
@@ -157,6 +185,11 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
             <Link href={`/dashboard/companies/${id}/edit`}>
               <Button variant="outline">Editar</Button>
             </Link>
+            {isActive && (
+              <Button onClick={() => impersonateMut.mutate()} disabled={impersonateMut.isPending}>
+                {impersonateMut.isPending ? 'Abrindo…' : 'Acessar admin'}
+              </Button>
+            )}
             {isActive ? (
               <Button variant="outline" onClick={() => setSuspendOpen(true)}>
                 Suspender

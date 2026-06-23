@@ -166,6 +166,11 @@ supabase:
   # verifica HS256 com ele em vez de ES256/JWKS. VAZIO por default → prod segue ES256/JWKS
   # intocado. Ver JwtAuthenticationFilter.
   jwt-secret: ${SUPABASE_JWT_SECRET:}
+  # Base do GoTrue + service_role key, usados pela Admin API (generate_link) no
+  # "entrar como empresa" do super-admin (SupabaseAdminClient). VAZIOS = recurso
+  # desabilitado (503 impersonation_unavailable) — não quebra o boot.
+  url: ${SUPABASE_URL:}
+  service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
 
 server:
   port: 8080
