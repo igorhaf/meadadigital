@@ -127,8 +127,8 @@ export async function deleteCompany(id: string): Promise<void> {
   return apiFetch<void>(`/admin/companies/${id}`, { method: 'DELETE' })
 }
 
-/** Resposta do "entrar como empresa": token de uso único + email do admin alvo. */
-export type ImpersonateResult = { tokenHash: string; email: string }
+/** Resposta do "entrar como empresa": token de uso único + email do admin alvo + slug da empresa. */
+export type ImpersonateResult = { tokenHash: string; email: string; slug: string }
 
 /**
  * POST /admin/companies/{id}/impersonate — super-admin entra no admin da empresa.

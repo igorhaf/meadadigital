@@ -91,16 +91,22 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   })
 
   // "Acessar admin" (impersonation): abre a nova aba JÁ no clique (síncrono — senão o
-  // browser bloqueia o popup), depois aponta ela pro /auth/confirm com o token do magic
-  // link assim que o backend responde.
+  // browser bloqueia o popup), depois aponta ela pro /auth/confirm com o token do magic link.
+  // A nova aba abre no SUBDOMÍNIO do tenant ({slug}.dominio), NÃO no host do root — domínio
+  // distinto = cookie de sessão separado, então a sessão do super-admin NÃO é derrubada.
   const impersonateMut = useMutation({
     mutationFn: async () => {
       const win = window.open('about:blank', '_blank')
       try {
-        const { tokenHash } = await impersonateCompany(id)
-        // URL ABSOLUTA no host atual do admin: garante que a nova aba (about:blank)
-        // resolva o /auth/confirm no MESMO domínio onde o cookie de sessão será gravado.
-        const url = `${window.location.origin}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=email&next=/dashboard`
+        const { tokenHash, slug } = await impersonateCompany(id)
+        // base do domínio atual (meadadigital.local[:porta]) → {slug}.base[:porta]
+        const { protocol, host } = window.location
+        const hostname = host.split(':')[0]
+        const port = host.split(':')[1]
+        const parts = hostname.split('.')
+        const base = parts.length <= 2 ? hostname : parts.slice(1).join('.')
+        const tenantHost = `${slug}.${base}${port ? `:${port}` : ''}`
+        const url = `${protocol}//${tenantHost}/auth/confirm?token_hash=${encodeURIComponent(tokenHash)}&type=email&next=/dashboard`
         if (win) win.location.href = url
         else window.open(url, '_blank') // fallback se o popup inicial falhou
       } catch (e) {

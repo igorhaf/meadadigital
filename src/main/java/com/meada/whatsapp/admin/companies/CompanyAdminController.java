@@ -245,7 +245,10 @@ public class CompanyAdminController {
             return error(502, "Bad Gateway", "impersonation_link_failed");
         }
         auditLogger.log(id, user.userId(), "impersonated", "company", id, Map.of("as_email", email));
-        return ResponseEntity.ok(Map.of("tokenHash", tokenHash, "email", email));
+        // slug → o frontend abre o admin do tenant no SUBDOMÍNIO dele ({slug}.dominio), domínio
+        // distinto do root → cookie de sessão separado (não derruba a sessão do super-admin).
+        String slug = repository.findSlug(id);
+        return ResponseEntity.ok(Map.of("tokenHash", tokenHash, "email", email, "slug", slug == null ? "" : slug));
     }
 
     // ---- DELETE (hard delete) ------------------------------------------------

@@ -69,7 +69,14 @@ export async function middleware(request: NextRequest) {
     !path.startsWith('/api') &&
     !path.startsWith('/_next') &&
     !path.startsWith('/public') &&
-    !path.startsWith('/p/')
+    !path.startsWith('/p/') &&
+    // Rotas de APP que precisam funcionar no subdomínio da empresa (ex.: o "Acessar admin"
+    // do super-admin abre {empresa}.dominio/auth/confirm → /dashboard, logado como o tenant).
+    // Sem excluir, o roteamento de empresa engoliria esses paths (→ 404 no /p/{slug}/...).
+    !path.startsWith('/auth') &&
+    !path.startsWith('/login') &&
+    !path.startsWith('/dashboard') &&
+    !path.startsWith('/admin')
   ) {
     const r = await resolveCompany(candidate)
     if (!r.exists) {

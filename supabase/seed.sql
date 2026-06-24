@@ -113,6 +113,8 @@ do $$
 declare
   t record;
   cid uuid;
+  uid uuid;
+  uemail text;
 begin
   for t in
     select * from (values
@@ -131,14 +133,38 @@ begin
       ('glowestetica', 'Glow Estética',      'estetica',   true)
     ) as v(slug, name, profile_id, with_cms)
   loop
-    -- company idempotente por slug
-    insert into public.companies (name, slug, profile_id)
-    values (t.name, t.slug, t.profile_id)
-    on conflict (slug) do update set name = excluded.name, profile_id = excluded.profile_id
-    returning id into cid;
-    if cid is null then
-      select id into cid from public.companies where slug = t.slug;
-    end if;
+    -- UUIDs DETERMINÍSTICOS derivados do slug (md5→uuid) — reproduzíveis e estáveis,
+    -- pra ligar o admin (public.users.company_id) à company sem depender de gen_random_uuid.
+    cid := md5('company:' || t.slug)::uuid;
+    uid := md5('user:'    || t.slug)::uuid;
+    uemail := t.slug || '@meadadigital.com';
+
+    insert into public.companies (id, name, slug, profile_id)
+    values (cid, t.name, t.slug, t.profile_id)
+    on conflict (slug) do update set id = excluded.id, name = excluded.name, profile_id = excluded.profile_id;
+
+    -- admin logável do tenant (auth.users + identity + public.users) — alvo do "Acessar admin"
+    -- do super-admin. Senha bofo-meca-oleo. Email: {slug}@meadadigital.com.
+    insert into auth.users (
+      instance_id, id, aud, role, email, encrypted_password, email_confirmed_at,
+      raw_app_meta_data, raw_user_meta_data, created_at, updated_at,
+      confirmation_token, email_change, email_change_token_new, recovery_token)
+    values (
+      '00000000-0000-0000-0000-000000000000', uid, 'authenticated', 'authenticated',
+      uemail, crypt('bofo-meca-oleo', gen_salt('bf')), now(),
+      '{"provider":"email","providers":["email"]}', '{"email_verified":true}', now(), now(),
+      '', '', '', '')
+    on conflict (id) do nothing;
+
+    insert into auth.identities (provider_id, user_id, identity_data, provider, last_sign_in_at, created_at, updated_at)
+    values (uid::text, uid,
+      jsonb_build_object('sub', uid::text, 'email', uemail, 'email_verified', true, 'phone_verified', false),
+      'email', now(), now(), now())
+    on conflict (provider, provider_id) do nothing;
+
+    insert into public.users (id, company_id, email, role)
+    values (uid, cid, uemail, 'admin')
+    on conflict (id) do update set company_id = excluded.company_id, role = excluded.role;
 
     if t.with_cms then
       insert into public.cms_sites (company_id, published)

@@ -60,6 +60,13 @@ public class CompanyAdminRepository {
         return jdbcTemplate.queryForObject(INSERT, ROW_MAPPER, name, slug, paletteId);
     }
 
+    /** Slug da empresa (base do subdomínio onde o impersonate abre o admin do tenant). null se não existe. */
+    public String findSlug(UUID companyId) {
+        return jdbcTemplate.query("select slug from companies where id = ?",
+                (rs, rn) -> rs.getString("slug"), companyId)
+            .stream().findFirst().orElse(null);
+    }
+
     /**
      * Email do usuário-admin "owner" da empresa (mais antigo, ativo) — alvo do "entrar como
      * empresa" do super-admin. null se a empresa não tem admin elegível (suspensos/excluídos
