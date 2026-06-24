@@ -2,16 +2,15 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: 'standalone',
-  // Dev atrás do Caddy por subdomínio (fase 0.5): o Next 16 bloqueia recursos de dev (HMR)
-  // de origens que não sejam localhost. Sem isto, a hidratação não completa e o form de login
-  // cai no submit NATIVO (GET com a senha na URL — exatamente o sintoma observado). Lista os
-  // hosts servidos pelo Caddy para o dev runtime confiar neles.
+  // Dev por subdomínio: o Next 16 bloqueia recursos de dev (HMR/JS) de origens não confiáveis.
+  // Sem isto, a hidratação não completa e o form de login cai no submit NATIVO (GET com a senha
+  // na URL — sintoma observado), e o branding client-side (me.productName) não carrega → parece
+  // o "front do Meada root". Cobre o domínio-base + TODOS os subdomínios (nichos E tenants, ex.:
+  // comida-modelo.meadadigital.local no "Acessar admin") via wildcard — assim tenant novo não
+  // exige editar esta lista.
   allowedDevOrigins: [
     'meadadigital.local',
-    'meada.meadadigital.local',
-    'juridico.meadadigital.local',
-    'dental.meadadigital.local',
-    'sushi.meadadigital.local',
+    '*.meadadigital.local',
   ],
   // Compat: o sushi foi alinhado ao padrão {nicho}-* (sushi-menu/sushi-orders). Redireciona as
   // rotas genéricas antigas (bookmark/histórico) pras novas. 308 permanente.
