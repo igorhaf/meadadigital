@@ -38,6 +38,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.floricultura.FloriculturaCatalogCache floriculturaCatalogCache;
     private final com.meada.whatsapp.profiles.pizzaria.PizzariaMenuCache pizzariaMenuCache;
     private final com.meada.whatsapp.profiles.adega.AdegaMenuCache adegaMenuCache;
+    private final com.meada.whatsapp.profiles.escola.EscolaContextCache escolaContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -57,6 +58,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.floricultura.FloriculturaCatalogCache floriculturaCatalogCache,
                                 com.meada.whatsapp.profiles.pizzaria.PizzariaMenuCache pizzariaMenuCache,
                                 com.meada.whatsapp.profiles.adega.AdegaMenuCache adegaMenuCache,
+                                com.meada.whatsapp.profiles.escola.EscolaContextCache escolaContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -75,6 +77,7 @@ public class ProfilePromptContext {
         this.floriculturaCatalogCache = floriculturaCatalogCache;
         this.pizzariaMenuCache = pizzariaMenuCache;
         this.adegaMenuCache = adegaMenuCache;
+        this.escolaContextCache = escolaContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -230,6 +233,22 @@ public class ProfilePromptContext {
             + "aceite ou recuse o pedido no sentido de produção (isso é a loja quem faz); o total é "
             + "recalculado pelo sistema.";
 
+    private static final String ESCOLA =
+        "Você é atendente de uma escola de educação infantil. Tom acolhedor-cuidadoso, de quem fala com "
+            + "pais sobre a educação dos filhos. Você fala com o RESPONSÁVEL (pai/mãe), identificado pelo "
+            + "telefone. Você SÓ: mostra as turmas COM VAGA disponível (série/ano + turno + a mensalidade "
+            + "JÁ cadastrada), AGENDA uma VISITA da família à escola (dia + período manhã/tarde), e "
+            + "REGISTRA o INTERESSE de matrícula de um aluno (filho) numa turma. NUNCA prometa vaga não "
+            + "confirmada — fale em 'registrar o interesse'/'pré-reservar pra secretaria confirmar', nunca "
+            + "'vaga garantida'. NUNCA defina, negocie ou invente VALOR de mensalidade, desconto, bolsa, "
+            + "taxa ou condição de pagamento (isso é da secretaria — você só informa o valor já "
+            + "cadastrado); qualquer negociação → 'a secretaria vai falar com você'. NUNCA dê PARECER "
+            + "PEDAGÓGICO sobre a criança (nível, dificuldade, adequação à série, comportamento, "
+            + "necessidade especial) — acolha e encaminhe à coordenação/secretaria (e ofereça agendar a "
+            + "visita); NUNCA decida a série/turma 'ideal'. NUNCA invente turma, série, turno, vaga, valor, "
+            + "professor ou estrutura que não esteja cadastrado. Aceitar/confirmar a matrícula de fato, "
+            + "definir valor e dar parecer são AÇÕES da secretaria no painel.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -262,6 +281,7 @@ public class ProfilePromptContext {
             case FLORICULTURA -> FLORICULTURA;
             case PIZZARIA -> PIZZARIA;
             case ADEGA -> ADEGA;
+            case ESCOLA -> ESCOLA;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -403,6 +423,14 @@ public class ProfilePromptContext {
             // age_confirmed). IGNORA conversationId (contexto é o cardápio). Pedido nasce 'aguardando';
             // sem age_confirmed=true o backend não cria (trava de faixa etária).
             return persona + adegaMenuCache.menuSegment(companyId);
+        }
+        if ("escola".equals(profileId)) {
+            // escola (8.19): persona + turmas com vagas restantes + os alunos (filhos) do responsável +
+            // horário + instruções das 2 tags (<matricula_escola> 2 modos + <visita_escola>). Resolve o
+            // responsável (contact) pela conversa (per-contact, igual legal/dental).
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + escolaContextCache.contextSegment(companyId, contactId);
         }
         return persona;
     }

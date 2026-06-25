@@ -917,6 +917,52 @@ aceite. (Os perfis comida 8.4, floricultura 8.5 e pizzaria 8.6 estão documentad
 - Migration `53_adega.sql` (slot atribuído pelo `docs/prompts-gordos/README.md`; 51/52 reservados a
   casamento/padaria). Tenant `igorhaf20` (Adega Modelo). Guia: `docs/PERFIL_ADEGA.md`.
 
+## Perfil Escola (EscolaBot, camada 8.19)
+
+DÉCIMO NONO perfil vertical real (20º contando generic). O tenant escola (`profile_id='escola'`) vira
+um produto de ESCOLA / EDUCAÇÃO INFANTIL: gerencia turmas (série+turno+capacity+mensalidade), cadastra
+os alunos de cada responsável, matricula alunos (assinatura) e agenda visitas da família. A IA atende
+os RESPONSÁVEIS (pais) via WhatsApp com tom acolhedor-cuidadoso.
+
+- **CLONA o chassi da ACADEMIA (camada 7.7):** planos→TURMAS (com capacity), matrícula = ASSINATURA
+  (ativa/suspensa/cancelada), anti-dupla, capacity por turma validado TRANSACIONALMENTE no INSERT
+  (defesa race), mensalidade MANUAL (`escola_payments`, UNIQUE por mês → 409 duplicate_payment; sem
+  Stripe/inadimplência). suspensa MANTÉM a vaga; cancelada LIBERA + materializa end_date.
+- **ESCAPADA 1 — o ALUNO é SUB-ENTIDADE do RESPONSÁVEL (espelho pet/nutri):** na academia o "aluno"
+  era o próprio contato; aqui o responsável (pai/mãe) é o `contact` e o aluno (filho) é
+  `escola_students` (contact_id NOT NULL). 1 responsável → N alunos. A matrícula referencia
+  `student_id`. **Anti-dupla = 1 matrícula ATIVA por (aluno, turma)** (índice parcial
+  `uniq_active_enrollment_per_student_class`): um irmão pode estar na mesma turma; o mesmo aluno pode
+  estar em turmas diferentes; o mesmo aluno NÃO pode ter 2 ativas na MESMA turma.
+- **ESCAPADA 2 — VISITA agendada (agenda LEVE dia+período, espelho floricultura):** `escola_visits`
+  (`visit_date >= hoje` + `period` manha|tarde), SEM conflito de capacidade, SEM slot fino. Entidade
+  própria com status próprio (agendada/realizada/cancelada). A visita INDEPENDE de matrícula e de aluno
+  (`student_id` nullable). Os dois conceitos juntos (assinatura-por-aluno-sub-entidade + agenda leve de
+  visita) é a escapada desta SM.
+- **DOIS status hardcoded** (cada um com parity Java↔TS): `EscolaEnrollmentStatus` (ativa⇄suspensa;
+  ambas→cancelada) ↔ `escola-enrollment-status.ts`; `EscolaVisitStatus` (agendada→realizada/cancelada)
+  ↔ `escola-visit-status.ts`. shift (manha/tarde/integral) e period (manha/tarde) por CHECK simples;
+  grade/intended_grade texto livre.
+- **DUAS tags namespace próprio** (distintas de `<matricula>` da academia e de TODAS): `<matricula_escola>`
+  (2 modos — `student_id` existente OU `new_student` cadastra o aluno sub-entidade E matricula, espelho
+  `new_animal` do pet) via `MatriculaEscolaConfirmHandler`; `<visita_escola>` via
+  `VisitaEscolaConfirmHandler`. `OutboundService` ganhou `maybeProcessMatriculaEscola` +
+  `maybeProcessVisitaEscola` (encadeados após os demais; perfil é único, só um age; removem a tag).
+- **Persona ESCOLA** (`ProfilePromptContext.ESCOLA`, acolhedora-cuidadosa): NUNCA promete vaga não
+  confirmada (fala em "registrar interesse"/"pré-reservar"), NUNCA define/inventa mensalidade/desconto/
+  bolsa, NUNCA dá parecer pedagógico (encaminha à coordenação), NUNCA inventa turma/série/turno/
+  professor. Contexto via `EscolaContextCache` (TTL 60s, keyed por (companyId, contactId) — traz os
+  filhos do responsável + turmas com vagas restantes), invalidado em toda mutação.
+- **Guard:** `EscolaProfileGuard` (403 forbidden_wrong_profile). `JwtAuthenticationFilter` autentica
+  `/api/escola/**` (além dos 18 perfis anteriores).
+- **Sidebar:** `getNavForProfile('escola')` injeta "Escola" (Turmas/Alunos/Matrículas/Visitas/
+  Configurações), branch próprio. Paleta `mostarda`.
+- **NÃO TEM:** boletim/notas/frequência/diário de classe, parecer pedagógico estruturado, pagamento
+  real (Stripe #50)/inadimplência, contrato e-sign, lista de espera persistida, transporte/material/
+  merenda, foto (bloqueador SERVICE_ROLE_KEY), slot fino na visita, multi-unidade, calendário letivo.
+- Migration `63_escola.sql` (slot do `docs/prompts-gordos/README.md`; 54-62 reservados aos nichos
+  intermediários). Tenant `igorhaf30` (Escola Modelo). Guia: `docs/PERFIL_ESCOLA.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**

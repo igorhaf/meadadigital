@@ -41,7 +41,8 @@ public enum ProfileType {
     COMIDA("comida", "Comida", "comida", "terracota"),
     FLORICULTURA("floricultura", "Floricultura", "floricultura", "rosa-po"),
     PIZZARIA("pizzaria", "Pizzaria", "pizzaria", "carmim"),
-    ADEGA("adega", "Adega", "adega", "beringela");
+    ADEGA("adega", "Adega", "adega", "beringela"),
+    ESCOLA("escola", "Escola", "escola", "mostarda");
 
     private final String id;
     private final String productName;

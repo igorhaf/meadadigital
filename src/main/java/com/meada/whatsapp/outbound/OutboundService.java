@@ -123,6 +123,10 @@ public class OutboundService {
     // e remove a tag antes de enviar. Só age para profile_id='adega'. Inclui a ESCAPADA +18 (a tag sem
     // age_confirmed=true não cria pedido — trava de faixa etária na venda de álcool).
     private final com.meada.whatsapp.profiles.adega.orders.PedidoAdegaConfirmHandler pedidoAdegaConfirmHandler;
+    // Camada 8.19 (perfil escola): pós-processa <matricula_escola> (matrícula-assinatura, 2 modos:
+    // student_id OU new_student) e <visita_escola> (agenda leve dia+período). Só agem p/ profile_id='escola'.
+    private final com.meada.whatsapp.profiles.escola.enrollments.MatriculaEscolaConfirmHandler matriculaEscolaConfirmHandler;
+    private final com.meada.whatsapp.profiles.escola.visits.VisitaEscolaConfirmHandler visitaEscolaConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -179,6 +183,8 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.floricultura.orders.PedidoFlorConfirmHandler pedidoFlorConfirmHandler,
                            com.meada.whatsapp.profiles.pizzaria.orders.PedidoPizzaConfirmHandler pedidoPizzaConfirmHandler,
                            com.meada.whatsapp.profiles.adega.orders.PedidoAdegaConfirmHandler pedidoAdegaConfirmHandler,
+                           com.meada.whatsapp.profiles.escola.enrollments.MatriculaEscolaConfirmHandler matriculaEscolaConfirmHandler,
+                           com.meada.whatsapp.profiles.escola.visits.VisitaEscolaConfirmHandler visitaEscolaConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -217,6 +223,8 @@ public class OutboundService {
         this.pedidoFlorConfirmHandler = pedidoFlorConfirmHandler;
         this.pedidoPizzaConfirmHandler = pedidoPizzaConfirmHandler;
         this.pedidoAdegaConfirmHandler = pedidoAdegaConfirmHandler;
+        this.matriculaEscolaConfirmHandler = matriculaEscolaConfirmHandler;
+        this.visitaEscolaConfirmHandler = visitaEscolaConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -354,6 +362,10 @@ public class OutboundService {
         // Camada 8.9 (perfil adega): <pedido_adega> cria o pedido de bebidas (nasce 'aguardando';
         // trava +18 — sem age_confirmed=true não cria). Encadeado (perfil é único; só um age).
         toSend = maybeProcessPedidoAdega(event, conversationId, toSend);
+        // Camada 8.19 (perfil escola): <matricula_escola> (matrícula) e <visita_escola> (visita).
+        // Encadeados após os demais (perfil é único; só um age). Removem a tag antes de enviar.
+        toSend = maybeProcessMatriculaEscola(event, conversationId, toSend);
+        toSend = maybeProcessVisitaEscola(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -989,6 +1001,59 @@ public class OutboundService {
                 event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = pedidoAdegaConfirmHandler.stripOrderTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil escola (camada 8.19): se o tenant é escola e a resposta da IA contém
+     * a tag {@code <matricula_escola>}, registra a matrícula (MatriculaEscolaConfirmHandler resolve o
+     * responsável da conversa, valida turma/aluno/capacity/anti-dupla; 2 modos: student_id existente OU
+     * new_student cadastra o aluno sub-entidade E matricula) e devolve um AiResponse SEM a tag.
+     * Best-effort; tag sempre removida; só age se profile_id='escola'.
+     */
+    private AiResponse maybeProcessMatriculaEscola(MessageInboundProcessedEvent event,
+                                                   UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !matriculaEscolaConfirmHandler.hasOrderTag(reply)) {
+            return aiResponse;
+        }
+        if (!"escola".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            matriculaEscolaConfirmHandler.parseAndCreate(
+                event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = matriculaEscolaConfirmHandler.stripOrderTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil escola (camada 8.19): se o tenant é escola e a resposta da IA contém
+     * a tag {@code <visita_escola>}, agenda a visita (VisitaEscolaConfirmHandler resolve o responsável,
+     * valida data futura + período; agenda leve dia+período, SEM conflito) e devolve um AiResponse SEM a
+     * tag. Best-effort; tag sempre removida; só age se profile_id='escola'.
+     */
+    private AiResponse maybeProcessVisitaEscola(MessageInboundProcessedEvent event,
+                                                UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !visitaEscolaConfirmHandler.hasOrderTag(reply)) {
+            return aiResponse;
+        }
+        if (!"escola".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            visitaEscolaConfirmHandler.parseAndCreate(
+                event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = visitaEscolaConfirmHandler.stripOrderTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

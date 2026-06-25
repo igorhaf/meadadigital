@@ -37,7 +37,9 @@ import {
   Scissors,
   ScrollText,
   Settings,
+  Baby,
   Pizza,
+  School,
   ShieldCheck,
   Sparkles,
   Stethoscope,
@@ -210,6 +212,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'floricultura') return [FLORICULTURA_GROUP, ...NAV_GROUPS]
   if (profileId === 'pizzaria') return [PIZZARIA_GROUP, ...NAV_GROUPS]
   if (profileId === 'adega') return [ADEGA_GROUP, ...NAV_GROUPS]
+  if (profileId === 'escola') return [ESCOLA_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -403,5 +406,18 @@ const ADEGA_GROUP: NavGroup = {
     { label: 'Catálogo', href: '/dashboard/adega-menu', icon: Wine },
     { label: 'Pedidos', href: '/dashboard/adega-orders', icon: ClipboardList },
     { label: 'Configurações', href: '/dashboard/adega-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil escola (educação infantil, camada 8.19). "Escola".
+ * Rotas /dashboard/escola-* — Alunos são sub-entidade do responsável; Visitas é a agenda leve. */
+const ESCOLA_GROUP: NavGroup = {
+  heading: 'Escola',
+  items: [
+    { label: 'Turmas', href: '/dashboard/escola-classes', icon: School },
+    { label: 'Alunos', href: '/dashboard/escola-students', icon: Baby },
+    { label: 'Matrículas', href: '/dashboard/escola-enrollments', icon: ClipboardList },
+    { label: 'Visitas', href: '/dashboard/escola-visits', icon: CalendarCheck },
+    { label: 'Configurações', href: '/dashboard/escola-settings', icon: Settings },
   ],
 }
