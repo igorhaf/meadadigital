@@ -963,6 +963,55 @@ os RESPONSÁVEIS (pais) via WhatsApp com tom acolhedor-cuidadoso.
 - Migration `63_escola.sql` (slot do `docs/prompts-gordos/README.md`; 54-62 reservados aos nichos
   intermediários). Tenant `igorhaf30` (Escola Modelo). Guia: `docs/PERFIL_ESCOLA.md`.
 
+## Perfil Ateliê (AtelieBot, camada 8.14)
+
+DÉCIMO NONO perfil vertical real (20º contando generic). UM perfil 'atelie' serve os TRÊS tipos de
+negócio — costura sob medida, arte, design — porque compartilham o mesmo chassi: peça/obra SOB
+ENCOMENDA personalizada → briefing → orçamento → aprovação → execução com provas/ajustes. O tipo é um
+CAMPO da proposta (`project_type`), NÃO três perfis.
+
+- **CLONA o chassi do EVENTOS (camada 8.2):** proposta order-based + itens de ORÇAMENTO (total
+  materializado) + gate de aprovação em 2 fases via tag que muta o estado de um artefato existente.
+  Funil idêntico ao `EventProposalStatus` (`AtelieProposalStatus`: rascunho→orcada→aprovada→fechada→
+  realizada + recusada/cancelada; orcada exige total>0 → empty_budget; `itemsLocked` a partir de
+  fechada). Cliente NÃO é entidade (continua o contact; snapshots customer_name/phone na proposta).
+  (Os perfis projetos/casamento da fila NÃO existem ainda — clonei o eventos, o chassi-avô.)
+- **`project_type` hardcoded com parity** (`AtelieProjectType` ↔ `atelie-project-type.ts`,
+  `AtelieProjectTypeParityTest`): costura|arte|design. CAMPO da proposta (CHECK + default 'costura'),
+  enum LOCAL do perfil (NÃO confundir com a enum de plataforma `ProfileType`).
+- **ESCAPADA — SUB-ENTIDADE DE ETAPAS DE PROVA/AJUSTE (`atelie_fittings`):** uma peça sob medida tem
+  PROVAS MARCADAS (1ª prova → 2ª prova → ajuste final → entrega), cada uma com title + due_date
+  NULLABLE (previsão) + **status BINÁRIO** (pendente/realizada) + position (ordem explícita) +
+  completed_at. Espelha os marcos de cronograma do eventos (`event_timeline_items`) na FORMA, com 2
+  diferenças: (1) status BINÁRIO (não os 3 estados pendente/em_andamento/concluida das etapas do
+  projetos); (2) vocabulário de PROVA DE COSTURA/AJUSTE (não cronograma de horas/produção). Transição
+  pendente⇄realizada LIVRE (ao entrar em realizada seta completed_at; ao voltar zera). reorder
+  re-materializa position 0..N na transação. NÃO entra no total. Gerenciada SÓ no painel (SEM tag de
+  IA, igual o cronograma do eventos). Trava junto com os itens de orçamento (`itemsLocked` → 409
+  proposal_locked). Status da prova é CHECK simples (SEM enum/parity — só o status da PROPOSTA e o
+  project_type têm parity).
+- **DUAS tags namespace próprio** (distintas de `<proposta_evento>`/`<aprovacao_proposta>` e de TODAS):
+  `<proposta_atelie>` ABRE a proposta em rascunho (UM modo; project_type ausente/inválido → 'costura';
+  artisan_id inválido → ignora mas abre) via `PropostaAtelieConfirmHandler`; `<aprovacao_atelie>` MUTA
+  o estado (aprovada|recusada, só se 'orcada') via `AprovacaoAtelieHandler`. `OutboundService` ganhou
+  `maybeProcessPropostaAtelie` + `maybeProcessAprovacaoAtelie` (encadeados após os demais; perfil é
+  único, só um age; removem a tag).
+- **Persona ATELIE** (`ProfilePromptContext.ATELIE`, prestativa-consultiva-sensível): NUNCA fecha
+  contrato/preço/desconto, NUNCA confirma prazo/medida não cravado pela equipe, NUNCA inventa material/
+  tecido/técnica/item/valor, NUNCA promete resultado estético, NUNCA gerencia provas pela conversa.
+  Contexto via `AtelieContextCache` (TTL 20s, keyed por (companyId, contactId) — artesãos + propostas
+  do contato em aberto; NÃO injeta as provas), invalidado em toda mutação.
+- **Guard:** `AtelieProfileGuard` (403 forbidden_wrong_profile). `JwtAuthenticationFilter` autentica
+  `/api/atelie/**` (além dos 19 perfis anteriores).
+- **Sidebar:** `getNavForProfile('atelie')` injeta "Ateliê" (Artesãos/Propostas/Configurações), branch
+  próprio. A tela de Propostas tem os DOIS editores inline (orçamento com total + provas/ajustes
+  ordenadas com os 2 estados). Paleta `orquidea`.
+- **NÃO TEM:** conflito de agenda/data, catálogo de tecidos/materiais/técnicas pré-cadastrados, tabela
+  de medidas estruturada, contrato e-sign, pagamento/sinal (Stripe #50), foto/anexo (bloqueador
+  SERVICE_ROLE_KEY), lembrete automático de prova, multi-artesão com agenda.
+- Migration `58_atelie.sql` (slot do `docs/prompts-gordos/README.md` ordem 9). Tenant `igorhaf25`
+  (Ateliê Modelo). Guia: `docs/PERFIL_ATELIE.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**

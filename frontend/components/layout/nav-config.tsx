@@ -213,6 +213,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'pizzaria') return [PIZZARIA_GROUP, ...NAV_GROUPS]
   if (profileId === 'adega') return [ADEGA_GROUP, ...NAV_GROUPS]
   if (profileId === 'escola') return [ESCOLA_GROUP, ...NAV_GROUPS]
+  if (profileId === 'atelie') return [ATELIE_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -419,5 +420,16 @@ const ESCOLA_GROUP: NavGroup = {
     { label: 'Matrículas', href: '/dashboard/escola-enrollments', icon: ClipboardList },
     { label: 'Visitas', href: '/dashboard/escola-visits', icon: CalendarCheck },
     { label: 'Configurações', href: '/dashboard/escola-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil atelie (costura sob medida/arte/design, camada 8.14). "Ateliê".
+ * Rotas /dashboard/atelie-* — Propostas tem os 2 editores (orçamento + provas/ajustes). */
+const ATELIE_GROUP: NavGroup = {
+  heading: 'Ateliê',
+  items: [
+    { label: 'Artesãos', href: '/dashboard/atelie-artisans', icon: Scissors },
+    { label: 'Propostas', href: '/dashboard/atelie-proposals', icon: FileText },
+    { label: 'Configurações', href: '/dashboard/atelie-settings', icon: Settings },
   ],
 }

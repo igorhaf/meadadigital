@@ -117,7 +117,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/49_floricultura.sql",
         "db/migrations/50_pizzaria.sql",
         "db/migrations/53_adega.sql",
-        "db/migrations/63_escola.sql"
+        "db/migrations/63_escola.sql",
+        "db/migrations/58_atelie.sql"
     };
 
     /**
@@ -259,6 +260,8 @@ public abstract class AbstractIntegrationTest {
               adega_menu_item_options, adega_menu_items, adega_config,
               escola_payments, escola_enrollments, escola_visits,
               escola_students, escola_classes, escola_config,
+              atelie_proposal_items, atelie_fittings, atelie_proposals,
+              atelie_artisans, atelie_config,
               profile_features, cms_pages, cms_sites
             RESTART IDENTITY CASCADE
             """);

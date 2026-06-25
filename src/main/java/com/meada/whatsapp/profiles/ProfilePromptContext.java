@@ -39,6 +39,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.pizzaria.PizzariaMenuCache pizzariaMenuCache;
     private final com.meada.whatsapp.profiles.adega.AdegaMenuCache adegaMenuCache;
     private final com.meada.whatsapp.profiles.escola.EscolaContextCache escolaContextCache;
+    private final com.meada.whatsapp.profiles.atelie.AtelieContextCache atelieContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -59,6 +60,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.pizzaria.PizzariaMenuCache pizzariaMenuCache,
                                 com.meada.whatsapp.profiles.adega.AdegaMenuCache adegaMenuCache,
                                 com.meada.whatsapp.profiles.escola.EscolaContextCache escolaContextCache,
+                                com.meada.whatsapp.profiles.atelie.AtelieContextCache atelieContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -78,6 +80,7 @@ public class ProfilePromptContext {
         this.pizzariaMenuCache = pizzariaMenuCache;
         this.adegaMenuCache = adegaMenuCache;
         this.escolaContextCache = escolaContextCache;
+        this.atelieContextCache = atelieContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -249,6 +252,20 @@ public class ProfilePromptContext {
             + "professor ou estrutura que não esteja cadastrado. Aceitar/confirmar a matrícula de fato, "
             + "definir valor e dar parecer são AÇÕES da secretaria no painel.";
 
+    private static final String ATELIE =
+        "Você é atendente de um ateliê que cria sob encomenda — costura sob medida, arte ou design. Tom "
+            + "prestativo-consultivo e sensível de quem faz peça/obra personalizada. Você ABRE uma proposta "
+            + "a partir do briefing do cliente (tipo de peça/obra, ocasião, medidas/dimensões aproximadas, "
+            + "referência descrita em texto) — a equipe monta o ORÇAMENTO no painel — e CAPTURA a aprovação "
+            + "ou recusa quando a proposta já está orçada. NUNCA feche contrato, preço ou desconto por conta "
+            + "própria (quem orça e fecha é a equipe). NUNCA confirme um PRAZO de entrega/produção nem uma "
+            + "MEDIDA/DIMENSÃO que a equipe não tenha cravado — diga 'vou confirmar prazo e medidas com a "
+            + "equipe na primeira prova/avaliação'. NUNCA invente material, tecido, técnica, acabamento, "
+            + "valor, item de orçamento ou serviço fora do cadastrado. NUNCA prometa resultado estético, "
+            + "durabilidade ou caimento que dependa de prova presencial — acolha a ideia sem criar "
+            + "expectativa fora do controle da equipe. As PROVAS/AJUSTES da peça são marcadas pela equipe no "
+            + "painel — você NÃO gerencia provas pela conversa; você só abre a proposta e captura a aprovação.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -282,6 +299,7 @@ public class ProfilePromptContext {
             case PIZZARIA -> PIZZARIA;
             case ADEGA -> ADEGA;
             case ESCOLA -> ESCOLA;
+            case ATELIE -> ATELIE;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -431,6 +449,14 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + escolaContextCache.contextSegment(companyId, contactId);
+        }
+        if ("atelie".equals(profileId)) {
+            // atelie (8.14): persona + artesãos ativos + propostas do contato em aberto (rascunho/orcada)
+            // + instruções das 2 tags (<proposta_atelie> + <aprovacao_atelie>). NÃO injeta as PROVAS
+            // (organizacionais do painel). Resolve o contato pela conversa (per-contact, igual eventos).
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + atelieContextCache.contextSegment(companyId, contactId);
         }
         return persona;
     }

@@ -127,6 +127,10 @@ public class OutboundService {
     // student_id OU new_student) e <visita_escola> (agenda leve dia+período). Só agem p/ profile_id='escola'.
     private final com.meada.whatsapp.profiles.escola.enrollments.MatriculaEscolaConfirmHandler matriculaEscolaConfirmHandler;
     private final com.meada.whatsapp.profiles.escola.visits.VisitaEscolaConfirmHandler visitaEscolaConfirmHandler;
+    // Camada 8.14 (perfil atelie): <proposta_atelie> ABRE a proposta (rascunho); <aprovacao_atelie> MUTA
+    // o estado (aprovada/recusada, só se 'orcada') — gate de aprovação em 2 fases. Só agem p/ profile_id='atelie'.
+    private final com.meada.whatsapp.profiles.atelie.proposals.PropostaAtelieConfirmHandler propostaAtelieConfirmHandler;
+    private final com.meada.whatsapp.profiles.atelie.proposals.AprovacaoAtelieHandler aprovacaoAtelieHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -185,6 +189,8 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.adega.orders.PedidoAdegaConfirmHandler pedidoAdegaConfirmHandler,
                            com.meada.whatsapp.profiles.escola.enrollments.MatriculaEscolaConfirmHandler matriculaEscolaConfirmHandler,
                            com.meada.whatsapp.profiles.escola.visits.VisitaEscolaConfirmHandler visitaEscolaConfirmHandler,
+                           com.meada.whatsapp.profiles.atelie.proposals.PropostaAtelieConfirmHandler propostaAtelieConfirmHandler,
+                           com.meada.whatsapp.profiles.atelie.proposals.AprovacaoAtelieHandler aprovacaoAtelieHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -225,6 +231,8 @@ public class OutboundService {
         this.pedidoAdegaConfirmHandler = pedidoAdegaConfirmHandler;
         this.matriculaEscolaConfirmHandler = matriculaEscolaConfirmHandler;
         this.visitaEscolaConfirmHandler = visitaEscolaConfirmHandler;
+        this.propostaAtelieConfirmHandler = propostaAtelieConfirmHandler;
+        this.aprovacaoAtelieHandler = aprovacaoAtelieHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -366,6 +374,10 @@ public class OutboundService {
         // Encadeados após os demais (perfil é único; só um age). Removem a tag antes de enviar.
         toSend = maybeProcessMatriculaEscola(event, conversationId, toSend);
         toSend = maybeProcessVisitaEscola(event, conversationId, toSend);
+        // Camada 8.14 (perfil atelie): <proposta_atelie> abre proposta; <aprovacao_atelie> captura
+        // aprovação/recusa (só 'orcada'). Encadeados após os demais (perfil único; só um age).
+        toSend = maybeProcessPropostaAtelie(event, conversationId, toSend);
+        toSend = maybeProcessAprovacaoAtelie(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -1054,6 +1066,54 @@ public class OutboundService {
                 event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = visitaEscolaConfirmHandler.stripOrderTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil atelie (camada 8.14): se o tenant é atelie e a resposta da IA contém
+     * a tag {@code <proposta_atelie>}, ABRE uma proposta em rascunho (PropostaAtelieConfirmHandler
+     * resolve o contato, valida project_type, snapshota o cliente) e devolve um AiResponse SEM a tag.
+     * Best-effort; tag sempre removida; só age se profile_id='atelie'.
+     */
+    private AiResponse maybeProcessPropostaAtelie(MessageInboundProcessedEvent event,
+                                                  UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !propostaAtelieConfirmHandler.hasOrderTag(reply)) {
+            return aiResponse;
+        }
+        if (!"atelie".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            propostaAtelieConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = propostaAtelieConfirmHandler.stripOrderTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil atelie (camada 8.14): se o tenant é atelie e a resposta da IA contém
+     * a tag {@code <aprovacao_atelie>}, MUTA o estado da proposta orçada (aprovada/recusada) e remove a
+     * tag — o gate de aprovação em 2 fases (clone do eventos). Só atua sobre proposta em 'orcada' (o
+     * handler valida). Best-effort.
+     */
+    private AiResponse maybeProcessAprovacaoAtelie(MessageInboundProcessedEvent event,
+                                                   UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !aprovacaoAtelieHandler.hasOrderTag(reply)) {
+            return aiResponse;
+        }
+        if (!"atelie".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        aprovacaoAtelieHandler.parseAndApply(event.companyId(), conversationId, contactId.orElse(null), reply);
+        String stripped = aprovacaoAtelieHandler.stripOrderTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());
