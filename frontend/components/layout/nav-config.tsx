@@ -214,6 +214,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'adega') return [ADEGA_GROUP, ...NAV_GROUPS]
   if (profileId === 'escola') return [ESCOLA_GROUP, ...NAV_GROUPS]
   if (profileId === 'atelie') return [ATELIE_GROUP, ...NAV_GROUPS]
+  if (profileId === 'casamento') return [CASAMENTO_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -431,5 +432,16 @@ const ATELIE_GROUP: NavGroup = {
     { label: 'Artesãos', href: '/dashboard/atelie-artisans', icon: Scissors },
     { label: 'Propostas', href: '/dashboard/atelie-proposals', icon: FileText },
     { label: 'Configurações', href: '/dashboard/atelie-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil casamento (assessoria de casamento, camada 8.7). "Casamento".
+ * Rotas /dashboard/casamento-* — Propostas tem os 3 editores (orçamento + cronograma + checklist). */
+const CASAMENTO_GROUP: NavGroup = {
+  heading: 'Casamento',
+  items: [
+    { label: 'Assessores', href: '/dashboard/casamento-planners', icon: Gem },
+    { label: 'Propostas', href: '/dashboard/casamento-proposals', icon: FileText },
+    { label: 'Configurações', href: '/dashboard/casamento-settings', icon: Settings },
   ],
 }

@@ -40,6 +40,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.adega.AdegaMenuCache adegaMenuCache;
     private final com.meada.whatsapp.profiles.escola.EscolaContextCache escolaContextCache;
     private final com.meada.whatsapp.profiles.atelie.AtelieContextCache atelieContextCache;
+    private final com.meada.whatsapp.profiles.casamento.CasamentoContextCache casamentoContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -61,6 +62,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.adega.AdegaMenuCache adegaMenuCache,
                                 com.meada.whatsapp.profiles.escola.EscolaContextCache escolaContextCache,
                                 com.meada.whatsapp.profiles.atelie.AtelieContextCache atelieContextCache,
+                                com.meada.whatsapp.profiles.casamento.CasamentoContextCache casamentoContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -81,6 +83,7 @@ public class ProfilePromptContext {
         this.adegaMenuCache = adegaMenuCache;
         this.escolaContextCache = escolaContextCache;
         this.atelieContextCache = atelieContextCache;
+        this.casamentoContextCache = casamentoContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -266,6 +269,19 @@ public class ProfilePromptContext {
             + "expectativa fora do controle da equipe. As PROVAS/AJUSTES da peça são marcadas pela equipe no "
             + "painel — você NÃO gerencia provas pela conversa; você só abre a proposta e captura a aprovação.";
 
+    private static final String CASAMENTO =
+        "Você é atendente de uma assessoria/cerimonial de casamento. Tom acolhedor-celebrativo, de quem "
+            + "cuida de um dos dias mais importantes dos noivos. Você ABRE uma proposta a partir do briefing "
+            + "(data prevista, nº de convidados, estilo, o que sonham pro dia) — a equipe monta o ORÇAMENTO no "
+            + "painel — e, quando a proposta já está orçada, informa o total e CAPTURA a aprovação ou recusa. "
+            + "NUNCA feche contrato, preço ou desconto por conta própria (quem orça e fecha é a equipe). NUNCA "
+            + "confirme a disponibilidade de uma data que não esteja confirmada — diga 'vou verificar a "
+            + "disponibilidade com a equipe'. NUNCA invente item de pacote, valor, fornecedor ou serviço fora "
+            + "do cadastrado. NUNCA prometa estrutura/local/comodidade não informada, NUNCA prometa um "
+            + "'casamento perfeito' nem garanta resultado — acolha o sonho sem criar expectativa fora do "
+            + "controle. O cronograma do dia e o checklist de preparação são montados/acompanhados pela equipe "
+            + "no painel — você NÃO os gerencia pela conversa; você só abre a proposta e captura a aprovação.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -300,6 +316,7 @@ public class ProfilePromptContext {
             case ADEGA -> ADEGA;
             case ESCOLA -> ESCOLA;
             case ATELIE -> ATELIE;
+            case CASAMENTO -> CASAMENTO;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -457,6 +474,14 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + atelieContextCache.contextSegment(companyId, contactId);
+        }
+        if ("casamento".equals(profileId)) {
+            // casamento (8.7): persona + assessores ativos + propostas do contato em aberto (rascunho/
+            // orcada) + instruções das 2 tags (<proposta_casamento> + <aprovacao_casamento>). NÃO injeta
+            // cronograma NEM checklist (organizacionais do painel). Resolve o contato pela conversa.
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + casamentoContextCache.contextSegment(companyId, contactId);
         }
         return persona;
     }

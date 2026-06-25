@@ -43,7 +43,8 @@ public enum ProfileType {
     PIZZARIA("pizzaria", "Pizzaria", "pizzaria", "carmim"),
     ADEGA("adega", "Adega", "adega", "beringela"),
     ESCOLA("escola", "Escola", "escola", "mostarda"),
-    ATELIE("atelie", "Ateliê", "atelie", "orquidea");
+    ATELIE("atelie", "Ateliê", "atelie", "orquidea"),
+    CASAMENTO("casamento", "Casamento", "casamento", "trigo");
 
     private final String id;
     private final String productName;

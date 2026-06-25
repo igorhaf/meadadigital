@@ -131,6 +131,10 @@ public class OutboundService {
     // o estado (aprovada/recusada, só se 'orcada') — gate de aprovação em 2 fases. Só agem p/ profile_id='atelie'.
     private final com.meada.whatsapp.profiles.atelie.proposals.PropostaAtelieConfirmHandler propostaAtelieConfirmHandler;
     private final com.meada.whatsapp.profiles.atelie.proposals.AprovacaoAtelieHandler aprovacaoAtelieHandler;
+    // Camada 8.7 (perfil casamento): <proposta_casamento> ABRE a proposta (rascunho); <aprovacao_casamento>
+    // MUTA o estado (aprovada/recusada, só se 'orcada') — gate de aprovação em 2 fases. Só p/ profile_id='casamento'.
+    private final com.meada.whatsapp.profiles.casamento.proposals.PropostaCasamentoConfirmHandler propostaCasamentoConfirmHandler;
+    private final com.meada.whatsapp.profiles.casamento.proposals.AprovacaoCasamentoHandler aprovacaoCasamentoHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -191,6 +195,8 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.escola.visits.VisitaEscolaConfirmHandler visitaEscolaConfirmHandler,
                            com.meada.whatsapp.profiles.atelie.proposals.PropostaAtelieConfirmHandler propostaAtelieConfirmHandler,
                            com.meada.whatsapp.profiles.atelie.proposals.AprovacaoAtelieHandler aprovacaoAtelieHandler,
+                           com.meada.whatsapp.profiles.casamento.proposals.PropostaCasamentoConfirmHandler propostaCasamentoConfirmHandler,
+                           com.meada.whatsapp.profiles.casamento.proposals.AprovacaoCasamentoHandler aprovacaoCasamentoHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -233,6 +239,8 @@ public class OutboundService {
         this.visitaEscolaConfirmHandler = visitaEscolaConfirmHandler;
         this.propostaAtelieConfirmHandler = propostaAtelieConfirmHandler;
         this.aprovacaoAtelieHandler = aprovacaoAtelieHandler;
+        this.propostaCasamentoConfirmHandler = propostaCasamentoConfirmHandler;
+        this.aprovacaoCasamentoHandler = aprovacaoCasamentoHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -378,6 +386,10 @@ public class OutboundService {
         // aprovação/recusa (só 'orcada'). Encadeados após os demais (perfil único; só um age).
         toSend = maybeProcessPropostaAtelie(event, conversationId, toSend);
         toSend = maybeProcessAprovacaoAtelie(event, conversationId, toSend);
+        // Camada 8.7 (perfil casamento): <proposta_casamento> abre; <aprovacao_casamento> captura
+        // aprovação/recusa (só 'orcada'). Encadeados após os demais (perfil único; só um age).
+        toSend = maybeProcessPropostaCasamento(event, conversationId, toSend);
+        toSend = maybeProcessAprovacaoCasamento(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -1114,6 +1126,53 @@ public class OutboundService {
         Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
         aprovacaoAtelieHandler.parseAndApply(event.companyId(), conversationId, contactId.orElse(null), reply);
         String stripped = aprovacaoAtelieHandler.stripOrderTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil casamento (camada 8.7): se o tenant é casamento e a resposta da IA
+     * contém a tag {@code <proposta_casamento>}, ABRE uma proposta em rascunho (PropostaCasamentoConfirmHandler
+     * resolve o contato/noivos, snapshota o cliente) e devolve um AiResponse SEM a tag. Best-effort; tag
+     * sempre removida; só age se profile_id='casamento'.
+     */
+    private AiResponse maybeProcessPropostaCasamento(MessageInboundProcessedEvent event,
+                                                     UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !propostaCasamentoConfirmHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"casamento".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            propostaCasamentoConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = propostaCasamentoConfirmHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil casamento (camada 8.7): se o tenant é casamento e a resposta da IA
+     * contém a tag {@code <aprovacao_casamento>}, MUTA o estado da proposta orçada (aprovada/recusada) e
+     * remove a tag — o gate de aprovação em 2 fases (clone do eventos). Só atua sobre proposta em
+     * 'orcada' (o handler valida). Best-effort.
+     */
+    private AiResponse maybeProcessAprovacaoCasamento(MessageInboundProcessedEvent event,
+                                                      UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !aprovacaoCasamentoHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"casamento".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        aprovacaoCasamentoHandler.parseAndApply(event.companyId(), conversationId, reply);
+        String stripped = aprovacaoCasamentoHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

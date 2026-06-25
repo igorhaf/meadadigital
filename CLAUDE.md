@@ -1012,6 +1012,50 @@ CAMPO da proposta (`project_type`), NÃO três perfis.
 - Migration `58_atelie.sql` (slot do `docs/prompts-gordos/README.md` ordem 9). Tenant `igorhaf25`
   (Ateliê Modelo). Guia: `docs/PERFIL_ATELIE.md`.
 
+## Perfil Casamento (CasamentoBot, camada 8.7)
+
+VIGÉSIMO perfil vertical real (21º contando generic). Assessoria/cerimonial de casamento: a equipe
+COORDENA casamentos (não é fornecedor isolado). A IA atende os noivos, abre uma proposta a partir do
+briefing, e captura a aprovação/recusa quando a equipe já orçou no painel.
+
+- **CLONA o chassi do EVENTOS (camada 8.2):** proposta order-based + itens de ORÇAMENTO (total
+  materializado) + cronograma do dia + gate de aprovação em 2 fases via tag que muta o estado. Funil
+  idêntico ao `EventProposalStatus` (`WeddingProposalStatus`; orcada exige total>0 → empty_budget;
+  itemsLocked a partir de fechada). Cliente NÃO é entidade (snapshots customer_name/phone — pode ser
+  "Ana & João" — na proposta).
+- **ESCAPADA — TERCEIRA SUB-ENTIDADE no mesmo artefato: CHECKLIST pré-casamento (`wedding_checklist_
+  tasks`).** Eventos tinha 2 tipos de sub-item; casamento tem 3, que NÃO se misturam: (1) orçamento
+  (`wedding_proposal_items`, DINHEIRO → entra no total); (2) cronograma (`wedding_timeline_items`, a
+  HORA das coisas no dia → ordenado por start_time, não entra no total); (3) **checklist** (o que
+  FALTA fazer até lá → ordenado por **due_date NULLS LAST**, status **BINÁRIO** done boolean + done_at,
+  não entra no total). O checklist é a escapada: estado binário (sem enum/parity — done boolean),
+  due_date nullable, gerenciado SÓ no painel (SEM tag de IA), trava junto com itemsLocked (409
+  proposal_locked).
+- **DUAS tags namespace próprio** (distintas de `<proposta_evento>`/`<aprovacao_proposta>` e de TODAS):
+  `<proposta_casamento>` ABRE em rascunho (planner_id inválido → ignora mas abre) via
+  `PropostaCasamentoConfirmHandler` (eventos-style: hasTag/stripTag/parseAndCreate); `<aprovacao_
+  casamento>` MUTA (aprovada|recusada, só se 'orcada') via `AprovacaoCasamentoHandler`
+  (parseAndApply 3 args). `OutboundService` ganhou `maybeProcessPropostaCasamento` +
+  `maybeProcessAprovacaoCasamento`.
+- **Persona CASAMENTO** (`ProfilePromptContext.CASAMENTO`, acolhedora-celebrativa): NUNCA fecha
+  contrato/preço/desconto, NUNCA confirma data não confirmada, NUNCA inventa item/valor/fornecedor,
+  NUNCA promete "casamento perfeito", NUNCA gerencia cronograma/checklist pela conversa. Contexto via
+  `CasamentoContextCache` (TTL 20s, keyed por (companyId, contactId) — assessores + propostas em
+  aberto; NÃO injeta cronograma nem checklist).
+- **Guard:** `CasamentoProfileGuard` (403 forbidden_wrong_profile). `JwtAuthenticationFilter` autentica
+  `/api/casamento/**` (além dos 20 perfis anteriores).
+- **Sidebar:** `getNavForProfile('casamento')` injeta "Casamento" (Assessores/Propostas/Configurações),
+  branch próprio. A tela de Propostas tem os TRÊS editores inline. Paleta `trigo`.
+- **NÃO TEM:** conflito de agenda/data, pacotes pré-cadastrados, contrato e-sign, pagamento/sinal
+  (Stripe #50), RSVP/lista de convidados, lembrete de prazo do checklist, fornecedores com agenda,
+  foto/mood board (bloqueador SERVICE_ROLE_KEY).
+- **Lição de ordenação (do SM atelie, reaplicada):** `51_casamento.sql` é numericamente anterior às
+  migrations 53/58/63 mas tem a CHECK completa (21 perfis); por isso entra por ÚLTIMO no `SCRIPTS` do
+  `AbstractIntegrationTest` (a migration que reescreve a CHECK por último precisa ter a lista completa).
+  O UPDATE de item materializa line_total dos valores FINAIS em Java (não na SET clause do Postgres).
+- Migration `51_casamento.sql` (slot do `docs/prompts-gordos/README.md` ordem 2). Tenant `igorhaf18`
+  (Casamento Modelo). Guia: `docs/PERFIL_CASAMENTO.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**
