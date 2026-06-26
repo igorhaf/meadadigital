@@ -43,6 +43,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.casamento.CasamentoContextCache casamentoContextCache;
     private final com.meada.whatsapp.profiles.concessionaria.ConcessionariaContextCache concessionariaContextCache;
     private final com.meada.whatsapp.profiles.lavanderia.LavanderiaCatalogCache lavanderiaCatalogCache;
+    private final com.meada.whatsapp.profiles.dermatologia.DermatologiaContextCache dermatologiaContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -67,6 +68,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.casamento.CasamentoContextCache casamentoContextCache,
                                 com.meada.whatsapp.profiles.concessionaria.ConcessionariaContextCache concessionariaContextCache,
                                 com.meada.whatsapp.profiles.lavanderia.LavanderiaCatalogCache lavanderiaCatalogCache,
+                                com.meada.whatsapp.profiles.dermatologia.DermatologiaContextCache dermatologiaContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -90,6 +92,7 @@ public class ProfilePromptContext {
         this.casamentoContextCache = casamentoContextCache;
         this.concessionariaContextCache = concessionariaContextCache;
         this.lavanderiaCatalogCache = lavanderiaCatalogCache;
+        this.dermatologiaContextCache = dermatologiaContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -317,6 +320,22 @@ public class ProfilePromptContext {
             + "que a equipe avalia a peça na coleta e faz o melhor possível, sem garantia de remoção total. NUNCA "
             + "prometa uma entrega antes do prazo (coleta + prazo do serviço mais lento).";
 
+    private static final String DERMATOLOGIA =
+        "Você é o assistente virtual de um consultório de dermatologia. Tom técnico mas acolhedor, sério e "
+            + "sem alarmismo. Seu papel é AGENDAR consultas (primeira consulta, retorno ou procedimento) e "
+            + "ENTREGAR a orientação de preparo que a dermatologista já gravou — e NADA além disso. Avaliar a "
+            + "pele é ato médico exclusivo: você NUNCA dá diagnóstico; NUNCA avalia, classifica ou interpreta "
+            + "lesão, mancha, pinta, sinal, acne, micose, queda de cabelo, unha ou qualquer sintoma de pele; "
+            + "NUNCA recomenda tratamento, medicação, ácido, pomada, protetor solar, dermocosmético, "
+            + "procedimento ou protocolo; NUNCA opina se algo 'é grave', 'é normal', 'é câncer' ou 'não é nada'. "
+            + "Se o paciente enviar FOTO de uma lesão pedindo avaliação, você NÃO avalia a foto — acolhe a "
+            + "preocupação e explica que a avaliação exige consulta presencial; ofereça agendar. Para QUALQUER "
+            + "dúvida clínica, oriente a agendar consulta. Se o paciente relatar uma lesão que MUDA, SANGRA, "
+            + "CRESCE, COÇA/DÓI de forma persistente ou não cicatriza, oriente a buscar avaliação COM URGÊNCIA e "
+            + "ofereça a primeira consulta disponível, SEM dar nome à condição e SEM dizer se é grave (nem "
+            + "minimizar, nem alarmar). Identifique o paciente pelo telefone; se for o primeiro atendimento, "
+            + "peça o nome.";
+
     private static final String RESTAURANT =
         "Você é atendente de reservas de um restaurante. Tom acolhedor e ágil. Conheça as mesas "
             + "disponíveis e os horários livres. Quando o cliente pedir reserva, verifique a "
@@ -354,6 +373,7 @@ public class ProfilePromptContext {
             case CASAMENTO -> CASAMENTO;
             case CONCESSIONARIA -> CONCESSIONARIA;
             case LAVANDERIA -> LAVANDERIA;
+            case DERMATOLOGIA -> DERMATOLOGIA;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -488,6 +508,15 @@ public class ProfilePromptContext {
             // mínimo + instruções da tag <pedido_lavanderia> (com collect_date + período + endereço).
             // IGNORA conversationId (contexto é o catálogo). Pedido nasce 'aguardando'.
             return persona + lavanderiaCatalogCache.catalogSegment(companyId);
+        }
+        if ("dermatologia".equals(profileId)) {
+            // dermatologia (8.11): persona + dermatologistas + tipos de atendimento (nome+duração, SEM o
+            // prep_instructions) + pacientes do contato + slots livres por profissional + instruções das
+            // 2 tags (<consulta_derma> + <entrega_preparo>). Resolve o contato pela conversa (per-contact,
+            // igual nutri/dental).
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + dermatologiaContextCache.contextSegment(companyId, contactId);
         }
         if ("pizzaria".equals(profileId)) {
             // pizzaria (8.6): persona + cardápio (sabores/itens + modifiers Tamanho/Borda com deltas) +

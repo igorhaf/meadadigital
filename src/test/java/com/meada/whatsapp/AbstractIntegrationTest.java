@@ -121,7 +121,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/58_atelie.sql",
         "db/migrations/51_casamento.sql",
         "db/migrations/61_concessionaria.sql",
-        "db/migrations/54_lavanderia.sql"
+        "db/migrations/54_lavanderia.sql",
+        "db/migrations/55_dermatologia.sql"
     };
 
     /**
@@ -271,6 +272,8 @@ public abstract class AbstractIntegrationTest {
               concessionaria_salespeople, concessionaria_config,
               lavanderia_order_item_options, lavanderia_order_items, lavanderia_orders,
               lavanderia_service_options, lavanderia_services, lavanderia_config,
+              dermatologia_appointments, dermatologia_patients, dermatologia_procedure_types,
+              dermatologia_professionals, dermatologia_config,
               profile_features, cms_pages, cms_sites
             RESTART IDENTITY CASCADE
             """);

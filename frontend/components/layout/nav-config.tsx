@@ -43,6 +43,7 @@ import {
   ShieldCheck,
   Sparkles,
   Stethoscope,
+  Syringe,
   Tag,
   Wand2,
   UtensilsCrossed,
@@ -218,6 +219,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'casamento') return [CASAMENTO_GROUP, ...NAV_GROUPS]
   if (profileId === 'concessionaria') return [CONCESSIONARIA_GROUP, ...NAV_GROUPS]
   if (profileId === 'lavanderia') return [LAVANDERIA_GROUP, ...NAV_GROUPS]
+  if (profileId === 'dermatologia') return [DERMATOLOGIA_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -469,5 +471,17 @@ const LAVANDERIA_GROUP: NavGroup = {
     { label: 'Serviços', href: '/dashboard/lavanderia-services', icon: WashingMachine },
     { label: 'Pedidos', href: '/dashboard/lavanderia-orders', icon: ClipboardList },
     { label: 'Configurações', href: '/dashboard/lavanderia-settings', icon: Settings },
+  ],
+}
+
+/** Grupo de navegação exclusivo do perfil dermatologia (clínica dermatológica, camada 8.11). */
+const DERMATOLOGIA_GROUP: NavGroup = {
+  heading: 'Dermatologia',
+  items: [
+    { label: 'Dermatologistas', href: '/dashboard/dermatologia-professionals', icon: Stethoscope },
+    { label: 'Pacientes', href: '/dashboard/dermatologia-patients', icon: Users },
+    { label: 'Tipos de Atendimento', href: '/dashboard/dermatologia-procedures', icon: Syringe },
+    { label: 'Agenda', href: '/dashboard/dermatologia-appointments', icon: CalendarCheck },
+    { label: 'Configurações', href: '/dashboard/dermatologia-settings', icon: Settings },
   ],
 }

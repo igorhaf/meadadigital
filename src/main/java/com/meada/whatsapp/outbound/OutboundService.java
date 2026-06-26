@@ -142,6 +142,11 @@ public class OutboundService {
     // Camada 8.10 (perfil lavanderia): <pedido_lavanderia> cria o pedido (nasce 'aguardando'; 2 datas
     // coleta+entrega com turnaround). Só age p/ profile_id='lavanderia'.
     private final com.meada.whatsapp.profiles.lavanderia.orders.PedidoLavanderiaConfirmHandler pedidoLavanderiaConfirmHandler;
+    // Camada 8.11 (perfil dermatologia): <consulta_derma> agenda consulta (conflito por profissional,
+    // 2 modos paciente); <entrega_preparo> entrega READ-ONLY a nota de preparo do tipo (verbatim, barreira
+    // de contato). Só agem p/ profile_id='dermatologia'.
+    private final com.meada.whatsapp.profiles.dermatologia.appointments.AgendamentoDermaConfirmHandler agendamentoDermaConfirmHandler;
+    private final com.meada.whatsapp.profiles.dermatologia.appointments.EntregaPreparoHandler entregaPreparoHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -207,6 +212,8 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.concessionaria.testdrives.TestDriveConfirmHandler testDriveConfirmHandler,
                            com.meada.whatsapp.profiles.concessionaria.leads.LeadCarroConfirmHandler leadCarroConfirmHandler,
                            com.meada.whatsapp.profiles.lavanderia.orders.PedidoLavanderiaConfirmHandler pedidoLavanderiaConfirmHandler,
+                           com.meada.whatsapp.profiles.dermatologia.appointments.AgendamentoDermaConfirmHandler agendamentoDermaConfirmHandler,
+                           com.meada.whatsapp.profiles.dermatologia.appointments.EntregaPreparoHandler entregaPreparoHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -254,6 +261,8 @@ public class OutboundService {
         this.testDriveConfirmHandler = testDriveConfirmHandler;
         this.leadCarroConfirmHandler = leadCarroConfirmHandler;
         this.pedidoLavanderiaConfirmHandler = pedidoLavanderiaConfirmHandler;
+        this.agendamentoDermaConfirmHandler = agendamentoDermaConfirmHandler;
+        this.entregaPreparoHandler = entregaPreparoHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -409,6 +418,9 @@ public class OutboundService {
         toSend = maybeProcessLeadCarro(event, conversationId, toSend);
         // Camada 8.10 (perfil lavanderia): <pedido_lavanderia> cria o pedido de lavagem (2 datas).
         toSend = maybeProcessPedidoLavanderia(event, conversationId, toSend);
+        // Camada 8.11 (perfil dermatologia): <consulta_derma> agenda; <entrega_preparo> entrega preparo.
+        toSend = maybeProcessConsultaDerma(event, conversationId, toSend);
+        toSend = maybeProcessEntregaPreparo(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -1268,6 +1280,56 @@ public class OutboundService {
             pedidoLavanderiaConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = pedidoLavanderiaConfirmHandler.stripOrderTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil dermatologia (camada 8.11): se o tenant é dermatologia e a resposta da
+     * IA contém a tag {@code <consulta_derma>}, agenda a consulta (AgendamentoDermaConfirmHandler resolve
+     * o contato, valida conflito por profissional, materializa end_at; 2 modos paciente) e devolve um
+     * AiResponse SEM a tag. Best-effort; só age se profile_id='dermatologia'.
+     */
+    private AiResponse maybeProcessConsultaDerma(MessageInboundProcessedEvent event,
+                                                 UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !agendamentoDermaConfirmHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"dermatologia".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            agendamentoDermaConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = agendamentoDermaConfirmHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil dermatologia (camada 8.11): se o tenant é dermatologia e a resposta da
+     * IA contém a tag {@code <entrega_preparo>}, entrega READ-ONLY a nota de preparo do tipo da consulta
+     * (EntregaPreparoHandler envia o texto VERBATIM via notifier, com barreira de contato) e devolve um
+     * AiResponse SEM a tag. Best-effort; só age se profile_id='dermatologia'.
+     */
+    private AiResponse maybeProcessEntregaPreparo(MessageInboundProcessedEvent event,
+                                                  UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !entregaPreparoHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"dermatologia".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            entregaPreparoHandler.parseAndDeliver(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = entregaPreparoHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

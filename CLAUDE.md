@@ -1123,6 +1123,36 @@ catálogo de serviços + modifiers).
 - Migration `54_lavanderia.sql` (slot README ordem 5; entra por ÚLTIMO no SCRIPTS — sua CHECK tem os 23
   perfis). Tenant `igorhaf21` (Lavanderia Modelo). Guia: `docs/PERFIL_LAVANDERIA.md`.
 
+## Perfil Dermatologia (DermatologiaBot, camada 8.11)
+
+VIGÉSIMO TERCEIRO perfil vertical real (24º contando generic). Clínica dermatológica. CLONA o chassi de
+agenda clínica do DENTAL/NUTRI: profissional + conflito POR professional_id (half-open, re-verificado na
+transação) + end_at MATERIALIZADO no INSERT + paciente sub-entidade do contact + status hardcoded com
+parity (FEMININO: agendada/confirmada/realizada/cancelada/falta).
+
+- **TRAVA CLÍNICA (na persona + schema):** a IA NUNCA diagnostica, avalia lesão/mancha/pinta/FOTO,
+  recomenda tratamento/medicação/procedimento, opina "é grave/é câncer/não é nada", orienta ácido/
+  protetor/skincare. Dúvida clínica → encaminha a agendar. GUARDA de sinais de alarme (lesão que muda/
+  sangra/cresce/não cicatriza) → urgência SEM diagnosticar. LGPD: notes + prep_instructions ADMINISTRATIVOS.
+- **ESCAPADA — TIPOS DE ATENDIMENTO como TABELA (`dermatologia_procedure_types`):** dental/nutri tinham
+  appointment_type enum com duração FIXA do config; aqui o tenant CADASTRA os tipos (consulta 30min,
+  botox 60min…), cada um com SUA duration_minutes + uma NOTA DE PREPARO (prep_instructions) opcional.
+  Decisão cravada: TABELA, não enum (duração varia por tipo; preparo é por tipo, cadastrável). A consulta
+  referencia procedure_type_id e SNAPSHOTA name+duration_minutes.
+- **Nota de preparo = entrega READ-ONLY (espelho EntregaPlanoHandler do nutri):** `EntregaPreparoHandler`
+  busca o tipo da consulta e envia o `prep_instructions` VERBATIM via notifier.sendText (não passa pela
+  IA), com BARREIRA DE CONTATO (só entrega preparo de consulta do PRÓPRIO contato da conversa). Sem
+  preparo / contato diferente → empty.
+- **2 tags namespace próprio:** `<consulta_derma>` (2 modos patient_id/new_patient — espelho do nutri)
+  via `AgendamentoDermaConfirmHandler`; `<entrega_preparo>` via `EntregaPreparoHandler.parseAndDeliver`.
+  `OutboundService.maybeProcessConsultaDerma` + `maybeProcessEntregaPreparo`. Persona
+  `ProfilePromptContext.DERMATOLOGIA`. `DermatologiaContextCache` TTL 30s keyed por (companyId, contactId)
+  — NÃO injeta prep_instructions (só indica que o tipo TEM preparo, igual nutri não despeja o body do plano).
+- **Guard:** `DermatologiaProfileGuard`. JwtFilter `/api/dermatologia/**`. Sidebar: branch próprio
+  (Dermatologistas/Pacientes/Tipos de Atendimento/Agenda/Configurações). Paleta `teal`.
+- Migration `55_dermatologia.sql` (slot README ordem 6; entra por ÚLTIMO no SCRIPTS — sua CHECK tem os 24
+  perfis). Tenant `igorhaf22` (Clínica Derma Modelo). Guia: `docs/PERFIL_DERMATOLOGIA.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**
