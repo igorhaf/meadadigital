@@ -6,6 +6,7 @@ import {
   BedDouble,
   BookOpen,
   Briefcase,
+  Plane,
   Building2,
   Calendar,
   Camera,
@@ -236,6 +237,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'padaria') return [PADARIA_GROUP, ...NAV_GROUPS]
   if (profileId === 'otica') return [OTICA_GROUP, ...NAV_GROUPS]
   if (profileId === 'papelaria') return [PAPELARIA_GROUP, ...NAV_GROUPS]
+  if (profileId === 'viagens') return [VIAGENS_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -575,5 +577,14 @@ const PAPELARIA_GROUP: NavGroup = {
     { label: 'Catálogo', href: '/dashboard/papelaria-catalog', icon: Mail },
     { label: 'Pedidos', href: '/dashboard/papelaria-orders', icon: ClipboardList },
     { label: 'Configurações', href: '/dashboard/papelaria-settings', icon: Settings },
+  ],
+}
+
+const VIAGENS_GROUP: NavGroup = {
+  heading: 'Viagens',
+  items: [
+    { label: 'Consultores', href: '/dashboard/viagens-consultants', icon: Users },
+    { label: 'Propostas', href: '/dashboard/viagens-proposals', icon: Plane },
+    { label: 'Configurações', href: '/dashboard/viagens-settings', icon: Settings },
   ],
 }

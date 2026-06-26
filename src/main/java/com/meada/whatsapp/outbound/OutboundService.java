@@ -180,6 +180,11 @@ public class OutboundService {
     // (muta o estado de um pedido existente em 'arte_aprovacao'). Só agem p/ profile_id='papelaria'.
     private final com.meada.whatsapp.profiles.papelaria.orders.PedidoPapelariaConfirmHandler pedidoPapelariaConfirmHandler;
     private final com.meada.whatsapp.profiles.papelaria.orders.AprovacaoArteHandler aprovacaoArteHandler;
+    // Camada 8.18 (perfil viagens): <proposta_viagem> ABRE a proposta de viagem (rascunho);
+    // <aprovacao_viagem> CAPTURA a aprovação/recusa (muta o estado de uma proposta 'orcada' existente).
+    // Só agem p/ profile_id='viagens'.
+    private final com.meada.whatsapp.profiles.viagens.proposals.PropostaViagemConfirmHandler propostaViagemConfirmHandler;
+    private final com.meada.whatsapp.profiles.viagens.proposals.AprovacaoViagemHandler aprovacaoViagemHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -259,6 +264,8 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.otica.orders.EncomendaOticaConfirmHandler encomendaOticaConfirmHandler,
                            com.meada.whatsapp.profiles.papelaria.orders.PedidoPapelariaConfirmHandler pedidoPapelariaConfirmHandler,
                            com.meada.whatsapp.profiles.papelaria.orders.AprovacaoArteHandler aprovacaoArteHandler,
+                           com.meada.whatsapp.profiles.viagens.proposals.PropostaViagemConfirmHandler propostaViagemConfirmHandler,
+                           com.meada.whatsapp.profiles.viagens.proposals.AprovacaoViagemHandler aprovacaoViagemHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -320,6 +327,8 @@ public class OutboundService {
         this.encomendaOticaConfirmHandler = encomendaOticaConfirmHandler;
         this.pedidoPapelariaConfirmHandler = pedidoPapelariaConfirmHandler;
         this.aprovacaoArteHandler = aprovacaoArteHandler;
+        this.propostaViagemConfirmHandler = propostaViagemConfirmHandler;
+        this.aprovacaoViagemHandler = aprovacaoViagemHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -498,6 +507,9 @@ public class OutboundService {
         // Camada 8.15 (perfil papelaria): <pedido_papelaria> cria; <aprovacao_arte> aprova a arte.
         toSend = maybeProcessPedidoPapelaria(event, conversationId, toSend);
         toSend = maybeProcessAprovacaoArte(event, conversationId, toSend);
+        // Camada 8.18 (perfil viagens): <proposta_viagem> abre; <aprovacao_viagem> aprova/recusa.
+        toSend = maybeProcessPropostaViagem(event, conversationId, toSend);
+        toSend = maybeProcessAprovacaoViagem(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -1714,6 +1726,53 @@ public class OutboundService {
             aprovacaoArteHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = aprovacaoArteHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil viagens (camada 8.18): se o tenant é viagens e a resposta da IA contém
+     * a tag {@code <proposta_viagem>}, ABRE a proposta de viagem em rascunho (PropostaViagemConfirmHandler
+     * resolve o contato, snapshota cliente; consultant/datas inválidos são ignorados mas a proposta abre)
+     * e devolve um AiResponse SEM a tag. Best-effort; só age se profile_id='viagens'.
+     */
+    private AiResponse maybeProcessPropostaViagem(MessageInboundProcessedEvent event,
+                                                  UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !propostaViagemConfirmHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"viagens".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            propostaViagemConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = propostaViagemConfirmHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil viagens (camada 8.18): se o tenant é viagens e a resposta da IA contém
+     * a tag {@code <aprovacao_viagem>}, CAPTURA a aprovação/recusa declarada pelo cliente
+     * (AprovacaoViagemHandler aplica só se a proposta está 'orcada'; senão no-op) e devolve um AiResponse
+     * SEM a tag. Best-effort; só age se profile_id='viagens'.
+     */
+    private AiResponse maybeProcessAprovacaoViagem(MessageInboundProcessedEvent event,
+                                                   UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !aprovacaoViagemHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"viagens".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        aprovacaoViagemHandler.parseAndApply(event.companyId(), conversationId, reply);
+        String stripped = aprovacaoViagemHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

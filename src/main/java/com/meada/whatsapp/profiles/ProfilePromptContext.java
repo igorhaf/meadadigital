@@ -52,6 +52,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.padaria.PadariaMenuCache padariaMenuCache;
     private final com.meada.whatsapp.profiles.otica.OticaContextCache oticaContextCache;
     private final com.meada.whatsapp.profiles.papelaria.PapelariaCatalogCache papelariaCatalogCache;
+    private final com.meada.whatsapp.profiles.viagens.ViagensContextCache viagensContextCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -85,6 +86,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.padaria.PadariaMenuCache padariaMenuCache,
                                 com.meada.whatsapp.profiles.otica.OticaContextCache oticaContextCache,
                                 com.meada.whatsapp.profiles.papelaria.PapelariaCatalogCache papelariaCatalogCache,
+                                com.meada.whatsapp.profiles.viagens.ViagensContextCache viagensContextCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -117,6 +119,7 @@ public class ProfilePromptContext {
         this.padariaMenuCache = padariaMenuCache;
         this.oticaContextCache = oticaContextCache;
         this.papelariaCatalogCache = papelariaCatalogCache;
+        this.viagensContextCache = viagensContextCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -386,6 +389,20 @@ public class ProfilePromptContext {
             + "um módulo, só faça quando o aluno já estiver matriculado e for o próprio contato da conversa. "
             + "NUNCA prometa certificado, aprovação ou resultado que não esteja descrito no curso.";
 
+    private static final String VIAGENS =
+        "Você é consultor de uma agência de viagens. Tom prestativo-consultivo, de quem ajuda a planejar a "
+            + "viagem dos sonhos. Identifique o cliente pelo telefone. A partir do BRIEFING (destino desejado, "
+            + "período/datas, número de viajantes, estilo de viagem, orçamento aproximado), ABRA uma proposta; "
+            + "a EQUIPE monta a cotação no painel (aéreo, hospedagem, traslados, passeios) e você informa o "
+            + "total e CAPTURA a aprovação/recusa do cliente. NUNCA confirme disponibilidade de VOO, HOTEL, "
+            + "ASSENTO, TARIFA ou PREÇO que a equipe não tenha cravado na cotação — diga 'vou verificar a "
+            + "disponibilidade e os valores com a equipe'. NUNCA EMITE passagem, reserva, bilhete ou voucher. "
+            + "NUNCA invente destino, roteiro, item de cotação, valor, hotel, companhia aérea ou passeio. NUNCA "
+            + "fecha contrato, preço ou desconto por conta própria (quem orça e fecha é a equipe). NUNCA "
+            + "prometa 'a viagem perfeita' nem garanta clima/câmbio/condição que dependa de terceiros. NUNCA "
+            + "gerencie o ROTEIRO/ITINERÁRIO dia-a-dia pela conversa — o itinerário é montado pela equipe no "
+            + "painel; você só abre a proposta e captura a aprovação.";
+
     private static final String PAPELARIA =
         "Você é atendente de uma papelaria de convites personalizados. Tom prestativo-criativo, de quem "
             + "ajuda a planejar um convite especial. Conheça o catálogo (convites, save the date, cartões, "
@@ -510,6 +527,7 @@ public class ProfilePromptContext {
             case PADARIA -> PADARIA;
             case OTICA -> OTICA;
             case PAPELARIA -> PAPELARIA;
+            case VIAGENS -> VIAGENS;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -723,6 +741,14 @@ public class ProfilePromptContext {
             // personalização com deltas) + taxa/mínimo/lead + instruções das 2 tags (<pedido_papelaria> com
             // tiragem/personalização/custom_text + <aprovacao_arte>). IGNORA conversationId (catálogo).
             return persona + papelariaCatalogCache.catalogSegment(companyId);
+        }
+        if ("viagens".equals(profileId)) {
+            // viagens (8.18): persona + consultores ativos + propostas do contato em aberto (rascunho/orcada
+            // com destino/datas/total) + instruções das 2 tags (<proposta_viagem> + <aprovacao_viagem>). NÃO
+            // injeta o itinerário (organizacional do painel). Per-contact (resolve o contato pela conversa).
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + viagensContextCache.contextSegment(companyId, contactId);
         }
         if ("escola".equals(profileId)) {
             // escola (8.19): persona + turmas com vagas restantes + os alunos (filhos) do responsável +

@@ -1462,6 +1462,40 @@ date, cartões, adesivos, embalagens). CLONA o chassi do [[Padaria]] (pedido com
 - Migration `59_papelaria.sql` (6 tabelas; slot README ordem 10; entra por ÚLTIMO no SCRIPTS — sua CHECK
   tem os 32). Tenant `igorhaf26` (Papelaria Modelo). Guia: `docs/PERFIL_PAPELARIA.md`.
 
+## Perfil Viagens (ViagensBot, camada 8.18)
+
+TRIGÉSIMO TERCEIRO perfil vertical real (32 + generic). Agência de viagens: monta cotações/propostas de
+pacote (destino, datas, viajantes, hospedagem, voos, traslados, passeios) e captura a aprovação do cliente.
+CLONA o chassi do [[Eventos]] (proposta order-based + aprovação em 2 fases) e inaugura a sub-entidade de
+ROTEIRO/ITINERÁRIO MULTI-DIA.
+
+- **ESCAPADA — ROTEIRO MULTI-DIA (`travel_itinerary_days`):** UMA linha por DIA da viagem (`day_number` int
+  + `day_date` date NULLABLE + title + description), ordenado por `day_date asc NULLS LAST, day_number asc`.
+  DIFERENTE de tudo: o cronograma do eventos/casamento é UM DIA ordenado por HORA (start_time); o itinerário
+  de viagens é MULTI-DIA (7/10/15 dias). SEM status/progresso (≠ checklist binário casamento, ≠ etapas 3
+  estados projetos) — é descritivo. NÃO entra no total. Gerenciado SÓ no painel (SEM tag de IA). reorder
+  re-materializa day_number 1..N na transação. Trava junto com `itemsLocked()`.
+- **Proposta (chassi eventos):** itens de COTAÇÃO (`travel_proposal_items`: category aereo/hospedagem/
+  traslado/passeio/outro; line_total materializado) ENTRAM no total. Cliente NÃO é entidade (snapshots
+  customer_name/phone). SEM conflito de agenda/data (start_date/end_date/day_date são campos LIVRES — é
+  cotação). Status `TravelProposalStatus` (parity, idêntico EventProposalStatus): rascunho→orcada→aprovada→
+  fechada→realizada + recusada/cancelada; orcada exige total>0 → 400 empty_budget; itemsLocked a partir de
+  fechada (trava cotação E itinerário). Notifica orcada/aprovada/fechada/recusada (texto defensivo, sem
+  "viagem perfeita").
+- **2 tags:** `<proposta_viagem>` (abre rascunho; hasTag/stripTag/parseAndCreate; consultant/datas inválidos
+  ignorados mas abre) + `<aprovacao_viagem>` (muta; hasTag/stripTag/parseAndApply; só se 'orcada'). A IA
+  NUNCA emite passagem/voucher, NUNCA confirma voo/hotel/preço não cravado, NUNCA inventa destino/item/valor,
+  NUNCA fecha contrato, NUNCA gerencia o itinerário pela conversa. OutboundService maybeProcessPropostaViagem
+  + maybeProcessAprovacaoViagem. Contexto `ViagensContextCache` TTL 20s per (companyId, contactId) — NÃO
+  injeta o itinerário (organizacional do painel).
+- **Guard:** `ViagensProfileGuard`. `JwtAuthenticationFilter` autentica `/api/viagens/**`. Sidebar:
+  `getNavForProfile('viagens')` injeta "Viagens" (Consultores/Propostas/Configurações). Paleta `floresta`.
+- **NÃO TEM:** emissão real de passagem/GDS, integração booking/OTA, pagamento/sinal/câmbio (Stripe #50),
+  catálogo de pacotes pré-cadastrados, contrato e-sign, seguro/visto, lista de passageiros, conflito de
+  agenda, lembrete de data, anexo de voucher, multi-consultor com agenda.
+- Migration `62_viagens.sql` (5 tabelas; slot README ordem 13; entra por ÚLTIMO no SCRIPTS — sua CHECK tem
+  os 33). Tenant `igorhaf29` (Viagens Modelo). Guia: `docs/PERFIL_VIAGENS.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**
