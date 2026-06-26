@@ -52,7 +52,8 @@ public enum ProfileType {
     CURSOS("cursos", "Cursos", "cursos", "oliva"),
     LINGERIE("lingerie", "Lingerie", "lingerie", "ameixa"),
     MODA_INFANTIL("moda_infantil", "Moda Infantil", "moda-infantil", "por-do-sol"),
-    LAS("las", "Lãs", "las", "ferrugem");
+    LAS("las", "Lãs", "las", "ferrugem"),
+    PADARIA("padaria", "Padaria", "padaria", "abobora");
 
     private final String id;
     private final String productName;

@@ -167,6 +167,9 @@ public class OutboundService {
     // Camada 8.23 (perfil las): <pedido_las> cria o pedido de varejo de lãs (variante cor×dye_lot +
     // estoque, decremento transacional, regra same_lot_guaranteed). Só age p/ profile_id='las'.
     private final com.meada.whatsapp.profiles.las.orders.PedidoLasConfirmHandler pedidoLasConfirmHandler;
+    // Camada 8.8 (perfil padaria): <encomenda_padaria> cria o pedido de padaria/confeitaria (cardápio +
+    // personalização + made_to_order/lead time + fulfillment + gate de aceite). Só age p/ profile_id='padaria'.
+    private final com.meada.whatsapp.profiles.padaria.orders.EncomendaPadariaConfirmHandler encomendaPadariaConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -241,6 +244,7 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.lingerie.orders.PedidoLingerieConfirmHandler pedidoLingerieConfirmHandler,
                            com.meada.whatsapp.profiles.modainfantil.orders.PedidoModaInfantilConfirmHandler pedidoModaInfantilConfirmHandler,
                            com.meada.whatsapp.profiles.las.orders.PedidoLasConfirmHandler pedidoLasConfirmHandler,
+                           com.meada.whatsapp.profiles.padaria.orders.EncomendaPadariaConfirmHandler encomendaPadariaConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -297,6 +301,7 @@ public class OutboundService {
         this.pedidoLingerieConfirmHandler = pedidoLingerieConfirmHandler;
         this.pedidoModaInfantilConfirmHandler = pedidoModaInfantilConfirmHandler;
         this.pedidoLasConfirmHandler = pedidoLasConfirmHandler;
+        this.encomendaPadariaConfirmHandler = encomendaPadariaConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -467,6 +472,8 @@ public class OutboundService {
         toSend = maybeProcessPedidoModaInfantil(event, conversationId, toSend);
         // Camada 8.23 (perfil las): <pedido_las> cria o pedido de varejo de lãs.
         toSend = maybeProcessPedidoLas(event, conversationId, toSend);
+        // Camada 8.8 (perfil padaria): <encomenda_padaria> cria o pedido de padaria.
+        toSend = maybeProcessEncomendaPadaria(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -1555,6 +1562,32 @@ public class OutboundService {
             pedidoLasConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = pedidoLasConfirmHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil padaria (camada 8.8): se o tenant é padaria e a resposta da IA contém
+     * a tag {@code <encomenda_padaria>}, cria o pedido de padaria/confeitaria (EncomendaPadariaConfirmHandler
+     * resolve o contato, recalcula o total descartando o da IA, snapshota opções/personalização,
+     * valida lead time dos itens sob encomenda e a regra de fulfillment) e devolve um AiResponse SEM a
+     * tag. Best-effort; tag sempre removida; só age se profile_id='padaria'.
+     */
+    private AiResponse maybeProcessEncomendaPadaria(MessageInboundProcessedEvent event,
+                                                    UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !encomendaPadariaConfirmHandler.hasOrderTag(reply)) {
+            return aiResponse;
+        }
+        if (!"padaria".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            encomendaPadariaConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = encomendaPadariaConfirmHandler.stripOrderTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

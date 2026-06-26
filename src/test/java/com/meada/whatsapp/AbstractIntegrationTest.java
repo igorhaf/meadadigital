@@ -127,7 +127,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/64_cursos.sql",
         "db/migrations/65_lingerie.sql",
         "db/migrations/66_moda_infantil.sql",
-        "db/migrations/67_las.sql"
+        "db/migrations/67_las.sql",
+        "db/migrations/52_padaria.sql"
     };
 
     /**
@@ -289,6 +290,8 @@ public abstract class AbstractIntegrationTest {
               moda_infantil_products, moda_infantil_config,
               las_order_items, las_orders, las_variants,
               las_products, las_config,
+              padaria_order_item_options, padaria_order_items, padaria_orders,
+              padaria_menu_item_options, padaria_menu_items, padaria_config,
               profile_features, cms_pages, cms_sites
             RESTART IDENTITY CASCADE
             """);

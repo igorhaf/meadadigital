@@ -14,6 +14,7 @@ import {
   GraduationCap,
   CalendarClock,
   ClipboardList,
+  Croissant,
   Clock,
   Dumbbell,
   Gem,
@@ -230,6 +231,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'lingerie') return [LINGERIE_GROUP, ...NAV_GROUPS]
   if (profileId === 'moda_infantil') return [MODA_INFANTIL_GROUP, ...NAV_GROUPS]
   if (profileId === 'las') return [LAS_GROUP, ...NAV_GROUPS]
+  if (profileId === 'padaria') return [PADARIA_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -540,5 +542,14 @@ const LAS_GROUP: NavGroup = {
     { label: 'Catálogo', href: '/dashboard/las-catalog', icon: Scissors },
     { label: 'Pedidos', href: '/dashboard/las-orders', icon: ShoppingBag },
     { label: 'Configurações', href: '/dashboard/las-settings', icon: Settings },
+  ],
+}
+
+const PADARIA_GROUP: NavGroup = {
+  heading: 'Padaria',
+  items: [
+    { label: 'Cardápio', href: '/dashboard/padaria-menu', icon: Croissant },
+    { label: 'Pedidos', href: '/dashboard/padaria-orders', icon: ClipboardList },
+    { label: 'Configurações', href: '/dashboard/padaria-settings', icon: Settings },
   ],
 }

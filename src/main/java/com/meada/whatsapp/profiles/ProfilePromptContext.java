@@ -49,6 +49,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.lingerie.LingerieMenuCache lingerieMenuCache;
     private final com.meada.whatsapp.profiles.modainfantil.ModaInfantilMenuCache modaInfantilMenuCache;
     private final com.meada.whatsapp.profiles.las.LasMenuCache lasMenuCache;
+    private final com.meada.whatsapp.profiles.padaria.PadariaMenuCache padariaMenuCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -79,6 +80,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.lingerie.LingerieMenuCache lingerieMenuCache,
                                 com.meada.whatsapp.profiles.modainfantil.ModaInfantilMenuCache modaInfantilMenuCache,
                                 com.meada.whatsapp.profiles.las.LasMenuCache lasMenuCache,
+                                com.meada.whatsapp.profiles.padaria.PadariaMenuCache padariaMenuCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -108,6 +110,7 @@ public class ProfilePromptContext {
         this.lingerieMenuCache = lingerieMenuCache;
         this.modaInfantilMenuCache = modaInfantilMenuCache;
         this.lasMenuCache = lasMenuCache;
+        this.padariaMenuCache = padariaMenuCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -377,6 +380,19 @@ public class ProfilePromptContext {
             + "um módulo, só faça quando o aluno já estiver matriculado e for o próprio contato da conversa. "
             + "NUNCA prometa certificado, aprovação ou resultado que não esteja descrito no curso.";
 
+    private static final String PADARIA =
+        "Você é atendente de uma padaria e confeitaria de bairro. Tom caloroso e acolhedor. Conheça o "
+            + "cardápio: itens de PRONTA-ENTREGA (pães, salgados, doces de balcão) e itens SOB ENCOMENDA "
+            + "(bolos, tortas — marcados com o prazo mínimo de antecedência). Monte o pedido na conversa. "
+            + "Para itens sob encomenda, colete a DATA de retirada/entrega respeitando a antecedência mínima "
+            + "(lead time) — NUNCA prometa uma data antes do prazo; se o cliente pedir antes, explique e "
+            + "ofereça a primeira data possível. Ofereça a personalização do bolo (sabor/recheio/tamanho) e o "
+            + "texto da plaquinha quando fizer sentido. Pergunte se é RETIRADA (no balcão) ou ENTREGA (com "
+            + "endereço e taxa). NUNCA invente produto, sabor, recheio, tamanho, adicional ou preço fora do "
+            + "cardápio; o total é recalculado pelo sistema. NUNCA prometa decoração/tema não cadastrado — "
+            + "bolo artístico complexo, diga 'vou confirmar com a confeitaria'. Confirme SEMPRE com o valor "
+            + "total e avise que o pedido vai para confirmação da padaria. NUNCA aceite ou recuse o pedido.";
+
     private static final String LAS =
         "Você é atendente de uma loja de lãs e novelos (tricô e crochê). Tom acolhedor e prestativo, de "
             + "quem entende de trabalho manual. Conheça o catálogo: cada produto tem variantes por COR e por "
@@ -454,6 +470,7 @@ public class ProfilePromptContext {
             case LINGERIE -> LINGERIE;
             case MODA_INFANTIL -> MODA_INFANTIL;
             case LAS -> LAS;
+            case PADARIA -> PADARIA;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -645,6 +662,13 @@ public class ProfilePromptContext {
             // ESTOQUE por lote) + taxa/mínimo + instruções da tag <pedido_las> + a regra same_lot_guaranteed.
             // IGNORA conversationId (contexto é o catálogo). Pedido nasce 'aguardando' (gate de aceite).
             return persona + lasMenuCache.menuSegment(companyId);
+        }
+        if ("padaria".equals(profileId)) {
+            // padaria (8.8): persona + cardápio (itens por categoria, marcando os SOB ENCOMENDA com lead
+            // time + personalização com deltas) + taxa/mínimo/lead default + instruções da tag
+            // <encomenda_padaria> (fulfillment + data condicional + personalização + cake_message). IGNORA
+            // conversationId (contexto é o cardápio). Pedido nasce 'aguardando' (gate de aceite).
+            return persona + padariaMenuCache.menuSegment(companyId);
         }
         if ("escola".equals(profileId)) {
             // escola (8.19): persona + turmas com vagas restantes + os alunos (filhos) do responsável +

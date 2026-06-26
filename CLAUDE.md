@@ -1356,6 +1356,38 @@ com o eixo de variante sendo COR × DYE_LOT e a regra "mesmo lote preferencial".
 - Migration `67_las.sql` (slot README ordem 18; entra por ÚLTIMO no SCRIPTS — sua CHECK tem os 29 perfis).
   Tenant `igorhaf34` (Lãs Modelo). Guia: `docs/PERFIL_LAS.md`.
 
+## Perfil Padaria (PadariaBot, camada 8.8)
+
+TRIGÉSIMO perfil vertical real (29 + generic). CLONA o chassi do [[Floricultura]] (pedido agendado por dia
++ período + gate de aceite + cardápio + modifiers) com 2 escapadas + fulfillment. Padaria & confeitaria
+"de bairro".
+
+- **ESCAPADA 1 — PRONTA-ENTREGA × SOB-ENCOMENDA com LEAD TIME:** cada item tem `made_to_order` +
+  `lead_time_days` (nullable, override do `lead_time_days_default` da config). Itens pronta-entrega não
+  exigem data; itens sob encomenda exigem `pickup_or_delivery_date`. A data é CONDICIONAL (obrigatória só
+  se há item made_to_order) e é `hoje + MAX(lead_time dos itens made_to_order)` (America/Sao_Paulo); data
+  antes disso → 422 `lead_time_violation` com a 1ª data possível.
+- **ESCAPADA 2 — PERSONALIZAÇÃO DO BOLO:** além dos modifiers planos (Sabor/Recheio/Tamanho via
+  `padaria_menu_item_options` com price_delta), o order_item carrega `cake_message` (texto livre da placa,
+  snapshot).
+- **fulfillment retirada × entrega:** entrega exige delivery_address (senão 422 `address_required`) + soma
+  taxa; retirada sem taxa/endereço. Status `PadariaOrderStatus` (8 estados, parity) diverge no fim:
+  aguardando→em_preparo→pronto→{retirado | saiu_entrega→entregue} + recusado/cancelado. Gate de aceite
+  humano (aguardando→em_preparo); aguardando não notifica.
+- **Categorias hardcoded** (PadariaCategory parity: paes/salgados/doces_balcao/bolos_encomenda/tortas/
+  bebidas). `PadariaFulfillment` + `PadariaPeriod` também têm parity (4 parity tests no total). Total
+  materializado (descarta o da IA). Tag `<encomenda_padaria>`; handler hasOrderTag/stripOrderTag/
+  parseAndCreate (floricultura-style); OutboundService maybeProcessEncomendaPadaria. Cache
+  PadariaMenuCache TTL 60s (IGNORA conversationId). Persona calorosa: NUNCA inventa item/preço, NUNCA
+  aceita/recusa, respeita lead time, não promete decoração não cadastrada.
+- **Guard:** `PadariaProfileGuard`. `JwtAuthenticationFilter` autentica `/api/padaria/**`. Sidebar:
+  `getNavForProfile('padaria')` injeta "Padaria" (Cardápio/Pedidos/Configurações). Paleta `abobora`.
+- **NÃO TEM:** foto, bolo artístico sob orçamento ad-hoc, assinatura de pães recorrente, combo/cupom,
+  pagamento real (Stripe #50), iFood, estoque/produção, slot fino, tabela nutricional estruturada.
+- Migration `52_padaria.sql` (slot README ordem 3; como 52 < 67 no disco, sua CHECK já tem os 30; entra
+  por ÚLTIMO no SCRIPTS de teste — lição atelie: a migration que reescreve a CHECK por último precisa ter
+  a lista completa). Tenant `igorhaf19` (Padaria Modelo). Guia: `docs/PERFIL_PADARIA.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**

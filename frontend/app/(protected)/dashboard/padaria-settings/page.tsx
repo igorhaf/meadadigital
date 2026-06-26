@@ -1,0 +1,118 @@
+'use client'
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
+import { useEffect, useState } from 'react'
+
+import { PageHeader } from '@/components/layout/page-header'
+import { ApiError } from '@/lib/api/client'
+import { Button } from '@/components/ui/button'
+import { Card, Section } from '@/components/ui/card'
+import { getConfig, updateConfig } from '@/lib/api/padaria/config'
+
+type FormState = { deliveryFee: string; minOrder: string; leadTimeDefault: string } // reais + dias
+
+/**
+ * Configurações do PadariaBot: taxa de entrega + valor mínimo do pedido (em R$) + prazo padrão (em
+ * dias) das encomendas que não declaram um prazo próprio (leadTimeDaysDefault — ESCAPADA 8.8).
+ */
+export default function PadariaSettingsPage() {
+  const qc = useQueryClient()
+  const [form, setForm] = useState<FormState | null>(null)
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  const { data, isPending, isError } = useQuery({
+    queryKey: ['padaria-config'],
+    queryFn: () => getConfig(),
+  })
+
+  useEffect(() => {
+    if (data) {
+      setForm({
+        deliveryFee: String(data.deliveryFeeCents / 100),
+        minOrder: String(data.minOrderCents / 100),
+        leadTimeDefault: String(data.leadTimeDaysDefault),
+      })
+    }
+  }, [data])
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      if (!form) throw new Error('form não carregado')
+      return updateConfig({
+        deliveryFeeCents: Math.max(0, Math.round(Number(form.deliveryFee || 0) * 100)),
+        minOrderCents: Math.max(0, Math.round(Number(form.minOrder || 0) * 100)),
+        leadTimeDaysDefault: Math.max(0, Math.round(Number(form.leadTimeDefault || 0))),
+      })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['padaria-config'] })
+      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+    },
+    onError: (e) => {
+      if (e instanceof ApiError && e.reason === 'validation_error') {
+        setError('Valores inválidos. Use números maiores ou iguais a zero.')
+      } else {
+        setError('Erro ao salvar as configurações.')
+      }
+    },
+  })
+
+  return (
+    <div className="space-y-6">
+      <PageHeader title="Configurações" description="Taxa de entrega, valor mínimo do pedido e prazo padrão das encomendas." />
+
+      {isError ? (
+        <p className="text-sm text-destructive">Erro ao carregar as configurações.</p>
+      ) : isPending || !form ? (
+        <p className="text-sm text-muted-foreground">Carregando…</p>
+      ) : (
+        <Card>
+          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+            <Section title="Delivery">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Taxa de entrega (R$)</label>
+                  <input type="number" min="0" step="0.01" value={form.deliveryFee}
+                    onChange={(e) => setForm((f) => f && { ...f, deliveryFee: e.target.value })}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pedido mínimo (R$)</label>
+                  <input type="number" min="0" step="0.01" value={form.minOrder}
+                    onChange={(e) => setForm((f) => f && { ...f, minOrder: e.target.value })}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+              </div>
+            </Section>
+
+            <Section title="Encomendas">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Prazo padrão das encomendas (dias)
+                  </label>
+                  <input type="number" min="0" step="1" value={form.leadTimeDefault}
+                    onChange={(e) => setForm((f) => f && { ...f, leadTimeDefault: e.target.value })}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Usado nas encomendas (bolos, tortas) que não definem um prazo próprio no item.
+                  </p>
+                </div>
+              </div>
+            </Section>
+
+            {error && <p className="text-sm text-destructive">{error}</p>}
+            {saved && <p className="text-sm text-emerald-600">Configurações salvas.</p>}
+
+            <div className="flex justify-end">
+              <Button type="submit" disabled={saveMutation.isPending}>
+                {saveMutation.isPending ? 'Salvando…' : 'Salvar'}
+              </Button>
+            </div>
+          </form>
+        </Card>
+      )}
+    </div>
+  )
+}
