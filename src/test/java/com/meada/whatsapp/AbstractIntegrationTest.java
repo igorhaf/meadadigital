@@ -131,7 +131,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/52_padaria.sql",
         "db/migrations/56_otica.sql",
         "db/migrations/59_papelaria.sql",
-        "db/migrations/62_viagens.sql"
+        "db/migrations/62_viagens.sql",
+        "db/migrations/68_suplementos.sql"
     };
 
     /**
@@ -302,6 +303,7 @@ public abstract class AbstractIntegrationTest {
               papelaria_catalog_item_options, papelaria_catalog_items, papelaria_config,
               travel_itinerary_days, travel_proposal_items, travel_proposals,
               travel_consultants, travel_config,
+              sup_order_items, sup_orders, sup_variants, sup_products, sup_config,
               profile_features, cms_pages, cms_sites
             RESTART IDENTITY CASCADE
             """);

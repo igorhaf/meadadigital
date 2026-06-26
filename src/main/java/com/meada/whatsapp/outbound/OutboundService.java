@@ -185,6 +185,10 @@ public class OutboundService {
     // Só agem p/ profile_id='viagens'.
     private final com.meada.whatsapp.profiles.viagens.proposals.PropostaViagemConfirmHandler propostaViagemConfirmHandler;
     private final com.meada.whatsapp.profiles.viagens.proposals.AprovacaoViagemHandler aprovacaoViagemHandler;
+    // Camada 8.24 (perfil suplementos): <pedido_suplementos> cria o pedido de varejo (variante sabor×peso
+    // + estoque, decremento transacional → out_of_stock; gate de aceite humano; só entrega). Só age p/
+    // profile_id='suplementos'.
+    private final com.meada.whatsapp.profiles.suplementos.orders.PedidoSuplementosConfirmHandler pedidoSuplementosConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -266,6 +270,7 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.papelaria.orders.AprovacaoArteHandler aprovacaoArteHandler,
                            com.meada.whatsapp.profiles.viagens.proposals.PropostaViagemConfirmHandler propostaViagemConfirmHandler,
                            com.meada.whatsapp.profiles.viagens.proposals.AprovacaoViagemHandler aprovacaoViagemHandler,
+                           com.meada.whatsapp.profiles.suplementos.orders.PedidoSuplementosConfirmHandler pedidoSuplementosConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -329,6 +334,7 @@ public class OutboundService {
         this.aprovacaoArteHandler = aprovacaoArteHandler;
         this.propostaViagemConfirmHandler = propostaViagemConfirmHandler;
         this.aprovacaoViagemHandler = aprovacaoViagemHandler;
+        this.pedidoSuplementosConfirmHandler = pedidoSuplementosConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -510,6 +516,8 @@ public class OutboundService {
         // Camada 8.18 (perfil viagens): <proposta_viagem> abre; <aprovacao_viagem> aprova/recusa.
         toSend = maybeProcessPropostaViagem(event, conversationId, toSend);
         toSend = maybeProcessAprovacaoViagem(event, conversationId, toSend);
+        // Camada 8.24 (perfil suplementos): <pedido_suplementos> cria o pedido de varejo.
+        toSend = maybeProcessPedidoSuplementos(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -1773,6 +1781,32 @@ public class OutboundService {
         }
         aprovacaoViagemHandler.parseAndApply(event.companyId(), conversationId, reply);
         String stripped = aprovacaoViagemHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil suplementos (camada 8.24): se o tenant é suplementos e a resposta da IA
+     * contém a tag {@code <pedido_suplementos>}, cria o pedido de varejo (PedidoSuplementosConfirmHandler
+     * resolve o contato, resolve as variantes sabor×peso, DECREMENTA o estoque transacionalmente —
+     * out_of_stock aborta —, recalcula o total descartando o da IA, e snapshota produto/variante) e devolve
+     * um AiResponse SEM a tag. Best-effort; só age se profile_id='suplementos'.
+     */
+    private AiResponse maybeProcessPedidoSuplementos(MessageInboundProcessedEvent event,
+                                                     UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !pedidoSuplementosConfirmHandler.hasOrderTag(reply)) {
+            return aiResponse;
+        }
+        if (!"suplementos".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            pedidoSuplementosConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = pedidoSuplementosConfirmHandler.stripOrderTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

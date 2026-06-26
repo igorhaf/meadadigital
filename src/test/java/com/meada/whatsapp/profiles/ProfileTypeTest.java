@@ -27,7 +27,7 @@ class ProfileTypeTest {
     }
 
     @Test
-    @DisplayName("allActive lista os 33 perfis")
+    @DisplayName("allActive lista os 34 perfis")
     void allActive() {
         List<ProfileType> all = ProfileType.allActive();
         assertThat(all).containsExactly(
@@ -39,7 +39,7 @@ class ProfileTypeTest {
             ProfileType.CASAMENTO, ProfileType.CONCESSIONARIA, ProfileType.LAVANDERIA, ProfileType.DERMATOLOGIA,
             ProfileType.FOTOGRAFIA, ProfileType.CURSOS, ProfileType.LINGERIE, ProfileType.MODA_INFANTIL,
             ProfileType.LAS, ProfileType.PADARIA, ProfileType.OTICA, ProfileType.PAPELARIA,
-            ProfileType.VIAGENS);
+            ProfileType.VIAGENS, ProfileType.SUPLEMENTOS);
     }
 
     @Test

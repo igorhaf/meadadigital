@@ -53,6 +53,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.otica.OticaContextCache oticaContextCache;
     private final com.meada.whatsapp.profiles.papelaria.PapelariaCatalogCache papelariaCatalogCache;
     private final com.meada.whatsapp.profiles.viagens.ViagensContextCache viagensContextCache;
+    private final com.meada.whatsapp.profiles.suplementos.SuplementosMenuCache suplementosMenuCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -87,6 +88,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.otica.OticaContextCache oticaContextCache,
                                 com.meada.whatsapp.profiles.papelaria.PapelariaCatalogCache papelariaCatalogCache,
                                 com.meada.whatsapp.profiles.viagens.ViagensContextCache viagensContextCache,
+                                com.meada.whatsapp.profiles.suplementos.SuplementosMenuCache suplementosMenuCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -120,6 +122,7 @@ public class ProfilePromptContext {
         this.oticaContextCache = oticaContextCache;
         this.papelariaCatalogCache = papelariaCatalogCache;
         this.viagensContextCache = viagensContextCache;
+        this.suplementosMenuCache = suplementosMenuCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -389,6 +392,24 @@ public class ProfilePromptContext {
             + "um módulo, só faça quando o aluno já estiver matriculado e for o próprio contato da conversa. "
             + "NUNCA prometa certificado, aprovação ou resultado que não esteja descrito no curso.";
 
+    private static final String SUPLEMENTOS =
+        "Você é balconista de uma loja de suplementos alimentares (nutrição esportiva / loja de saúde). "
+            + "Tom prestativo e informativo. Suplemento NÃO é medicamento e você NÃO é profissional de saúde. "
+            + ">>> Você NUNCA prescreve DOSAGEM/posologia/'quanto tomar'/'como tomar'/horário; NUNCA recomenda "
+            + "um suplemento como TRATAMENTO ou CONDUTA para emagrecer/ganhar massa/curar/melhorar performance "
+            + "ou resolver um sintoma/objetivo de saúde; NUNCA responde 'isso serve pra [doença/objetivo]?', "
+            + "'isso engorda/emagrece?', 'posso tomar com [remédio]?', 'qual o melhor pra mim?', 'é seguro pra "
+            + "[condição]?'; NUNCA opina sobre saúde, patologia, interação medicamentosa, contraindicação ou "
+            + "efeito fisiológico; não monta protocolo, não compara por 'eficácia', não valida objetivo "
+            + "corporal. <<< Para QUALQUER dúvida de uso/dosagem/objetivo de saúde, acolha sem reforçar e "
+            + "oriente consultar NUTRICIONISTA/MÉDICO/EDUCADOR FÍSICO ('Para isso, o ideal é conversar com um "
+            + "nutricionista ou médico — eu não posso orientar sobre uso ou dosagem.'). Você SÓ: mostra o "
+            + "catálogo, tira dúvida de PRODUTO (sabor, peso/tamanho da embalagem, preço, disponibilidade/"
+            + "estoque) e monta o pedido. Lembre, quando fizer sentido: este produto não substitui a "
+            + "orientação de um profissional de saúde. NUNCA invente produto, sabor, peso ou preço fora do "
+            + "catálogo; o total é recalculado pelo sistema. NUNCA ofereça uma variante ESGOTADA. NUNCA aceite "
+            + "ou recuse o pedido (isso é a loja quem faz); confirme só o recebimento e o endereço de entrega.";
+
     private static final String VIAGENS =
         "Você é consultor de uma agência de viagens. Tom prestativo-consultivo, de quem ajuda a planejar a "
             + "viagem dos sonhos. Identifique o cliente pelo telefone. A partir do BRIEFING (destino desejado, "
@@ -528,6 +549,7 @@ public class ProfilePromptContext {
             case OTICA -> OTICA;
             case PAPELARIA -> PAPELARIA;
             case VIAGENS -> VIAGENS;
+            case SUPLEMENTOS -> SUPLEMENTOS;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -749,6 +771,13 @@ public class ProfilePromptContext {
             UUID contactId = conversationId == null ? null
                 : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
             return persona + viagensContextCache.contextSegment(companyId, contactId);
+        }
+        if ("suplementos".equals(profileId)) {
+            // suplementos (8.24): persona (com TRAVA DE SAÚDE) + catálogo (produtos por categoria + marca +
+            // variantes sabor×peso com preço e ESTOQUE) + taxa/mínimo + instruções da tag
+            // <pedido_suplementos> + a TRAVA DE NÃO-PRESCRIÇÃO repetida no bloco (2º lugar, igual nutri).
+            // IGNORA conversationId (contexto é o catálogo). Pedido nasce 'aguardando' (gate de aceite).
+            return persona + suplementosMenuCache.menuSegment(companyId);
         }
         if ("escola".equals(profileId)) {
             // escola (8.19): persona + turmas com vagas restantes + os alunos (filhos) do responsável +

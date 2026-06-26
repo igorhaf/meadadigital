@@ -1496,6 +1496,41 @@ ROTEIRO/ITINERÁRIO MULTI-DIA.
 - Migration `62_viagens.sql` (5 tabelas; slot README ordem 13; entra por ÚLTIMO no SCRIPTS — sua CHECK tem
   os 33). Tenant `igorhaf29` (Viagens Modelo). Guia: `docs/PERFIL_VIAGENS.md`.
 
+## Perfil Suplementos (SuplementosBot, camada 8.24)
+
+TRIGÉSIMO QUARTO perfil vertical real (33 + generic). Loja de varejo de suplementos / nutrição esportiva
+(whey, creatina, vitaminas, pré-treino, termogênicos, acessórios) com entrega. CLONA o chassi order-based
+do [[Comida]] (pedido + gate de aceite + Kanban) + o chassi de VARIANTES COM ESTOQUE do [[Lingerie]], e
+inaugura num perfil de VAREJO a TRAVA DE NÃO-PRESCRIÇÃO.
+
+- **ESCAPADA 1 — variantes (sabor × peso) com ESTOQUE + decremento transacional:** produto (`sup_products`:
+  name+brand+category+description) tem N variantes (`sup_variants`: flavor nullable + size_label + sku +
+  price_cents + stock_quantity + expiry_date administrativo). O pedido referencia a VARIANTE; na criação o
+  backend decrementa o estoque na transação (UPDATE condicional `stock_quantity >= qtd` → 0 linhas → 409
+  out_of_stock, aborta tudo, rollback). expiry_date informativo (a IA não promete validade). flavor/
+  size_label/sku texto livre; UNIQUE(company, sku). Cancelar NÃO devolve estoque (fase futura).
+- **ESCAPADA 2 (coração) — TRAVA DE SAÚDE / não-prescrição (espelho leve do nutri, em VAREJO):** a IA NUNCA
+  prescreve dosagem/posologia/uso, NUNCA recomenda como tratamento/conduta por objetivo/sintoma, NUNCA
+  responde "isso serve pra X?/quanto tomar?/posso tomar com Y?", NUNCA opina sobre saúde/patologia/interação
+  medicamentosa — acolhe e encaminha a nutricionista/médico/educador físico ("não posso orientar sobre uso
+  ou dosagem"). Aviso "não substitui orientação profissional". A IA SÓ mostra catálogo, tira dúvida de
+  PRODUTO e monta pedido. A trava vive em DOIS lugares: persona (ProfilePromptContext.SUPLEMENTOS) E bloco
+  de instruções do SuplementosMenuCache (igual nutri).
+- **Pedido (chassi comida + gate):** nasce 'aguardando' (gate de aceite humano: aceita→em_preparo/recusa→
+  recusado; a IA não aceita/recusa). Status SuplementosOrderStatus (parity): aguardando→em_preparo→
+  saiu_entrega→entregue + recusado/cancelado; aguardando/cancelado não notificam. SÓ ENTREGA
+  (delivery_address NOT NULL → 422 address_required + taxa). Total materializado (descarta o da IA).
+  Categorias hardcoded (SuplementosCategory parity: proteinas/aminoacidos/vitaminas/pre_treino/
+  emagrecedores/acessorios). Tag `<pedido_suplementos>`; handler hasOrderTag/stripOrderTag/parseAndCreate;
+  OutboundService maybeProcessPedidoSuplementos. Cache SuplementosMenuCache TTL 60s (ignora conversationId).
+- **Guard:** `SuplementosProfileGuard`. `JwtAuthenticationFilter` autentica `/api/suplementos/**`. Sidebar:
+  `getNavForProfile('suplementos')` injeta "Suplementos" (Produtos/Pedidos/Configurações). Paleta `eucalipto`.
+- **NÃO TEM:** pagamento real (Stripe #50), foto, recomendação personalizada/quiz (PROIBIDO pela trava),
+  assinatura/recorrência, devolução de estoque ao cancelar, lote/FEFO, tabela nutricional, combo/cupom,
+  retirada (só entrega).
+- Migration `68_suplementos.sql` (5 tabelas; slot README ordem 19; entra por ÚLTIMO no SCRIPTS — sua CHECK
+  tem os 34). Tenant `igorhaf35` (Suplementos Modelo). Guia: `docs/PERFIL_SUPLEMENTOS.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**

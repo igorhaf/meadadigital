@@ -44,6 +44,7 @@ export const PROFILES = [
   { id: 'otica', productName: 'Ótica', subdomain: 'otica', defaultPaletteId: 'ardosia' },
   { id: 'papelaria', productName: 'Papelaria', subdomain: 'papelaria', defaultPaletteId: 'lavanda' },
   { id: 'viagens', productName: 'Viagens', subdomain: 'viagens', defaultPaletteId: 'floresta' },
+  { id: 'suplementos', productName: 'Suplementos', subdomain: 'suplementos', defaultPaletteId: 'eucalipto' },
 ] as const
 
 export type Profile = (typeof PROFILES)[number]

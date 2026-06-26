@@ -31,11 +31,11 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
     }
 
     @Test
-    @DisplayName("GET /admin/profiles → catálogo com os 33 perfis (super-admin)")
+    @DisplayName("GET /admin/profiles → catálogo com os 34 perfis (super-admin)")
     void profiles_catalog() throws Exception {
         mockMvc.perform(get("/admin/profiles").header("Authorization", "Bearer " + superToken()))
             .andExpect(status().isOk())
-            .andExpect(jsonPath("$.items.length()").value(33))
+            .andExpect(jsonPath("$.items.length()").value(34))
             .andExpect(jsonPath("$.items[?(@.id == 'legal')].productName").value("Legal"))
             .andExpect(jsonPath("$.items[?(@.id == 'restaurant')].productName").value("Restaurante"))
             .andExpect(jsonPath("$.items[?(@.id == 'salon')].productName").value("Salão"))
@@ -65,7 +65,8 @@ class ProfileMatchControllerIntegrationTest extends AbstractAdminIntegrationTest
             .andExpect(jsonPath("$.items[?(@.id == 'padaria')].productName").value("Padaria"))
             .andExpect(jsonPath("$.items[?(@.id == 'otica')].productName").value("Ótica"))
             .andExpect(jsonPath("$.items[?(@.id == 'papelaria')].productName").value("Papelaria"))
-            .andExpect(jsonPath("$.items[?(@.id == 'viagens')].productName").value("Viagens"));
+            .andExpect(jsonPath("$.items[?(@.id == 'viagens')].productName").value("Viagens"))
+            .andExpect(jsonPath("$.items[?(@.id == 'suplementos')].productName").value("Suplementos"));
     }
 
     @Test

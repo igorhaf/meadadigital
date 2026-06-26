@@ -56,7 +56,8 @@ public enum ProfileType {
     PADARIA("padaria", "Padaria", "padaria", "abobora"),
     OTICA("otica", "Ótica", "otica", "ardosia"),
     PAPELARIA("papelaria", "Papelaria", "papelaria", "lavanda"),
-    VIAGENS("viagens", "Viagens", "viagens", "floresta");
+    VIAGENS("viagens", "Viagens", "viagens", "floresta"),
+    SUPLEMENTOS("suplementos", "Suplementos", "suplementos", "eucalipto");
 
     private final String id;
     private final String productName;

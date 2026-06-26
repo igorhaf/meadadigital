@@ -238,6 +238,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'otica') return [OTICA_GROUP, ...NAV_GROUPS]
   if (profileId === 'papelaria') return [PAPELARIA_GROUP, ...NAV_GROUPS]
   if (profileId === 'viagens') return [VIAGENS_GROUP, ...NAV_GROUPS]
+  if (profileId === 'suplementos') return [SUPLEMENTOS_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -586,5 +587,14 @@ const VIAGENS_GROUP: NavGroup = {
     { label: 'Consultores', href: '/dashboard/viagens-consultants', icon: Users },
     { label: 'Propostas', href: '/dashboard/viagens-proposals', icon: Plane },
     { label: 'Configurações', href: '/dashboard/viagens-settings', icon: Settings },
+  ],
+}
+
+const SUPLEMENTOS_GROUP: NavGroup = {
+  heading: 'Suplementos',
+  items: [
+    { label: 'Produtos', href: '/dashboard/suplementos-products', icon: Dumbbell },
+    { label: 'Pedidos', href: '/dashboard/suplementos-orders', icon: ClipboardList },
+    { label: 'Configurações', href: '/dashboard/suplementos-settings', icon: Settings },
   ],
 }
