@@ -105,6 +105,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final String CURSOS_PATH_PREFIX = "/api/cursos/";
     private static final String LINGERIE_PATH_PREFIX = "/api/lingerie/";
     private static final String MODA_INFANTIL_PATH_PREFIX = "/api/moda-infantil/";
+    private static final String LAS_PATH_PREFIX = "/api/las/";
     private static final String CMS_PATH_PREFIX = "/api/cms/";
 
     // Junta a company para checar suspensão da empresa no mesmo SELECT (camada 6.1/6.2).
@@ -203,6 +204,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             && !uri.startsWith(CURSOS_PATH_PREFIX)
             && !uri.startsWith(LINGERIE_PATH_PREFIX)
             && !uri.startsWith(MODA_INFANTIL_PATH_PREFIX)
+            && !uri.startsWith(LAS_PATH_PREFIX)
             && !uri.startsWith(CMS_PATH_PREFIX)
             && !isInviteAccept(request);
     }

@@ -164,6 +164,9 @@ public class OutboundService {
     // (variante faixa-etária×cor + estoque, decremento transacional, restock no cancelamento). Só age
     // p/ profile_id='moda_infantil'.
     private final com.meada.whatsapp.profiles.modainfantil.orders.PedidoModaInfantilConfirmHandler pedidoModaInfantilConfirmHandler;
+    // Camada 8.23 (perfil las): <pedido_las> cria o pedido de varejo de lãs (variante cor×dye_lot +
+    // estoque, decremento transacional, regra same_lot_guaranteed). Só age p/ profile_id='las'.
+    private final com.meada.whatsapp.profiles.las.orders.PedidoLasConfirmHandler pedidoLasConfirmHandler;
 
     private final int maxAttempts;
     private final List<Duration> backoffs;
@@ -237,6 +240,7 @@ public class OutboundService {
                            com.meada.whatsapp.profiles.cursos.enrollments.EntregaModuloHandler entregaModuloHandler,
                            com.meada.whatsapp.profiles.lingerie.orders.PedidoLingerieConfirmHandler pedidoLingerieConfirmHandler,
                            com.meada.whatsapp.profiles.modainfantil.orders.PedidoModaInfantilConfirmHandler pedidoModaInfantilConfirmHandler,
+                           com.meada.whatsapp.profiles.las.orders.PedidoLasConfirmHandler pedidoLasConfirmHandler,
                            @org.springframework.beans.factory.annotation.Value("${gemini.model}")
                            String geminiModel) {
         this.conversationRepository = conversationRepository;
@@ -292,6 +296,7 @@ public class OutboundService {
         this.entregaModuloHandler = entregaModuloHandler;
         this.pedidoLingerieConfirmHandler = pedidoLingerieConfirmHandler;
         this.pedidoModaInfantilConfirmHandler = pedidoModaInfantilConfirmHandler;
+        this.pedidoLasConfirmHandler = pedidoLasConfirmHandler;
         this.geminiModel = geminiModel;
         this.maxAttempts = retryProps.maxAttempts();
         // converte uma vez (lista YAML de millis → Durations). O RetryRunner valida
@@ -460,6 +465,8 @@ public class OutboundService {
         toSend = maybeProcessPedidoLingerie(event, conversationId, toSend);
         // Camada 8.22 (perfil moda_infantil): <pedido_moda_infantil> cria o pedido de varejo infantil.
         toSend = maybeProcessPedidoModaInfantil(event, conversationId, toSend);
+        // Camada 8.23 (perfil las): <pedido_las> cria o pedido de varejo de lãs.
+        toSend = maybeProcessPedidoLas(event, conversationId, toSend);
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
@@ -1521,6 +1528,33 @@ public class OutboundService {
             pedidoModaInfantilConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = pedidoModaInfantilConfirmHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Pós-processamento do perfil las (camada 8.23): se o tenant é las e a resposta da IA contém a tag
+     * {@code <pedido_las>}, cria o pedido de varejo de lãs (PedidoLasConfirmHandler resolve o contato,
+     * resolve as variantes cor×dye_lot, DECREMENTA o estoque transacionalmente — out_of_stock aborta —,
+     * valida a regra same_lot_guaranteed — mixed_dye_lots aborta —, recalcula o total descartando o da IA,
+     * e snapshota produto/cor/lote) e devolve um AiResponse SEM a tag. Best-effort; tag sempre removida;
+     * só age se profile_id='las'.
+     */
+    private AiResponse maybeProcessPedidoLas(MessageInboundProcessedEvent event,
+                                             UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !pedidoLasConfirmHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"las".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            pedidoLasConfirmHandler.parseAndCreate(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = pedidoLasConfirmHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

@@ -48,6 +48,7 @@ public class ProfilePromptContext {
     private final com.meada.whatsapp.profiles.cursos.CursosContextCache cursosContextCache;
     private final com.meada.whatsapp.profiles.lingerie.LingerieMenuCache lingerieMenuCache;
     private final com.meada.whatsapp.profiles.modainfantil.ModaInfantilMenuCache modaInfantilMenuCache;
+    private final com.meada.whatsapp.profiles.las.LasMenuCache lasMenuCache;
     private final ConversationRepository conversationRepository;
 
     public ProfilePromptContext(SushiMenuCache sushiMenuCache,
@@ -77,6 +78,7 @@ public class ProfilePromptContext {
                                 com.meada.whatsapp.profiles.cursos.CursosContextCache cursosContextCache,
                                 com.meada.whatsapp.profiles.lingerie.LingerieMenuCache lingerieMenuCache,
                                 com.meada.whatsapp.profiles.modainfantil.ModaInfantilMenuCache modaInfantilMenuCache,
+                                com.meada.whatsapp.profiles.las.LasMenuCache lasMenuCache,
                                 ConversationRepository conversationRepository) {
         this.sushiMenuCache = sushiMenuCache;
         this.legalCaseContextCache = legalCaseContextCache;
@@ -105,6 +107,7 @@ public class ProfilePromptContext {
         this.cursosContextCache = cursosContextCache;
         this.lingerieMenuCache = lingerieMenuCache;
         this.modaInfantilMenuCache = modaInfantilMenuCache;
+        this.lasMenuCache = lasMenuCache;
         this.conversationRepository = conversationRepository;
     }
 
@@ -374,6 +377,18 @@ public class ProfilePromptContext {
             + "um módulo, só faça quando o aluno já estiver matriculado e for o próprio contato da conversa. "
             + "NUNCA prometa certificado, aprovação ou resultado que não esteja descrito no curso.";
 
+    private static final String LAS =
+        "Você é atendente de uma loja de lãs e novelos (tricô e crochê). Tom acolhedor e prestativo, de "
+            + "quem entende de trabalho manual. Conheça o catálogo: cada produto tem variantes por COR e por "
+            + "LOTE DE TINGIMENTO (dye_lot). Explique, quando fizer sentido, que novelos da mesma cor mas de "
+            + "LOTES diferentes podem ter pequena variação de tom — por isso, para um projeto grande, o ideal "
+            + "é levar tudo do MESMO lote. Se o cliente quiser garantir o mesmo lote, registre o pedido com "
+            + "essa exigência (same_lot_guaranteed). Monte o pedido escolhendo a VARIANTE exata (cor + lote) "
+            + "com o variant_id do catálogo. NUNCA ofereça uma variante ESGOTADA — ofereça outra cor/lote "
+            + "disponível. NUNCA invente produto, cor, lote ou preço fora do catálogo; o total é recalculado "
+            + "pelo sistema. Confirme SEMPRE com o valor total e se é entrega (com endereço) ou retirada. "
+            + "Avise que o pedido vai para confirmação da loja. NUNCA aceite ou recuse o pedido.";
+
     private static final String MODA_INFANTIL =
         "Você é atendente de uma loja de moda infantil (roupa de criança). Tom acolhedor, gentil e "
             + "prático. Conheça o catálogo: cada produto tem uma grade de variantes (TAMANHO por faixa "
@@ -438,6 +453,7 @@ public class ProfilePromptContext {
             case CURSOS -> CURSOS;
             case LINGERIE -> LINGERIE;
             case MODA_INFANTIL -> MODA_INFANTIL;
+            case LAS -> LAS;
             case GENERIC -> "";
         };
         if (body.isEmpty()) {
@@ -623,6 +639,12 @@ public class ProfilePromptContext {
             // sugestão idade→tamanho. IGNORA conversationId (contexto é o catálogo). Pedido nasce
             // 'aguardando' (gate de aceite da loja).
             return persona + modaInfantilMenuCache.menuSegment(companyId);
+        }
+        if ("las".equals(profileId)) {
+            // las (8.23): persona + catálogo (produtos por categoria + variantes cor×dye_lot com preço e
+            // ESTOQUE por lote) + taxa/mínimo + instruções da tag <pedido_las> + a regra same_lot_guaranteed.
+            // IGNORA conversationId (contexto é o catálogo). Pedido nasce 'aguardando' (gate de aceite).
+            return persona + lasMenuCache.menuSegment(companyId);
         }
         if ("escola".equals(profileId)) {
             // escola (8.19): persona + turmas com vagas restantes + os alunos (filhos) do responsável +

@@ -229,6 +229,7 @@ function profileGroups(profileId: string | null | undefined): NavGroup[] {
   if (profileId === 'cursos') return [CURSOS_GROUP, ...NAV_GROUPS]
   if (profileId === 'lingerie') return [LINGERIE_GROUP, ...NAV_GROUPS]
   if (profileId === 'moda_infantil') return [MODA_INFANTIL_GROUP, ...NAV_GROUPS]
+  if (profileId === 'las') return [LAS_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
 
@@ -530,5 +531,14 @@ const MODA_INFANTIL_GROUP: NavGroup = {
     { label: 'Catálogo', href: '/dashboard/moda-infantil-catalog', icon: Baby },
     { label: 'Pedidos', href: '/dashboard/moda-infantil-orders', icon: ShoppingBag },
     { label: 'Configurações', href: '/dashboard/moda-infantil-settings', icon: Settings },
+  ],
+}
+
+const LAS_GROUP: NavGroup = {
+  heading: 'Lãs',
+  items: [
+    { label: 'Catálogo', href: '/dashboard/las-catalog', icon: Scissors },
+    { label: 'Pedidos', href: '/dashboard/las-orders', icon: ShoppingBag },
+    { label: 'Configurações', href: '/dashboard/las-settings', icon: Settings },
   ],
 }

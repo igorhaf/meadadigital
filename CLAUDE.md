@@ -1327,6 +1327,35 @@ com variantes) com o eixo de tamanho sendo FAIXA ETÁRIA + devolução de estoqu
 - Migration `66_moda_infantil.sql` (slot README ordem 17; entra por ÚLTIMO no SCRIPTS — sua CHECK tem os
   28 perfis). Tenant `igorhaf33` (Moda Infantil Modelo). Guia: `docs/PERFIL_MODA_INFANTIL.md`.
 
+## Perfil Lãs (LasBot, camada 8.23)
+
+VIGÉSIMO NONO perfil vertical real (28 + generic). CLONE do [[Lingerie]] (chassi de varejo com variantes)
+com o eixo de variante sendo COR × DYE_LOT e a regra "mesmo lote preferencial". Loja de lãs/novelos/tricô.
+
+- **⭐ ESCAPADA — DYE LOT (lote de tingimento) + same_lot_guaranteed:** novelos da mesma cor mas de LOTES
+  diferentes têm variação de tom; quem tricota projeto grande precisa do MESMO lote. A variante é
+  `(color, dye_lot)` (ambos texto livre; UNIQUE(product_id, color, dye_lot)) — cada lote da mesma cor é um
+  SKU com SEU estoque. O pedido tem `same_lot_guaranteed boolean`; quando true o backend agrupa os itens
+  por color_snapshot e exige um ÚNICO dye_lot_snapshot por cor → senão `MixedDyeLotsException` → **422
+  mixed_dye_lots** (com as cores ofensoras) e ABORTA (rollback). Como o pedido só vem da IA (sem POST
+  manual), o handler trata como abort silencioso (tag descartada). O eixo `size` do lingerie foi trocado
+  por `dye_lot`; não há enum de size (color/dye_lot texto livre).
+- **Herda do Lingerie:** decremento transacional (UPDATE condicional stock_qty>=qtd → 409 out_of_stock,
+  aborta), categorias hardcoded (LasCategory parity: las/linhas/kits/agulhas/acessorios/pelucia), status
+  LasOrderStatus (parity: aguardando→separando→enviado→entregue + recusado/cancelado, gate humano,
+  aguardando não notifica), total materializado, fulfillment entrega/retirada, cliente=contato, tag
+  `<pedido_las>`, OutboundService maybeProcessPedidoLas. Cache LasMenuCache TTL 60s (IGNORA conversationId).
+- **2 parity tests** (categoria + status; SEM size parity — não há enum de tamanho). Persona LAS
+  (acolhedora, entende de trabalho manual): explica que mesmo lote = mesmo tom, registra
+  same_lot_guaranteed, NUNCA oferece variante esgotada, NUNCA inventa produto/cor/lote/preço, NUNCA
+  aceita/recusa.
+- **Guard:** `LasProfileGuard`. `JwtAuthenticationFilter` autentica `/api/las/**`. Sidebar:
+  `getNavForProfile('las')` injeta "Lãs" (Catálogo/Pedidos/Configurações). Paleta `ferrugem`.
+- **NÃO TEM:** foto, pagamento real (Stripe #50), cupom/promoção, reserva de lote sem pedido, frete por
+  CEP, cálculo de quantidade de novelos por projeto, variante 3+ eixos.
+- Migration `67_las.sql` (slot README ordem 18; entra por ÚLTIMO no SCRIPTS — sua CHECK tem os 29 perfis).
+  Tenant `igorhaf34` (Lãs Modelo). Guia: `docs/PERFIL_LAS.md`.
+
 ## Camada 9.0 — Feature Flags por Nicho (infra de plataforma)
 
 Infra pro ROOT (super-admin) ligar/desligar features por nicho num lugar só. A 1ª feature é o **CMS**
