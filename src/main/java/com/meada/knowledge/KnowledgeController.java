@@ -85,7 +85,7 @@ public class KnowledgeController {
                 "error", "Unprocessable", "reason", "ingestion_failed",
                 "documentId", doc.id().toString()));
         }
-        return documentRepository.findById(doc.id())
+        return documentRepository.findById(doc.id(), user.companyId())
             .<ResponseEntity<Object>>map(d -> ResponseEntity.status(201).body(d))
             .orElseGet(() -> error(500, "document_vanished"));
     }

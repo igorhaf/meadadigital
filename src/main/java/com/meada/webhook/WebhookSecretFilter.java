@@ -45,6 +45,14 @@ import java.security.MessageDigest;
  * legítimo capturado) nem contra interceptação se o TLS for downgradeado. HMAC do
  * corpo + timestamp resolve. Hardening registrado para depois do MVP.
  *
+ * <p><b>Cobertura PARCIAL de replay já existente (auditoria de segurança):</b> o handler de
+ * {@code messages.upsert} aplica um GUARD DE FRESCOR por {@code messageTimestamp}
+ * ({@code webhook.message-max-age-seconds}, ver RISKS.md) — um {@code messages.upsert} antigo
+ * reenviado é REJEITADO por idade. Isso mitiga o replay no evento de maior risco (resposta
+ * automática a contato real). Outros eventos de webhook ainda não têm anti-replay; o HMAC+
+ * timestamp acima continua sendo o hardening completo. Além disso, o webhook está OFF até religar
+ * consciente (RISKS.md), o que zera a exposição ativa por ora.
+ *
  * <p>@Order(1): primeiro filtro custom da aplicação — garante explicitamente que
  * a verificação de secret roda antes de qualquer filtro de app futuro (rate limit,
  * tracing, etc.). Filtros built-in do Spring Boot usam ordens menores e seguem

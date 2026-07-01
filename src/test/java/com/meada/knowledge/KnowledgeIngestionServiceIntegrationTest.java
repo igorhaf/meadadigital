@@ -77,8 +77,11 @@ class KnowledgeIngestionServiceIntegrationTest extends AbstractIntegrationTest {
 
         ingestionService.process(doc, pdf);
 
-        KnowledgeDocument after = documentRepository.findById(doc.id()).orElseThrow();
+        KnowledgeDocument after = documentRepository.findById(doc.id(), COMPANY).orElseThrow();
         assertThat(after.status()).isEqualTo("ready");
+        // Anti-IDOR (auditoria de segurança M2): findById scopado por company — buscar o MESMO id
+        // com OUTRO company_id não retorna o documento (impede ler doc de outro tenant via UUID).
+        assertThat(documentRepository.findById(doc.id(), UUID.randomUUID())).isEmpty();
         assertThat(after.charCount()).isGreaterThan(0);
         assertThat(after.chunkCount()).isGreaterThanOrEqualTo(1);
         assertThat(countChunks(doc.id())).isEqualTo(after.chunkCount());
@@ -107,7 +110,7 @@ class KnowledgeIngestionServiceIntegrationTest extends AbstractIntegrationTest {
         assertThatThrownBy(() -> ingestionService.process(doc, blankPdf))
             .isInstanceOf(PdfExtractionException.class);
 
-        KnowledgeDocument after = documentRepository.findById(doc.id()).orElseThrow();
+        KnowledgeDocument after = documentRepository.findById(doc.id(), COMPANY).orElseThrow();
         assertThat(after.status()).isEqualTo("failed");
         assertThat(after.errorMessage()).isNotBlank();
         assertThat(countChunks(doc.id())).isZero();

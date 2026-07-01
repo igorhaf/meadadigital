@@ -31,6 +31,13 @@ import java.util.Objects;
  *
  * <p>Null-guard: se {@code admin.cors-allowed-origins} faltar no YAML, o campo vem null →
  * lista vazia (nenhuma origem cross-origin permitida; em dev/prod a key sempre deve estar setada).
+ *
+ * <p><b>Hardening de origem (auditoria de segurança):</b> o curinga {@code *.meadadigital.local}
+ * é aceitável em DEV (o painel roda em N subdomínios na porta 80) com {@code allowCredentials=false}
+ * — o JWT vive em cookie httpOnly (via @supabase/ssr), inalcançável por JS cross-origin, então um
+ * subdomínio de tenant não consegue ler resposta de {@code /admin/**} com credencial. AINDA ASSIM,
+ * em PROD a recomendação é listar origens EXPLÍCITAS do painel (root + nichos), evitando o curinga
+ * global ({@code *}) — esse, sim, é rejeitado aqui (sanitizeOrigins) por ser largo demais.
  */
 @Configuration
 public class AdminCorsConfig {
@@ -38,8 +45,22 @@ public class AdminCorsConfig {
     private final List<String> allowedOrigins;
 
     public AdminCorsConfig(AdminProperties adminProperties) {
-        this.allowedOrigins = Objects.requireNonNullElse(
-            adminProperties.corsAllowedOrigins(), List.of());
+        this.allowedOrigins = sanitizeOrigins(Objects.requireNonNullElse(
+            adminProperties.corsAllowedOrigins(), List.of()));
+    }
+
+    /**
+     * Remove curingas GLOBAIS perigosos ({@code *}, {@code http://*}, {@code https://*}) — um
+     * "qualquer origem" anula o propósito da allowlist. Curinga de SUBDOMÍNIO
+     * ({@code http://*.dominio}) é mantido (escopo a um domínio que controlamos). Lista vazia após
+     * a limpeza = nenhuma origem cross-origin (fail-closed).
+     */
+    private static List<String> sanitizeOrigins(List<String> origins) {
+        return origins.stream()
+            .map(String::trim)
+            .filter(o -> !o.isEmpty())
+            .filter(o -> !o.equals("*") && !o.equals("http://*") && !o.equals("https://*"))
+            .toList();
     }
 
     @Bean

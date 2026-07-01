@@ -230,6 +230,11 @@ public abstract class AbstractIntegrationTest {
         //   → allowlist vazia (correto para os testes não-admin). Os testes admin definem a
         //   allowlist via @DynamicPropertySource próprio (AbstractAdminIntegrationTest).
         registry.add("supabase.jwks-url", () -> "http://localhost:0/jwks");
+        // supabase.url VAZIO de propósito: ativa o verifier de issuer/audience do
+        // JwtAuthenticationFilter SÓ quando há url (prod). Os tokens de teste (mintToken) não
+        // setam iss/aud; deixar a url vazia mantém o verifier default (exp/nbf) e a suíte
+        // existente passa. A cobertura do iss/aud vive em teste dedicado que seta a url.
+        registry.add("supabase.url", () -> "");
         registry.add("admin.cors-allowed-origins", () -> "http://localhost:3000");
     }
 

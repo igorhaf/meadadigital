@@ -17,7 +17,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.security.SecureRandom;
 import java.time.Instant;
+import java.util.Base64;
 import java.util.Map;
 import java.util.UUID;
 
@@ -119,6 +121,22 @@ public class CompanyAdminController {
         }
     }
 
+    /**
+     * Email determinístico do tenant-admin da empresa (meada_{slug}_{token}@meadadigital.com), pro
+     * root saber/copiar o login. Endpoint dedicado pra NÃO mudar a forma do GET detail (que o
+     * frontend já consome). "" se a empresa ainda não tem admin.
+     */
+    @GetMapping("/admin/companies/{id}/admin-email")
+    public ResponseEntity<Object> adminEmail(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id) {
+        if (notSuperAdmin(user)) {
+            return forbidden();
+        }
+        String email = repository.findOwnerEmail(id);
+        return ResponseEntity.ok(Map.of("adminEmail", email == null ? "" : email));
+    }
+
     // ---- POST cria (4.2 — inalterado) ---------------------------------------
 
     /**
@@ -143,9 +161,65 @@ public class CompanyAdminController {
             auditLogger.log(created.id(), user.userId(), "created", "company", created.id(),
                 Map.of("name", created.name(), "slug", created.slug(),
                        "paletteId", created.paletteId()));
-            return ResponseEntity.status(201).body(created);
+            // Provisiona o tenant-admin com o email DETERMINÍSTICO meada_{slug}_{token}@meadadigital.com.
+            // Best-effort: se a Admin API não está configurada (dev sem service_role), a empresa fica
+            // criada e o admin é provisionado depois (seed/migração); não falha a criação.
+            String adminEmail = provisionTenantAdmin(created.id(), created.slug());
+            Object body = adminEmail == null
+                ? created
+                : Map.of("company", created, "adminEmail", adminEmail);
+            return ResponseEntity.status(201).body(body);
         } catch (DuplicateKeyException e) {
             return error(409, "Conflict", "slug_already_exists");
+        }
+    }
+
+    private static final SecureRandom SECURE_RANDOM = new SecureRandom();
+
+    /**
+     * Gera a senha do tenant-admin provisionado. Por padrão é ALEATÓRIA e forte (24 bytes
+     * base64url, ~32 chars) — NUNCA volta no corpo da resposta nem em log; o admin recebe acesso
+     * pelo fluxo de "esqueci a senha" do Supabase (link mágico).
+     *
+     * <p>Override só pra DEV: se {@code MEADA_DEV_ADMIN_PASSWORD} (env) estiver setado, usa esse
+     * valor — assim o dev local tem uma senha conhecida sem cravar segredo no código. Em prod a
+     * env não existe → senha aleatória. (Antes havia uma constante hardcoded no fonte versionado:
+     * todo admin novo nascia com a MESMA senha conhecida — corrigido.)
+     */
+    private static String generateAdminPassword() {
+        String dev = System.getenv("MEADA_DEV_ADMIN_PASSWORD");
+        if (dev != null && !dev.isBlank()) {
+            return dev;
+        }
+        byte[] bytes = new byte[24];
+        SECURE_RANDOM.nextBytes(bytes);
+        return Base64.getUrlEncoder().withoutPadding().encodeToString(bytes);
+    }
+
+    /**
+     * Cria o tenant-admin de uma empresa nova no Auth + public.users com o email
+     * {@code meada_{slug}_{admin_token}@meadadigital.com}. Devolve o email criado, ou null se a
+     * Admin API está off ou o provisionamento falhou (não propaga — a empresa já foi criada).
+     * A senha gerada NÃO é retornada (acesso via reset de senha do Supabase).
+     */
+    private String provisionTenantAdmin(UUID companyId, String slug) {
+        if (!supabaseAdmin.enabled()) {
+            return null;
+        }
+        try {
+            String token = repository.findAdminToken(companyId);
+            if (token == null) {
+                return null;
+            }
+            String email = "meada_" + slug + "_" + token + "@meadadigital.com";
+            String userId = supabaseAdmin.createUser(email, generateAdminPassword());
+            repository.insertTenantAdmin(java.util.UUID.fromString(userId), companyId, email);
+            auditLogger.log(companyId, null, "tenant_admin_provisioned", "user", companyId,
+                Map.of("email", email));
+            return email;
+        } catch (RuntimeException e) {
+            // não derruba a criação da empresa; o admin pode ser provisionado depois.
+            return null;
         }
     }
 

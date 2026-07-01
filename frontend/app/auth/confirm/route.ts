@@ -4,6 +4,19 @@ import { type NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
 /**
+ * Sanitiza o destino do redirect pós-login: aceita SÓ path relativo do próprio site.
+ * Bloqueia open redirect — `https://evil.com`, `//evil.com` e `/\evil.com` escapariam do
+ * origin via `new URL(next, origin)`. Exige começar com '/' e o 2º char NÃO ser '/' nem '\'.
+ * Qualquer coisa fora disso cai no default seguro '/dashboard'.
+ */
+function safeNext(raw: string | null): string {
+  if (!raw || raw[0] !== '/' || raw[1] === '/' || raw[1] === '\\') {
+    return '/dashboard'
+  }
+  return raw
+}
+
+/**
  * Callback de verificação de OTP/magic link (padrão @supabase/ssr).
  * GET /auth/confirm?token_hash=…&type=…&next=/dashboard
  *
@@ -15,7 +28,7 @@ export async function GET(request: NextRequest) {
   const { searchParams } = new URL(request.url)
   const tokenHash = searchParams.get('token_hash')
   const type = (searchParams.get('type') ?? 'email') as EmailOtpType
-  const next = searchParams.get('next') ?? '/dashboard'
+  const next = safeNext(searchParams.get('next'))
 
   if (!tokenHash) {
     return NextResponse.redirect(new URL('/login?error=missing_token', request.url))

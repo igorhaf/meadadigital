@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { ArrowDown, ArrowUp } from 'lucide-react'
+import { ArrowDown, ArrowUp, ChevronDown } from 'lucide-react'
 import Link from 'next/link'
 import { useState } from 'react'
 
@@ -15,6 +15,7 @@ import {
   type ShowcaseGrid,
   type ShowcaseRow,
 } from '@/lib/api/admin/niche-showcase'
+import { formatMonthlyPrice, getCatalogEntry } from '@/lib/profiles/profile-catalog'
 import { PALETTES } from '@/lib/themes/palettes'
 
 /**
@@ -29,6 +30,7 @@ function colorFor(paletteId: string): string {
 export default function NichesShowcasePage() {
   const qc = useQueryClient()
   const [err, setErr] = useState<string | null>(null)
+  const [expanded, setExpanded] = useState<string | null>(null)
 
   const { data, isPending, isError, error } = useQuery<ShowcaseGrid>({
     queryKey: ['niche-showcase'],
@@ -87,39 +89,72 @@ export default function NichesShowcasePage() {
     <div className="space-y-6">
       <PageHeader
         title="Vitrine de Nichos"
-        description={`Marque até ${data.maxFeatured} nichos como destaque (aparecem na home) e ordene a lista (a ordem vale na página de Produtos). ${featuredCount}/${data.maxFeatured} em destaque.`}
+        description={`Cada nicho é um produto com preço e descrição própria. Marque até ${data.maxFeatured} como destaque (aparecem na home) e ordene a lista (vale na página de Produtos). ${featuredCount}/${data.maxFeatured} em destaque.`}
       />
       {err && <p className="text-sm text-destructive">{err}</p>}
 
       <div className="divide-y divide-border rounded-lg border border-border">
-        {rows.map((row, i) => (
-          <div key={row.profileId} className="flex items-center gap-3 px-4 py-3">
-            <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
-            <span className="size-4 shrink-0 rounded" style={{ background: colorFor(row.paletteId) }} />
-            <div className="min-w-0 flex-1">
-              <span className="font-medium">{row.productName}</span>
-              <span className="ml-2 text-xs text-muted-foreground">{row.subdomain}.meadadigital.com</span>
+        {rows.map((row, i) => {
+          const catalog = getCatalogEntry(row.profileId)
+          const isOpen = expanded === row.profileId
+          return (
+            <div key={row.profileId} className="px-4 py-3">
+              <div className="flex items-center gap-3">
+                <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
+                <span className="size-4 shrink-0 rounded" style={{ background: colorFor(row.paletteId) }} />
+                <div className="min-w-0 flex-1">
+                  <div className="flex flex-wrap items-baseline gap-x-2">
+                    <span className="font-medium">{row.productName}</span>
+                    <span className="text-xs text-muted-foreground">{row.subdomain}.meadadigital.com</span>
+                  </div>
+                  {catalog?.tagline && (
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{catalog.tagline}</p>
+                  )}
+                </div>
+                {catalog && (
+                  <span className="shrink-0 text-sm font-semibold tabular-nums" style={{ color: colorFor(row.paletteId) }}>
+                    {formatMonthlyPrice(catalog.priceMonthly)}
+                  </span>
+                )}
+                {row.featured && <Badge>destaque</Badge>}
+                <label className="flex cursor-pointer items-center gap-1 text-xs text-muted-foreground">
+                  <input
+                    type="checkbox"
+                    checked={row.featured}
+                    disabled={setMut.isPending}
+                    onChange={() => toggleFeatured(row)}
+                  />
+                  destaque
+                </label>
+                {catalog?.highlights?.length ? (
+                  <Button
+                    variant="outline"
+                    className="h-7 w-7 p-0"
+                    onClick={() => setExpanded(isOpen ? null : row.profileId)}
+                    aria-label={isOpen ? 'Recolher detalhes' : 'Ver o que o produto faz'}
+                  >
+                    <ChevronDown className={`size-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                  </Button>
+                ) : null}
+                <div className="flex shrink-0 gap-1">
+                  <Button variant="outline" className="h-7 w-7 p-0" disabled={i === 0} onClick={() => move(rows, i, -1)} aria-label="Subir">
+                    <ArrowUp className="size-3.5" />
+                  </Button>
+                  <Button variant="outline" className="h-7 w-7 p-0" disabled={i === rows.length - 1} onClick={() => move(rows, i, 1)} aria-label="Descer">
+                    <ArrowDown className="size-3.5" />
+                  </Button>
+                </div>
+              </div>
+              {isOpen && catalog?.highlights?.length ? (
+                <ul className="ml-9 mt-2 list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                  {catalog.highlights.map((h, hi) => (
+                    <li key={hi}>{h}</li>
+                  ))}
+                </ul>
+              ) : null}
             </div>
-            {row.featured && <Badge>destaque</Badge>}
-            <label className="flex cursor-pointer items-center gap-1 text-xs text-muted-foreground">
-              <input
-                type="checkbox"
-                checked={row.featured}
-                disabled={setMut.isPending}
-                onChange={() => toggleFeatured(row)}
-              />
-              destaque
-            </label>
-            <div className="flex shrink-0 gap-1">
-              <Button variant="outline" className="h-7 w-7 p-0" disabled={i === 0} onClick={() => move(rows, i, -1)} aria-label="Subir">
-                <ArrowUp className="size-3.5" />
-              </Button>
-              <Button variant="outline" className="h-7 w-7 p-0" disabled={i === rows.length - 1} onClick={() => move(rows, i, 1)} aria-label="Descer">
-                <ArrowDown className="size-3.5" />
-              </Button>
-            </div>
-          </div>
-        ))}
+          )
+        })}
       </div>
     </div>
   )

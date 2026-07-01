@@ -57,7 +57,8 @@ public class KnowledgeDocumentRepository {
         + "where company_id = ? and deleted_at is null order by created_at desc";
 
     private static final String FIND_BY_ID =
-        "select " + COLS + " from knowledge_documents where id = ? and deleted_at is null";
+        "select " + COLS + " from knowledge_documents "
+        + "where id = ? and company_id = ? and deleted_at is null";
 
     private static final String SOFT_DELETE =
         "update knowledge_documents set deleted_at = now(), updated_at = now() "
@@ -93,8 +94,13 @@ public class KnowledgeDocumentRepository {
         return jdbcTemplate.query(FIND_BY_COMPANY, ROW_MAPPER, companyId);
     }
 
-    public Optional<KnowledgeDocument> findById(UUID id) {
-        return jdbcTemplate.query(FIND_BY_ID, ROW_MAPPER, id).stream().findFirst();
+    /**
+     * Busca por id SCOPADA por tenant — o {@code company_id} no WHERE impede IDOR (ler documento
+     * de outro tenant via UUID). Espelha o scoping de {@link #softDelete}/{@link #setActive}.
+     */
+    public Optional<KnowledgeDocument> findById(UUID id, UUID companyId) {
+        Objects.requireNonNull(companyId, "companyId must not be null");
+        return jdbcTemplate.query(FIND_BY_ID, ROW_MAPPER, id, companyId).stream().findFirst();
     }
 
     /** @return true se algo foi deletado (documento existia e era do tenant). */

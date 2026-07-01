@@ -1,3 +1,4 @@
+import './cms-theme.css'
 import { cn } from '@/lib/utils'
 import { slotRing } from '@/lib/cms/slot-highlight'
 import type {
@@ -25,6 +26,9 @@ import type {
   TextProps,
 } from '@/lib/cms/cms-block-type'
 import type { CmsNavItem, CmsTheme } from '@/lib/cms/public-fetch'
+import { safeUrl, safeFrameSrc } from '@/lib/cms/safe-url'
+import { themeById } from '@/lib/cms/themes/theme-catalog'
+import { themeToCssVars, themeLayoutAttrs } from '@/lib/cms/themes/theme-tokens'
 import { MeadaHero } from '@/components/cms/blocks/meada-hero'
 import { MeadaCta, MeadaPortfolio, MeadaServices } from '@/components/cms/blocks/meada-sections'
 import { MeadaFooter, MeadaNavbar } from '@/components/cms/blocks/meada-chrome'
@@ -61,6 +65,11 @@ export function cmsShellStyle(theme: CmsTheme | null): React.CSSProperties {
       fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
     }
   }
+  // Tema do CATÁLOGO (sistema de temas por nicho): resolve paleta+forma completas via themeId.
+  if (theme?.themeId) {
+    const def = themeById(theme.themeId)
+    if (def) return themeToCssVars(def)
+  }
   const primary = theme?.primaryColor || '#0f172a'
   const dark = theme?.dark === true
   return {
@@ -68,6 +77,16 @@ export function cmsShellStyle(theme: CmsTheme | null): React.CSSProperties {
     background: dark ? '#0b1120' : '#ffffff',
     color: dark ? '#e2e8f0' : '#0f172a',
   }
+}
+
+/** data-attributes de layout (hero/card/dark) pro shell quando o tema é do catálogo — os blocos
+ * leem via seletores `[data-hero=split]`, `[data-card=shadow]`, etc. {} se não há themeId. */
+export function cmsShellLayoutAttrs(theme: CmsTheme | null): Record<string, string> {
+  if (theme?.themeId) {
+    const def = themeById(theme.themeId)
+    if (def) return themeLayoutAttrs(def)
+  }
+  return {}
 }
 
 // ---- blocos originais (8) ---------------------------------------------------
@@ -90,21 +109,21 @@ function HeroBlock({ props, activeSlot }: { props: HeroProps; activeSlot?: strin
           {props.title && <h1 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">{props.title}</h1>}
           {props.subtitle && <p className="mx-auto mt-4 max-w-2xl text-lg opacity-90 md:mx-0">{props.subtitle}</p>}
           <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
-            {props.buttonLabel && props.buttonHref && (
-              <a href={props.buttonHref} data-slot="buttonPrimary" className={cn('inline-block rounded-md bg-white px-6 py-3 font-medium text-slate-900 hover:bg-slate-100', ringIf('buttonPrimary'))}>
+            {props.buttonLabel && safeUrl(props.buttonHref) && (
+              <a href={safeUrl(props.buttonHref)} data-slot="buttonPrimary" className={cn('inline-block rounded-md bg-white px-6 py-3 font-medium text-slate-900 hover:bg-slate-100', ringIf('buttonPrimary'))}>
                 {props.buttonLabel}
               </a>
             )}
-            {props.secondaryButtonLabel && props.secondaryButtonHref && (
-              <a href={props.secondaryButtonHref} data-slot="buttonSecondary" className={cn('inline-block rounded-md px-6 py-3 font-medium text-white ring-1 ring-white/40 hover:bg-white/10', ringIf('buttonSecondary'))}>
+            {props.secondaryButtonLabel && safeUrl(props.secondaryButtonHref) && (
+              <a href={safeUrl(props.secondaryButtonHref)} data-slot="buttonSecondary" className={cn('inline-block rounded-md px-6 py-3 font-medium text-white ring-1 ring-white/40 hover:bg-white/10', ringIf('buttonSecondary'))}>
                 {props.secondaryButtonLabel}
               </a>
             )}
           </div>
         </div>
-        {props.imageUrl && (
+        {safeUrl(props.imageUrl) && (
           /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
-          <img src={props.imageUrl} alt={props.title || ''} data-slot="image" className={cn('w-full rounded-3xl shadow-2xl md:aspect-[4/3] md:object-cover', ringIf('image'))} />
+          <img src={safeUrl(props.imageUrl)} alt={props.title || ''} data-slot="image" className={cn('w-full rounded-3xl shadow-2xl md:aspect-[4/3] md:object-cover', ringIf('image'))} />
         )}
       </div>
     </section>
@@ -169,8 +188,10 @@ function GalleryBlock({ props }: { props: GalleryProps }) {
       <div className="grid gap-4 sm:grid-cols-2 md:grid-cols-3">
         {(props.images ?? []).map((img, i) => (
           <figure key={i} className="overflow-hidden rounded-lg border border-black/10">
-            {/* eslint-disable-next-line @next/next/no-img-element -- URLs externas coladas pelo tenant */}
-            <img src={img.url} alt={img.caption || ''} className="h-48 w-full object-cover" />
+            {safeUrl(img.url) && (
+              /* eslint-disable-next-line @next/next/no-img-element -- URLs externas coladas pelo tenant */
+              <img src={safeUrl(img.url)} alt={img.caption || ''} className="h-48 w-full object-cover" />
+            )}
             {img.caption && <figcaption className="px-3 py-2 text-sm opacity-70">{img.caption}</figcaption>}
           </figure>
         ))}
@@ -220,9 +241,9 @@ function MapBlock({ props }: { props: MapProps }) {
     <section className="mx-auto max-w-4xl px-6 py-12">
       {props.title && <h2 className="mb-4 text-center text-2xl font-bold">{props.title}</h2>}
       {props.address && <p className="mb-4 text-center opacity-80">{props.address}</p>}
-      {props.embedUrl && (
+      {safeFrameSrc(props.embedUrl) && (
         <div className="overflow-hidden rounded-lg border border-black/10">
-          <iframe src={props.embedUrl} title="Mapa" className="h-80 w-full" loading="lazy" />
+          <iframe src={safeFrameSrc(props.embedUrl)} title="Mapa" className="h-80 w-full" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups" referrerPolicy="no-referrer" />
         </div>
       )}
     </section>
@@ -236,8 +257,8 @@ function BannerStripBlock({ props, activeSlot }: { props: BannerStripProps; acti
   return (
     <div className="px-6 py-3 text-center text-sm" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
       <span data-slot="message" className={cn('font-medium', slotRing(activeSlot, 'message'))}>{props.message}</span>
-      {props.buttonLabel && props.buttonHref && (
-        <a href={props.buttonHref} data-slot="button" className={cn('ml-3 font-semibold underline underline-offset-2 hover:no-underline', slotRing(activeSlot, 'button'))}>
+      {props.buttonLabel && safeUrl(props.buttonHref) && (
+        <a href={safeUrl(props.buttonHref)} data-slot="button" className={cn('ml-3 font-semibold underline underline-offset-2 hover:no-underline', slotRing(activeSlot, 'button'))}>
           {props.buttonLabel} →
         </a>
       )}
@@ -291,16 +312,16 @@ function ImageTextSplitBlock({ props, activeSlot }: { props: ImageTextSplitProps
           {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
           {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
           {props.body && <p className="mt-4 whitespace-pre-line opacity-80">{props.body}</p>}
-          {props.buttonLabel && props.buttonHref && (
-            <a href={props.buttonHref} data-slot="button" className={cn('mt-6 inline-block rounded-md px-6 py-3 font-medium text-white', slotRing(activeSlot, 'button', false))} style={{ background: 'var(--cms-primary)' }}>
+          {props.buttonLabel && safeUrl(props.buttonHref) && (
+            <a href={safeUrl(props.buttonHref)} data-slot="button" className={cn('mt-6 inline-block rounded-md px-6 py-3 font-medium text-white', slotRing(activeSlot, 'button', false))} style={{ background: 'var(--cms-primary)' }}>
               {props.buttonLabel}
             </a>
           )}
         </div>
-        {props.imageUrl && (
+        {safeUrl(props.imageUrl) && (
           <div className="md:[direction:ltr]">
             {/* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */}
-            <img src={props.imageUrl} alt={props.title || ''} data-slot="image" className={cn('aspect-[4/3] w-full rounded-3xl object-cover shadow-xl', slotRing(activeSlot, 'image', false))} />
+            <img src={safeUrl(props.imageUrl)} alt={props.title || ''} data-slot="image" className={cn('aspect-[4/3] w-full rounded-3xl object-cover shadow-xl', slotRing(activeSlot, 'image', false))} />
           </div>
         )}
       </div>
@@ -371,9 +392,9 @@ function PackagesBlock({ props }: { props: PackagesProps }) {
           {(props.items ?? []).map((p, i) => (
             <div key={i} className={`overflow-hidden rounded-2xl bg-white shadow-sm ${p.popular ? 'ring-2' : 'ring-1 ring-black/10'}`}
               style={p.popular ? { ['--tw-ring-color' as string]: 'var(--cms-primary)' } : undefined}>
-              {p.imageUrl && (
+              {safeUrl(p.imageUrl) && (
                 /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
-                <img src={p.imageUrl} alt={p.name} className="aspect-[4/3] w-full object-cover" />
+                <img src={safeUrl(p.imageUrl)} alt={p.name} className="aspect-[4/3] w-full object-cover" />
               )}
               <div className="p-6 text-slate-900">
                 {p.popular && <div className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>Mais escolhido</div>}
@@ -381,7 +402,7 @@ function PackagesBlock({ props }: { props: PackagesProps }) {
                 {p.description && <p className="mt-2 text-sm opacity-70">{p.description}</p>}
                 {p.price && <div className="mt-4 text-3xl font-bold tabular-nums">{p.price}</div>}
                 {p.buttonLabel && (
-                  <a href={p.buttonHref || '#'} className="mt-6 inline-block w-full rounded-xl py-2.5 text-center font-semibold text-white" style={{ background: 'var(--cms-primary)' }}>
+                  <a href={safeUrl(p.buttonHref) || '#'} className="mt-6 inline-block w-full rounded-xl py-2.5 text-center font-semibold text-white" style={{ background: 'var(--cms-primary)' }}>
                     {p.buttonLabel}
                   </a>
                 )}
@@ -435,8 +456,8 @@ function CtaBlock({ props, activeSlot }: { props: CtaProps; activeSlot?: string 
           {props.title && <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{props.title}</h2>}
           {props.subtitle && <p className="mx-auto mt-4 max-w-2xl opacity-90">{props.subtitle}</p>}
         </div>
-        {props.buttonLabel && props.buttonHref && (
-          <a href={props.buttonHref} data-slot="button" className={cn('mt-8 inline-block rounded-md bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-100', slotRing(activeSlot, 'button'))}>
+        {props.buttonLabel && safeUrl(props.buttonHref) && (
+          <a href={safeUrl(props.buttonHref)} data-slot="button" className={cn('mt-8 inline-block rounded-md bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-100', slotRing(activeSlot, 'button'))}>
             {props.buttonLabel}
           </a>
         )}
@@ -634,7 +655,7 @@ export function CmsRender({
     (row.columns ?? []).some((col) => (col.blocks ?? []).some((b) => b.type === 'meada_navbar')),
   )
   return (
-    <main className="min-h-screen" style={cmsShellStyle(theme)}>
+    <main className="cms-shell min-h-screen" style={cmsShellStyle(theme)} {...cmsShellLayoutAttrs(theme)}>
       {nav.length > 1 && !hasOwnNavbar && (
         <nav className="flex flex-wrap items-center justify-center gap-4 border-b border-black/10 px-6 py-4 text-sm">
           {nav.map((n) => (

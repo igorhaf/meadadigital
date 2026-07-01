@@ -20,6 +20,21 @@ const nextConfig: NextConfig = {
       { source: '/dashboard/orders', destination: '/dashboard/sushi-orders', permanent: true },
     ]
   },
+  // Anti-clickjacking no SITE PÚBLICO do CMS (/p/**): o conteúdo é editável pelo tenant e
+  // renderizado sem auth — sem isto, um terceiro poderia embutir a página num iframe invisível
+  // e induzir cliques (clickjacking). X-Frame-Options (legado) + CSP frame-ancestors 'none'
+  // (moderno) negam o embed. Aplicado só a /p/** (o painel /dashboard tem seu próprio contexto).
+  async headers() {
+    return [
+      {
+        source: '/p/:path*',
+        headers: [
+          { key: 'X-Frame-Options', value: 'DENY' },
+          { key: 'Content-Security-Policy', value: "frame-ancestors 'none'" },
+        ],
+      },
+    ]
+  },
 };
 
 export default nextConfig;

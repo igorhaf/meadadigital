@@ -11,6 +11,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Pattern;
 
 /**
  * CMS PÚBLICO (SM-N), multi-página. SEM auth (rotas fora da allowlist do JwtFilter). Serve a página
@@ -47,6 +48,17 @@ public class CmsPublicController {
         return ResponseEntity.status(404).body(Map.of("error", "Not Found", "reason", "page_not_found"));
     }
 
+    // Hostname válido (RFC 1123 simplificado): labels alfanuméricas com hífen interno, separadas por
+    // ponto, total <= 253. Rejeita CEDO host malformado (path traversal, null byte, espaço, esquema)
+    // antes de tocar o banco — defesa em profundidade (a busca é por igualdade exata, mas não
+    // assumimos que qualquer string é um domínio). Auditoria de segurança (B2).
+    private static final Pattern HOSTNAME =
+        Pattern.compile("^(?=.{1,253}$)([a-z0-9]([a-z0-9-]{0,61}[a-z0-9])?\\.)+[a-z]{2,63}$");
+
+    private static boolean validHost(String host) {
+        return host != null && HOSTNAME.matcher(host.toLowerCase()).matches();
+    }
+
     @GetMapping("/public/cms/by-slug/{slug}")
     public ResponseEntity<Object> homeBySlug(@PathVariable String slug) {
         Optional<CmsPage> page = service.publishedHomeBySlug(slug);
@@ -61,12 +73,14 @@ public class CmsPublicController {
 
     @GetMapping("/public/cms/by-domain")
     public ResponseEntity<Object> byDomain(@RequestParam String host) {
+        if (!validHost(host)) return notFound();
         Optional<CmsPage> page = service.publishedHomeByDomain(host);
         return page.map(this::ok).orElseGet(CmsPublicController::notFound);
     }
 
     @GetMapping("/public/cms/by-domain/{pageSlug}")
     public ResponseEntity<Object> pageByDomain(@RequestParam String host, @PathVariable String pageSlug) {
+        if (!validHost(host)) return notFound();
         Optional<CmsPage> page = service.publishedPageByDomain(host, pageSlug);
         return page.map(this::ok).orElseGet(CmsPublicController::notFound);
     }
@@ -79,6 +93,7 @@ public class CmsPublicController {
      */
     @GetMapping("/public/cms/tls-allowed")
     public ResponseEntity<Void> tlsAllowed(@RequestParam String domain) {
+        if (!validHost(domain)) return ResponseEntity.status(404).build();
         return service.domainAllowedForTls(domain)
             ? ResponseEntity.ok().build()
             : ResponseEntity.status(404).build();

@@ -11,6 +11,7 @@ import com.nimbusds.jose.proc.SecurityContext;
 import com.nimbusds.jwt.JWTClaimsSet;
 import com.nimbusds.jwt.proc.BadJWTException;
 import com.nimbusds.jwt.proc.ConfigurableJWTProcessor;
+import com.nimbusds.jwt.proc.DefaultJWTClaimsVerifier;
 import com.nimbusds.jwt.proc.DefaultJWTProcessor;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -135,6 +136,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     public JwtAuthenticationFilter(AdminProperties adminProperties,
                                    JWKSource<SecurityContext> jwkSource,
                                    @Value("${supabase.jwt-secret:}") String jwtSecret,
+                                   @Value("${supabase.url:}") String supabaseUrl,
                                    JdbcTemplate jdbcTemplate,
                                    ObjectMapper objectMapper) {
         this.jdbcTemplate = jdbcTemplate;
@@ -157,6 +159,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             // PROD: ES256 selecionando a chave pública pela kid do token (via JWKSource/JWKS).
             processor.setJWSKeySelector(
                 new JWSVerificationKeySelector<>(JWSAlgorithm.ES256, jwkSource));
+        }
+        // Validação de claims: além de exp/nbf (default do nimbus), EXIGE issuer = projeto Supabase
+        // (${SUPABASE_URL}/auth/v1) e audience 'authenticated'. Sem isso, um token ES256 válido de
+        // OUTRO projeto Supabase (mesma curva) seria aceito. Só ativa quando supabase.url está
+        // setado — dev local (Supabase CLI, url vazia/divergente) mantém o verifier default
+        // (exp/nbf), pra não quebrar o fluxo HS256 local.
+        if (supabaseUrl != null && !supabaseUrl.isBlank()) {
+            String issuer = supabaseUrl.replaceAll("/+$", "") + "/auth/v1";
+            processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
+                new JWTClaimsSet.Builder().issuer(issuer).audience("authenticated").build(),
+                Set.of("exp")));
         }
         this.jwtProcessor = processor;
         // allowlist normalizada (lowercase) uma vez no boot; null-safe se a key faltar no YAML.
@@ -286,10 +299,13 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (ParseException e) {
             throw new AuthRejectException(401, "malformed_token");
         } catch (BadJWTException e) {
-            // O DefaultJWTClaimsVerifier por padrão só valida exp e nbf — em MVP mapeamos
-            // genericamente para token_expired. Se um dia configurarmos requiredClaims,
-            // este catch precisa diferenciar (via e.getMessage() ou inspeção).
-            throw new AuthRejectException(401, "token_expired");
+            // Claims-level: exp/nbf OU (agora) issuer/audience divergentes. Diferencia pela
+            // mensagem do nimbus: "Expired JWT" → token_expired; o resto (iss/aud) → invalid_claims.
+            // Ambos 401 — não vaza ao atacante por que falhou.
+            String msg = e.getMessage();
+            String reason = (msg != null && msg.toLowerCase().contains("expired"))
+                ? "token_expired" : "invalid_claims";
+            throw new AuthRejectException(401, reason);
         } catch (BadJOSEException e) {
             throw new AuthRejectException(401, "invalid_signature");
         } catch (JOSEException e) {
