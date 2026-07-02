@@ -134,7 +134,14 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/62_viagens.sql",
         "db/migrations/68_suplementos.sql",
         "db/migrations/69_sushi_funcional.sql",
-        "db/migrations/72_academia_inadimplencia.sql"
+        "db/migrations/72_academia_inadimplencia.sql",
+        "db/migrations/73_academia_checkins.sql",
+        "db/migrations/74_academia_waitlist.sql",
+        "db/migrations/75_academia_day_passes.sql",
+        "db/migrations/76_academia_referrals.sql",
+        "db/migrations/77_academia_coupons.sql",
+        "db/migrations/78_academia_loyalty.sql",
+        "db/migrations/79_academia_aniversario.sql"
     };
 
     /**

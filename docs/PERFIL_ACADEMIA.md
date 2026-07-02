@@ -2,7 +2,8 @@
 
 O AcademiaBot é o produto do Meada para academias e studios de fitness. Seus clientes falam pelo
 WhatsApp; a IA atende com tom acolhedor-motivador, mostra os planos e as aulas com vaga, e matricula.
-Você acompanha as matrículas, registra pagamentos e gerencia planos e aulas pelo painel.
+Você acompanha as matrículas, registra presença e pagamentos, gerencia cupons, fidelidade e
+indicações, e enxerga a saúde do negócio nos relatórios.
 
 ## 1. Planos (`/dashboard/academia-plans`)
 
@@ -32,11 +33,76 @@ Você acompanha as matrículas, registra pagamentos e gerencia planos e aulas pe
   veja o histórico, o último mês pago e os meses em aberto. Pagamento só em matrícula ativa; um mês
   não pode ser registrado duas vezes.
 
-## 4. Configurações (`/dashboard/academia-settings`)
+## 4. Check-ins / frequência (`/dashboard/academia-checkins`)
 
-- **Horário de funcionamento** (abre/fecha).
+- Escolha a aula e marque **"Presente"** nos alunos que apareceram — 1 presença por aluno/aula/dia
+  (o sistema barra duplicata).
+- **Histórico** com filtro de período: quem veio, em qual aula e quando.
+- A frequência é o alicerce da reativação de inativo e da fidelidade por assiduidade. O check-in
+  pela conversa ("cheguei" → IA registra) é fase futura — o schema já prevê a origem `ia`.
 
-## 5. Como a IA atende
+## 5. Fila de espera (`/dashboard/academia-waitlist`)
+
+- Aula lotada não é venda perdida: adicione o interessado à **fila da aula** (nome + telefone).
+- A **posição é derivada por ordem de chegada** — quando alguém sai da frente (chamado/desistiu), as
+  posições recomputam sozinhas.
+- Ações: **Chamar** (avise o interessado — abriu vaga), **Matriculou** (virou matrícula pelo fluxo
+  normal) e **Desistiu**. Entrar na fila NÃO cria matrícula nem reserva vaga: a fila só ordena o
+  interesse.
+
+## 6. Avulsos / day-use (`/dashboard/academia-day-passes`)
+
+- Registre a **aula avulsa / diária** de quem ainda não é aluno: nome, telefone, aula (opcional),
+  data e valor.
+- O passe nasce **"A receber"**; ao receber (dinheiro/Pix na recepção), marque **"Pago"**.
+- Cobrança online do avulso espera o gateway de pagamento (#50) — hoje o registro é manual.
+
+## 7. Cupons (`/dashboard/academia-coupons`)
+
+- Cupom de desconto para fechar matrícula parada: **percentual** (1–100%) ou **valor fixo** (R$),
+  com mínimo, limite de usos e validade opcionais.
+- O código é **único por academia (sem diferenciar maiúsculas)** e pode ser divulgado em campanha; a
+  IA aplica na conversa e o backend valida (ativo + validade + mínimo + usos).
+
+## 8. Fidelidade por assiduidade (`/dashboard/academia-loyalty`)
+
+- **Opt-in:** ligue a fidelidade, defina **pontos por check-in**, o **limiar** de pontos e a
+  **recompensa** (texto livre, ex.: "Uma aula grátis").
+- Consulte o **saldo do aluno** (por matrícula ativa) e credite pontos manualmente se precisar
+  (ajuste/cortesia). Quando o saldo atinge o limiar, a tela sinaliza **"Recompensa atingida"** — a
+  concessão é sua (registre e zere/ajuste os pontos como política da casa).
+
+## 9. Indicações (`/dashboard/academia-referrals`)
+
+- **Traga um amigo:** registre a indicação (quem indicou — aluno da casa — e o indicado) e o sistema
+  gera um **código único** para o indicador divulgar.
+- Quando o amigo matricular, marque **"Converteu"** — o desconto (`%`) é concedido LOCALMENTE por
+  você no pagamento (cashback real espera o gateway #50).
+
+## 10. Relatórios (`/dashboard/academia-reports`)
+
+- **MRR** (receita mensal recorrente das matrículas ativas), matrículas por status, e **ocupação por
+  aula** (ativos × capacidade) — enxergue aula ociosa e aula lotada de relance. Somente leitura.
+
+## 11. Régua de inadimplência (automática)
+
+- Diariamente o sistema varre as matrículas ativas e, respeitando a **carência (grace_days)** da sua
+  configuração, envia **um lembrete de vencimento por mês em aberto** pelo WhatsApp.
+- Se você ligar a **auto-suspensão** (`auto_suspend_days`), a matrícula é **suspensa** sozinha após o
+  atraso-limite (suspensa mantém a vaga — a régua nunca cancela). A cobrança real com link de
+  pagamento espera o gateway #50.
+
+## 12. Aniversário do aluno (automático)
+
+- Cadastre a **data de nascimento** no contato; no dia, a IA envia **uma** mensagem calorosa de
+  parabéns por ano (sem repetir). A mensagem é um voto de felicidades — sem oferta clínica, sem
+  promessa de resultado.
+
+## 13. Configurações (`/dashboard/academia-settings`)
+
+- **Horário de funcionamento** (abre/fecha) e política de inadimplência (carência e auto-suspensão).
+
+## 14. Como a IA atende
 
 - A IA conhece os planos ativos, as aulas com vaga (em tempo real) e se o cliente já tem matrícula
   (nesse caso, não oferece outra).
@@ -48,16 +114,18 @@ Você acompanha as matrículas, registra pagamentos e gerencia planos e aulas pe
 
 ## LGPD
 
-- As **observações** da matrícula são administrativas. **Não** registre dados de saúde do aluno.
+- As **observações** da matrícula e dos check-ins são administrativas. **Não** registre dados de
+  saúde do aluno. Data de nascimento do contato é usada só para a saudação de aniversário.
 
 ## Limitações conhecidas (honestas)
 
 - **Matrícula é assinatura** (ativa-até-cancelar), não um agendamento avulso.
 - **Vaga é por capacidade da aula** — suspensa mantém a vaga; só cancelar libera.
-- **Pagamento é manual** (registro mês a mês). Cobrança automática (cartão/Pix), boleto e cálculo de
-  inadimplência são fases futuras.
+- **Cobrança real (cartão/Pix/boleto) espera o gateway #50** — hoje: registro manual + lembrete de
+  vencimento + auto-suspensão opcional.
 - **Aluno não é cadastro formal** — o histórico vem do contato do WhatsApp.
+- **Check-in é pela recepção (painel).** A via pela conversa ("cheguei" → IA registra) e o
+  QR/leitor (espera o desbloqueio de upload, SERVICE_ROLE_KEY) são fases futuras.
 - **Sem treino prescrito, ficha de exercícios, avaliação física, balança/wearables, catraca,
-  fidelidade, multi-unidade.**
-- **Sem lembrete/cobrança automática.**
+  multi-unidade.**
 - **Fuso fixo** America/Sao_Paulo.

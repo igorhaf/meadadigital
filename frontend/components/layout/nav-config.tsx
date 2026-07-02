@@ -316,13 +316,20 @@ const POUSADA_GROUP: NavGroup = {
   ],
 }
 
-/** Grupo de navegação exclusivo do perfil academia (camada 7.7). */
+/** Grupo de navegação exclusivo do perfil academia (camada 7.7 + piloto Onda 2 do backlog). */
 const ACADEMIA_GROUP: NavGroup = {
   heading: 'Academia',
   items: [
     { label: 'Planos', href: '/dashboard/academia-plans', icon: Dumbbell },
     { label: 'Aulas', href: '/dashboard/academia-classes', icon: CalendarClock },
     { label: 'Matrículas', href: '/dashboard/academia-memberships', icon: ClipboardList },
+    { label: 'Check-ins', href: '/dashboard/academia-checkins', icon: ClipboardCheck },
+    { label: 'Fila de espera', href: '/dashboard/academia-waitlist', icon: ListOrdered },
+    { label: 'Avulsos', href: '/dashboard/academia-day-passes', icon: Ticket },
+    { label: 'Cupons', href: '/dashboard/academia-coupons', icon: Tag },
+    { label: 'Fidelidade', href: '/dashboard/academia-loyalty', icon: Award },
+    { label: 'Indicações', href: '/dashboard/academia-referrals', icon: UserPlus },
+    { label: 'Relatórios', href: '/dashboard/academia-reports', icon: BarChart3 },
     { label: 'Configurações', href: '/dashboard/academia-settings', icon: Settings },
   ],
 }
