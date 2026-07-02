@@ -26,8 +26,9 @@ preços), respondendo clientes pelo WhatsApp. Dados isolados por tenant via RLS.
 ## Bootstrap do zero (clone → ambiente rodando)
 
 Pré-requisitos: **Java 17 Temurin** (`/usr/lib/jvm/temurin-17-jdk-amd64`), **Node + npm**,
-**Maven 3.8+**, **Docker** (para a Evolution local). Banco/Auth são Supabase remoto (não
-sobe local) — é preciso um projeto Supabase com o schema das migrations aplicado.
+**Maven 3.8+**, **Docker** (para a Evolution local). Banco/Auth são **Supabase LOCAL via CLI**
+desde 2026-07-01 (`supabase start` — API/Auth em `:54321`, Postgres em `:54322`) com o schema
+das migrations aplicado. (Antes era Supabase remoto via Session pooler — não vale mais.)
 
 1. **Backend env:** `cp .env.example .env` e preencher (Supabase datasource via Session
    pooler IPv4, `WEBHOOK_SECRET`, `GEMINI_API_KEY`/`GEMINI_MODEL`, `EVOLUTION_BASE_URL`,
@@ -134,11 +135,14 @@ paralelizar DENTRO da própria rodada, não de abrir sessões extras.
 - **Frontend** (Next, porta 3000): `cd frontend && npm run dev`. `/login` → 200.
 - **Testes backend:** `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn -B clean test`.
 - **Build frontend:** `cd frontend && npm run build`.
-- **Banco (psql direto):** Supabase Session pooler IPv4
-  (`aws-1-us-west-2.pooler.supabase.com:5432`, user `postgres.<ref>`); senha em
-  `SPRING_DATASOURCE_PASSWORD` do `.env`. Smoke E2E real: login via
-  `POST {SUPABASE_URL}/auth/v1/token?grant_type=password` → token ES256 → bater no
-  backend ou no PostgREST (`/rest/v1/...`).
+- **Banco (psql direto):** Supabase LOCAL (CLI) — `psql -h 127.0.0.1 -p 54322 -U postgres -d postgres`;
+  senha em `SPRING_DATASOURCE_PASSWORD` do `.env`. `SUPABASE_URL=http://127.0.0.1:54321` (backend);
+  o frontend usa o IP do WSL (`http://172.27.153.135:54321`) pra alinhar o nome do cookie
+  `sb-172-auth-token` entre browser e SSR (lição do redirect loop de 2026-07-01). Migration nova
+  se aplica com `psql ... -f supabase/migrations/NN_x.sql` ao fechar a onda.
+  (O Session pooler remoto `aws-1-us-west-2` documentado antes NÃO vale mais.)
+  Smoke E2E real: login via `POST {SUPABASE_URL}/auth/v1/token?grant_type=password` → token →
+  bater no backend ou no PostgREST (`/rest/v1/...`).
 
 ## DevX local (Docker — fase 0.5)
 
