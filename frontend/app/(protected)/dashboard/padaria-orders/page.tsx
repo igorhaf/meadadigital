@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import { listOrders, updateOrderStatus } from '@/lib/api/padaria/orders'
 import { fulfillmentLabel } from '@/profiles/padaria/padaria-fulfillment'
 import { periodLabel } from '@/profiles/padaria/padaria-period'
@@ -51,6 +52,7 @@ function OrderCard({
   onAdvance,
   onCancel,
   busy,
+  dragProps,
 }: {
   order: Order
   onAccept: (o: Order) => void
@@ -58,11 +60,16 @@ function OrderCard({
   onAdvance: (o: Order) => void
   onCancel: (o: Order) => void
   busy: boolean
+  dragProps?: React.HTMLAttributes<HTMLDivElement> & { draggable?: boolean }
 }) {
   const next = nextStatus(order.status, order.fulfillment)
   const awaiting = order.status === 'aguardando'
   const schedule = scheduleLine(order)
   return (
+    <div
+      {...dragProps}
+      className="data-[dragging=true]:opacity-50 [&[draggable=true]]:cursor-grab active:[&[draggable=true]]:cursor-grabbing"
+    >
     <Card className="space-y-2 p-3">
       <div className="flex items-center justify-between">
         <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
@@ -114,6 +121,7 @@ function OrderCard({
         )}
       </div>
     </Card>
+    </div>
   )
 }
 
@@ -160,6 +168,25 @@ export default function PadariaOrdersPage() {
     if (next) statusMutation.mutate({ id: o.id, status: next })
   }
 
+  const busy = statusMutation.isPending
+
+  const allActiveForDnd = active.data?.items ?? []
+
+  // Drag-and-drop: soltar um card numa coluna avança o pedido — SÓ nas transições válidas do funil
+  // (nextStatus, que diverge por fulfillment em "pronto"). 'aguardando' é gate de aceite (botão);
+  // recusar/cancelar continuam por botão (exigem motivo/confirmação).
+  const dnd = useKanbanDnd({
+    canDrop: (id, target) => {
+      const o = allActiveForDnd.find((x) => x.id === id)
+      if (!o || busy) return false
+      if (o.status === 'aguardando') return false // aceitar/recusar = botão
+      return nextStatus(o.status, o.fulfillment) === target
+    },
+    onDrop: (id, target) => {
+      statusMutation.mutate({ id, status: target as OrderStatus })
+    },
+  })
+
   function confirmReject() {
     if (!rejectTarget) return
     statusMutation.mutate({
@@ -201,7 +228,11 @@ export default function PadariaOrdersPage() {
             {KANBAN_COLUMNS.map((col) => {
               const colOrders = allActive.filter((o) => o.status === col.id)
               return (
-                <div key={col.id} className="space-y-3">
+                <div
+                  key={col.id}
+                  {...dnd.columnProps(col.id)}
+                  className="space-y-3 rounded-lg p-1 transition-colors data-[over=true]:bg-[var(--palette-surface)] data-[over=true]:ring-2 data-[over=true]:ring-primary/40"
+                >
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold">{col.label}</h2>
                     <Badge variant="muted">{colOrders.length}</Badge>
@@ -214,7 +245,8 @@ export default function PadariaOrdersPage() {
                         <OrderCard
                           key={o.id}
                           order={o}
-                          busy={statusMutation.isPending}
+                          busy={busy}
+                          dragProps={dnd.cardProps(o.id)}
                           onAccept={accept}
                           onReject={(ord) => { setRejectReason(''); setRejectTarget(ord) }}
                           onAdvance={advance}

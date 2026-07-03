@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import { listOrders, updateOrderStatus } from '@/lib/api/otica/orders'
 import {
   KANBAN_COLUMNS,
@@ -49,6 +50,7 @@ function OrderCard({
   onAdvance,
   onCancel,
   busy,
+  dragProps,
 }: {
   order: Order
   onOpen: (o: Order) => void
@@ -57,10 +59,15 @@ function OrderCard({
   onAdvance: (o: Order) => void
   onCancel: (o: Order) => void
   busy: boolean
+  dragProps?: React.HTMLAttributes<HTMLDivElement> & { draggable?: boolean }
 }) {
   const next = NEXT_STATUS[order.status]
   const awaiting = order.status === 'aguardando'
   return (
+    <div
+      {...dragProps}
+      className="data-[dragging=true]:opacity-50 [&[draggable=true]]:cursor-grab active:[&[draggable=true]]:cursor-grabbing"
+    >
     <Card className="space-y-2 p-3">
       <button onClick={() => onOpen(order)} className="w-full space-y-2 text-left">
         <div className="flex items-center justify-between">
@@ -105,6 +112,7 @@ function OrderCard({
         )}
       </div>
     </Card>
+    </div>
   )
 }
 
@@ -210,6 +218,20 @@ export default function OticaOrdersPage() {
   }
 
   const allActive = active.data?.items ?? []
+
+  // Drag-and-drop: soltar um card numa coluna avança o pedido — SÓ se for a transição válida
+  // (NEXT_STATUS do status atual). Recusar/cancelar continuam por botão.
+  const dnd = useKanbanDnd({
+    canDrop: (id, target) => {
+      const o = allActive.find((x) => x.id === id)
+      if (!o || statusMutation.isPending) return false
+      return NEXT_STATUS[o.status] === target
+    },
+    onDrop: (id, target) => {
+      statusMutation.mutate({ id, status: target as OticaOrderStatusId })
+    },
+  })
+
   const historyItems = (history.data?.items ?? []).filter(
     (o) => o.status === 'retirado' || o.status === 'recusado' || o.status === 'cancelado',
   )
@@ -235,7 +257,11 @@ export default function OticaOrdersPage() {
             {KANBAN_COLUMNS.map((col) => {
               const colOrders = allActive.filter((o) => o.status === col.id)
               return (
-                <div key={col.id} className="space-y-3">
+                <div
+                  key={col.id}
+                  {...dnd.columnProps(col.id)}
+                  className="space-y-3 rounded-lg p-1 transition-colors data-[over=true]:bg-[var(--palette-surface)] data-[over=true]:ring-2 data-[over=true]:ring-primary/40"
+                >
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold">{col.label}</h2>
                     <Badge variant="muted">{colOrders.length}</Badge>
@@ -249,6 +275,7 @@ export default function OticaOrdersPage() {
                           key={o.id}
                           order={o}
                           busy={statusMutation.isPending}
+                          dragProps={dnd.cardProps(o.id)}
                           onOpen={setDetail}
                           onAccept={accept}
                           onReject={(ord) => { setRejectReason(''); setRejectTarget(ord) }}

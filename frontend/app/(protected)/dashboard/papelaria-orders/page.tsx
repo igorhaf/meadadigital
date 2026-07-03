@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import { approveArt, listOrders, setArtUrl, updateOrderStatus } from '@/lib/api/papelaria/orders'
 import { fulfillmentLabel } from '@/profiles/papelaria/papelaria-fulfillment'
 import { periodLabel } from '@/profiles/papelaria/papelaria-period'
@@ -60,6 +61,7 @@ function OrderCard({
   onAdvance,
   onCancel,
   busy,
+  dragProps,
 }: {
   order: Order
   onAccept: (o: Order) => void
@@ -70,10 +72,15 @@ function OrderCard({
   onAdvance: (o: Order) => void
   onCancel: (o: Order) => void
   busy: boolean
+  dragProps?: React.HTMLAttributes<HTMLDivElement> & { draggable?: boolean }
 }) {
   const next = nextStatus(order.status, order.fulfillment)
   const schedule = scheduleLine(order)
   return (
+    <div
+      {...dragProps}
+      className="data-[dragging=true]:opacity-50 [&[draggable=true]]:cursor-grab active:[&[draggable=true]]:cursor-grabbing"
+    >
     <Card className="space-y-2 p-3">
       <div className="flex items-center justify-between">
         <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
@@ -169,6 +176,7 @@ function OrderCard({
         )}
       </div>
     </Card>
+    </div>
   )
 }
 
@@ -245,6 +253,30 @@ export default function PapelariaOrdersPage() {
     statusMutation.mutate({ id: o.id, status: 'em_producao' })
   }
 
+  const allActiveForDnd = active.data?.items ?? []
+
+  // Drag-and-drop: soltar um card numa coluna avança o pedido SÓ nas transições "simples" e válidas.
+  // Bloqueios da ESCAPADA da arte: NÃO se arrasta pra 'aceito'/'recusado' (gate de aceite = botão),
+  // nem pra 'arte_aprovacao' (exige SUBIR a arte, que pede URL via modal). Pra 'em_producao' só com
+  // a arte aprovada (mesmo gate do backend → 409 art_not_approved). As demais: o nextStatus do funil.
+  const dnd = useKanbanDnd({
+    canDrop: (id, target) => {
+      const o = allActiveForDnd.find((x) => x.id === id)
+      if (!o || busy) return false
+      if (o.status === 'aguardando') return false // aceitar/recusar é gate de botão
+      if (o.status === 'aceito') return false // subir arte exige URL (modal)
+      if (target === 'arte_aprovacao') return false // idem
+      if (target === 'em_producao') {
+        // de 'aceito' (sem arte) ou de 'arte_aprovacao' com arte aprovada
+        return o.status === 'arte_aprovacao' && o.artApproved
+      }
+      return nextStatus(o.status, o.fulfillment) === target
+    },
+    onDrop: (id, target) => {
+      statusMutation.mutate({ id, status: target as OrderStatus })
+    },
+  })
+
   function openArt(o: Order) {
     setArtUrlInput(o.artUrl ?? '')
     setArtError(null)
@@ -304,7 +336,11 @@ export default function PapelariaOrdersPage() {
             {KANBAN_COLUMNS.map((col) => {
               const colOrders = allActive.filter((o) => o.status === col.id)
               return (
-                <div key={col.id} className="space-y-3">
+                <div
+                  key={col.id}
+                  {...dnd.columnProps(col.id)}
+                  className="space-y-3 rounded-lg p-1 transition-colors data-[over=true]:bg-[var(--palette-surface)] data-[over=true]:ring-2 data-[over=true]:ring-primary/40"
+                >
                   <div className="flex items-center justify-between">
                     <h2 className="text-sm font-semibold">{col.label}</h2>
                     <Badge variant="muted">{colOrders.length}</Badge>
@@ -318,6 +354,7 @@ export default function PapelariaOrdersPage() {
                           key={o.id}
                           order={o}
                           busy={busy}
+                          dragProps={dnd.cardProps(o.id)}
                           onAccept={accept}
                           onReject={(ord) => { setRejectReason(''); setRejectTarget(ord) }}
                           onUploadArt={openArt}
