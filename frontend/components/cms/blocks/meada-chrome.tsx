@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 import type { MeadaFooterProps, MeadaNavbarProps } from '@/lib/cms/cms-block-type'
@@ -64,7 +65,7 @@ export function MeadaNavbar({ props, activeSlot }: { props: MeadaNavbarProps; ac
     <>
       <nav style={{ position: 'sticky', top: 0, zIndex: 100, height: '72px', background: scrolled ? 'rgba(0,8,18,0.85)' : 'rgba(0,8,18,0.5)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', borderBottom: scrolled ? '1px solid rgba(59,130,246,0.15)' : '1px solid rgba(59,130,246,0.05)', transition: 'background 0.3s ease, border-color 0.3s ease' }}>
         <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 2rem', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <a href="/" data-slot="brand" style={{ textDecoration: 'none', ...slotOutlineStyle(activeSlot, 'brand') }}><Brand name={props.brandName} suffix={props.brandSuffix} /></a>
+          <Link href="/" data-slot="brand" style={{ textDecoration: 'none', ...slotOutlineStyle(activeSlot, 'brand') }}><Brand name={props.brandName} suffix={props.brandSuffix} /></Link>
 
           {/* links desktop */}
           <div className="hidden items-center md:flex" style={{ gap: '2rem' }}>

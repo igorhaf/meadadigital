@@ -52,6 +52,7 @@ export function ThemeModeProvider({ children }: { children: React.ReactNode }) {
   // Hidrata o estado a partir do localStorage no mount (client only). 'system' legado vira 'light'
   // (o produto só tem claro/escuro agora — resquício do toggle de 3 estados).
   useEffect(() => {
+    /* eslint-disable react-hooks/set-state-in-effect -- hidratação do localStorage no mount (client only) é sync com sistema externo */
     const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null
     if (stored === 'dark') {
       setModeState('dark')
@@ -61,6 +62,7 @@ export function ThemeModeProvider({ children }: { children: React.ReactNode }) {
     } else {
       setModeState('light')
     }
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [])
 
   // Aplica a classe sempre que o modo muda.

@@ -50,8 +50,10 @@ export function GlobalSearch() {
       return () => clearTimeout(t)
     }
     // Limpa ao fechar para a próxima abertura começar do zero.
+    /* eslint-disable react-hooks/set-state-in-effect -- reset atrelado ao ciclo do modal (open), não derivável no render */
     setQuery('')
     setResults(EMPTY)
+    /* eslint-enable react-hooks/set-state-in-effect */
   }, [open])
 
   // Busca com debounce de 250ms. q < 2 chars → limpa (o backend devolveria vazio mesmo).
@@ -59,6 +61,7 @@ export function GlobalSearch() {
   useEffect(() => {
     const q = query.trim()
     if (q.length < 2) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- zera resultados junto do debounce (efeito é dono do ciclo da busca)
       setResults(EMPTY)
       return
     }

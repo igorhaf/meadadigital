@@ -143,6 +143,7 @@ function LoginInner() {
   // DEPOIS da montagem, no cliente.
   const [profile, setProfile] = useState(GENERIC_PROFILE)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratação pós-mount é o padrão SSR-safe (ver comentário acima)
     setProfile(currentProfile())
   }, [])
   const title = isInvite ? 'Aceitar convite' : `Bem-vindo ao ${profile.productName}`

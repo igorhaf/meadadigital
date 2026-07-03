@@ -35,6 +35,7 @@
       sessionId = 's-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);
       localStorage.setItem(SESSION_KEY, sessionId);
     }
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars -- ES5 (sem optional catch binding)
   } catch (e) {
     // localStorage bloqueado (modo privado/cookies off): sessão efêmera só nesta visita.
     sessionId = 's-' + Date.now() + '-' + Math.random().toString(36).slice(2, 10);

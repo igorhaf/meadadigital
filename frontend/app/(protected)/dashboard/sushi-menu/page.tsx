@@ -52,7 +52,7 @@ export default function MenuPage() {
     queryFn: () => listCategories(),
   })
 
-  const categories = categoriesQuery.data?.items ?? []
+  const categories = useMemo(() => categoriesQuery.data?.items ?? [], [categoriesQuery.data])
   const categoryById = useMemo(() => {
     const m = new Map<string, Category>()
     for (const c of categories) m.set(c.id, c)
