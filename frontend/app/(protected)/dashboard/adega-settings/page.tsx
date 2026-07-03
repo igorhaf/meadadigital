@@ -1,20 +1,20 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getConfig, updateConfig } from '@/lib/api/adega/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = { deliveryFee: string; minOrder: string } // reais
 
 /** Configurações do AdegaBot (delivery): taxa de entrega + valor mínimo do pedido (em R$). */
 export default function AdegaSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -23,14 +23,10 @@ export default function AdegaSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        deliveryFee: String(data.deliveryFeeCents / 100),
-        minOrder: String(data.minOrderCents / 100),
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    deliveryFee: String(d.deliveryFeeCents / 100),
+    minOrder: String(d.minOrderCents / 100),
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {

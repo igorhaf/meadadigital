@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getConfig, updateConfig } from '@/lib/api/concessionaria/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   businessName: string
@@ -32,7 +33,6 @@ function hhmm(t: string): string {
  */
 export default function ConcessionariaSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -41,22 +41,18 @@ export default function ConcessionariaSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        businessName: data.businessName ?? '',
-        durationMinutes: data.durationMinutes,
-        bufferMinutes: data.bufferMinutes,
-        opensAt: hhmm(data.opensAt),
-        closesAt: hhmm(data.closesAt),
-        notes: data.notes ?? '',
-        followupEnabled: data.followupEnabled ?? true,
-        followupDays: data.followupDays ?? 3,
-        testdriveReminderEnabled: data.testdriveReminderEnabled ?? true,
-        autoCompleteEnabled: data.autoCompleteEnabled ?? true,
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    businessName: d.businessName ?? '',
+    durationMinutes: d.durationMinutes,
+    bufferMinutes: d.bufferMinutes,
+    opensAt: hhmm(d.opensAt),
+    closesAt: hhmm(d.closesAt),
+    notes: d.notes ?? '',
+    followupEnabled: d.followupEnabled ?? true,
+    followupDays: d.followupDays ?? 3,
+    testdriveReminderEnabled: d.testdriveReminderEnabled ?? true,
+    autoCompleteEnabled: d.autoCompleteEnabled ?? true,
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {

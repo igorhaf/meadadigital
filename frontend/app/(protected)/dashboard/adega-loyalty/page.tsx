@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getLoyalty, updateLoyalty } from '@/lib/api/adega/loyalty'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   enabled: boolean
@@ -22,7 +23,6 @@ type FormState = {
  */
 export default function AdegaLoyaltyPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -31,16 +31,12 @@ export default function AdegaLoyaltyPage() {
     queryFn: () => getLoyalty(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        enabled: data.enabled,
-        thresholdOrders: String(data.thresholdOrders),
-        rewardKind: data.rewardKind,
-        rewardValue: data.rewardKind === 'percent' ? String(data.rewardValue) : String(data.rewardValue / 100),
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    enabled: d.enabled,
+    thresholdOrders: String(d.thresholdOrders),
+    rewardKind: d.rewardKind,
+    rewardValue: d.rewardKind === 'percent' ? String(d.rewardValue) : String(d.rewardValue / 100),
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {

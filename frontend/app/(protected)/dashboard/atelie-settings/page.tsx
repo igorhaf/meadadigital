@@ -1,12 +1,13 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getConfig, updateConfig } from '@/lib/api/atelie/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = { businessName: string; notes: string; fittingReminderEnabled: boolean }
 
@@ -16,7 +17,6 @@ type FormState = { businessName: string; notes: string; fittingReminderEnabled: 
  */
 export default function AtelieSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -25,15 +25,11 @@ export default function AtelieSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        businessName: data.businessName ?? '',
-        notes: data.notes ?? '',
-        fittingReminderEnabled: data.fittingReminderEnabled ?? true,
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    businessName: d.businessName ?? '',
+    notes: d.notes ?? '',
+    fittingReminderEnabled: d.fittingReminderEnabled ?? true,
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {

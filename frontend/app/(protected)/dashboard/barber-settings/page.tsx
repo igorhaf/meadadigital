@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getConfig, updateConfig } from '@/lib/api/barbearia/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   opensAt: string; closesAt: string; slotMinutes: number; queueEnabled: boolean
@@ -24,7 +25,6 @@ function hhmm(t: string): string {
  */
 export default function BarberSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -33,17 +33,13 @@ export default function BarberSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        opensAt: hhmm(data.opensAt), closesAt: hhmm(data.closesAt),
-        slotMinutes: data.slotMinutes, queueEnabled: data.queueEnabled,
-        reminderEnabled: data.reminderEnabled ?? true,
-        autoCompleteEnabled: data.autoCompleteEnabled ?? true,
-        upsellEnabled: data.upsellEnabled ?? false,
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    opensAt: hhmm(d.opensAt), closesAt: hhmm(d.closesAt),
+    slotMinutes: d.slotMinutes, queueEnabled: d.queueEnabled,
+    reminderEnabled: d.reminderEnabled ?? true,
+    autoCompleteEnabled: d.autoCompleteEnabled ?? true,
+    upsellEnabled: d.upsellEnabled ?? false,
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -131,7 +127,7 @@ export default function BarberSettingsPage() {
                   <span>
                     Lembrete de confirmação nas 24h antes do horário
                     <span className="block text-xs text-muted-foreground">
-                      "Confirma seu corte amanhã 15h? Responda SIM ou CANCELAR" — a resposta do cliente
+                      &quot;Confirma seu corte amanhã 15h? Responda SIM ou CANCELAR&quot; — a resposta do cliente
                       confirma ou libera o horário automaticamente.
                     </span>
                   </span>
@@ -142,7 +138,7 @@ export default function BarberSettingsPage() {
                   <span>
                     Auto-transição de status
                     <span className="block text-xs text-muted-foreground">
-                      Confirmado com horário passado vira "realizado" (alimenta fidelidade e relatório);
+                      Confirmado com horário passado vira &quot;realizado&quot; (alimenta fidelidade e relatório);
                       fila de dias anteriores expira sozinha.
                     </span>
                   </span>

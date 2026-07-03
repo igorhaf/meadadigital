@@ -1,12 +1,13 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getConfig, updateConfig } from '@/lib/api/casamento/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   businessName: string
@@ -23,7 +24,6 @@ type FormState = {
  */
 export default function CasamentoSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -32,18 +32,14 @@ export default function CasamentoSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        businessName: data.businessName ?? '',
-        notes: data.notes ?? '',
-        checklistReminderEnabled: data.checklistReminderEnabled ?? true,
-        paymentReminderEnabled: data.paymentReminderEnabled ?? true,
-        autoCompleteEnabled: data.autoCompleteEnabled ?? true,
-        anniversaryEnabled: data.anniversaryEnabled ?? true,
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    businessName: d.businessName ?? '',
+    notes: d.notes ?? '',
+    checklistReminderEnabled: d.checklistReminderEnabled ?? true,
+    paymentReminderEnabled: d.paymentReminderEnabled ?? true,
+    autoCompleteEnabled: d.autoCompleteEnabled ?? true,
+    anniversaryEnabled: d.anniversaryEnabled ?? true,
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
