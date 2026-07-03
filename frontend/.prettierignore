@@ -1,0 +1,8 @@
+# build/deps
+.next
+node_modules
+next-env.d.ts
+package-lock.json
+
+# assets estáticos servidos como estão (widget.js é ES5 deliberado)
+public
