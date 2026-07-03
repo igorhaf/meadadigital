@@ -1,0 +1,582 @@
+openapi: 3.0.3
+info:
+  title: Meada API
+  version: "1.0.0"
+  description: |
+    API do **Meada** — SaaS multi-tenant de atendimento via WhatsApp com IA.
+
+    ## Autenticação
+    - **JWT (Supabase, ES256/JWKS)** no header `Authorization: Bearer <token>` para `/admin/**` e
+      `/api/{nicho}/**`. Validado por filtro próprio (`JwtAuthenticationFilter`).
+    - **Webhook secret** (`apikey` header/query) para `/webhooks/**`.
+    - **Sem auth** para `/public/**` e o fluxo público de convites.
+
+    ## Papéis
+    - `SUPER_ADMIN` (email na allowlist) → `/admin/**` global.
+    - `TENANT_ADMIN` (linha em `users`) → `/admin/**` (tenant) + `/api/{nicho}/**`.
+    - `INVITEE` (JWT sem linha em `users`) → só aceitar convite.
+
+    ## Nota sobre os nichos
+    Há 34 perfis verticais (`/api/{nicho}/**`). Eles repetem padrões CRUD; este documento descreve
+    o **padrão paramétrico** (com `{nicho}` e `{resource}`) e destaca os endpoints especiais
+    (handlers/gates). Para a regra de negócio de cada nicho ver a wiki em `docs/wiki/05-nichos.md`.
+
+    ## Pagamentos
+    Não há gateway de PSP integrado. Os endpoints `/payments` (academia/escola/cursos) são
+    **registro manual** de mensalidade. Ver `docs/wiki/06-pagamentos.md`.
+  contact:
+    name: Meada
+servers:
+  - url: http://localhost:8095
+    description: Backend local
+  - url: https://api.meadadigital.com
+    description: Produção (placeholder)
+
+tags:
+  - name: Auth & Me
+  - name: Admin — Super-admin
+  - name: Admin — Tenant
+  - name: Mensageria
+  - name: Conhecimento (RAG)
+  - name: CMS (tenant)
+  - name: CMS (público)
+  - name: Webhook
+  - name: Convites
+  - name: Feature flags
+  - name: LGPD
+  - name: Nichos — padrão CRUD
+  - name: Nichos — handlers/gates especiais
+
+security:
+  - bearerAuth: []
+
+paths:
+  # ─────────────────────────────── AUTH & ME ───────────────────────────────
+  /admin/me:
+    get:
+      tags: [Auth & Me]
+      summary: Identidade do usuário autenticado
+      responses:
+        "200":
+          description: Identidade resolvida
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Me" }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    patch:
+      tags: [Auth & Me]
+      summary: Edita o próprio perfil (nome/senha)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                fullName: { type: string }
+                password: { type: string, format: password }
+      responses:
+        "200": { description: Atualizado }
+        "401": { $ref: "#/components/responses/Unauthorized" }
+
+  /api/access-logs:
+    post:
+      tags: [Auth & Me]
+      security: []
+      summary: Registra evento de acesso (público)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [action, email]
+              properties:
+                action: { type: string, enum: [login_success, login_failed, password_changed] }
+                email: { type: string, format: email }
+      responses:
+        "204": { description: Registrado }
+        "400": { $ref: "#/components/responses/BadRequest" }
+  /admin/access-logs:
+    get:
+      tags: [Admin — Tenant]
+      summary: Lista os 100 acessos mais recentes do tenant
+      responses:
+        "200": { description: Lista de access logs }
+
+  # ─────────────────────────── ADMIN — SUPER-ADMIN ──────────────────────────
+  /admin/companies:
+    get:
+      tags: [Admin — Super-admin]
+      summary: Lista empresas (filtros + paginação)
+      parameters:
+        - { name: page, in: query, schema: { type: integer, default: 1 } }
+        - { name: pageSize, in: query, schema: { type: integer, default: 20 } }
+        - { name: status, in: query, schema: { type: string, enum: [active, suspended] } }
+        - { name: q, in: query, schema: { type: string }, description: busca em name/slug }
+        - { name: created_after, in: query, schema: { type: string, format: date } }
+      responses:
+        "200":
+          description: Página de empresas
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/CompanyPage" }
+        "403": { $ref: "#/components/responses/Forbidden" }
+    post:
+      tags: [Admin — Super-admin]
+      summary: Cria empresa (+ usuário owner)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [slug, name]
+              properties:
+                slug: { type: string }
+                name: { type: string }
+                profileId: { type: string, description: um dos 34 perfis }
+      responses:
+        "201": { description: Criada }
+        "409": { description: "slug_taken", content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } } }
+  /admin/companies/{id}:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    get:
+      tags: [Admin — Super-admin]
+      summary: Detalhe da empresa
+      responses: { "200": { description: Empresa }, "404": { $ref: "#/components/responses/NotFound" } }
+    patch:
+      tags: [Admin — Super-admin]
+      summary: Edita empresa (status/slug/profile_id)
+      responses: { "200": { description: Atualizada } }
+    delete:
+      tags: [Admin — Super-admin]
+      summary: Remove empresa
+      responses: { "204": { description: Removida } }
+  /admin/companies/{id}/suspend:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    post: { tags: [Admin — Super-admin], summary: Suspende empresa, responses: { "200": { description: ok } } }
+  /admin/companies/{id}/reactivate:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    post: { tags: [Admin — Super-admin], summary: Reativa empresa, responses: { "200": { description: ok } } }
+  /admin/companies/{id}/impersonate:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    post: { tags: [Admin — Super-admin], summary: Impersona o tenant, responses: { "200": { description: ok } } }
+
+  /admin/users:
+    get:
+      tags: [Admin — Super-admin]
+      summary: Lista usuários globais
+      parameters:
+        - { name: page, in: query, schema: { type: integer } }
+        - { name: q, in: query, schema: { type: string } }
+        - { name: companyId, in: query, schema: { type: string, format: uuid } }
+        - { name: role, in: query, schema: { type: string } }
+        - { name: suspended, in: query, schema: { type: boolean } }
+      responses: { "200": { description: Página de usuários } }
+  /admin/users/{id}/suspend:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    post: { tags: [Admin — Super-admin], summary: Suspende usuário, responses: { "200": { description: ok } } }
+  /admin/users/{id}/reactivate:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    post: { tags: [Admin — Super-admin], summary: Reativa usuário, responses: { "200": { description: ok } } }
+
+  /admin/profile-features:
+    get:
+      tags: [Feature flags]
+      summary: Grade de feature flags por nicho (super-admin)
+      responses: { "200": { description: Grade } }
+  /admin/profile-features/{profileId}/{featureKey}:
+    put:
+      tags: [Feature flags]
+      summary: Liga/desliga uma feature para um nicho
+      parameters:
+        - { name: profileId, in: path, required: true, schema: { type: string } }
+        - { name: featureKey, in: path, required: true, schema: { type: string, enum: [cms] } }
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, properties: { enabled: { type: boolean } } } } }
+      responses:
+        "200": { description: Atualizado }
+        "400": { description: "unknown_profile | unknown_feature" }
+
+  # ───────────────────────────── ADMIN — TENANT ─────────────────────────────
+  /admin/teams:
+    get: { tags: [Admin — Tenant], summary: Lista times do tenant, responses: { "200": { description: ok } } }
+    post:
+      tags: [Admin — Tenant]
+      summary: Cria time
+      requestBody: { content: { application/json: { schema: { type: object, properties: { name: { type: string } } } } } }
+      responses: { "201": { description: Criado }, "403": { $ref: "#/components/responses/Forbidden" } }
+  /admin/teams/{id}:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    put: { tags: [Admin — Tenant], summary: Renomeia time, responses: { "200": { description: ok } } }
+    delete: { tags: [Admin — Tenant], summary: Remove time, responses: { "204": { description: ok } } }
+
+  /admin/invitations:
+    get: { tags: [Convites], summary: Lista convites do tenant, responses: { "200": { description: ok } } }
+    post:
+      tags: [Convites]
+      summary: Envia convite de operador
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, role]
+              properties:
+                email: { type: string, format: email }
+                role: { type: string, enum: [owner, admin, agent] }
+      responses: { "201": { description: Criado } }
+  /admin/invitations/{id}:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    delete: { tags: [Convites], summary: Cancela convite, responses: { "204": { description: ok } } }
+
+  /admin/knowledge/documents:
+    get: { tags: [Conhecimento (RAG)], summary: Lista documentos da base, responses: { "200": { description: ok } } }
+    post:
+      tags: [Conhecimento (RAG)]
+      summary: Upload de documento (PDF/TXT) → chunking + embeddings
+      requestBody:
+        content:
+          multipart/form-data:
+            schema: { type: object, properties: { file: { type: string, format: binary } } }
+      responses: { "201": { description: Ingerido } }
+  /admin/knowledge/documents/{id}:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    delete: { tags: [Conhecimento (RAG)], summary: Remove documento (soft delete), responses: { "204": { description: ok } } }
+
+  /admin/contacts/{id}/export:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    get: { tags: [LGPD], summary: Exporta todos os dados do contato (ZIP), responses: { "200": { description: ZIP } } }
+  /admin/contacts/{id}/erase:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    delete: { tags: [LGPD], summary: Direito ao esquecimento (apaga em cascata), responses: { "204": { description: ok } } }
+
+  # ───────────────────────────────  MENSAGERIA ──────────────────────────────
+  /api/conversations:
+    get:
+      tags: [Mensageria]
+      summary: Inbox de conversas
+      parameters:
+        - { name: status, in: query, schema: { type: string, enum: [open, closed] } }
+        - { name: assignedUser, in: query, schema: { type: string, format: uuid } }
+      responses: { "200": { description: Lista de conversas } }
+  /api/conversations/{id}:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    get: { tags: [Mensageria], summary: Detalhe + histórico de mensagens, responses: { "200": { description: ok } } }
+    patch: { tags: [Mensageria], summary: Atualiza status/atribuição, responses: { "200": { description: ok } } }
+  /api/conversations/{id}/messages:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    post:
+      tags: [Mensageria]
+      summary: Operador humano envia mensagem
+      requestBody: { content: { application/json: { schema: { type: object, properties: { content: { type: string } } } } } }
+      responses: { "201": { description: Enviada } }
+
+  # ─────────────────────────────────  CMS  ──────────────────────────────────
+  /api/cms/site:
+    get:
+      tags: [CMS (tenant)]
+      summary: Obtém/cria o site do tenant
+      responses:
+        "200": { description: Site, content: { application/json: { schema: { $ref: "#/components/schemas/CmsSite" } } } }
+        "403": { description: "feature_disabled" }
+  /api/cms/site/domain:
+    put:
+      tags: [CMS (tenant)]
+      summary: Define domínio próprio (zera verificação)
+      requestBody: { content: { application/json: { schema: { type: object, properties: { domain: { type: string } } } } } }
+      responses:
+        "200": { description: ok }
+        "400": { description: "invalid_domain" }
+        "409": { description: "domain_taken" }
+  /api/cms/pages:
+    post:
+      tags: [CMS (tenant)]
+      summary: Cria página
+      responses: { "201": { description: Criada }, "409": { description: "page_slug_taken" } }
+  /api/cms/pages/{id}:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    put: { tags: [CMS (tenant)], summary: Salva blocos/título/published, responses: { "200": { description: ok }, "400": { description: invalid_blocks } } }
+    delete: { tags: [CMS (tenant)], summary: Remove página, responses: { "204": { description: ok } } }
+
+  /public/cms/by-slug/{slug}:
+    parameters: [ { name: slug, in: path, required: true, schema: { type: string } } ]
+    get:
+      tags: [CMS (público)]
+      security: []
+      summary: Home pública por slug da empresa
+      responses:
+        "200": { description: View pública, content: { application/json: { schema: { $ref: "#/components/schemas/CmsPublicView" } } } }
+        "404": { $ref: "#/components/responses/NotFound" }
+  /public/cms/by-domain:
+    get:
+      tags: [CMS (público)]
+      security: []
+      summary: Home pública por domínio custom
+      parameters: [ { name: host, in: query, required: true, schema: { type: string } } ]
+      responses: { "200": { description: View pública }, "404": { $ref: "#/components/responses/NotFound" } }
+
+  # ────────────────────────────────  WEBHOOK  ───────────────────────────────
+  /webhooks/evolution:
+    post:
+      tags: [Webhook]
+      security: [ { webhookSecret: [] } ]
+      summary: Inbound de mensagens da Evolution API
+      description: |
+        Protegido por secret (`apikey`). Sempre responde 200 (mesmo quando ignora o evento, para a
+        Evolution não reenviar). Guard de frescor rejeita mensagens mais velhas que
+        `webhook.message-max-age-seconds` (default 180s).
+      requestBody:
+        required: true
+        content: { application/json: { schema: { type: object, description: EvolutionWebhookPayload } } }
+      responses:
+        "200": { description: Aceito ou ignorado (com motivo interno) }
+        "401": { description: "invalid_secret" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+
+  # ───────────────────────────────  CONVITES  ───────────────────────────────
+  /api/invitations/{token}:
+    parameters: [ { name: token, in: path, required: true, schema: { type: string } } ]
+    get:
+      tags: [Convites]
+      security: []
+      summary: Lookup público de um convite
+      responses: { "200": { description: "{ valid, companyName }" } }
+  /api/invitations/{token}/accept:
+    parameters: [ { name: token, in: path, required: true, schema: { type: string } } ]
+    post:
+      tags: [Convites]
+      summary: Aceita convite (modo INVITEE — JWT válido sem linha em users)
+      responses: { "201": { description: Conta de operador criada } }
+
+  # ─────────────────────  NICHOS — PADRÃO CRUD PARAMÉTRICO  ──────────────────
+  /api/{nicho}/config:
+    parameters: [ { $ref: "#/components/parameters/Nicho" } ]
+    get: { tags: [Nichos — padrão CRUD], summary: Config do nicho (fallback default), responses: { "200": { description: ok } } }
+    put: { tags: [Nichos — padrão CRUD], summary: Atualiza config, responses: { "200": { description: ok }, "400": { description: "invalid_hours (perfis com agenda)" } } }
+
+  /api/{nicho}/{resource}:
+    parameters:
+      - { $ref: "#/components/parameters/Nicho" }
+      - { $ref: "#/components/parameters/Resource" }
+    get:
+      tags: [Nichos — padrão CRUD]
+      summary: Lista recursos do nicho (paginado)
+      description: |
+        `resource` é um recurso do nicho — ex.: `professionals`, `services`, `menu`, `products`,
+        `appointments`, `orders`, `proposals`, `patients`, `vehicles`, etc.
+      responses:
+        "200": { description: Página de recursos, content: { application/json: { schema: { $ref: "#/components/schemas/Page" } } } }
+        "403": { description: "forbidden_wrong_profile" }
+    post:
+      tags: [Nichos — padrão CRUD]
+      summary: Cria recurso
+      responses: { "201": { description: Criado }, "403": { description: forbidden_wrong_profile } }
+  /api/{nicho}/{resource}/{id}:
+    parameters:
+      - { $ref: "#/components/parameters/Nicho" }
+      - { $ref: "#/components/parameters/Resource" }
+      - { $ref: "#/components/parameters/Id" }
+    get: { tags: [Nichos — padrão CRUD], summary: Detalhe, responses: { "200": { description: ok }, "404": { $ref: "#/components/responses/NotFound" } } }
+    patch: { tags: [Nichos — padrão CRUD], summary: Atualiza, responses: { "200": { description: ok } } }
+    delete:
+      tags: [Nichos — padrão CRUD]
+      summary: Remove (ou arquiva)
+      responses:
+        "204": { description: Removido }
+        "409": { description: "{entidade}_in_use — referenciado por agendamento/pedido" }
+  /api/{nicho}/{resource}/{id}/toggle:
+    parameters:
+      - { $ref: "#/components/parameters/Nicho" }
+      - { $ref: "#/components/parameters/Resource" }
+      - { $ref: "#/components/parameters/Id" }
+    patch: { tags: [Nichos — padrão CRUD], summary: Ativa/desativa (active), responses: { "200": { description: ok } } }
+  /api/{nicho}/{resource}/{id}/status:
+    parameters:
+      - { $ref: "#/components/parameters/Nicho" }
+      - { $ref: "#/components/parameters/Resource" }
+      - { $ref: "#/components/parameters/Id" }
+    patch:
+      tags: [Nichos — padrão CRUD]
+      summary: Transição de status (Kanban / agenda / proposta)
+      description: |
+        Dispara a máquina de status hardcoded do nicho. Aceite humano de pedido, confirmação de
+        agendamento, aprovação de proposta, etc.
+      requestBody:
+        content: { application/json: { schema: { type: object, properties: { status: { type: string }, rejectionReason: { type: string } } } } }
+      responses:
+        "200": { description: Transicionado }
+        "409": { description: "invalid_status_transition | conflict_slot | out_of_stock" }
+        "400": { description: "empty_budget (proposta sem itens)" }
+        "422": { description: "age_not_confirmed | lead_time_violation | turnaround_violation" }
+
+  # Sub-recursos representativos (itens de proposta/pedido, variantes, etc.)
+  /api/{nicho}/{resource}/{id}/items:
+    parameters:
+      - { $ref: "#/components/parameters/Nicho" }
+      - { $ref: "#/components/parameters/Resource" }
+      - { $ref: "#/components/parameters/Id" }
+    post:
+      tags: [Nichos — padrão CRUD]
+      summary: Adiciona item (orçamento/pedido) — recalcula total materializado
+      responses: { "201": { description: ok }, "409": { description: "proposal_locked | order_locked" } }
+
+  # ───────────────────  NICHOS — HANDLERS / GATES ESPECIAIS  ─────────────────
+  /api/sushi/orders:
+    get: { tags: [Nichos — handlers/gates especiais], summary: "Sushi — pedidos (criados pela IA via <pedido>)", responses: { "200": { description: ok } } }
+  /api/nutri/plans/{id}/activate:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    patch:
+      tags: [Nichos — handlers/gates especiais]
+      summary: "Nutri — ativa plano (arquiva o anterior; 1 ativo por paciente)"
+      responses: { "200": { description: ok } }
+  /api/barbearia/queue:
+    get:
+      tags: [Nichos — handlers/gates especiais]
+      summary: "Barbearia — fila de walk-in (posição derivada, ETA estimada)"
+      responses: { "200": { description: "tickets com posição calculada + ETA" } }
+    post: { tags: [Nichos — handlers/gates especiais], summary: "Entra na fila", responses: { "201": { description: ok } } }
+  /api/estetica/packages:
+    get:
+      tags: [Nichos — handlers/gates especiais]
+      summary: "Estética — pacotes (saldo de sessões que decrementa transacionalmente)"
+      responses: { "200": { description: ok } }
+  /api/concessionaria/vehicles/{id}/status:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    patch:
+      tags: [Nichos — handlers/gates especiais]
+      summary: "Concessionária — ciclo de estoque do veículo (disponivel→reservado→vendido)"
+      responses: { "200": { description: ok } }
+
+  # Endpoints de pagamento MANUAL (academia/escola/cursos) — ver wiki/06
+  /api/academia/memberships/{id}/payments:
+    parameters: [ { $ref: "#/components/parameters/Id" } ]
+    get:
+      tags: [Nichos — handlers/gates especiais]
+      summary: "Mensalidade — lista pagamentos + resumo (REGISTRO MANUAL; sem gateway)"
+      responses: { "200": { description: "{ items, summary }" } }
+    post:
+      tags: [Nichos — handlers/gates especiais]
+      summary: "Mensalidade — registra pagamento manual"
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              properties:
+                referenceMonth: { type: string, format: date }
+                amountCents: { type: integer }
+                method: { type: string, example: Pix }
+                notes: { type: string }
+      responses:
+        "201": { description: Registrado }
+        "400": { description: "matrícula não ativa" }
+        "409": { description: "duplicate_payment (UNIQUE do mês)" }
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT do Supabase (ES256, validado por JWKS).
+    webhookSecret:
+      type: apiKey
+      in: header
+      name: apikey
+      description: Secret HMAC do webhook (também aceito como query `?apikey=`).
+
+  parameters:
+    Id:
+      name: id
+      in: path
+      required: true
+      schema: { type: string, format: uuid }
+    Nicho:
+      name: nicho
+      in: path
+      required: true
+      description: |
+        profile_id do nicho. Um de: sushi, legal, restaurant, dental, salon, pousada, academia,
+        pet, oficina, nutri, barbearia, eventos, estetica, comida, floricultura, pizzaria, casamento,
+        padaria, adega, lavanderia, dermatologia, otica, projetos, atelie, papelaria, fotografia,
+        concessionaria, viagens, escola, cursos, lingerie, moda-infantil, las, suplementos.
+      schema: { type: string }
+    Resource:
+      name: resource
+      in: path
+      required: true
+      description: Recurso do nicho (professionals, services, menu, products, orders, proposals, …).
+      schema: { type: string }
+
+  responses:
+    Unauthorized:
+      description: Token ausente/inválido
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    Forbidden:
+      description: "Sem permissão (forbidden_wrong_profile, forbidden_not_super_admin, feature_disabled, …)"
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    NotFound:
+      description: Recurso não encontrado
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+    BadRequest:
+      description: Requisição inválida
+      content: { application/json: { schema: { $ref: "#/components/schemas/Error" } } }
+
+  schemas:
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+        reason: { type: string, description: "código estável (ex.: forbidden_wrong_profile, out_of_stock)" }
+    Page:
+      type: object
+      properties:
+        items: { type: array, items: { type: object } }
+        total: { type: integer }
+        page: { type: integer }
+        pageSize: { type: integer }
+    Me:
+      type: object
+      properties:
+        email: { type: string }
+        role: { type: string, enum: [SUPER_ADMIN, TENANT_ADMIN] }
+        companyId: { type: string, format: uuid, nullable: true }
+        companyName: { type: string, nullable: true }
+        profileId: { type: string, nullable: true }
+        profileName: { type: string, nullable: true }
+        features:
+          type: object
+          additionalProperties: { type: boolean }
+          description: "mapa feature→habilitada resolvido pelo nicho (ex.: { cms: true })"
+    CompanyPage:
+      allOf:
+        - $ref: "#/components/schemas/Page"
+    CmsSite:
+      type: object
+      properties:
+        id: { type: string, format: uuid }
+        companyId: { type: string, format: uuid }
+        domain: { type: string, nullable: true }
+        domainVerified: { type: boolean }
+        published: { type: boolean }
+        theme: { type: object }
+        createdAt: { type: string, format: date-time }
+        updatedAt: { type: string, format: date-time }
+    CmsPublicView:
+      type: object
+      properties:
+        title: { type: string }
+        blocks: { type: array, items: { type: object } }
+        theme: { type: object }
+        nav:
+          type: array
+          items:
+            type: object
+            properties:
+              pageSlug: { type: string }
+              title: { type: string }
+              isHome: { type: boolean }
