@@ -10,7 +10,7 @@ import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/suplementos/config'
 import { useSyncedForm } from '@/lib/use-synced-form'
 
-type FormState = { deliveryFee: string; minOrder: string } // reais
+type FormState = { deliveryFee: string; minOrder: string; freeShipping: string } // reais
 
 /** Configurações do SuplementosBot (varejo): taxa de entrega + valor mínimo do pedido (em R$). */
 export default function SuplementosSettingsPage() {
@@ -26,6 +26,8 @@ export default function SuplementosSettingsPage() {
   const [form, setForm] = useSyncedForm(data, (d): FormState => ({
     deliveryFee: String(d.deliveryFeeCents / 100),
     minOrder: String(d.minOrderCents / 100),
+    freeShipping:
+      d.freeShippingThresholdCents != null ? String(d.freeShippingThresholdCents / 100) : '',
   }))
 
   const saveMutation = useMutation({
@@ -34,6 +36,10 @@ export default function SuplementosSettingsPage() {
       return updateConfig({
         deliveryFeeCents: Math.max(0, Math.round(Number(form.deliveryFee || 0) * 100)),
         minOrderCents: Math.max(0, Math.round(Number(form.minOrder || 0) * 100)),
+        freeShippingThresholdCents:
+          form.freeShipping === ''
+            ? null
+            : Math.max(0, Math.round(Number(form.freeShipping) * 100)),
       })
     },
     onSuccess: () => {
@@ -95,6 +101,23 @@ export default function SuplementosSettingsPage() {
                     onChange={(e) => setForm((f) => f && { ...f, minOrder: e.target.value })}
                     className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
                   />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Frete grátis acima de (R$)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.freeShipping}
+                    onChange={(e) => setForm((f) => f && { ...f, freeShipping: e.target.value })}
+                    placeholder="Vazio = desligado"
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                  <p className="mt-1 text-xs text-muted-foreground">
+                    Subtotal maior ou igual ao piso zera a taxa; a IA pode avisar quanto falta.
+                  </p>
                 </div>
               </div>
             </Section>

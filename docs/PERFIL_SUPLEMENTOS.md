@@ -70,3 +70,17 @@ lote/FEFO/inventário; tabela nutricional estruturada; combo/cupom; retirada na 
 - Cache `SuplementosMenuCache` TTL 60s (ignora conversationId; carrega catálogo + a trava). Base de
   conhecimento (RAG): disponível como em todo perfil.
 - Guard `/api/suplementos/**` → 403 `forbidden_wrong_profile`. Paleta `eucalipto`. Tenant: `igorhaf35`.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_SUPLEMENTOS #3b/#9, migration 89)
+
+- **Frete grátis acima de X (#3b):** `sup_config.free_shipping_threshold_cents` (NULL =
+  desligado). Subtotal ≥ piso → o backend ZERA a taxa no cálculo materializado do pedido.
+  O bloco do `SuplementosMenuCache` autoriza a IA a avisar quanto falta pro frete grátis
+  (fato do pedido — a trava de não-prescrição segue intacta). Campo em Configurações.
+- **Devolução de estoque ao cancelar/recusar (#9):** ao entrar em `recusado`/`cancelado`, o
+  backend devolve o estoque das variantes (`stock_quantity + qtd`) e marca
+  `sup_orders.stock_returned = true` NA MESMA transação — IDEMPOTENTE (duplo-cancelamento não
+  devolve 2×). Espelho do moda_infantil.
+- **Onda 2 (registrado):** cupom de 1ª compra (motor unificado `com.meada.common.coupons` +
+  integração no pedido, espelho comida mig 85), reativação por ciclo de reposição (scheduler,
+  janela por categoria), assinatura de recompra (clube).

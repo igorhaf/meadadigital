@@ -4,11 +4,13 @@ import { apiFetch } from '@/lib/api/client'
 export type SuplementosConfig = {
   deliveryFeeCents: number
   minOrderCents: number
+  freeShippingThresholdCents: number | null
 }
 
 export type UpdateConfigInput = {
   deliveryFeeCents: number
   minOrderCents: number
+  freeShippingThresholdCents?: number | null
 }
 
 export function getConfig(): Promise<SuplementosConfig> {

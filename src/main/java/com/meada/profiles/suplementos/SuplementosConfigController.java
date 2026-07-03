@@ -32,7 +32,8 @@ public class SuplementosConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(int deliveryFeeCents, int minOrderCents) {}
+    public record ConfigRequest(int deliveryFeeCents, int minOrderCents,
+                                Integer freeShippingThresholdCents) {}
 
     @GetMapping("/api/suplementos/config")
     public ResponseEntity<Object> get(
@@ -57,6 +58,6 @@ public class SuplementosConfigController {
             return error(403, "Forbidden", "forbidden_wrong_profile");
         }
         return ResponseEntity.ok(service.update(companyId, user.userId(),
-            req.deliveryFeeCents(), req.minOrderCents()));
+            req.deliveryFeeCents(), req.minOrderCents(), req.freeShippingThresholdCents()));
     }
 }

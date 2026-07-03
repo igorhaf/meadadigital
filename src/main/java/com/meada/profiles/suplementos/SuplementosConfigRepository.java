@@ -23,22 +23,27 @@ public class SuplementosConfigRepository {
     /** Config do tenant, ou {@link SuplementosConfig#ZERO} se não houver linha. */
     public SuplementosConfig findByCompany(UUID companyId) {
         return jdbcTemplate.query(
-                "select delivery_fee_cents, min_order_cents from sup_config where company_id = ?",
+                "select delivery_fee_cents, min_order_cents, free_shipping_threshold_cents "
+                    + "from sup_config where company_id = ?",
                 (rs, rn) -> new SuplementosConfig(
-                    rs.getInt("delivery_fee_cents"), rs.getInt("min_order_cents")),
+                    rs.getInt("delivery_fee_cents"), rs.getInt("min_order_cents"),
+                    rs.getObject("free_shipping_threshold_cents") == null
+                        ? null : rs.getInt("free_shipping_threshold_cents")),
                 companyId)
             .stream().findFirst().orElse(SuplementosConfig.ZERO);
     }
 
     /** Upsert da config (insert ou update por company_id). Mantém updated_at. */
-    public SuplementosConfig upsert(UUID companyId, int deliveryFeeCents, int minOrderCents) {
+    public SuplementosConfig upsert(UUID companyId, int deliveryFeeCents, int minOrderCents,
+                                    Integer freeShippingThresholdCents) {
         jdbcTemplate.update(
-            "insert into sup_config (company_id, delivery_fee_cents, min_order_cents) "
-                + "values (?, ?, ?) "
+            "insert into sup_config (company_id, delivery_fee_cents, min_order_cents, free_shipping_threshold_cents) "
+                + "values (?, ?, ?, ?) "
                 + "on conflict (company_id) do update set "
                 + "delivery_fee_cents = excluded.delivery_fee_cents, "
-                + "min_order_cents = excluded.min_order_cents, updated_at = now()",
-            companyId, deliveryFeeCents, minOrderCents);
+                + "min_order_cents = excluded.min_order_cents, "
+                + "free_shipping_threshold_cents = excluded.free_shipping_threshold_cents, updated_at = now()",
+            companyId, deliveryFeeCents, minOrderCents, freeShippingThresholdCents);
         return findByCompany(companyId);
     }
 }
