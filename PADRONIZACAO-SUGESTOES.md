@@ -12,7 +12,9 @@ Registradas conforme a trava "sem dependências novas"; nada aqui foi instalado 
    `npm run lint` como gate de CI (hoje o gate é `next build` + mvn).
 3. **Checkstyle/Spotless no backend** — não há lint Java; um formatter com config mínima (imports,
    indentação) tornaria o cânone verificável. Exige plugin Maven novo.
-4. **Extração dos clones de motor (cupom/fidelidade)** — `{Sushi,Adega,Comida,Atelie,Wedding,Barber}Coupon*`
+4. **Extração dos clones de motor (cupom/fidelidade)** — ✅ INICIADA 2026-07-03 por decisão do
+   Igor: motor de cupom unificado (fatia 1, commit 4917aca, −997 linhas, 1848 verdes); roadmap
+   das demais fatias em docs/UNIFICACAO_CHASSIS.md. Texto original: — `{Sushi,Adega,Comida,Atelie,Wedding,Barber}Coupon*`
    são clones deliberados por nicho (decisão de arquitetura: isolamento por perfil > DRY). Se um dia
    compensar, um módulo `com.meada.common.coupons` parametrizado por tabela eliminaria ~6× o código —
    decisão do arquiteto, não de padronização.

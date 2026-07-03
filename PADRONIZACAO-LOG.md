@@ -93,6 +93,25 @@ Total da fase: 410 arquivos reformatados em 4 lotes `[REVISAR]` + 1 lote de deps
 Reformatação é puramente mecânica (formatação, ordem de classes Tailwind, ordem de imports) —
 sem mudança semântica; cada lote validado com eslint (0 erros) + `next build` limpo.
 
+## Fase 5 — Economia de tokens (2026-07-03, "faça tudo de uma vez" do Igor)
+
+Três frentes além da padronização (a estratégia real pedida: reduzir o peso da aplicação e o
+custo de tokens das sessões):
+
+- **T1** — dieta do CLAUDE.md: 1708→386 linhas (140KB→26KB, ~25k tokens de contexto fixo a
+  menos POR SESSÃO). 30 seções por perfil viram 7 chassis + tabela-catálogo de 34 perfis +
+  lições cravadas. Nada de regra cravada se perdeu; detalhe por perfil já vivia em
+  docs/PERFIL_*.md. Commit: d236b03
+- **T2** — gerador de perfil (`scripts/gerar-perfil.py` + README): clona chassi de exemplar com
+  renames com fronteira de palavra e REGENERA a CHECK completa do enum (mata a armadilha do
+  sed). Validado com perfil descartável (40 arquivos, zero resíduo, CHECK íntegra, compila) e
+  revertido. Commit: ac36113
+- **T3 `[REVISAR]`** — unificação fatia 1: motor de cupom (7 clones → `com.meada.common.coupons`
+  base + subclasses finas; records/contratos JSON preservados; academia mantém validate/apply).
+  −997 linhas líquidas. Gate: mvn -B clean test = **1848 verdes, 0 falhas**, testes por perfil
+  inalterados fora imports (prova de preservação). Commit: 4917aca
+  Roadmap das fatias 2–7: docs/UNIFICACAO_CHASSIS.md.
+
 ## Resumo final
 
 - Lotes executados: **15** (S1 skills+CLAUDE.md · F1 types/imports · F2 eslint seguro ·
