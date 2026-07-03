@@ -1,5 +1,4 @@
 'use client'
-import { useResetWhen } from '@/lib/use-synced-form'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -10,6 +9,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { createFaq, updateFaq, type Faq } from '@/lib/supabase/faqs'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 // question e answer obrigatórios (text NOT NULL no banco). Sem campos opcionais — mais
 // simples que o form de service.
@@ -61,13 +61,13 @@ export function CreateFaqDialog({
   // Sincroniza os campos quando abre (ou troca de registro): edição pré-popula, criação
   // limpa. Depende de open também para repreencher ao reabrir o mesmo registro.
   useResetWhen(open ? `${faq?.id ?? 'create'}:${initialQuestion ?? ''}` : null, () => {
-      // Edição: faq manda. Criação: usa initialQuestion (sugestão da IA) se houver, senão
-      // limpa. answer começa vazio na criação (faq?.answer ?? '').
-      reset({
-        question: faq?.question ?? initialQuestion ?? '',
-        answer: faq?.answer ?? '',
-      })
-      setServerError(null)
+    // Edição: faq manda. Criação: usa initialQuestion (sugestão da IA) se houver, senão
+    // limpa. answer começa vazio na criação (faq?.answer ?? '').
+    reset({
+      question: faq?.question ?? initialQuestion ?? '',
+      answer: faq?.answer ?? '',
+    })
+    setServerError(null)
   })
 
   const mutation = useMutation({

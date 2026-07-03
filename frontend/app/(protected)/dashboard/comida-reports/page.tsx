@@ -15,7 +15,12 @@ function monthLabel(yyyyMm: string): string {
   return `${m}/${y}`
 }
 
-function RowsTable({ rows, firstColumn, firstValue, showRevenue = true }: {
+function RowsTable({
+  rows,
+  firstColumn,
+  firstValue,
+  showRevenue = true,
+}: {
   rows: ComidaReportRow[]
   firstColumn: string
   firstValue: (r: ComidaReportRow) => string
@@ -39,7 +44,11 @@ function RowsTable({ rows, firstColumn, firstValue, showRevenue = true }: {
             <tr key={i}>
               <td className="px-3 py-2">{firstValue(r)}</td>
               <td className="px-3 py-2 text-right tabular-nums">{r.count}</td>
-              {showRevenue && <td className="px-3 py-2 text-right tabular-nums">{formatBrl(r.totalCents ?? 0)}</td>}
+              {showRevenue && (
+                <td className="px-3 py-2 text-right tabular-nums">
+                  {formatBrl(r.totalCents ?? 0)}
+                </td>
+              )}
             </tr>
           ))}
         </tbody>
@@ -69,8 +78,11 @@ export default function ComidaReportsPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         {WINDOWS.map((w) => (
-          <button key={w} onClick={() => setMonths(w)}
-            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={w}
+            onClick={() => setMonths(w)}
+            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {w === 1 ? '1 mês' : `${w} meses`}
           </button>
         ))}
@@ -93,28 +105,40 @@ export default function ComidaReportsPage() {
             </Card>
             <Card>
               <p className="text-xs text-muted-foreground">Ticket médio</p>
-              <p className="text-2xl font-semibold tabular-nums">{formatBrl(data.avgTicketCents)}</p>
+              <p className="text-2xl font-semibold tabular-nums">
+                {formatBrl(data.avgTicketCents)}
+              </p>
             </Card>
           </div>
 
           <Card>
             <Section title="Por mês">
-              <RowsTable rows={data.byMonth} firstColumn="Mês"
-                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')} />
+              <RowsTable
+                rows={data.byMonth}
+                firstColumn="Mês"
+                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Top itens (entregues)">
-              <RowsTable rows={data.topItems} firstColumn="Item"
-                firstValue={(r) => r.item ?? '—'} />
+              <RowsTable
+                rows={data.topItems}
+                firstColumn="Item"
+                firstValue={(r) => r.item ?? '—'}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Horário de pico (pedidos por hora, todos os status)">
-              <RowsTable rows={data.byHour} firstColumn="Hora" showRevenue={false}
-                firstValue={(r) => `${String(r.hour).padStart(2, '0')}h`} />
+              <RowsTable
+                rows={data.byHour}
+                firstColumn="Hora"
+                showRevenue={false}
+                firstValue={(r) => `${String(r.hour).padStart(2, '0')}h`}
+              />
             </Section>
           </Card>
         </>

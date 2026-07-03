@@ -60,7 +60,9 @@ function MessagesChart({ data }: { data: MessagesByDay[] }) {
   const y = (v: number) => H - PAD - (v * (H - 2 * PAD)) / maxY
 
   const line = (key: 'inbound' | 'outbound') =>
-    data.map((d, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(d[key]).toFixed(1)}`).join(' ')
+    data
+      .map((d, i) => `${i === 0 ? 'M' : 'L'} ${x(i).toFixed(1)} ${y(d[key]).toFixed(1)}`)
+      .join(' ')
 
   // 3 linhas de grade horizontais (0, meio, topo).
   const gridYs = [0, maxY / 2, maxY]
@@ -113,10 +115,18 @@ const COMPARISON_ROWS: { key: keyof MonthlyCounts; label: string }[] = [
 /** Indicador de variação: verde ↑ (subiu), vermelho ↓ (caiu), neutro — (igual). */
 function DeltaBadge({ delta }: { delta: number }) {
   if (delta > 0) {
-    return <span className="text-sm font-medium text-green-600 tabular-nums">↑ +{delta.toLocaleString('pt-BR')}</span>
+    return (
+      <span className="text-sm font-medium text-green-600 tabular-nums">
+        ↑ +{delta.toLocaleString('pt-BR')}
+      </span>
+    )
   }
   if (delta < 0) {
-    return <span className="text-sm font-medium text-red-600 tabular-nums">↓ {delta.toLocaleString('pt-BR')}</span>
+    return (
+      <span className="text-sm font-medium text-red-600 tabular-nums">
+        ↓ {delta.toLocaleString('pt-BR')}
+      </span>
+    )
   }
   return <span className="text-sm text-muted-foreground tabular-nums">— 0</span>
 }
@@ -270,8 +280,8 @@ export default function MetricsPage() {
                   </ol>
                 )}
                 <p className="mt-3 text-xs text-muted-foreground">
-                  Ordem cronológica. O ranking por uso real fica para uma fase futura, quando
-                  houver rastreamento de qual FAQ a IA usou em cada resposta.
+                  Ordem cronológica. O ranking por uso real fica para uma fase futura, quando houver
+                  rastreamento de qual FAQ a IA usou em cada resposta.
                 </p>
               </Card>
             </div>
@@ -295,8 +305,10 @@ function KpiCard({ label, value, hint }: { label: string; value: number; hint?: 
 
 /** Variação percentual (verde ↑ / vermelho ↓ / neutro —). */
 function PctDelta({ pct }: { pct: number }) {
-  if (pct > 0) return <span className="text-sm font-medium text-green-600 tabular-nums">↑ +{pct}%</span>
-  if (pct < 0) return <span className="text-sm font-medium text-red-600 tabular-nums">↓ {pct}%</span>
+  if (pct > 0)
+    return <span className="text-sm font-medium text-green-600 tabular-nums">↑ +{pct}%</span>
+  if (pct < 0)
+    return <span className="text-sm font-medium text-red-600 tabular-nums">↓ {pct}%</span>
   return <span className="text-sm text-muted-foreground tabular-nums">— 0%</span>
 }
 
@@ -340,7 +352,9 @@ function GlobalMetricsView() {
     {
       key: 'messagesLast30d',
       header: 'Mensagens (30d)',
-      render: (t) => <span className="tabular-nums">{t.messagesLast30d.toLocaleString('pt-BR')}</span>,
+      render: (t) => (
+        <span className="tabular-nums">{t.messagesLast30d.toLocaleString('pt-BR')}</span>
+      ),
     },
   ]
 

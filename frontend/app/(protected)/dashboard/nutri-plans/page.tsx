@@ -8,14 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { listPatients } from '@/lib/api/nutri/patients'
+import { activatePlan, archivePlan, createPlan, listPlans, updatePlan } from '@/lib/api/nutri/plans'
 import { listProfessionals } from '@/lib/api/nutri/professionals'
-import {
-  activatePlan,
-  archivePlan,
-  createPlan,
-  listPlans,
-  updatePlan,
-} from '@/lib/api/nutri/plans'
 import { formatDate, type NutriPlan } from '@/profiles/nutri/nutri-types'
 
 type FormState = {
@@ -27,7 +21,15 @@ type FormState = {
   active: boolean
   notes: string
 }
-const EMPTY: FormState = { title: '', professionalId: '', body: '', startsOn: '', endsOn: '', active: true, notes: '' }
+const EMPTY: FormState = {
+  title: '',
+  professionalId: '',
+  body: '',
+  startsOn: '',
+  endsOn: '',
+  active: true,
+  notes: '',
+}
 
 /**
  * Planos alimentares (camada 8.0). Editor: seleciona um paciente e gerencia os planos dele.
@@ -86,7 +88,10 @@ export default function NutriPlansPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['nutri-plans', patientId] })
-      setModalOpen(false); setEditing(null); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setEditing(null)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: () => setFormError('Erro ao salvar o plano.'),
   })
@@ -101,7 +106,12 @@ export default function NutriPlansPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['nutri-plans', patientId] }),
   })
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setFormError(null); setModalOpen(true) }
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY)
+    setFormError(null)
+    setModalOpen(true)
+  }
   function openEdit(p: NutriPlan) {
     setEditing(p)
     setForm({
@@ -113,7 +123,8 @@ export default function NutriPlansPage() {
       active: p.status === 'ativo',
       notes: p.notes ?? '',
     })
-    setFormError(null); setModalOpen(true)
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const items = plans.data?.items ?? []
@@ -123,18 +134,21 @@ export default function NutriPlansPage() {
       <PageHeader
         title="Planos alimentares"
         description="Selecione um paciente para ver e gerenciar os planos dele. A IA entrega o texto do plano exatamente como escrito."
-        actions={
-          patientId !== '' ? <Button onClick={openCreate}>Novo plano</Button> : undefined
-        }
+        actions={patientId !== '' ? <Button onClick={openCreate}>Novo plano</Button> : undefined}
       />
 
       <div className="flex flex-wrap items-center gap-2">
         <label className="text-xs font-medium text-muted-foreground">Paciente</label>
-        <select value={patientId} onChange={(e) => setPatientId(e.target.value)}
-          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm">
+        <select
+          value={patientId}
+          onChange={(e) => setPatientId(e.target.value)}
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-sm"
+        >
           <option value="">Selecione…</option>
           {(patients.data?.items ?? []).map((p) => (
-            <option key={p.id} value={p.id}>{p.name}</option>
+            <option key={p.id} value={p.id}>
+              {p.name}
+            </option>
           ))}
         </select>
       </div>
@@ -154,9 +168,11 @@ export default function NutriPlansPage() {
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{p.title}</span>
-                  {p.status === 'ativo'
-                    ? <Badge variant="success">ativo</Badge>
-                    : <Badge variant="muted">arquivado</Badge>}
+                  {p.status === 'ativo' ? (
+                    <Badge variant="success">ativo</Badge>
+                  ) : (
+                    <Badge variant="muted">arquivado</Badge>
+                  )}
                 </div>
                 <p className="text-xs text-muted-foreground">
                   {p.professionalName ?? '—'}
@@ -166,14 +182,28 @@ export default function NutriPlansPage() {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(p)}>Editar</Button>
+                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(p)}>
+                  Editar
+                </Button>
                 {p.status === 'arquivado' && (
-                  <Button variant="outline" className="h-7 px-2 text-xs"
-                    disabled={activateMutation.isPending} onClick={() => activateMutation.mutate(p.id)}>Ativar</Button>
+                  <Button
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    disabled={activateMutation.isPending}
+                    onClick={() => activateMutation.mutate(p.id)}
+                  >
+                    Ativar
+                  </Button>
                 )}
                 {p.status === 'ativo' && (
-                  <Button variant="outline" className="h-7 px-2 text-xs"
-                    disabled={archiveMutation.isPending} onClick={() => archiveMutation.mutate(p.id)}>Arquivar</Button>
+                  <Button
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    disabled={archiveMutation.isPending}
+                    onClick={() => archiveMutation.mutate(p.id)}
+                  >
+                    Arquivar
+                  </Button>
                 )}
               </div>
             </div>
@@ -181,62 +211,117 @@ export default function NutriPlansPage() {
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar plano' : 'Novo plano'} size="lg">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar plano' : 'Novo plano'}
+        size="lg"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Título</label>
-            <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} required
-              maxLength={200} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={form.title}
+              onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+              required
+              maxLength={200}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Nutricionista responsável</label>
-            <select value={form.professionalId} onChange={(e) => setForm((f) => ({ ...f, professionalId: e.target.value }))}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Nutricionista responsável
+            </label>
+            <select
+              value={form.professionalId}
+              onChange={(e) => setForm((f) => ({ ...f, professionalId: e.target.value }))}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            >
               <option value="">(nenhum)</option>
               {(professionals.data?.items ?? []).map((p) => (
-                <option key={p.id} value={p.id}>{p.name}</option>
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
               ))}
             </select>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Plano alimentar (markdown)</label>
-            <textarea value={form.body} onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))} required
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Plano alimentar (markdown)
+            </label>
+            <textarea
+              value={form.body}
+              onChange={(e) => setForm((f) => ({ ...f, body: e.target.value }))}
+              required
               rows={12}
               placeholder="Escreva aqui o plano alimentar completo do paciente. A IA entrega este texto exatamente como está, sem editar."
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm"
+            />
             <p className="mt-1 text-xs text-muted-foreground">
-              A IA entrega este texto <strong>verbatim</strong> ao paciente — nunca o reescreve nem resume.
+              A IA entrega este texto <strong>verbatim</strong> ao paciente — nunca o reescreve nem
+              resume.
             </p>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Início da vigência</label>
-              <input type="date" value={form.startsOn} onChange={(e) => setForm((f) => ({ ...f, startsOn: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Início da vigência
+              </label>
+              <input
+                type="date"
+                value={form.startsOn}
+                onChange={(e) => setForm((f) => ({ ...f, startsOn: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Fim da vigência</label>
-              <input type="date" value={form.endsOn} onChange={(e) => setForm((f) => ({ ...f, endsOn: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Fim da vigência
+              </label>
+              <input
+                type="date"
+                value={form.endsOn}
+                onChange={(e) => setForm((f) => ({ ...f, endsOn: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           {!editing && (
             <label className="flex items-center gap-2 text-xs text-muted-foreground">
-              <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+              />
               Plano ativo (arquiva o plano ativo anterior deste paciente)
             </label>
           )}
           <p className="text-xs text-muted-foreground">
-            Exatamente <strong>um</strong> plano fica ativo por paciente. Ativar um plano arquiva automaticamente o anterior.
+            Exatamente <strong>um</strong> plano fica ativo por paciente. Ativar um plano arquiva
+            automaticamente o anterior.
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-            <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Observações
+            </label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>

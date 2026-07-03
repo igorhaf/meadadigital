@@ -4,17 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
-import {
-  createPlan,
-  deletePlan,
-  listPlans,
-  togglePlan,
-  updatePlan,
-} from '@/lib/api/academia/plans'
+import { createPlan, deletePlan, listPlans, togglePlan, updatePlan } from '@/lib/api/academia/plans'
+import { ApiError } from '@/lib/api/client'
 import { formatPrice, type Plan } from '@/profiles/academia/academia-types'
 
 type FormState = { name: string; price: string; description: string }
@@ -48,7 +42,10 @@ export default function AcademiaPlansPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['academia-plans'] })
-      setModalOpen(false); setEditing(null); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setEditing(null)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: () => setFormError('Erro ao salvar o plano.'),
   })
@@ -68,11 +65,17 @@ export default function AcademiaPlansPage() {
     },
   })
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setFormError(null); setModalOpen(true) }
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY)
+    setFormError(null)
+    setModalOpen(true)
+  }
   function openEdit(p: Plan) {
     setEditing(p)
     setForm({ name: p.name, price: String(p.monthlyCents / 100), description: p.description ?? '' })
-    setFormError(null); setModalOpen(true)
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const plans = data?.items ?? []
@@ -100,46 +103,90 @@ export default function AcademiaPlansPage() {
                   <span className="font-medium">{p.name}</span>
                   {!p.active && <Badge variant="muted">inativo</Badge>}
                 </div>
-                <span className="tabular-nums text-sm">{formatPrice(p.monthlyCents)}/mês</span>
+                <span className="text-sm tabular-nums">{formatPrice(p.monthlyCents)}/mês</span>
               </div>
               {p.description && <p className="text-xs text-muted-foreground">{p.description}</p>}
               <div className="flex items-center gap-3 pt-1">
                 <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <input type="checkbox" checked={p.active} disabled={toggleMutation.isPending}
-                    onChange={() => toggleMutation.mutate(p)} />
+                  <input
+                    type="checkbox"
+                    checked={p.active}
+                    disabled={toggleMutation.isPending}
+                    onChange={() => toggleMutation.mutate(p)}
+                  />
                   ativo
                 </label>
-                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(p)}>Editar</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs"
-                  disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(p.id)}>Excluir</Button>
+                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(p)}>
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(p.id)}
+                >
+                  Excluir
+                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar plano' : 'Novo plano'} size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar plano' : 'Novo plano'}
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-              maxLength={200} placeholder="Mensal Livre, Mensal Aulas Coletivas…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+              maxLength={200}
+              placeholder="Mensal Livre, Mensal Aulas Coletivas…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Valor mensal (R$)</label>
-            <input type="number" min="0" step="0.01" value={form.price} required
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Valor mensal (R$)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              required
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Descrição
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>

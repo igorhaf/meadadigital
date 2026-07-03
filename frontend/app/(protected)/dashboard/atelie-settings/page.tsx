@@ -42,7 +42,9 @@ export default function AtelieSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['atelie-config'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: () => setError('Erro ao salvar as configurações.'),
   })
@@ -60,34 +62,56 @@ export default function AtelieSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Identidade do ateliê">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome do ateliê</label>
-                  <input value={form.businessName}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Nome do ateliê
+                  </label>
+                  <input
+                    value={form.businessName}
                     onChange={(e) => setForm((f) => f && { ...f, businessName: e.target.value })}
                     placeholder="Ateliê Agulha de Ouro, Studio Linha…"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-                  <textarea value={form.notes}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Observações
+                  </label>
+                  <textarea
+                    value={form.notes}
                     onChange={(e) => setForm((f) => f && { ...f, notes: e.target.value })}
-                    rows={3} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    rows={3}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
 
             <Section title="Lembrete de prova/ajuste">
               <label className="flex items-start gap-2 text-sm">
-                <input type="checkbox" checked={form.fittingReminderEnabled} className="mt-0.5"
-                  onChange={(e) => setForm((f) => f && { ...f, fittingReminderEnabled: e.target.checked })} />
+                <input
+                  type="checkbox"
+                  checked={form.fittingReminderEnabled}
+                  className="mt-0.5"
+                  onChange={(e) =>
+                    setForm((f) => f && { ...f, fittingReminderEnabled: e.target.checked })
+                  }
+                />
                 <span>
-                  Lembrar o cliente pelo WhatsApp na <strong>véspera</strong> de cada prova/ajuste com prazo
+                  Lembrar o cliente pelo WhatsApp na <strong>véspera</strong> de cada prova/ajuste
+                  com prazo
                   <span className="block text-xs text-muted-foreground">
-                    Mensagem automática fixa (não passa pela IA), enviada 1x por prova/data. Remarcar a
-                    prova para outra data reenvia o lembrete.
+                    Mensagem automática fixa (não passa pela IA), enviada 1x por prova/data.
+                    Remarcar a prova para outra data reenvia o lembrete.
                   </span>
                 </span>
               </label>

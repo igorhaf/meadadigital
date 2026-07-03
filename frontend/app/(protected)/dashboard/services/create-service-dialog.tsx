@@ -1,5 +1,4 @@
 'use client'
-import { useResetWhen } from '@/lib/use-synced-form'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
@@ -10,6 +9,7 @@ import { z } from 'zod'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { createService, updateService, type Service } from '@/lib/supabase/services'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 // name obrigatório; description opcional; preço em REAIS (campo amigável), convertido para
 // price_cents na submissão. Preço vazio → null (serviço sem preço). Preço presente deve
@@ -87,9 +87,7 @@ export function CreateServiceDialog({
         description: values.description?.trim() ? values.description.trim() : null,
         priceCents: reaisToCents(values.priceReais),
       }
-      return isEdit
-        ? updateService(service!.id, payload)
-        : createService({ companyId, ...payload })
+      return isEdit ? updateService(service!.id, payload) : createService({ companyId, ...payload })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-services'] })

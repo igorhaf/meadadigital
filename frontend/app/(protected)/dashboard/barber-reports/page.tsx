@@ -15,7 +15,12 @@ function monthLabel(yyyyMm: string): string {
   return `${m}/${y}`
 }
 
-function RowsTable({ rows, firstColumn, firstValue, withNoShows }: {
+function RowsTable({
+  rows,
+  firstColumn,
+  firstValue,
+  withNoShows,
+}: {
   rows: BarberReportRow[]
   firstColumn: string
   firstValue: (r: BarberReportRow) => string
@@ -40,7 +45,9 @@ function RowsTable({ rows, firstColumn, firstValue, withNoShows }: {
             <tr key={i}>
               <td className="px-3 py-2">{firstValue(r)}</td>
               <td className="px-3 py-2 text-right tabular-nums">{r.count}</td>
-              {withNoShows && <td className="px-3 py-2 text-right tabular-nums">{r.noShows ?? 0}</td>}
+              {withNoShows && (
+                <td className="px-3 py-2 text-right tabular-nums">{r.noShows ?? 0}</td>
+              )}
               <td className="px-3 py-2 text-right tabular-nums">{formatPrice(r.totalCents)}</td>
             </tr>
           ))}
@@ -62,9 +69,10 @@ export default function BarberReportsPage() {
     queryFn: () => getReportSummary(months),
   })
 
-  const noShowRate = data && data.realizedCount + data.noShowCount > 0
-    ? Math.round((data.noShowCount / (data.realizedCount + data.noShowCount)) * 100)
-    : 0
+  const noShowRate =
+    data && data.realizedCount + data.noShowCount > 0
+      ? Math.round((data.noShowCount / (data.realizedCount + data.noShowCount)) * 100)
+      : 0
 
   return (
     <div className="space-y-6">
@@ -75,8 +83,11 @@ export default function BarberReportsPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         {WINDOWS.map((w) => (
-          <button key={w} onClick={() => setMonths(w)}
-            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={w}
+            onClick={() => setMonths(w)}
+            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {w} meses
           </button>
         ))}
@@ -110,22 +121,32 @@ export default function BarberReportsPage() {
 
           <Card>
             <Section title="Por mês">
-              <RowsTable rows={data.byMonth} firstColumn="Mês"
-                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')} />
+              <RowsTable
+                rows={data.byMonth}
+                firstColumn="Mês"
+                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Por barbeiro">
-              <RowsTable rows={data.byBarber} firstColumn="Barbeiro" withNoShows
-                firstValue={(r) => r.barberName ?? '—'} />
+              <RowsTable
+                rows={data.byBarber}
+                firstColumn="Barbeiro"
+                withNoShows
+                firstValue={(r) => r.barberName ?? '—'}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Ranking de serviços">
-              <RowsTable rows={data.byService} firstColumn="Serviço"
-                firstValue={(r) => r.serviceName ?? '—'} />
+              <RowsTable
+                rows={data.byService}
+                firstColumn="Serviço"
+                firstValue={(r) => r.serviceName ?? '—'}
+              />
             </Section>
           </Card>
         </>

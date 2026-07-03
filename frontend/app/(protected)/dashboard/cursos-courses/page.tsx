@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
   createCourse,
   deleteCourse,
@@ -63,7 +63,10 @@ export default function CursosCoursesPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cursos-courses'] })
-      setModalOpen(false); setEditing(null); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setEditing(null)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: () => setFormError('Erro ao salvar o curso.'),
   })
@@ -83,11 +86,22 @@ export default function CursosCoursesPage() {
     },
   })
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setFormError(null); setModalOpen(true) }
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY)
+    setFormError(null)
+    setModalOpen(true)
+  }
   function openEdit(c: Course) {
     setEditing(c)
-    setForm({ title: c.title, category: c.category, price: String(c.monthlyCents / 100), description: c.description ?? '' })
-    setFormError(null); setModalOpen(true)
+    setForm({
+      title: c.title,
+      category: c.category,
+      price: String(c.monthlyCents / 100),
+      description: c.description ?? '',
+    })
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const courses = data?.items ?? []
@@ -116,19 +130,37 @@ export default function CursosCoursesPage() {
                   <Badge variant="muted">{c.category}</Badge>
                   {!c.active && <Badge variant="muted">inativo</Badge>}
                 </div>
-                <span className="tabular-nums text-sm">{formatBrl(c.monthlyCents)}/mês</span>
+                <span className="text-sm tabular-nums">{formatBrl(c.monthlyCents)}/mês</span>
               </div>
               {c.description && <p className="text-xs text-muted-foreground">{c.description}</p>}
               <div className="flex flex-wrap items-center gap-3 pt-1">
                 <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <input type="checkbox" checked={c.active} disabled={toggleMutation.isPending}
-                    onChange={() => toggleMutation.mutate(c)} />
+                  <input
+                    type="checkbox"
+                    checked={c.active}
+                    disabled={toggleMutation.isPending}
+                    onChange={() => toggleMutation.mutate(c)}
+                  />
                   ativo
                 </label>
-                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => setModulesCourse(c)}>Módulos</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(c)}>Editar</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs"
-                  disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(c.id)}>Excluir</Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => setModulesCourse(c)}
+                >
+                  Módulos
+                </Button>
+                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(c)}>
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(c.id)}
+                >
+                  Excluir
+                </Button>
               </div>
             </div>
           ))}
@@ -136,36 +168,75 @@ export default function CursosCoursesPage() {
       )}
 
       {/* Modal: criar/editar curso */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar curso' : 'Novo curso'} size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar curso' : 'Novo curso'}
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Título</label>
-              <input value={form.title} onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))} required
-                maxLength={200} placeholder="Inglês Intermediário, Violão…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input
+                value={form.title}
+                onChange={(e) => setForm((f) => ({ ...f, title: e.target.value }))}
+                required
+                maxLength={200}
+                placeholder="Inglês Intermediário, Violão…"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Categoria</label>
-              <input value={form.category} onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))} required
-                maxLength={100} placeholder="idiomas, música, tecnologia…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Categoria
+              </label>
+              <input
+                value={form.category}
+                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
+                required
+                maxLength={100}
+                placeholder="idiomas, música, tecnologia…"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Valor mensal (R$)</label>
-            <input type="number" min="0" step="0.01" value={form.price} required
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Valor mensal (R$)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              required
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Descrição
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>
@@ -206,7 +277,9 @@ function ModulesModal({ course, onClose }: { course: Course | null; onClose: () 
     },
     onSuccess: () => {
       invalidate()
-      setEditingModule(null); setModuleForm(EMPTY_MODULE); setModuleError(null)
+      setEditingModule(null)
+      setModuleForm(EMPTY_MODULE)
+      setModuleError(null)
     },
     onError: () => setModuleError('Erro ao salvar o módulo.'),
   })
@@ -237,11 +310,18 @@ function ModulesModal({ course, onClose }: { course: Course | null; onClose: () 
     setModuleError(null)
   }
   function startCreate() {
-    setEditingModule(null); setModuleForm(EMPTY_MODULE); setModuleError(null)
+    setEditingModule(null)
+    setModuleForm(EMPTY_MODULE)
+    setModuleError(null)
   }
 
   return (
-    <Modal open={course !== null} onClose={onClose} title={course ? `Módulos — ${course.title}` : 'Módulos'} size="lg">
+    <Modal
+      open={course !== null}
+      onClose={onClose}
+      title={course ? `Módulos — ${course.title}` : 'Módulos'}
+      size="lg"
+    >
       <div className="space-y-4">
         {isPending ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
@@ -252,47 +332,104 @@ function ModulesModal({ course, onClose }: { course: Course | null; onClose: () 
             {modules.map((m, i) => (
               <div key={m.id} className="flex items-center justify-between gap-3 px-3 py-2">
                 <div className="flex min-w-0 items-center gap-2">
-                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">{i + 1}</span>
+                  <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums">
+                    {i + 1}
+                  </span>
                   <div className="min-w-0">
                     <span className="block truncate text-sm font-medium">{m.title}</span>
-                    {m.content && <span className="block truncate text-xs text-muted-foreground">{m.content}</span>}
+                    {m.content && (
+                      <span className="block truncate text-xs text-muted-foreground">
+                        {m.content}
+                      </span>
+                    )}
                   </div>
                 </div>
                 <div className="flex shrink-0 items-center gap-1">
-                  <Button variant="outline" className="h-7 w-7 p-0 text-xs" disabled={i === 0 || reorderMutation.isPending}
-                    onClick={() => move(i, -1)} title="Subir">↑</Button>
-                  <Button variant="outline" className="h-7 w-7 p-0 text-xs" disabled={i === modules.length - 1 || reorderMutation.isPending}
-                    onClick={() => move(i, 1)} title="Descer">↓</Button>
-                  <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => startEdit(m)}>Editar</Button>
-                  <Button variant="outline" className="h-7 px-2 text-xs"
-                    disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(m.id)}>Excluir</Button>
+                  <Button
+                    variant="outline"
+                    className="h-7 w-7 p-0 text-xs"
+                    disabled={i === 0 || reorderMutation.isPending}
+                    onClick={() => move(i, -1)}
+                    title="Subir"
+                  >
+                    ↑
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-7 w-7 p-0 text-xs"
+                    disabled={i === modules.length - 1 || reorderMutation.isPending}
+                    onClick={() => move(i, 1)}
+                    title="Descer"
+                  >
+                    ↓
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    onClick={() => startEdit(m)}
+                  >
+                    Editar
+                  </Button>
+                  <Button
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    disabled={deleteMutation.isPending}
+                    onClick={() => deleteMutation.mutate(m.id)}
+                  >
+                    Excluir
+                  </Button>
                 </div>
               </div>
             ))}
           </div>
         )}
 
-        <form className="space-y-3 rounded-lg border border-border p-3" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
-          <p className="text-xs font-semibold text-muted-foreground">{editingModule ? 'Editar módulo' : 'Novo módulo'}</p>
+        <form
+          className="space-y-3 rounded-lg border border-border p-3"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
+          <p className="text-xs font-semibold text-muted-foreground">
+            {editingModule ? 'Editar módulo' : 'Novo módulo'}
+          </p>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Título</label>
-            <input value={moduleForm.title} onChange={(e) => setModuleForm((f) => ({ ...f, title: e.target.value }))} required
-              maxLength={200} placeholder="Aula 1 — Apresentação…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={moduleForm.title}
+              onChange={(e) => setModuleForm((f) => ({ ...f, title: e.target.value }))}
+              required
+              maxLength={200}
+              placeholder="Aula 1 — Apresentação…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Conteúdo (material entregue)</label>
-            <textarea value={moduleForm.content} onChange={(e) => setModuleForm((f) => ({ ...f, content: e.target.value }))}
-              rows={4} placeholder="Texto/material do módulo entregue ao aluno…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Conteúdo (material entregue)
+            </label>
+            <textarea
+              value={moduleForm.content}
+              onChange={(e) => setModuleForm((f) => ({ ...f, content: e.target.value }))}
+              rows={4}
+              placeholder="Texto/material do módulo entregue ao aluno…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {moduleError && <p className="text-sm text-destructive">{moduleError}</p>}
           <div className="flex justify-end gap-2">
             {editingModule && (
-              <Button type="button" variant="outline" onClick={startCreate}>Cancelar edição</Button>
+              <Button type="button" variant="outline" onClick={startCreate}>
+                Cancelar edição
+              </Button>
             )}
             <Button type="submit" disabled={saveMutation.isPending}>
-              {saveMutation.isPending ? 'Salvando…' : editingModule ? 'Salvar módulo' : 'Adicionar módulo'}
+              {saveMutation.isPending
+                ? 'Salvando…'
+                : editingModule
+                  ? 'Salvar módulo'
+                  : 'Adicionar módulo'}
             </Button>
           </div>
         </form>

@@ -41,7 +41,13 @@ type FormState = {
   dismissable: boolean
 }
 
-const EMPTY_FORM: FormState = { title: '', body: '', severity: 'info', expiresAt: '', dismissable: true }
+const EMPTY_FORM: FormState = {
+  title: '',
+  body: '',
+  severity: 'info',
+  expiresAt: '',
+  dismissable: true,
+}
 
 /**
  * Anúncios cross-tenant (camada 6.7, super-admin). Lista paginada, criação/edição via Modal,
@@ -104,9 +110,21 @@ export default function AnnouncementsPage() {
   }
 
   const columns: Column<Announcement>[] = [
-    { key: 'title', header: 'Título', render: (a) => <span className="font-medium">{a.title}</span> },
-    { key: 'severity', header: 'Severidade', render: (a) => <SeverityBadge severity={a.severity} /> },
-    { key: 'publishedAt', header: 'Publicado', render: (a) => new Date(a.publishedAt).toLocaleString('pt-BR') },
+    {
+      key: 'title',
+      header: 'Título',
+      render: (a) => <span className="font-medium">{a.title}</span>,
+    },
+    {
+      key: 'severity',
+      header: 'Severidade',
+      render: (a) => <SeverityBadge severity={a.severity} />,
+    },
+    {
+      key: 'publishedAt',
+      header: 'Publicado',
+      render: (a) => new Date(a.publishedAt).toLocaleString('pt-BR'),
+    },
     {
       key: 'expiresAt',
       header: 'Estado',
@@ -166,12 +184,26 @@ export default function AnnouncementsPage() {
           />
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Página {page + 1} de {totalPages} · {total} anúncio(s)</span>
+              <span>
+                Página {page + 1} de {totalPages} · {total} anúncio(s)
+              </span>
               <div className="flex gap-1">
-                <Button variant="outline" className="h-7 px-2 text-xs" disabled={page === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}>←</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs" disabled={page + 1 >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}>→</Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  ←
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={page + 1 >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  →
+                </Button>
               </div>
             </div>
           )}
@@ -214,10 +246,14 @@ export default function AnnouncementsPage() {
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Severidade</label>
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Severidade
+              </label>
               <select
                 value={form.severity}
-                onChange={(e) => setForm((f) => ({ ...f, severity: e.target.value as AnnouncementSeverity }))}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, severity: e.target.value as AnnouncementSeverity }))
+                }
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               >
                 <option value="info">Info</option>

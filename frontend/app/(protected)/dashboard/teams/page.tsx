@@ -134,7 +134,9 @@ export default function TeamsPage() {
                 className="h-7 px-2 text-xs"
                 disabled={remove.isPending && remove.variables === t.id}
                 onClick={() => {
-                  if (confirm(`Remover o time "${t.name}"? As conversas atribuídas ficam sem time.`)) {
+                  if (
+                    confirm(`Remover o time "${t.name}"? As conversas atribuídas ficam sem time.`)
+                  ) {
                     remove.mutate(t.id)
                   }
                 }}
@@ -163,15 +165,7 @@ export default function TeamsPage() {
  * (1..60 chars — espelha o CHECK do banco). Invalida ['my-teams'] no sucesso. Mantido inline
  * (sem componente separado) — é simples, só um input.
  */
-function TeamDialog({
-  open,
-  onClose,
-  team,
-}: {
-  open: boolean
-  onClose: () => void
-  team?: Team
-}) {
+function TeamDialog({ open, onClose, team }: { open: boolean; onClose: () => void; team?: Team }) {
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)

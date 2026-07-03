@@ -66,7 +66,8 @@ export default function ContactsPage() {
   })
 
   const toggleBlocked = useMutation({
-    mutationFn: ({ id, blocked }: { id: string; blocked: boolean }) => setContactBlocked(id, blocked),
+    mutationFn: ({ id, blocked }: { id: string; blocked: boolean }) =>
+      setContactBlocked(id, blocked),
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['my-contacts'] }),
     onError: (err) => console.error('setContactBlocked failed:', err),
   })
@@ -100,7 +101,7 @@ export default function ContactsPage() {
                   {c.name ?? '—'}
                 </Link>
                 <span className="text-muted-foreground">{c.phoneNumber}</span>
-                <span className="ml-auto tabular-nums text-muted-foreground">
+                <span className="ml-auto text-muted-foreground tabular-nums">
                   {c.messageCount.toLocaleString('pt-BR')} msgs
                 </span>
               </li>

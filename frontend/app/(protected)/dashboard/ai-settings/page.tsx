@@ -60,13 +60,13 @@ export default function AiSettingsPage() {
 
   // Sincroniza o estado local quando os dados chegam (data === null → mantém vazio).
   useOnSync(data, (data) => {
-      setTone(data.tone ?? '')
-      setSystemRules(data.systemRules ?? '')
-      setRestrictions(data.restrictions ?? '')
-      setHandoffTriggers(data.handoffTriggers ?? '')
-      setWelcomeMessage(data.welcomeMessage ?? '')
-      setReactivationDays(data.reactivationDays != null ? String(data.reactivationDays) : '')
-      setReactivationMessage(data.reactivationMessage ?? '')
+    setTone(data.tone ?? '')
+    setSystemRules(data.systemRules ?? '')
+    setRestrictions(data.restrictions ?? '')
+    setHandoffTriggers(data.handoffTriggers ?? '')
+    setWelcomeMessage(data.welcomeMessage ?? '')
+    setReactivationDays(data.reactivationDays != null ? String(data.reactivationDays) : '')
+    setReactivationMessage(data.reactivationMessage ?? '')
   })
 
   const mutation = useMutation({
@@ -249,8 +249,8 @@ export default function AiSettingsPage() {
               className="w-32 rounded-md border border-border bg-card px-3 py-2 text-sm"
             />
             <p className="mt-1 text-xs text-muted-foreground">
-              Clientes sem mensagem por esse número de dias recebem a mensagem de reativação.
-              Deixe vazio para desativar.
+              Clientes sem mensagem por esse número de dias recebem a mensagem de reativação. Deixe
+              vazio para desativar.
             </p>
           </div>
 

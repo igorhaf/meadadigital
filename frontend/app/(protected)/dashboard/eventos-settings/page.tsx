@@ -25,7 +25,10 @@ export default function EventosSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  const [form, setForm] = useSyncedForm(data, (d): FormState => ({ businessName: d.businessName ?? '', notes: d.notes ?? '' }))
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    businessName: d.businessName ?? '',
+    notes: d.notes ?? '',
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -34,7 +37,9 @@ export default function EventosSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['eventos-config'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: () => setError('Erro ao salvar as configurações.'),
   })
@@ -52,28 +57,43 @@ export default function EventosSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Identidade do espaço">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome do espaço/buffet</label>
-                  <input value={form.businessName}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Nome do espaço/buffet
+                  </label>
+                  <input
+                    value={form.businessName}
                     onChange={(e) => setForm((f) => f && { ...f, businessName: e.target.value })}
                     placeholder="Espaço Jardim, Buffet Encanto…"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-                  <textarea value={form.notes}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Observações
+                  </label>
+                  <textarea
+                    value={form.notes}
                     onChange={(e) => setForm((f) => f && { ...f, notes: e.target.value })}
-                    rows={3} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    rows={3}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
 
             <p className="text-xs text-muted-foreground">
-              A casa de festas trabalha por <strong>proposta</strong> (orçamento + cronograma), não por
-              agendamento de horário — por isso não há configuração de horário aqui.
+              A casa de festas trabalha por <strong>proposta</strong> (orçamento + cronograma), não
+              por agendamento de horário — por isso não há configuração de horário aqui.
             </p>
 
             {error && <p className="text-sm text-destructive">{error}</p>}

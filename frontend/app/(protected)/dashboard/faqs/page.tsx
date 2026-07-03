@@ -15,6 +15,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { getMe } from '@/lib/api/me'
 import { getFaqSuggestions } from '@/lib/supabase/faq-suggestions'
 import { getMyFaqs, setFaqActive, type Faq } from '@/lib/supabase/faqs'
+
 import { CreateFaqDialog } from './create-faq-dialog'
 
 const columns: Column<Faq>[] = [

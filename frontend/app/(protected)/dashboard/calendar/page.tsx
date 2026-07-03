@@ -8,11 +8,7 @@ import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { PageSkeleton } from '@/components/ui/skeleton'
-import {
-  getAppointments,
-  updateAppointmentStatus,
-  type Appointment,
-} from '@/lib/api/appointments'
+import { getAppointments, updateAppointmentStatus, type Appointment } from '@/lib/api/appointments'
 import { getMe } from '@/lib/api/me'
 
 const WEEKDAY_LABELS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
@@ -162,9 +158,7 @@ export default function CalendarPage() {
                 type="button"
                 onClick={() => setSelectedDay(isSelected ? null : key)}
                 className={`flex aspect-square flex-col items-center justify-start rounded-md border p-1 transition-colors ${
-                  isSelected
-                    ? 'border-primary bg-primary/10'
-                    : 'border-border hover:bg-muted'
+                  isSelected ? 'border-primary bg-primary/10' : 'border-border hover:bg-muted'
                 }`}
               >
                 <span className="text-xs">{date.getDate()}</span>

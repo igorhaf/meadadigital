@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
   createProduct,
   createVariant,
@@ -154,13 +154,18 @@ export default function LasCatalogPage() {
               <section key={cat.id} className="space-y-2">
                 <h2 className="text-sm font-semibold text-muted-foreground">{cat.label}</h2>
                 {catProducts.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nenhum produto nesta categoria ainda.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nenhum produto nesta categoria ainda.
+                  </p>
                 ) : (
                   <div className="divide-y divide-border rounded-lg border border-border">
                     {catProducts.map((p) => {
                       const inStock = p.variants.reduce((sum, v) => sum + v.stockQty, 0)
                       return (
-                        <div key={p.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                        <div
+                          key={p.id}
+                          className="flex items-center justify-between gap-3 px-4 py-3"
+                        >
                           <div className="min-w-0">
                             <div className="flex items-center gap-2">
                               <span className="font-medium">{p.name}</span>
@@ -174,7 +179,9 @@ export default function LasCatalogPage() {
                               )}
                             </div>
                             {p.description && (
-                              <p className="truncate text-xs text-muted-foreground">{p.description}</p>
+                              <p className="truncate text-xs text-muted-foreground">
+                                {p.description}
+                              </p>
                             )}
                           </div>
                           <div className="flex shrink-0 items-center gap-3">
@@ -188,10 +195,18 @@ export default function LasCatalogPage() {
                               />
                               disponível
                             </label>
-                            <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => setVariantsProduct(p)}>
+                            <Button
+                              variant="outline"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => setVariantsProduct(p)}
+                            >
                               Variantes
                             </Button>
-                            <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(p)}>
+                            <Button
+                              variant="outline"
+                              className="h-7 px-2 text-xs"
+                              onClick={() => openEdit(p)}
+                            >
                               Editar
                             </Button>
                             <Button
@@ -215,7 +230,12 @@ export default function LasCatalogPage() {
       )}
 
       {/* Modal: criar/editar produto */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar produto' : 'Novo produto'} size="md">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar produto' : 'Novo produto'}
+        size="md"
+      >
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -225,35 +245,64 @@ export default function LasCatalogPage() {
         >
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-              maxLength={120} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+              maxLength={120}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição (opcional)</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Descrição (opcional)
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Preço base (R$)</label>
-              <input type="number" min="0" step="0.01" value={form.price} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Preço base (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Categoria</label>
-              <select value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as LasCategoryId }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Categoria
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value as LasCategoryId }))
+                }
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 {LAS_CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>
@@ -363,16 +412,28 @@ function VariantsEditor({ product }: { product: Product }) {
             return (
               <div key={v.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
                 <div className="min-w-0">
-                  <span className="font-medium">{v.color} / lote {v.dyeLot}</span>
+                  <span className="font-medium">
+                    {v.color} / lote {v.dyeLot}
+                  </span>
                   {v.sku && <span className="ml-2 text-xs text-muted-foreground">SKU {v.sku}</span>}
-                  {!v.available && <Badge variant="muted" className="ml-2">indisponível</Badge>}
-                  {outOfStock && <Badge variant="danger" className="ml-2">sem estoque</Badge>}
+                  {!v.available && (
+                    <Badge variant="muted" className="ml-2">
+                      indisponível
+                    </Badge>
+                  )}
+                  {outOfStock && (
+                    <Badge variant="danger" className="ml-2">
+                      sem estoque
+                    </Badge>
+                  )}
                 </div>
                 <div className="flex shrink-0 items-center gap-2">
-                  <span className="tabular-nums text-xs text-muted-foreground">
+                  <span className="text-xs text-muted-foreground tabular-nums">
                     {v.priceCents == null ? 'herda base' : formatBrl(v.priceCents)}
                   </span>
-                  <span className={`tabular-nums text-xs ${outOfStock ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}>
+                  <span
+                    className={`text-xs tabular-nums ${outOfStock ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}
+                  >
                     {v.stockQty} un.
                   </span>
                   <label className="flex items-center gap-1 text-xs text-muted-foreground">
@@ -384,7 +445,11 @@ function VariantsEditor({ product }: { product: Product }) {
                     />
                     disp.
                   </label>
-                  <Button variant="outline" className="h-6 px-2 text-xs" onClick={() => startEdit(v)}>
+                  <Button
+                    variant="outline"
+                    className="h-6 px-2 text-xs"
+                    onClick={() => startEdit(v)}
+                  >
                     Editar
                   </Button>
                   <Button
@@ -409,36 +474,66 @@ function VariantsEditor({ product }: { product: Product }) {
           saveMutation.mutate()
         }}
       >
-        <div className="flex-1 min-w-[7rem]">
+        <div className="min-w-[7rem] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Cor</label>
-          <input value={form.color} onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))} required
-            maxLength={40} placeholder="Azul, Vermelho…"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <input
+            value={form.color}
+            onChange={(e) => setForm((f) => ({ ...f, color: e.target.value }))}
+            required
+            maxLength={40}
+            placeholder="Azul, Vermelho…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <div className="w-32">
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">Lote de tingimento</label>
-          <input value={form.dyeLot} onChange={(e) => setForm((f) => ({ ...f, dyeLot: e.target.value }))} required
-            maxLength={40} placeholder="L2024-A"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            Lote de tingimento
+          </label>
+          <input
+            value={form.dyeLot}
+            onChange={(e) => setForm((f) => ({ ...f, dyeLot: e.target.value }))}
+            required
+            maxLength={40}
+            placeholder="L2024-A"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <div className="w-28">
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">SKU (opcional)</label>
-          <input value={form.sku} onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
-            maxLength={60} placeholder="ABC-123"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            SKU (opcional)
+          </label>
+          <input
+            value={form.sku}
+            onChange={(e) => setForm((f) => ({ ...f, sku: e.target.value }))}
+            maxLength={60}
+            placeholder="ABC-123"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <div className="w-28">
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">Preço R$ (vazio = base)</label>
-          <input type="number" min="0" step="0.01" value={form.price}
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            Preço R$ (vazio = base)
+          </label>
+          <input
+            type="number"
+            min="0"
+            step="0.01"
+            value={form.price}
             onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
             placeholder="herda base"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <div className="w-20">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Estoque</label>
-          <input type="number" min="0" step="1" value={form.stock}
+          <input
+            type="number"
+            min="0"
+            step="1"
+            value={form.stock}
             onChange={(e) => setForm((f) => ({ ...f, stock: e.target.value }))}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <Button type="submit" className="h-8 px-3 text-xs" disabled={saveMutation.isPending}>
           {saveMutation.isPending ? 'Salvando…' : editingId ? 'Salvar' : 'Adicionar'}

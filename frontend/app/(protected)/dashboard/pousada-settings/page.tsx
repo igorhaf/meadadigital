@@ -4,9 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
+import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/pousada/config'
 import { useSyncedForm } from '@/lib/use-synced-form'
 
@@ -47,7 +47,9 @@ export default function PousadaSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['pousada-config'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'invalid_time') {
@@ -71,29 +73,48 @@ export default function PousadaSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Horários">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Check-in a partir de</label>
-                  <input type="time" value={form.checkInTime}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Check-in a partir de
+                  </label>
+                  <input
+                    type="time"
+                    value={form.checkInTime}
                     onChange={(e) => setForm((f) => f && { ...f, checkInTime: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Check-out até</label>
-                  <input type="time" value={form.checkOutTime}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Check-out até
+                  </label>
+                  <input
+                    type="time"
+                    value={form.checkOutTime}
                     onChange={(e) => setForm((f) => f && { ...f, checkOutTime: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
 
             <Section title="Política de cancelamento">
-              <textarea value={form.cancellationPolicy}
+              <textarea
+                value={form.cancellationPolicy}
                 onChange={(e) => setForm((f) => f && { ...f, cancellationPolicy: e.target.value })}
-                rows={4} placeholder="Texto livre — a IA repassa ao cliente. Opcional."
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                rows={4}
+                placeholder="Texto livre — a IA repassa ao cliente. Opcional."
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </Section>
 
             <p className="text-xs text-muted-foreground">

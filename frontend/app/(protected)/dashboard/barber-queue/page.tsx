@@ -8,8 +8,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { listBarbers } from '@/lib/api/barbearia/barbers'
-import { listServices } from '@/lib/api/barbearia/services'
 import { enqueue, listQueue, updateTicketStatus } from '@/lib/api/barbearia/queue'
+import { listServices } from '@/lib/api/barbearia/services'
 import { ApiError } from '@/lib/api/client'
 import { statusLabel, type BarberQueueStatusId } from '@/profiles/barbearia/barber-queue-status'
 import { formatTime, type QueueTicket } from '@/profiles/barbearia/barber-types'
@@ -39,7 +39,9 @@ function groupByBarber(items: QueueTicket[]): Group[] {
     })
   }
   // fila geral por último.
-  return [...map.values()].sort((a, b) => (a.key === GERAL ? 1 : b.key === GERAL ? -1 : a.label.localeCompare(b.label)))
+  return [...map.values()].sort((a, b) =>
+    a.key === GERAL ? 1 : b.key === GERAL ? -1 : a.label.localeCompare(b.label),
+  )
 }
 
 function fmtEta(min: number | null): string {
@@ -47,7 +49,13 @@ function fmtEta(min: number | null): string {
   return `~${min} min`
 }
 
-type FormState = { barberId: string; serviceId: string; guestName: string; guestPhone: string; notes: string }
+type FormState = {
+  barberId: string
+  serviceId: string
+  guestName: string
+  guestPhone: string
+  notes: string
+}
 const EMPTY: FormState = { barberId: '', serviceId: '', guestName: '', guestPhone: '', notes: '' }
 
 /**
@@ -67,20 +75,29 @@ export default function BarberQueuePage() {
     refetchInterval: 10000, // a fila muda rápido — atualiza a cada 10s.
   })
 
-  const barbers = useQuery({ queryKey: ['barber-barbers-all'], queryFn: () => listBarbers({ onlyActive: true }) })
-  const services = useQuery({ queryKey: ['barber-services-all'], queryFn: () => listServices({ onlyActive: true }) })
+  const barbers = useQuery({
+    queryKey: ['barber-barbers-all'],
+    queryFn: () => listBarbers({ onlyActive: true }),
+  })
+  const services = useQuery({
+    queryKey: ['barber-services-all'],
+    queryFn: () => listServices({ onlyActive: true }),
+  })
 
   const enqueueMutation = useMutation({
-    mutationFn: () => enqueue({
-      barberId: form.barberId || null,
-      serviceId: form.serviceId,
-      guestName: form.guestName,
-      guestPhone: form.guestPhone || null,
-      notes: form.notes || null,
-    }),
+    mutationFn: () =>
+      enqueue({
+        barberId: form.barberId || null,
+        serviceId: form.serviceId,
+        guestName: form.guestName,
+        guestPhone: form.guestPhone || null,
+        notes: form.notes || null,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['barber-queue'] })
-      setModalOpen(false); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'queue_disabled') {
@@ -110,7 +127,17 @@ export default function BarberQueuePage() {
       <PageHeader
         title="Fila"
         description="Walk-in por ordem de chegada. A posição é calculada na hora — atender ou liberar alguém reordena tudo automaticamente."
-        actions={<Button onClick={() => { setForm(EMPTY); setFormError(null); setModalOpen(true) }}>Colocar na fila</Button>}
+        actions={
+          <Button
+            onClick={() => {
+              setForm(EMPTY)
+              setFormError(null)
+              setModalOpen(true)
+            }}
+          >
+            Colocar na fila
+          </Button>
+        }
       />
 
       <p className="text-sm text-muted-foreground">
@@ -139,29 +166,45 @@ export default function BarberQueuePage() {
                           </span>
                         )}
                         <span className="font-medium">{t.guestName}</span>
-                        {t.status === 'chamado' && <Badge variant="success">{statusLabel(t.status)}</Badge>}
+                        {t.status === 'chamado' && (
+                          <Badge variant="success">{statusLabel(t.status)}</Badge>
+                        )}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {t.serviceName}
-                        {t.status === 'aguardando' && <> · espera estimada {fmtEta(t.etaMinutes)}</>}
-                        {t.status === 'chamado' && t.calledAt && <> · chamado às {formatTime(t.calledAt)}</>}
+                        {t.status === 'aguardando' && (
+                          <> · espera estimada {fmtEta(t.etaMinutes)}</>
+                        )}
+                        {t.status === 'chamado' && t.calledAt && (
+                          <> · chamado às {formatTime(t.calledAt)}</>
+                        )}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
                       {t.status === 'aguardando' && (
-                        <Button className="h-7 px-3 text-xs" disabled={statusMutation.isPending}
-                          onClick={() => statusMutation.mutate({ id: t.id, newStatus: 'chamado' })}>
+                        <Button
+                          className="h-7 px-3 text-xs"
+                          disabled={statusMutation.isPending}
+                          onClick={() => statusMutation.mutate({ id: t.id, newStatus: 'chamado' })}
+                        >
                           Chamar
                         </Button>
                       )}
                       {t.status === 'chamado' && (
-                        <Button className="h-7 px-3 text-xs" disabled={statusMutation.isPending}
-                          onClick={() => statusMutation.mutate({ id: t.id, newStatus: 'atendido' })}>
+                        <Button
+                          className="h-7 px-3 text-xs"
+                          disabled={statusMutation.isPending}
+                          onClick={() => statusMutation.mutate({ id: t.id, newStatus: 'atendido' })}
+                        >
                           Atendido
                         </Button>
                       )}
-                      <Button variant="outline" className="h-7 px-2 text-xs" disabled={statusMutation.isPending}
-                        onClick={() => statusMutation.mutate({ id: t.id, newStatus: 'desistiu' })}>
+                      <Button
+                        variant="outline"
+                        className="h-7 px-2 text-xs"
+                        disabled={statusMutation.isPending}
+                        onClick={() => statusMutation.mutate({ id: t.id, newStatus: 'desistiu' })}
+                      >
                         Desistiu
                       </Button>
                     </div>
@@ -174,49 +217,90 @@ export default function BarberQueuePage() {
       )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Colocar na fila" size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); enqueueMutation.mutate() }}>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            enqueueMutation.mutate()
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Barbeiro</label>
-              <select value={form.barberId} onChange={(e) => setForm((f) => ({ ...f, barberId: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Barbeiro
+              </label>
+              <select
+                value={form.barberId}
+                onChange={(e) => setForm((f) => ({ ...f, barberId: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 <option value="">Qualquer barbeiro</option>
                 {(barbers.data?.items ?? []).map((b) => (
-                  <option key={b.id} value={b.id}>{b.name}</option>
+                  <option key={b.id} value={b.id}>
+                    {b.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Serviço</label>
-              <select value={form.serviceId} onChange={(e) => setForm((f) => ({ ...f, serviceId: e.target.value }))} required
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Serviço
+              </label>
+              <select
+                value={form.serviceId}
+                onChange={(e) => setForm((f) => ({ ...f, serviceId: e.target.value }))}
+                required
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 <option value="">Selecione…</option>
                 {(services.data?.items ?? []).map((o) => (
-                  <option key={o.id} value={o.id}>{o.name} ({o.durationMinutes}min)</option>
+                  <option key={o.id} value={o.id}>
+                    {o.name} ({o.durationMinutes}min)
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Cliente</label>
-              <input value={form.guestName} onChange={(e) => setForm((f) => ({ ...f, guestName: e.target.value }))} required
-                maxLength={200} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Cliente
+              </label>
+              <input
+                value={form.guestName}
+                onChange={(e) => setForm((f) => ({ ...f, guestName: e.target.value }))}
+                required
+                maxLength={200}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Telefone (opcional)</label>
-              <input value={form.guestPhone} onChange={(e) => setForm((f) => ({ ...f, guestPhone: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Telefone (opcional)
+              </label>
+              <input
+                value={form.guestPhone}
+                onChange={(e) => setForm((f) => ({ ...f, guestPhone: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-            <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Observações
+            </label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={enqueueMutation.isPending}>
               {enqueueMutation.isPending ? 'Adicionando…' : 'Adicionar'}
             </Button>

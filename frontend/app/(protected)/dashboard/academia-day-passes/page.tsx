@@ -4,15 +4,21 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { listClasses } from '@/lib/api/academia/classes'
 import { createDayPass, listDayPasses, payDayPass } from '@/lib/api/academia/day-passes'
+import { ApiError } from '@/lib/api/client'
 import { formatDate, formatPrice } from '@/profiles/academia/academia-types'
 
-type FormState = { guestName: string; guestPhone: string; classId: string; passDate: string; price: string }
+type FormState = {
+  guestName: string
+  guestPhone: string
+  classId: string
+  passDate: string
+  price: string
+}
 
 /** "YYYY-MM-DD" de hoje no fuso local do browser. */
 function todayIso(): string {
@@ -27,7 +33,13 @@ function todayIso(): string {
 export default function AcademiaDayPassesPage() {
   const qc = useQueryClient()
   const [modalOpen, setModalOpen] = useState(false)
-  const [form, setForm] = useState<FormState>({ guestName: '', guestPhone: '', classId: '', passDate: todayIso(), price: '' })
+  const [form, setForm] = useState<FormState>({
+    guestName: '',
+    guestPhone: '',
+    classId: '',
+    passDate: todayIso(),
+    price: '',
+  })
   const [formError, setFormError] = useState<string | null>(null)
 
   const { data, isPending, isError } = useQuery({
@@ -54,7 +66,8 @@ export default function AcademiaDayPassesPage() {
       }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['academia-day-passes'] })
-      setModalOpen(false); setFormError(null)
+      setModalOpen(false)
+      setFormError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'invalid_date') setFormError('Data inválida.')
@@ -74,7 +87,8 @@ export default function AcademiaDayPassesPage() {
 
   function openCreate() {
     setForm({ guestName: '', guestPhone: '', classId: '', passDate: todayIso(), price: '' })
-    setFormError(null); setModalOpen(true)
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const passes = data?.items ?? []
@@ -88,7 +102,8 @@ export default function AcademiaDayPassesPage() {
       />
 
       <p className="text-xs text-muted-foreground">
-        A cobrança online espera o gateway de pagamento (#50) — por enquanto o registro do avulso é manual.
+        A cobrança online espera o gateway de pagamento (#50) — por enquanto o registro do avulso é
+        manual.
       </p>
 
       {isError ? (
@@ -116,16 +131,26 @@ export default function AcademiaDayPassesPage() {
                 <tr key={p.id} className="border-b border-border last:border-b-0">
                   <td className="px-3 py-2 font-medium">{p.guestName}</td>
                   <td className="px-3 py-2 text-muted-foreground">{p.guestPhone ?? '—'}</td>
-                  <td className="px-3 py-2">{p.classId ? classNameById.get(p.classId) ?? '—' : 'Livre'}</td>
+                  <td className="px-3 py-2">
+                    {p.classId ? (classNameById.get(p.classId) ?? '—') : 'Livre'}
+                  </td>
                   <td className="px-3 py-2 tabular-nums">{formatDate(p.passDate)}</td>
                   <td className="px-3 py-2 tabular-nums">{formatPrice(p.priceCents)}</td>
                   <td className="px-3 py-2">
-                    {p.paid ? <Badge variant="success">Pago</Badge> : <Badge variant="warning">A receber</Badge>}
+                    {p.paid ? (
+                      <Badge variant="success">Pago</Badge>
+                    ) : (
+                      <Badge variant="warning">A receber</Badge>
+                    )}
                   </td>
                   <td className="px-3 py-2 text-right">
                     {!p.paid && (
-                      <Button variant="outline" className="h-7 px-2 text-xs"
-                        disabled={payMutation.isPending} onClick={() => payMutation.mutate(p.id)}>
+                      <Button
+                        variant="outline"
+                        className="h-7 px-2 text-xs"
+                        disabled={payMutation.isPending}
+                        onClick={() => payMutation.mutate(p.id)}
+                      >
                         Marcar pago
                       </Button>
                     )}
@@ -138,43 +163,82 @@ export default function AcademiaDayPassesPage() {
       )}
 
       <Modal open={modalOpen} onClose={() => setModalOpen(false)} title="Novo avulso" size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); createMutation.mutate() }}>
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            createMutation.mutate()
+          }}
+        >
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome do visitante</label>
-            <input value={form.guestName} onChange={(e) => setForm((f) => ({ ...f, guestName: e.target.value }))}
-              required maxLength={200}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Nome do visitante
+            </label>
+            <input
+              value={form.guestName}
+              onChange={(e) => setForm((f) => ({ ...f, guestName: e.target.value }))}
+              required
+              maxLength={200}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Telefone</label>
-            <input value={form.guestPhone} onChange={(e) => setForm((f) => ({ ...f, guestPhone: e.target.value }))}
+            <input
+              value={form.guestPhone}
+              onChange={(e) => setForm((f) => ({ ...f, guestPhone: e.target.value }))}
               maxLength={30}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Aula (opcional)</label>
-            <select value={form.classId} onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Aula (opcional)
+            </label>
+            <select
+              value={form.classId}
+              onChange={(e) => setForm((f) => ({ ...f, classId: e.target.value }))}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            >
               <option value="">Livre (sem aula específica)</option>
-              {classes.filter((c) => c.active).map((c) => (
-                <option key={c.id} value={c.id}>{c.name}</option>
-              ))}
+              {classes
+                .filter((c) => c.active)
+                .map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
             </select>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Data</label>
-            <input type="date" value={form.passDate} onChange={(e) => setForm((f) => ({ ...f, passDate: e.target.value }))}
-              required className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              type="date"
+              value={form.passDate}
+              onChange={(e) => setForm((f) => ({ ...f, passDate: e.target.value }))}
+              required
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Preço (R$)</label>
-            <input type="number" min="0" step="0.01" value={form.price} required
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Preço (R$)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
+              required
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={createMutation.isPending}>
               {createMutation.isPending ? 'Salvando…' : 'Registrar'}
             </Button>

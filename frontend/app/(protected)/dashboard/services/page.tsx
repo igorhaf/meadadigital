@@ -13,6 +13,7 @@ import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getMe } from '@/lib/api/me'
 import { getMyServices, setServiceActive, type Service } from '@/lib/supabase/services'
+
 import { CreateServiceDialog } from './create-service-dialog'
 
 const columns: Column<Service>[] = [

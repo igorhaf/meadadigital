@@ -1,13 +1,7 @@
 'use client'
 
 import { useQuery } from '@tanstack/react-query'
-import {
-  AlertTriangle,
-  BarChart3,
-  CalendarDays,
-  MessagesSquare,
-  Users,
-} from 'lucide-react'
+import { AlertTriangle, BarChart3, CalendarDays, MessagesSquare, Users } from 'lucide-react'
 import Link from 'next/link'
 import { type ComponentType } from 'react'
 

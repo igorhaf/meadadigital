@@ -6,13 +6,13 @@ import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { Button } from '@/components/ui/button'
-import { ApiError } from '@/lib/api/client'
 import {
   getProfileFeatures,
   setProfileFeature,
   type NicheRow,
   type ProfileFeatureGrid,
 } from '@/lib/api/admin/profile-features'
+import { ApiError } from '@/lib/api/client'
 
 /**
  * Grade de Feature Flags por Nicho (super-admin — camada 9.0). Linhas = nichos (todos os perfis,
@@ -33,8 +33,15 @@ export default function ProfileFeaturesPage() {
   })
 
   const toggleMutation = useMutation({
-    mutationFn: ({ profileId, featureKey, enabled }: { profileId: string; featureKey: string; enabled: boolean }) =>
-      setProfileFeature(profileId, featureKey, enabled),
+    mutationFn: ({
+      profileId,
+      featureKey,
+      enabled,
+    }: {
+      profileId: string
+      featureKey: string
+      enabled: boolean
+    }) => setProfileFeature(profileId, featureKey, enabled),
     onMutate: ({ profileId, featureKey }) => setPending(`${profileId}:${featureKey}`),
     onSettled: () => {
       setPending(null)
@@ -82,13 +89,13 @@ export default function ProfileFeaturesPage() {
           <table className="w-full text-sm">
             <thead>
               <tr className="border-b border-border">
-                <th className="px-4 py-3 text-left text-xs font-medium uppercase tracking-wide text-muted-foreground">
+                <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
                   Nicho
                 </th>
                 {features.map((f) => (
                   <th
                     key={f.key}
-                    className="px-4 py-3 text-center text-xs font-medium uppercase tracking-wide text-muted-foreground"
+                    className="px-4 py-3 text-center text-xs font-medium tracking-wide text-muted-foreground uppercase"
                   >
                     {f.label}
                   </th>
@@ -98,22 +105,33 @@ export default function ProfileFeaturesPage() {
             <tbody>
               {isPending ? (
                 <tr>
-                  <td colSpan={1 + features.length} className="px-4 py-8 text-center text-muted-foreground">
+                  <td
+                    colSpan={1 + features.length}
+                    className="px-4 py-8 text-center text-muted-foreground"
+                  >
                     Carregando…
                   </td>
                 </tr>
               ) : niches.length === 0 ? (
                 <tr>
-                  <td colSpan={1 + features.length} className="px-4 py-8 text-center text-muted-foreground">
+                  <td
+                    colSpan={1 + features.length}
+                    className="px-4 py-8 text-center text-muted-foreground"
+                  >
                     Nenhum nicho.
                   </td>
                 </tr>
               ) : (
                 niches.map((n: NicheRow) => (
-                  <tr key={n.profileId} className="border-t border-border first:border-t-0 hover:bg-muted/40">
+                  <tr
+                    key={n.profileId}
+                    className="border-t border-border first:border-t-0 hover:bg-muted/40"
+                  >
                     <td className="px-4 py-3.5">
                       <span className="font-medium">{n.label}</span>
-                      <span className="ml-2 font-mono text-xs text-muted-foreground">{n.profileId}</span>
+                      <span className="ml-2 font-mono text-xs text-muted-foreground">
+                        {n.profileId}
+                      </span>
                     </td>
                     {features.map((f) => {
                       const enabled = n.flags[f.key] === true
@@ -125,7 +143,11 @@ export default function ProfileFeaturesPage() {
                             type="button"
                             disabled={busy}
                             onClick={() =>
-                              toggleMutation.mutate({ profileId: n.profileId, featureKey: f.key, enabled: !enabled })
+                              toggleMutation.mutate({
+                                profileId: n.profileId,
+                                featureKey: f.key,
+                                enabled: !enabled,
+                              })
                             }
                             aria-pressed={enabled}
                             aria-label={`${enabled ? 'Desligar' : 'Ligar'} ${f.label} para ${n.label}`}

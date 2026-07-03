@@ -4,12 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { listClasses } from '@/lib/api/academia/classes'
 import { createCheckin, listCheckins } from '@/lib/api/academia/checkins'
+import { listClasses } from '@/lib/api/academia/classes'
 import { listMemberships } from '@/lib/api/academia/memberships'
+import { ApiError } from '@/lib/api/client'
 import { dayOfWeekLabel, formatDate, formatTime } from '@/profiles/academia/academia-types'
 
 /** Date local → "YYYY-MM-DD". */
@@ -37,12 +37,16 @@ export default function AcademiaCheckinsPage() {
   const [histTo, setHistTo] = useState(today)
   const [registerMsg, setRegisterMsg] = useState<string | null>(null)
 
-  const classes = useQuery({ queryKey: ['academia-classes-all'], queryFn: () => listClasses({ onlyActive: true }) })
+  const classes = useQuery({
+    queryKey: ['academia-classes-all'],
+    queryFn: () => listClasses({ onlyActive: true }),
+  })
 
   // Matrículas ativas (da aula selecionada, ou todas p/ resolver nomes no histórico).
   const memberships = useQuery({
     queryKey: ['academia-memberships', 'checkins', classId],
-    queryFn: () => listMemberships({ status: 'ativa', classId: classId || undefined, pageSize: 100 }),
+    queryFn: () =>
+      listMemberships({ status: 'ativa', classId: classId || undefined, pageSize: 100 }),
   })
 
   // Check-ins de HOJE da aula selecionada — marca quem já tem presença.
@@ -55,7 +59,12 @@ export default function AcademiaCheckinsPage() {
   // Histórico por período (respeita a aula selecionada, se houver).
   const history = useQuery({
     queryKey: ['academia-checkins', 'history', classId, histFrom, histTo],
-    queryFn: () => listCheckins({ classId: classId || undefined, from: histFrom || undefined, to: histTo || undefined }),
+    queryFn: () =>
+      listCheckins({
+        classId: classId || undefined,
+        from: histFrom || undefined,
+        to: histTo || undefined,
+      }),
   })
 
   const checkinMutation = useMutation({
@@ -70,7 +79,10 @@ export default function AcademiaCheckinsPage() {
         // não é erro grave: a presença de hoje já existia — só sincroniza a lista.
         setRegisterMsg('Presença já registrada hoje para esse aluno.')
         qc.invalidateQueries({ queryKey: ['academia-checkins'] })
-      } else if (e instanceof ApiError && (e.reason === 'membership_not_found' || e.reason === 'class_not_found')) {
+      } else if (
+        e instanceof ApiError &&
+        (e.reason === 'membership_not_found' || e.reason === 'class_not_found')
+      ) {
         setRegisterMsg('Matrícula ou aula não encontrada. Recarregue a página.')
       } else {
         setRegisterMsg('Erro ao registrar a presença.')
@@ -104,12 +116,19 @@ export default function AcademiaCheckinsPage() {
 
       <div className="max-w-md">
         <label className="mb-1 block text-xs font-medium text-muted-foreground">Aula</label>
-        <select value={classId} onChange={(e) => { setClassId(e.target.value); setRegisterMsg(null) }}
-          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+        <select
+          value={classId}
+          onChange={(e) => {
+            setClassId(e.target.value)
+            setRegisterMsg(null)
+          }}
+          className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+        >
           <option value="">Todas as aulas</option>
           {classItems.map((c) => (
             <option key={c.id} value={c.id}>
-              {dayOfWeekLabel(c.dayOfWeek)} {formatTime(c.startTime)} · {c.modality} &quot;{c.name}&quot;
+              {dayOfWeekLabel(c.dayOfWeek)} {formatTime(c.startTime)} · {c.modality} &quot;{c.name}
+              &quot;
             </option>
           ))}
         </select>
@@ -119,7 +138,8 @@ export default function AcademiaCheckinsPage() {
       {classId !== '' && (
         <section className="space-y-2 rounded-lg border border-border p-4">
           <h2 className="text-sm font-semibold">
-            Registrar presença de hoje{selectedClass ? ` — ${selectedClass.name}` : ''} ({formatDate(today)})
+            Registrar presença de hoje{selectedClass ? ` — ${selectedClass.name}` : ''} (
+            {formatDate(today)})
           </h2>
           {memberships.isError ? (
             <p className="text-sm text-destructive">Erro ao carregar as matrículas da aula.</p>
@@ -135,13 +155,18 @@ export default function AcademiaCheckinsPage() {
                   <div key={m.id} className="flex items-center justify-between gap-3 px-3 py-2">
                     <div className="min-w-0">
                       <span className="text-sm font-medium">{m.studentName}</span>
-                      {m.studentPhone && <span className="ml-2 text-xs text-muted-foreground">{m.studentPhone}</span>}
+                      {m.studentPhone && (
+                        <span className="ml-2 text-xs text-muted-foreground">{m.studentPhone}</span>
+                      )}
                     </div>
                     {present ? (
                       <Badge variant="success">Presente ✓</Badge>
                     ) : (
-                      <Button className="h-7 px-3 text-xs" disabled={checkinMutation.isPending}
-                        onClick={() => checkinMutation.mutate(m.id)}>
+                      <Button
+                        className="h-7 px-3 text-xs"
+                        disabled={checkinMutation.isPending}
+                        onClick={() => checkinMutation.mutate(m.id)}
+                      >
                         Presente
                       </Button>
                     )}
@@ -160,13 +185,21 @@ export default function AcademiaCheckinsPage() {
         <div className="flex flex-wrap items-end gap-3">
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">De</label>
-            <input type="date" value={histFrom} onChange={(e) => setHistFrom(e.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              type="date"
+              value={histFrom}
+              onChange={(e) => setHistFrom(e.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Até</label>
-            <input type="date" value={histTo} onChange={(e) => setHistTo(e.target.value)}
-              className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              type="date"
+              value={histTo}
+              onChange={(e) => setHistTo(e.target.value)}
+              className="rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
         </div>
 
@@ -195,7 +228,9 @@ export default function AcademiaCheckinsPage() {
                     {classId === '' && <td className="px-3 py-2">{classNameOf(c.classId)}</td>}
                     <td className="px-3 py-2">{studentNameOf(c.membershipId)}</td>
                     <td className="px-3 py-2">
-                      <Badge variant={c.source === 'ia' ? 'info' : 'muted'}>{c.source === 'ia' ? 'IA' : 'Painel'}</Badge>
+                      <Badge variant={c.source === 'ia' ? 'info' : 'muted'}>
+                        {c.source === 'ia' ? 'IA' : 'Painel'}
+                      </Badge>
                     </td>
                     <td className="px-3 py-2 text-xs text-muted-foreground">{c.notes ?? '—'}</td>
                   </tr>

@@ -6,8 +6,11 @@ import { useState } from 'react'
 import { PageHeader } from '@/components/layout/page-header'
 import { Card, Section } from '@/components/ui/card'
 import { getReportSummary } from '@/lib/api/casamento/reports'
-import { statusLabel, type WeddingProposalStatusId } from '@/profiles/casamento/wedding-proposal-status'
 import { formatBrl, type WeddingReportRow } from '@/profiles/casamento/casamento-types'
+import {
+  statusLabel,
+  type WeddingProposalStatusId,
+} from '@/profiles/casamento/wedding-proposal-status'
 
 const WINDOWS = [6, 12, 24]
 
@@ -16,7 +19,12 @@ function monthLabel(yyyyMm: string): string {
   return `${m}/${y}`
 }
 
-function RowsTable({ rows, firstColumn, firstValue, countColumn = 'Casamentos' }: {
+function RowsTable({
+  rows,
+  firstColumn,
+  firstValue,
+  countColumn = 'Casamentos',
+}: {
   rows: WeddingReportRow[]
   firstColumn: string
   firstValue: (r: WeddingReportRow) => string
@@ -71,8 +79,11 @@ export default function CasamentoReportsPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         {WINDOWS.map((w) => (
-          <button key={w} onClick={() => setMonths(w)}
-            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={w}
+            onClick={() => setMonths(w)}
+            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {w} meses
           </button>
         ))}
@@ -97,29 +108,44 @@ export default function CasamentoReportsPage() {
 
           <Card>
             <Section title="Receita realizada por mês">
-              <RowsTable rows={data.byMonth} firstColumn="Mês"
-                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')} />
+              <RowsTable
+                rows={data.byMonth}
+                firstColumn="Mês"
+                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Receita prevista (contratos fechados, por mês do casamento)">
-              <RowsTable rows={data.upcomingByMonth} firstColumn="Mês do casamento"
-                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')} />
+              <RowsTable
+                rows={data.upcomingByMonth}
+                firstColumn="Mês do casamento"
+                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Por assessor (realizadas)">
-              <RowsTable rows={data.byPlanner} firstColumn="Assessor"
-                firstValue={(r) => r.plannerName ?? 'Sem atribuição'} />
+              <RowsTable
+                rows={data.byPlanner}
+                firstColumn="Assessor"
+                firstValue={(r) => r.plannerName ?? 'Sem atribuição'}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Funil (propostas por status)">
-              <RowsTable rows={data.funnel} firstColumn="Status" countColumn="Propostas"
-                firstValue={(r) => (r.status ? statusLabel(r.status as WeddingProposalStatusId) : '—')} />
+              <RowsTable
+                rows={data.funnel}
+                firstColumn="Status"
+                countColumn="Propostas"
+                firstValue={(r) =>
+                  r.status ? statusLabel(r.status as WeddingProposalStatusId) : '—'
+                }
+              />
             </Section>
           </Card>
         </>

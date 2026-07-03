@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
@@ -15,6 +14,7 @@ import {
   updateLoyaltyConfig,
 } from '@/lib/api/academia/loyalty'
 import { listMemberships } from '@/lib/api/academia/memberships'
+import { ApiError } from '@/lib/api/client'
 import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
@@ -36,7 +36,11 @@ export default function AcademiaLoyaltyPage() {
   const [creditPoints, setCreditPoints] = useState('')
   const [creditError, setCreditError] = useState<string | null>(null)
 
-  const { data: config, isPending, isError } = useQuery({
+  const {
+    data: config,
+    isPending,
+    isError,
+  } = useQuery({
     queryKey: ['academia-loyalty-config'],
     queryFn: () => getLoyaltyConfig(),
   })
@@ -53,7 +57,11 @@ export default function AcademiaLoyaltyPage() {
     queryFn: () => listMemberships({ status: 'ativa', pageSize: 100 }),
   })
 
-  const { data: balance, isPending: balancePending, isError: balanceError } = useQuery({
+  const {
+    data: balance,
+    isPending: balancePending,
+    isError: balanceError,
+  } = useQuery({
     queryKey: ['academia-loyalty-balance', contactId],
     queryFn: () => getLoyaltyBalance(contactId),
     enabled: contactId !== '',
@@ -74,7 +82,9 @@ export default function AcademiaLoyaltyPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['academia-loyalty-config'] })
       qc.invalidateQueries({ queryKey: ['academia-loyalty-balance'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'invalid_config') {
@@ -89,7 +99,8 @@ export default function AcademiaLoyaltyPage() {
     mutationFn: () => addLoyaltyPoints(contactId, Math.round(Number(creditPoints || '0'))),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['academia-loyalty-balance', contactId] })
-      setCreditPoints(''); setCreditError(null)
+      setCreditPoints('')
+      setCreditError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'invalid_points') {
@@ -118,32 +129,64 @@ export default function AcademiaLoyaltyPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Programa de fidelidade">
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input type="checkbox" checked={form.enabled}
-                  onChange={(e) => setForm((f) => f && { ...f, enabled: e.target.checked })} />
+                <input
+                  type="checkbox"
+                  checked={form.enabled}
+                  onChange={(e) => setForm((f) => f && { ...f, enabled: e.target.checked })}
+                />
                 Ativar fidelidade
               </label>
 
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pontos por check-in</label>
-                  <input type="number" min="1" step="1" value={form.pointsPerCheckin}
-                    onChange={(e) => setForm((f) => f && { ...f, pointsPerCheckin: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Pontos por check-in
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.pointsPerCheckin}
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, pointsPerCheckin: e.target.value })
+                    }
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Limiar da recompensa (opcional)</label>
-                  <input type="number" min="1" step="1" value={form.rewardThreshold} placeholder="ex.: 20"
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Limiar da recompensa (opcional)
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.rewardThreshold}
+                    placeholder="ex.: 20"
                     onChange={(e) => setForm((f) => f && { ...f, rewardThreshold: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Recompensa</label>
-                  <input value={form.rewardText} maxLength={200} placeholder="Uma aula grátis"
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Recompensa
+                  </label>
+                  <input
+                    value={form.rewardText}
+                    maxLength={200}
+                    placeholder="Uma aula grátis"
                     onChange={(e) => setForm((f) => f && { ...f, rewardText: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
 
@@ -173,12 +216,19 @@ export default function AcademiaLoyaltyPage() {
         >
           <div className="max-w-sm">
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Aluno</label>
-            <select value={contactId}
-              onChange={(e) => { setContactId(e.target.value); setCreditError(null) }}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+            <select
+              value={contactId}
+              onChange={(e) => {
+                setContactId(e.target.value)
+                setCreditError(null)
+              }}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            >
               <option value="">Selecione um aluno…</option>
               {students.map((m) => (
-                <option key={m.id} value={m.contactId as string}>{m.studentName}</option>
+                <option key={m.id} value={m.contactId as string}>
+                  {m.studentName}
+                </option>
               ))}
             </select>
             {students.length === 0 && (
@@ -188,8 +238,8 @@ export default function AcademiaLoyaltyPage() {
             )}
           </div>
 
-          {contactId && (
-            balanceError ? (
+          {contactId &&
+            (balanceError ? (
               <p className="text-sm text-destructive">Erro ao carregar o saldo.</p>
             ) : balancePending || !balance ? (
               <p className="text-sm text-muted-foreground">Carregando saldo…</p>
@@ -198,18 +248,35 @@ export default function AcademiaLoyaltyPage() {
                 <div className="flex items-center gap-3">
                   <span className="text-2xl font-semibold tabular-nums">{balance.points}</span>
                   <span className="text-sm text-muted-foreground">
-                    ponto(s){balance.rewardThreshold !== null ? ` — limiar: ${balance.rewardThreshold}` : ' — sem limiar configurado'}
+                    ponto(s)
+                    {balance.rewardThreshold !== null
+                      ? ` — limiar: ${balance.rewardThreshold}`
+                      : ' — sem limiar configurado'}
                   </span>
                   {balance.rewardReached && <Badge variant="success">Recompensa atingida</Badge>}
                 </div>
 
-                <form className="flex items-end gap-2"
-                  onSubmit={(e) => { e.preventDefault(); creditMutation.mutate() }}>
+                <form
+                  className="flex items-end gap-2"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    creditMutation.mutate()
+                  }}
+                >
                   <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Creditar pontos</label>
-                    <input type="number" min="1" step="1" value={creditPoints} required placeholder="ex.: 5"
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Creditar pontos
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      step="1"
+                      value={creditPoints}
+                      required
+                      placeholder="ex.: 5"
                       onChange={(e) => setCreditPoints(e.target.value)}
-                      className="w-32 rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                      className="w-32 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
                   </div>
                   <Button type="submit" variant="outline" disabled={creditMutation.isPending}>
                     {creditMutation.isPending ? 'Creditando…' : 'Creditar'}
@@ -217,8 +284,7 @@ export default function AcademiaLoyaltyPage() {
                 </form>
                 {creditError && <p className="text-sm text-destructive">{creditError}</p>}
               </div>
-            )
-          )}
+            ))}
         </Section>
       </Card>
     </div>

@@ -4,9 +4,9 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
+import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/lingerie/config'
 import { useSyncedForm } from '@/lib/use-synced-form'
 
@@ -38,7 +38,9 @@ export default function LingerieSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['lingerie-config'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'validation_error') {
@@ -59,20 +61,40 @@ export default function LingerieSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Delivery">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Taxa de entrega (R$)</label>
-                  <input type="number" min="0" step="0.01" value={form.deliveryFee}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Taxa de entrega (R$)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.deliveryFee}
                     onChange={(e) => setForm((f) => f && { ...f, deliveryFee: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pedido mínimo (R$)</label>
-                  <input type="number" min="0" step="0.01" value={form.minOrder}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Pedido mínimo (R$)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.minOrder}
                     onChange={(e) => setForm((f) => f && { ...f, minOrder: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>

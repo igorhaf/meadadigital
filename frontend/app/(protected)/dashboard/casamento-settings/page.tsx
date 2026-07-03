@@ -55,7 +55,9 @@ export default function CasamentoSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['casamento-config'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: () => setError('Erro ao salvar as configurações.'),
   })
@@ -73,21 +75,36 @@ export default function CasamentoSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Identidade da assessoria">
               <div className="space-y-4">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome da assessoria</label>
-                  <input value={form.businessName}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Nome da assessoria
+                  </label>
+                  <input
+                    value={form.businessName}
                     onChange={(e) => setForm((f) => f && { ...f, businessName: e.target.value })}
                     placeholder="Assessoria Encanto, Cerimonial Aurora…"
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-                  <textarea value={form.notes}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Observações
+                  </label>
+                  <textarea
+                    value={form.notes}
                     onChange={(e) => setForm((f) => f && { ...f, notes: e.target.value })}
-                    rows={3} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    rows={3}
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
@@ -95,43 +112,79 @@ export default function CasamentoSettingsPage() {
             <Section title="Automações (onda 1 do backlog)">
               <div className="space-y-3 text-sm">
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" checked={form.checklistReminderEnabled} className="mt-0.5"
-                    onChange={(e) => setForm((f) => f && { ...f, checklistReminderEnabled: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={form.checklistReminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, checklistReminderEnabled: e.target.checked })
+                    }
+                  />
                   <span>
-                    Lembrar o casal <strong>3 dias antes</strong> do prazo de cada tarefa do checklist
-                    <span className="block text-xs text-muted-foreground">Mensagem fixa (não passa pela IA), 1x por tarefa/prazo.</span>
+                    Lembrar o casal <strong>3 dias antes</strong> do prazo de cada tarefa do
+                    checklist
+                    <span className="block text-xs text-muted-foreground">
+                      Mensagem fixa (não passa pela IA), 1x por tarefa/prazo.
+                    </span>
                   </span>
                 </label>
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" checked={form.paymentReminderEnabled} className="mt-0.5"
-                    onChange={(e) => setForm((f) => f && { ...f, paymentReminderEnabled: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={form.paymentReminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, paymentReminderEnabled: e.target.checked })
+                    }
+                  />
                   <span>
-                    Lembrar o casal <strong>3 dias antes</strong> do vencimento de cada parcela/sinal
-                    <span className="block text-xs text-muted-foreground">Só parcelas em aberto do plano de pagamento.</span>
+                    Lembrar o casal <strong>3 dias antes</strong> do vencimento de cada
+                    parcela/sinal
+                    <span className="block text-xs text-muted-foreground">
+                      Só parcelas em aberto do plano de pagamento.
+                    </span>
                   </span>
                 </label>
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" checked={form.autoCompleteEnabled} className="mt-0.5"
-                    onChange={(e) => setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={form.autoCompleteEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })
+                    }
+                  />
                   <span>
-                    Marcar proposta <strong>fechada</strong> como <strong>realizada</strong> após a data do casamento
-                    <span className="block text-xs text-muted-foreground">Automático e silencioso (ninguém é notificado).</span>
+                    Marcar proposta <strong>fechada</strong> como <strong>realizada</strong> após a
+                    data do casamento
+                    <span className="block text-xs text-muted-foreground">
+                      Automático e silencioso (ninguém é notificado).
+                    </span>
                   </span>
                 </label>
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" checked={form.anniversaryEnabled} className="mt-0.5"
-                    onChange={(e) => setForm((f) => f && { ...f, anniversaryEnabled: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={form.anniversaryEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, anniversaryEnabled: e.target.checked })
+                    }
+                  />
                   <span>
                     Parabenizar o casal no <strong>aniversário de casamento</strong> (1x por ano)
-                    <span className="block text-xs text-muted-foreground">Pós-venda de longo prazo — mensagem calorosa, sem oferta agressiva.</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Pós-venda de longo prazo — mensagem calorosa, sem oferta agressiva.
+                    </span>
                   </span>
                 </label>
               </div>
             </Section>
 
             <p className="text-xs text-muted-foreground">
-              A assessoria trabalha por <strong>proposta</strong> (orçamento + cronograma + checklist),
-              não por agendamento de horário — por isso não há configuração de horário aqui.
+              A assessoria trabalha por <strong>proposta</strong> (orçamento + cronograma +
+              checklist), não por agendamento de horário — por isso não há configuração de horário
+              aqui.
             </p>
 
             {error && <p className="text-sm text-destructive">{error}</p>}

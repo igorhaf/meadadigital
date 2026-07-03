@@ -52,11 +52,7 @@ const SCHEDULING_URGENCY_LABEL: Record<'low' | 'normal' | 'high', string> = {
  * <p>Next 16: params é Promise — desembrulhado com use(). Guard de papel como nas outras
  * telas do tenant. Conversa de outro tenant → RLS faz getConversation lançar → erro.
  */
-export default function ConversationDetailPage({
-  params,
-}: {
-  params: Promise<{ id: string }>
-}) {
+export default function ConversationDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
   const queryClient = useQueryClient()
@@ -77,7 +73,11 @@ export default function ConversationDetailPage({
     refetchInterval: 5000,
   })
 
-  const { data: page, isPending, isError: msgError } = useQuery({
+  const {
+    data: page,
+    isPending,
+    isError: msgError,
+  } = useQuery({
     queryKey: ['conversation-messages', id],
     queryFn: () => getConversationMessages(id, 50),
     enabled: isTenant,
@@ -229,8 +229,7 @@ export default function ConversationDetailPage({
     )
   }
 
-  const conversationLabel =
-    conversation?.contactName ?? conversation?.contactPhone ?? 'Conversa'
+  const conversationLabel = conversation?.contactName ?? conversation?.contactPhone ?? 'Conversa'
 
   return (
     <div className="space-y-6">
@@ -311,163 +310,162 @@ export default function ConversationDetailPage({
 
         {/* COLUNA DIREITA — ações, sinais detectados, tags, time e respostas prontas */}
         {conversation && (
-        <div className="space-y-4">
-          <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
-            <span>{conversation.contactPhone}</span>
-            <Badge variant={conversation.status === 'open' ? 'success' : 'danger'}>
-              {conversation.status}
-            </Badge>
-            <Badge variant={conversation.handledBy === 'ai' ? 'default' : 'warning'}>
-              {conversation.handledBy}
-            </Badge>
-          </div>
+          <div className="space-y-4">
+            <div className="flex flex-wrap items-center gap-2 text-sm text-muted-foreground">
+              <span>{conversation.contactPhone}</span>
+              <Badge variant={conversation.status === 'open' ? 'success' : 'danger'}>
+                {conversation.status}
+              </Badge>
+              <Badge variant={conversation.handledBy === 'ai' ? 'default' : 'warning'}>
+                {conversation.handledBy}
+              </Badge>
+            </div>
 
-          {/* Ações (4.7): trocar atendente e abrir/fechar */}
-          <div className="flex flex-wrap gap-2">
-            {conversation.handledBy === 'ai' ? (
-              <Button
-                variant="outline"
-                disabled={mutating}
-                onClick={() => handledByMutation.mutate('human')}
-              >
-                Atender com humano
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                disabled={mutating}
-                onClick={() => handledByMutation.mutate('ai')}
-              >
-                Devolver pra IA
-              </Button>
-            )}
-            {conversation.status === 'open' ? (
-              <Button
-                variant="outline"
-                disabled={mutating}
-                onClick={() => statusMutation.mutate('closed')}
-              >
-                Fechar conversa
-              </Button>
-            ) : (
-              <Button
-                variant="outline"
-                disabled={mutating}
-                onClick={() => statusMutation.mutate('open')}
-              >
-                Reabrir conversa
-              </Button>
-            )}
-          </div>
-
-          {mutationError && (
-            <p className="text-sm text-destructive">
-              Erro ao atualizar a conversa. Tente novamente.
-            </p>
-          )}
-
-          {/* Time (#76): atribui a conversa a um time/departamento. "Nenhum" desatribui. O
-              dropdown só mostra times da própria empresa (getMyTeams). */}
-          <div className="flex items-center gap-2">
-            <label htmlFor="conversation-team" className="text-sm text-muted-foreground">
-              Time:
-            </label>
-            <select
-              id="conversation-team"
-              className="rounded-md border border-border px-3 py-1.5 text-sm"
-              value={conversation.teamId ?? ''}
-              disabled={teamMutation.isPending}
-              onChange={(e) => teamMutation.mutate(e.target.value || null)}
-            >
-              <option value="">nenhum</option>
-              {(teams ?? []).map((t) => (
-                <option key={t.id} value={t.id}>
-                  {t.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Possível agendamento (#29): só renderiza quando a IA detectou intent.
-              "Marcar como tratado" zera scheduling_intent → seção e badge somem. */}
-          {conversation.schedulingIntent && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
-              <div className="mb-2 flex items-center justify-between">
-                <h2 className="flex items-center gap-2 text-sm font-medium">
-                  🗓️ Possível agendamento
-                  <span
-                    className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${SCHEDULING_URGENCY_CLASSES[conversation.schedulingIntent.urgency]}`}
-                  >
-                    {SCHEDULING_URGENCY_LABEL[conversation.schedulingIntent.urgency]}
-                  </span>
-                </h2>
+            {/* Ações (4.7): trocar atendente e abrir/fechar */}
+            <div className="flex flex-wrap gap-2">
+              {conversation.handledBy === 'ai' ? (
                 <Button
                   variant="outline"
-                  className="h-7 px-2 text-xs"
-                  disabled={clearIntentMutation.isPending}
-                  onClick={() => clearIntentMutation.mutate()}
+                  disabled={mutating}
+                  onClick={() => handledByMutation.mutate('human')}
                 >
-                  Marcar como tratado
+                  Atender com humano
                 </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => handledByMutation.mutate('ai')}
+                >
+                  Devolver pra IA
+                </Button>
+              )}
+              {conversation.status === 'open' ? (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => statusMutation.mutate('closed')}
+                >
+                  Fechar conversa
+                </Button>
+              ) : (
+                <Button
+                  variant="outline"
+                  disabled={mutating}
+                  onClick={() => statusMutation.mutate('open')}
+                >
+                  Reabrir conversa
+                </Button>
+              )}
+            </div>
+
+            {mutationError && (
+              <p className="text-sm text-destructive">
+                Erro ao atualizar a conversa. Tente novamente.
+              </p>
+            )}
+
+            {/* Time (#76): atribui a conversa a um time/departamento. "Nenhum" desatribui. O
+              dropdown só mostra times da própria empresa (getMyTeams). */}
+            <div className="flex items-center gap-2">
+              <label htmlFor="conversation-team" className="text-sm text-muted-foreground">
+                Time:
+              </label>
+              <select
+                id="conversation-team"
+                className="rounded-md border border-border px-3 py-1.5 text-sm"
+                value={conversation.teamId ?? ''}
+                disabled={teamMutation.isPending}
+                onChange={(e) => teamMutation.mutate(e.target.value || null)}
+              >
+                <option value="">nenhum</option>
+                {(teams ?? []).map((t) => (
+                  <option key={t.id} value={t.id}>
+                    {t.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Possível agendamento (#29): só renderiza quando a IA detectou intent.
+              "Marcar como tratado" zera scheduling_intent → seção e badge somem. */}
+            {conversation.schedulingIntent && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
+                <div className="mb-2 flex items-center justify-between">
+                  <h2 className="flex items-center gap-2 text-sm font-medium">
+                    🗓️ Possível agendamento
+                    <span
+                      className={`inline-flex items-center rounded px-2 py-0.5 text-xs font-medium ${SCHEDULING_URGENCY_CLASSES[conversation.schedulingIntent.urgency]}`}
+                    >
+                      {SCHEDULING_URGENCY_LABEL[conversation.schedulingIntent.urgency]}
+                    </span>
+                  </h2>
+                  <Button
+                    variant="outline"
+                    className="h-7 px-2 text-xs"
+                    disabled={clearIntentMutation.isPending}
+                    onClick={() => clearIntentMutation.mutate()}
+                  >
+                    Marcar como tratado
+                  </Button>
+                </div>
+                <dl className="space-y-1 text-sm">
+                  <div className="flex gap-2">
+                    <dt className="text-muted-foreground">Quando:</dt>
+                    <dd>{conversation.schedulingIntent.whenHint || 'não informado'}</dd>
+                  </div>
+                  <div className="flex gap-2">
+                    <dt className="text-muted-foreground">Serviço:</dt>
+                    <dd>{conversation.schedulingIntent.serviceHint || 'não informado'}</dd>
+                  </div>
+                </dl>
+                <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm text-muted-foreground italic">
+                  “{conversation.schedulingIntent.rawExcerpt}”
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Detectado em{' '}
+                  {new Date(conversation.schedulingIntent.detectedAt).toLocaleString('pt-BR')}
+                </p>
               </div>
-              <dl className="space-y-1 text-sm">
-                <div className="flex gap-2">
-                  <dt className="text-muted-foreground">Quando:</dt>
-                  <dd>{conversation.schedulingIntent.whenHint || 'não informado'}</dd>
-                </div>
-                <div className="flex gap-2">
-                  <dt className="text-muted-foreground">Serviço:</dt>
-                  <dd>{conversation.schedulingIntent.serviceHint || 'não informado'}</dd>
-                </div>
-              </dl>
-              <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm italic text-muted-foreground">
-                “{conversation.schedulingIntent.rawExcerpt}”
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Detectado em{' '}
-                {new Date(conversation.schedulingIntent.detectedAt).toLocaleString('pt-BR')}
-              </p>
-            </div>
-          )}
+            )}
 
-          {/* Reclamação detectada (#52): box vermelho. A IA já forçou o handoff para humano
+            {/* Reclamação detectada (#52): box vermelho. A IA já forçou o handoff para humano
               quando detectou — aqui é só a sinalização visual ao atendente. */}
-          {conversation.complaintIntent && (
-            <div className="rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-500/40 dark:bg-red-500/10">
-              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
-                ⚠️ Reclamação detectada
-              </h2>
-              <p className="text-sm">{conversation.complaintIntent.summary}</p>
-              <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm italic text-muted-foreground">
-                “{conversation.complaintIntent.rawExcerpt}”
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Detectado em{' '}
-                {new Date(conversation.complaintIntent.detectedAt).toLocaleString('pt-BR')}
-              </p>
-            </div>
-          )}
+            {conversation.complaintIntent && (
+              <div className="rounded-lg border border-red-300 bg-red-50 p-4 dark:border-red-500/40 dark:bg-red-500/10">
+                <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-red-700 dark:text-red-400">
+                  ⚠️ Reclamação detectada
+                </h2>
+                <p className="text-sm">{conversation.complaintIntent.summary}</p>
+                <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm text-muted-foreground italic">
+                  “{conversation.complaintIntent.rawExcerpt}”
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Detectado em{' '}
+                  {new Date(conversation.complaintIntent.detectedAt).toLocaleString('pt-BR')}
+                </p>
+              </div>
+            )}
 
-          {/* Cancelamento detectado (#51): box âmbar. */}
-          {conversation.cancellationIntent && (
-            <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
-              <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
-                🚫 Cancelamento
-              </h2>
-              <p className="text-sm">{conversation.cancellationIntent.summary}</p>
-              <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm italic text-muted-foreground">
-                “{conversation.cancellationIntent.rawExcerpt}”
-              </p>
-              <p className="mt-2 text-xs text-muted-foreground">
-                Detectado em{' '}
-                {new Date(conversation.cancellationIntent.detectedAt).toLocaleString('pt-BR')}
-              </p>
-            </div>
-          )}
+            {/* Cancelamento detectado (#51): box âmbar. */}
+            {conversation.cancellationIntent && (
+              <div className="rounded-lg border border-amber-300 bg-amber-50 p-4 dark:border-amber-500/40 dark:bg-amber-500/10">
+                <h2 className="mb-2 flex items-center gap-2 text-sm font-medium text-amber-700 dark:text-amber-400">
+                  🚫 Cancelamento
+                </h2>
+                <p className="text-sm">{conversation.cancellationIntent.summary}</p>
+                <p className="mt-2 rounded bg-background/60 px-3 py-2 text-sm text-muted-foreground italic">
+                  “{conversation.cancellationIntent.rawExcerpt}”
+                </p>
+                <p className="mt-2 text-xs text-muted-foreground">
+                  Detectado em{' '}
+                  {new Date(conversation.cancellationIntent.detectedAt).toLocaleString('pt-BR')}
+                </p>
+              </div>
+            )}
 
-          {/* Dados coletados (#53): pares chave/valor do extracted_data, quando não-vazio. */}
-          {conversation.extractedData &&
-            Object.keys(conversation.extractedData).length > 0 && (
+            {/* Dados coletados (#53): pares chave/valor do extracted_data, quando não-vazio. */}
+            {conversation.extractedData && Object.keys(conversation.extractedData).length > 0 && (
               <Card className="p-4">
                 <h2 className="mb-2 text-sm font-medium">Dados coletados</h2>
                 <dl className="space-y-1 text-sm">
@@ -481,93 +479,93 @@ export default function ConversationDetailPage({
               </Card>
             )}
 
-          {/* Tags (#22): chips aplicados (com × para remover) + autocomplete para adicionar
+            {/* Tags (#22): chips aplicados (com × para remover) + autocomplete para adicionar
               tag EXISTENTE (criar tag nova é só em /dashboard/tags). */}
-          <Card className="p-4">
-            <h2 className="mb-2 text-sm font-medium">Tags</h2>
-            <div className="mb-3 flex flex-wrap items-center gap-1.5">
-              {(appliedTags ?? []).length === 0 ? (
-                <span className="text-sm text-muted-foreground">Nenhuma tag aplicada.</span>
-              ) : (
-                (appliedTags ?? []).map((t) => (
-                  <TagChip
-                    key={t.id}
-                    name={t.name}
-                    color={t.color}
-                    onRemove={() => removeTag.mutate(t.id)}
-                  />
-                ))
-              )}
-            </div>
-            {availableTags.length > 0 ? (
-              <select
-                className="w-full rounded-md border border-border px-3 py-2 text-sm"
-                value=""
-                disabled={addTag.isPending}
-                onChange={(e) => {
-                  if (e.target.value) {
-                    addTag.mutate(e.target.value)
-                  }
-                }}
-              >
-                <option value="">+ Adicionar tag…</option>
-                {availableTags.map((t) => (
-                  <option key={t.id} value={t.id}>
-                    {t.name}
-                  </option>
-                ))}
-              </select>
-            ) : (
-              <p className="text-xs text-muted-foreground">
-                {(allTags ?? []).length === 0 ? (
-                  <>
-                    Nenhuma tag cadastrada.{' '}
-                    <Link href="/dashboard/tags" className="underline">
-                      Criar tags
-                    </Link>
-                    .
-                  </>
+            <Card className="p-4">
+              <h2 className="mb-2 text-sm font-medium">Tags</h2>
+              <div className="mb-3 flex flex-wrap items-center gap-1.5">
+                {(appliedTags ?? []).length === 0 ? (
+                  <span className="text-sm text-muted-foreground">Nenhuma tag aplicada.</span>
                 ) : (
-                  'Todas as tags já estão aplicadas.'
+                  (appliedTags ?? []).map((t) => (
+                    <TagChip
+                      key={t.id}
+                      name={t.name}
+                      color={t.color}
+                      onRemove={() => removeTag.mutate(t.id)}
+                    />
+                  ))
                 )}
-              </p>
-            )}
-          </Card>
+              </div>
+              {availableTags.length > 0 ? (
+                <select
+                  className="w-full rounded-md border border-border px-3 py-2 text-sm"
+                  value=""
+                  disabled={addTag.isPending}
+                  onChange={(e) => {
+                    if (e.target.value) {
+                      addTag.mutate(e.target.value)
+                    }
+                  }}
+                >
+                  <option value="">+ Adicionar tag…</option>
+                  {availableTags.map((t) => (
+                    <option key={t.id} value={t.id}>
+                      {t.name}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <p className="text-xs text-muted-foreground">
+                  {(allTags ?? []).length === 0 ? (
+                    <>
+                      Nenhuma tag cadastrada.{' '}
+                      <Link href="/dashboard/tags" className="underline">
+                        Criar tags
+                      </Link>
+                      .
+                    </>
+                  ) : (
+                    'Todas as tags já estão aplicadas.'
+                  )}
+                </p>
+              )}
+            </Card>
 
-          {/* Respostas prontas (#88): lista os textos reutilizáveis da empresa. Como ainda
+            {/* Respostas prontas (#88): lista os textos reutilizáveis da empresa. Como ainda
               não há envio manual, a ação é copiar o corpo para a área de transferência
               (feedback "copiado" por ~1.5s). Catálogo é gerido em /dashboard/saved-replies. */}
-          <Card className="p-4">
-            <h2 className="mb-2 text-sm font-medium">Respostas prontas</h2>
-            {(savedReplies ?? []).length === 0 ? (
-              <p className="text-xs text-muted-foreground">
-                Nenhuma resposta pronta cadastrada.{' '}
-                <Link href="/dashboard/saved-replies" className="underline">
-                  Criar respostas
-                </Link>
-                .
-              </p>
-            ) : (
-              <ul className="space-y-1.5">
-                {(savedReplies ?? []).map((r) => (
-                  <li key={r.id} className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium">{r.title}</p>
-                      <p className="line-clamp-1 text-xs text-muted-foreground">{r.body}</p>
-                    </div>
-                    <Button
-                      variant="outline"
-                      className="h-7 shrink-0 px-2 text-xs"
-                      onClick={() => copyReply(r.id, r.body)}
-                    >
-                      {copiedReplyId === r.id ? 'Copiado' : 'Copiar'}
-                    </Button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Card>
-        </div>
+            <Card className="p-4">
+              <h2 className="mb-2 text-sm font-medium">Respostas prontas</h2>
+              {(savedReplies ?? []).length === 0 ? (
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma resposta pronta cadastrada.{' '}
+                  <Link href="/dashboard/saved-replies" className="underline">
+                    Criar respostas
+                  </Link>
+                  .
+                </p>
+              ) : (
+                <ul className="space-y-1.5">
+                  {(savedReplies ?? []).map((r) => (
+                    <li key={r.id} className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium">{r.title}</p>
+                        <p className="line-clamp-1 text-xs text-muted-foreground">{r.body}</p>
+                      </div>
+                      <Button
+                        variant="outline"
+                        className="h-7 shrink-0 px-2 text-xs"
+                        onClick={() => copyReply(r.id, r.body)}
+                      >
+                        {copiedReplyId === r.id ? 'Copiado' : 'Copiar'}
+                      </Button>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          </div>
         )}
       </div>
     </div>

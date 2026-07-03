@@ -4,13 +4,11 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
-import { listPlanners } from '@/lib/api/casamento/planners'
 import { listCatalog } from '@/lib/api/casamento/catalog'
 import {
   createPayment,
@@ -18,6 +16,7 @@ import {
   listPayments,
   setPaymentPaid,
 } from '@/lib/api/casamento/payments'
+import { listPlanners } from '@/lib/api/casamento/planners'
 import {
   addChecklistTask,
   addItem,
@@ -33,13 +32,8 @@ import {
   toggleChecklistTask,
   updateProposalStatus,
 } from '@/lib/api/casamento/proposals'
-import {
-  ALLOWED_NEXT,
-  ITEMS_LOCKED,
-  WEDDING_PROPOSAL_STATUSES,
-  statusLabel,
-  type WeddingProposalStatusId,
-} from '@/profiles/casamento/wedding-proposal-status'
+import { ApiError } from '@/lib/api/client'
+import { useOnSync } from '@/lib/use-synced-form'
 import {
   formatBrl,
   formatDate,
@@ -47,24 +41,45 @@ import {
   type WeddingChecklistTask,
   type WeddingProposal,
 } from '@/profiles/casamento/casamento-types'
-import { useOnSync } from '@/lib/use-synced-form'
+import {
+  ALLOWED_NEXT,
+  ITEMS_LOCKED,
+  statusLabel,
+  WEDDING_PROPOSAL_STATUSES,
+  type WeddingProposalStatusId,
+} from '@/profiles/casamento/wedding-proposal-status'
 
 function StatusBadge({ status }: { status: WeddingProposalStatusId }) {
   const variant =
-    status === 'aprovada' || status === 'fechada' ? 'success'
-    : status === 'realizada' ? 'info'
-    : status === 'orcada' ? 'warning'
-    : status === 'recusada' || status === 'cancelada' ? 'muted'
-    : 'default'
+    status === 'aprovada' || status === 'fechada'
+      ? 'success'
+      : status === 'realizada'
+        ? 'info'
+        : status === 'orcada'
+          ? 'warning'
+          : status === 'recusada' || status === 'cancelada'
+            ? 'muted'
+            : 'default'
   return <Badge variant={variant}>{statusLabel(status)}</Badge>
 }
 
 type OpenForm = {
-  customerName: string; plannerId: string; weddingStyle: string
-  weddingDate: string; guestCount: string; briefing: string; notes: string
+  customerName: string
+  plannerId: string
+  weddingStyle: string
+  weddingDate: string
+  guestCount: string
+  briefing: string
+  notes: string
 }
 const EMPTY_OPEN: OpenForm = {
-  customerName: '', plannerId: '', weddingStyle: '', weddingDate: '', guestCount: '', briefing: '', notes: '',
+  customerName: '',
+  plannerId: '',
+  weddingStyle: '',
+  weddingDate: '',
+  guestCount: '',
+  briefing: '',
+  notes: '',
 }
 
 type ItemForm = { description: string; quantity: string; price: string }
@@ -117,9 +132,15 @@ export default function CasamentoProposalsPage() {
     placeholderData: keepPreviousData,
   })
 
-  const planners = useQuery({ queryKey: ['casamento-planners-all'], queryFn: () => listPlanners({ onlyActive: true }) })
+  const planners = useQuery({
+    queryKey: ['casamento-planners-all'],
+    queryFn: () => listPlanners({ onlyActive: true }),
+  })
 
-  const catalog = useQuery({ queryKey: ['casamento-catalog-active'], queryFn: () => listCatalog({ onlyActive: true }) })
+  const catalog = useQuery({
+    queryKey: ['casamento-catalog-active'],
+    queryFn: () => listCatalog({ onlyActive: true }),
+  })
 
   const detail = useQuery({
     queryKey: ['casamento-proposal', detailId],
@@ -134,22 +155,29 @@ export default function CasamentoProposalsPage() {
   })
 
   const openMutation = useMutation({
-    mutationFn: () => openProposal({
-      customerName: openForm.customerName || null,
-      plannerId: openForm.plannerId || null,
-      weddingStyle: openForm.weddingStyle || null,
-      weddingDate: openForm.weddingDate || null,
-      guestCount: openForm.guestCount ? Math.max(0, Math.round(Number(openForm.guestCount))) : null,
-      briefing: openForm.briefing || null,
-      notes: openForm.notes || null,
-    }),
+    mutationFn: () =>
+      openProposal({
+        customerName: openForm.customerName || null,
+        plannerId: openForm.plannerId || null,
+        weddingStyle: openForm.weddingStyle || null,
+        weddingDate: openForm.weddingDate || null,
+        guestCount: openForm.guestCount
+          ? Math.max(0, Math.round(Number(openForm.guestCount)))
+          : null,
+        briefing: openForm.briefing || null,
+        notes: openForm.notes || null,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['casamento-proposals'] })
-      setOpenModal(false); setOpenForm(EMPTY_OPEN); setOpenError(null)
+      setOpenModal(false)
+      setOpenForm(EMPTY_OPEN)
+      setOpenError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'inactive_planner') setOpenError('Esse assessor está inativo.')
-      else if (e instanceof ApiError && e.reason === 'invalid_date') setOpenError('Data do casamento inválida.')
+      if (e instanceof ApiError && e.reason === 'inactive_planner')
+        setOpenError('Esse assessor está inativo.')
+      else if (e instanceof ApiError && e.reason === 'invalid_date')
+        setOpenError('Data do casamento inválida.')
       else setOpenError('Erro ao abrir a proposta.')
     },
   })
@@ -166,10 +194,12 @@ export default function CasamentoProposalsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['casamento-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['casamento-proposals'] })
-      setItemForm(EMPTY_ITEM); setItemError(null)
+      setItemForm(EMPTY_ITEM)
+      setItemError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setItemError('Esta proposta não aceita mais alteração de itens.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setItemError('Esta proposta não aceita mais alteração de itens.')
       else setItemError('Erro ao adicionar o item.')
     },
   })
@@ -196,11 +226,17 @@ export default function CasamentoProposalsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['casamento-proposal', detailId] })
-      setMarkForm(EMPTY_MARK); setMarkError(null)
+      setMarkForm(EMPTY_MARK)
+      setMarkError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setMarkError('Esta proposta não aceita mais alteração de cronograma.')
-      else if (e instanceof ApiError && (e.reason === 'invalid_time' || e.reason === 'timeline_item_not_found')) setMarkError('Horário inválido.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setMarkError('Esta proposta não aceita mais alteração de cronograma.')
+      else if (
+        e instanceof ApiError &&
+        (e.reason === 'invalid_time' || e.reason === 'timeline_item_not_found')
+      )
+        setMarkError('Horário inválido.')
       else setMarkError('Erro ao adicionar o marco.')
     },
   })
@@ -224,10 +260,12 @@ export default function CasamentoProposalsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['casamento-proposal', detailId] })
-      setTaskForm(EMPTY_TASK); setTaskError(null)
+      setTaskForm(EMPTY_TASK)
+      setTaskError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setTaskError('Esta proposta não aceita mais alteração do checklist.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setTaskError('Esta proposta não aceita mais alteração do checklist.')
       else if (e instanceof ApiError && e.reason === 'invalid_date') setTaskError('Prazo inválido.')
       else setTaskError('Erro ao adicionar a tarefa.')
     },
@@ -240,8 +278,10 @@ export default function CasamentoProposalsPage() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['casamento-proposal', detailId] }),
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setTaskError('Esta proposta não aceita mais alteração do checklist.')
-      else if (e instanceof ApiError && e.reason === 'checklist_task_not_found') setTaskError('Tarefa não encontrada.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setTaskError('Esta proposta não aceita mais alteração do checklist.')
+      else if (e instanceof ApiError && e.reason === 'checklist_task_not_found')
+        setTaskError('Tarefa não encontrada.')
       else setTaskError('Erro ao atualizar a tarefa.')
     },
   })
@@ -263,11 +303,16 @@ export default function CasamentoProposalsPage() {
       qc.invalidateQueries({ queryKey: ['casamento-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['casamento-proposals'] })
       qc.invalidateQueries({ queryKey: ['casamento-coupons'] })
-      setCouponCode(''); setCouponError(null)
+      setCouponCode('')
+      setCouponError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'invalid_coupon') setCouponError('Cupom inválido (inexistente, inativo, vencido, esgotado ou abaixo do orçamento mínimo).')
-      else if (e instanceof ApiError && e.reason === 'proposal_locked') setCouponError('Esta proposta não aceita mais alteração de cupom.')
+      if (e instanceof ApiError && e.reason === 'invalid_coupon')
+        setCouponError(
+          'Cupom inválido (inexistente, inativo, vencido, esgotado ou abaixo do orçamento mínimo).',
+        )
+      else if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setCouponError('Esta proposta não aceita mais alteração de cupom.')
       else setCouponError('Erro ao aplicar o cupom.')
     },
   })
@@ -298,11 +343,14 @@ export default function CasamentoProposalsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['casamento-payments', detailId] })
-      setPaymentForm(EMPTY_PAYMENT); setPaymentError(null)
+      setPaymentForm(EMPTY_PAYMENT)
+      setPaymentError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'invalid_payment') setPaymentError('Parcela inválida (valor > 0 e vencimento obrigatórios).')
-      else if (e instanceof ApiError && e.reason === 'proposal_locked') setPaymentError('Proposta recusada/cancelada não aceita plano de pagamento.')
+      if (e instanceof ApiError && e.reason === 'invalid_payment')
+        setPaymentError('Parcela inválida (valor > 0 e vencimento obrigatórios).')
+      else if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setPaymentError('Proposta recusada/cancelada não aceita plano de pagamento.')
       else setPaymentError('Erro ao adicionar a parcela.')
     },
   })
@@ -335,13 +383,19 @@ export default function CasamentoProposalsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['casamento-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['casamento-proposals'] })
-      setStatusTarget(null); setStatusError(null)
+      setStatusTarget(null)
+      setStatusError(null)
     },
     onError: (e) => {
       setStatusTarget(null)
-      if (e instanceof ApiError && e.reason === 'empty_budget') setStatusError('Adicione ao menos um item de orçamento antes de orçar.')
-      else if (e instanceof ApiError && e.reason === 'deposit_required') setStatusError('O plano tem SINAL em aberto — marque o sinal como pago antes de fechar o contrato.')
-      else if (e instanceof ApiError && e.reason === 'invalid_status_transition') setStatusError('Transição de status inválida.')
+      if (e instanceof ApiError && e.reason === 'empty_budget')
+        setStatusError('Adicione ao menos um item de orçamento antes de orçar.')
+      else if (e instanceof ApiError && e.reason === 'deposit_required')
+        setStatusError(
+          'O plano tem SINAL em aberto — marque o sinal como pago antes de fechar o contrato.',
+        )
+      else if (e instanceof ApiError && e.reason === 'invalid_status_transition')
+        setStatusError('Transição de status inválida.')
       else setStatusError('Erro ao mudar o status.')
     },
   })
@@ -357,8 +411,10 @@ export default function CasamentoProposalsPage() {
 
   // reseta forms locais ao trocar de proposta (não a cada refetch — preserva digitação).
   useOnSync(p?.id, () => {
-    setCouponCode(''); setCouponError(null)
-    setPaymentForm(EMPTY_PAYMENT); setPaymentError(null)
+    setCouponCode('')
+    setCouponError(null)
+    setPaymentForm(EMPTY_PAYMENT)
+    setPaymentError(null)
   })
 
   return (
@@ -366,17 +422,38 @@ export default function CasamentoProposalsPage() {
       <PageHeader
         title="Propostas"
         description="A IA abre a proposta pelo WhatsApp; a equipe orça, monta o cronograma e o checklist aqui, e o cliente aprova pela conversa."
-        actions={<Button onClick={() => { setOpenForm(EMPTY_OPEN); setOpenError(null); setOpenModal(true) }}>Nova proposta</Button>}
+        actions={
+          <Button
+            onClick={() => {
+              setOpenForm(EMPTY_OPEN)
+              setOpenError(null)
+              setOpenModal(true)
+            }}
+          >
+            Nova proposta
+          </Button>
+        }
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => { setStatus(''); setPage(0) }}
-          className={`rounded-full border px-3 py-1 text-xs ${status === '' ? 'border-primary bg-primary/10' : 'border-border'}`}>
+        <button
+          onClick={() => {
+            setStatus('')
+            setPage(0)
+          }}
+          className={`rounded-full border px-3 py-1 text-xs ${status === '' ? 'border-primary bg-primary/10' : 'border-border'}`}
+        >
           Todas
         </button>
         {WEDDING_PROPOSAL_STATUSES.map((s) => (
-          <button key={s.id} onClick={() => { setStatus(s.id); setPage(0) }}
-            className={`rounded-full border px-3 py-1 text-xs ${status === s.id ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={s.id}
+            onClick={() => {
+              setStatus(s.id)
+              setPage(0)
+            }}
+            className={`rounded-full border px-3 py-1 text-xs ${status === s.id ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {s.label}
           </button>
         ))}
@@ -391,12 +468,23 @@ export default function CasamentoProposalsPage() {
       ) : (
         <div className="divide-y divide-border rounded-lg border border-border">
           {items.map((prop: WeddingProposal) => (
-            <button key={prop.id} onClick={() => { setDetailId(prop.id); setItemError(null); setMarkError(null); setTaskError(null); setStatusError(null) }}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40">
+            <button
+              key={prop.id}
+              onClick={() => {
+                setDetailId(prop.id)
+                setItemError(null)
+                setMarkError(null)
+                setTaskError(null)
+                setStatusError(null)
+              }}
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+            >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{prop.customerName}</span>
-                  {prop.weddingStyle && <span className="text-xs text-muted-foreground">{prop.weddingStyle}</span>}
+                  {prop.weddingStyle && (
+                    <span className="text-xs text-muted-foreground">{prop.weddingStyle}</span>
+                  )}
                   <StatusBadge status={prop.status} />
                 </div>
                 <p className="truncate text-xs text-muted-foreground">
@@ -407,7 +495,9 @@ export default function CasamentoProposalsPage() {
               <div className="flex shrink-0 items-center gap-2">
                 {prop.dateBusy && <Badge variant="danger">Data ocupada</Badge>}
                 <div className="text-right">
-                  <div className="text-sm font-medium">{formatBrl(prop.totalCents - prop.discountCents)}</div>
+                  <div className="text-sm font-medium">
+                    {formatBrl(prop.totalCents - prop.discountCents)}
+                  </div>
                   <div className="text-xs text-muted-foreground">{formatDate(prop.openedAt)}</div>
                 </div>
               </div>
@@ -418,67 +508,135 @@ export default function CasamentoProposalsPage() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Página {page + 1} de {totalPages} · {total} propostas</span>
+          <span>
+            Página {page + 1} de {totalPages} · {total} propostas
+          </span>
           <div className="flex gap-1">
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={page === 0}
-              onClick={() => setPage((pg) => Math.max(0, pg - 1))}>←</Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={page + 1 >= totalPages}
-              onClick={() => setPage((pg) => pg + 1)}>→</Button>
+            <Button
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              disabled={page === 0}
+              onClick={() => setPage((pg) => Math.max(0, pg - 1))}
+            >
+              ←
+            </Button>
+            <Button
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              disabled={page + 1 >= totalPages}
+              onClick={() => setPage((pg) => pg + 1)}
+            >
+              →
+            </Button>
           </div>
         </div>
       )}
 
       {/* Modal: nova proposta */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)} title="Nova proposta de casamento" size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); openMutation.mutate() }}>
+      <Modal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        title="Nova proposta de casamento"
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            openMutation.mutate()
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Cliente</label>
-              <input value={openForm.customerName} onChange={(e) => setOpenForm((f) => ({ ...f, customerName: e.target.value }))} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Cliente
+              </label>
+              <input
+                value={openForm.customerName}
+                onChange={(e) => setOpenForm((f) => ({ ...f, customerName: e.target.value }))}
+                required
                 placeholder="Nome do cliente"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Assessor (opcional)</label>
-              <select value={openForm.plannerId} onChange={(e) => setOpenForm((f) => ({ ...f, plannerId: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Assessor (opcional)
+              </label>
+              <select
+                value={openForm.plannerId}
+                onChange={(e) => setOpenForm((f) => ({ ...f, plannerId: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 <option value="">Sem atribuição</option>
                 {(planners.data?.items ?? []).map((pl) => (
-                  <option key={pl.id} value={pl.id}>{pl.name}</option>
+                  <option key={pl.id} value={pl.id}>
+                    {pl.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Estilo do casamento</label>
-              <input value={openForm.weddingStyle} onChange={(e) => setOpenForm((f) => ({ ...f, weddingStyle: e.target.value }))}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Estilo do casamento
+              </label>
+              <input
+                value={openForm.weddingStyle}
+                onChange={(e) => setOpenForm((f) => ({ ...f, weddingStyle: e.target.value }))}
                 placeholder="clássico, rústico, praia, mini wedding…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Data do casamento</label>
-              <input type="date" value={openForm.weddingDate} onChange={(e) => setOpenForm((f) => ({ ...f, weddingDate: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Data do casamento
+              </label>
+              <input
+                type="date"
+                value={openForm.weddingDate}
+                onChange={(e) => setOpenForm((f) => ({ ...f, weddingDate: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Nº de convidados</label>
-              <input type="number" min="0" value={openForm.guestCount} onChange={(e) => setOpenForm((f) => ({ ...f, guestCount: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Nº de convidados
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={openForm.guestCount}
+                onChange={(e) => setOpenForm((f) => ({ ...f, guestCount: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Briefing</label>
-            <textarea value={openForm.briefing} onChange={(e) => setOpenForm((f) => ({ ...f, briefing: e.target.value }))}
-              rows={2} placeholder="O que o casal imagina para o casamento"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <textarea
+              value={openForm.briefing}
+              onChange={(e) => setOpenForm((f) => ({ ...f, briefing: e.target.value }))}
+              rows={2}
+              placeholder="O que o casal imagina para o casamento"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-            <textarea value={openForm.notes} onChange={(e) => setOpenForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Observações
+            </label>
+            <textarea
+              value={openForm.notes}
+              onChange={(e) => setOpenForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {openError && <p className="text-sm text-destructive">{openError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={openMutation.isPending}>
               {openMutation.isPending ? 'Abrindo…' : 'Abrir proposta'}
             </Button>
@@ -487,20 +645,35 @@ export default function CasamentoProposalsPage() {
       </Modal>
 
       {/* Modal: detalhe + orçamento + cronograma + checklist + status */}
-      <Modal open={detailId !== null} onClose={() => { setDetailId(null); setStatusError(null); setItemError(null); setMarkError(null); setTaskError(null) }}
-        title="Proposta de casamento" size="lg">
+      <Modal
+        open={detailId !== null}
+        onClose={() => {
+          setDetailId(null)
+          setStatusError(null)
+          setItemError(null)
+          setMarkError(null)
+          setTaskError(null)
+        }}
+        title="Proposta de casamento"
+        size="lg"
+      >
         {detail.isPending || !p ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
           <div className="space-y-4">
             <div className="flex items-center gap-2">
               <span className="font-medium">{p.customerName}</span>
-              {p.weddingStyle && <span className="text-xs text-muted-foreground">{p.weddingStyle}</span>}
+              {p.weddingStyle && (
+                <span className="text-xs text-muted-foreground">{p.weddingStyle}</span>
+              )}
               <StatusBadge status={p.status} />
             </div>
             <Card>
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div><dt className="text-xs text-muted-foreground">Telefone</dt><dd>{p.customerPhone ?? '—'}</dd></div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Telefone</dt>
+                  <dd>{p.customerPhone ?? '—'}</dd>
+                </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">Data</dt>
                   <dd className={p.dateBusy ? 'font-medium text-red-600' : ''}>
@@ -508,10 +681,26 @@ export default function CasamentoProposalsPage() {
                     {p.dateBusy && ' · já há casamento nesta data'}
                   </dd>
                 </div>
-                <div><dt className="text-xs text-muted-foreground">Convidados</dt><dd>{p.guestCount ?? '—'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{p.conversationId ? 'WhatsApp' : 'Manual'}</dd></div>
-                {p.briefing && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Briefing</dt><dd>{p.briefing}</dd></div>}
-                {p.notes && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Observações</dt><dd>{p.notes}</dd></div>}
+                <div>
+                  <dt className="text-xs text-muted-foreground">Convidados</dt>
+                  <dd>{p.guestCount ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Origem</dt>
+                  <dd>{p.conversationId ? 'WhatsApp' : 'Manual'}</dd>
+                </div>
+                {p.briefing && (
+                  <div className="col-span-2">
+                    <dt className="text-xs text-muted-foreground">Briefing</dt>
+                    <dd>{p.briefing}</dd>
+                  </div>
+                )}
+                {p.notes && (
+                  <div className="col-span-2">
+                    <dt className="text-xs text-muted-foreground">Observações</dt>
+                    <dd>{p.notes}</dd>
+                  </div>
+                )}
               </dl>
             </Card>
 
@@ -533,7 +722,10 @@ export default function CasamentoProposalsPage() {
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {p.items.map((it) => (
-                    <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={it.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="min-w-0">
                         <span className="font-medium">{it.description}</span>
                         <span className="ml-2 text-xs text-muted-foreground">
@@ -543,8 +735,12 @@ export default function CasamentoProposalsPage() {
                       <div className="flex shrink-0 items-center gap-2">
                         <span>{formatBrl(it.lineTotalCents)}</span>
                         {!locked && (
-                          <Button variant="outline" className="h-6 px-2 text-xs"
-                            disabled={deleteItemMutation.isPending} onClick={() => deleteItemMutation.mutate(it.id)}>
+                          <Button
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
+                            disabled={deleteItemMutation.isPending}
+                            onClick={() => deleteItemMutation.mutate(it.id)}
+                          >
                             Remover
                           </Button>
                         )}
@@ -555,45 +751,90 @@ export default function CasamentoProposalsPage() {
               )}
 
               {!locked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addItemMutation.mutate() }}>
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addItemMutation.mutate()
+                  }}
+                >
                   {(catalog.data?.items ?? []).length > 0 && (
                     <div className="w-full">
-                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Do catálogo (autofill, opcional)</label>
-                      <select value="" onChange={(e) => {
-                        const item = (catalog.data?.items ?? []).find((c) => c.id === e.target.value)
-                        if (item) {
-                          setItemForm((f) => ({ ...f, description: item.name, price: String(item.priceCents / 100) }))
-                        }
-                      }} className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Do catálogo (autofill, opcional)
+                      </label>
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const item = (catalog.data?.items ?? []).find(
+                            (c) => c.id === e.target.value,
+                          )
+                          if (item) {
+                            setItemForm((f) => ({
+                              ...f,
+                              description: item.name,
+                              price: String(item.priceCents / 100),
+                            }))
+                          }
+                        }}
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                      >
                         <option value="">Preencher com um pacote/adicional do catálogo…</option>
                         {(catalog.data?.items ?? []).map((c) => (
                           <option key={c.id} value={c.id}>
-                            [{c.kind === 'pacote' ? 'Pacote' : 'Adicional'}] {c.name} — {formatBrl(c.priceCents)}
+                            [{c.kind === 'pacote' ? 'Pacote' : 'Adicional'}] {c.name} —{' '}
+                            {formatBrl(c.priceCents)}
                           </option>
                         ))}
                       </select>
                     </div>
                   )}
-                  <div className="flex-1 min-w-[8rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição</label>
-                    <input value={itemForm.description} onChange={(e) => setItemForm((f) => ({ ...f, description: e.target.value }))} required
-                      maxLength={200} placeholder="Buffet, decoração, fotografia…"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                  <div className="min-w-[8rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Descrição
+                    </label>
+                    <input
+                      value={itemForm.description}
+                      onChange={(e) => setItemForm((f) => ({ ...f, description: e.target.value }))}
+                      required
+                      maxLength={200}
+                      placeholder="Buffet, decoração, fotografia…"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-16">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Qtd</label>
-                    <input type="number" min="1" value={itemForm.quantity}
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Qtd
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={itemForm.quantity}
                       onChange={(e) => setItemForm((f) => ({ ...f, quantity: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-24">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Unit. (R$)</label>
-                    <input type="number" min="0" step="0.01" value={itemForm.price} required
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Unit. (R$)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={itemForm.price}
+                      required
                       onChange={(e) => setItemForm((f) => ({ ...f, price: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addItemMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addItemMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                 </form>
               )}
               {itemError && <p className="text-sm text-destructive">{itemError}</p>}
@@ -602,30 +843,54 @@ export default function CasamentoProposalsPage() {
               {p.couponCodeSnapshot ? (
                 <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                   <span>
-                    Cupom <span className="font-mono font-medium">{p.couponCodeSnapshot}</span> aplicado
-                    <span className="ml-1 text-xs text-muted-foreground">(−{formatBrl(p.discountCents)})</span>
+                    Cupom <span className="font-mono font-medium">{p.couponCodeSnapshot}</span>{' '}
+                    aplicado
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (−{formatBrl(p.discountCents)})
+                    </span>
                   </span>
                   {!locked && (
-                    <Button variant="outline" className="h-7 px-2 text-xs"
-                      disabled={removeCouponMutation.isPending} onClick={() => removeCouponMutation.mutate()}>
+                    <Button
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      disabled={removeCouponMutation.isPending}
+                      onClick={() => removeCouponMutation.mutate()}
+                    >
                       Remover cupom
                     </Button>
                   )}
                 </div>
-              ) : !locked && (
-                <form className="flex flex-wrap items-end gap-2"
-                  onSubmit={(e) => { e.preventDefault(); applyCouponMutation.mutate() }}>
-                  <div className="w-44">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Cupom (opcional)</label>
-                    <input value={couponCode} maxLength={40} placeholder="CÓDIGO"
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm uppercase" />
-                  </div>
-                  <Button type="submit" variant="outline" className="h-8 px-3 text-xs"
-                    disabled={applyCouponMutation.isPending || !couponCode.trim()}>
-                    Aplicar
-                  </Button>
-                </form>
+              ) : (
+                !locked && (
+                  <form
+                    className="flex flex-wrap items-end gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      applyCouponMutation.mutate()
+                    }}
+                  >
+                    <div className="w-44">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Cupom (opcional)
+                      </label>
+                      <input
+                        value={couponCode}
+                        maxLength={40}
+                        placeholder="CÓDIGO"
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm uppercase"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      disabled={applyCouponMutation.isPending || !couponCode.trim()}
+                    >
+                      Aplicar
+                    </Button>
+                  </form>
+                )
               )}
               {couponError && <p className="text-sm text-destructive">{couponError}</p>}
             </div>
@@ -641,15 +906,28 @@ export default function CasamentoProposalsPage() {
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {p.timeline.map((mk) => (
-                    <div key={mk.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={mk.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="min-w-0">
-                        <span className="font-mono text-xs font-medium">{formatTime(mk.startTime)}</span>
+                        <span className="font-mono text-xs font-medium">
+                          {formatTime(mk.startTime)}
+                        </span>
                         <span className="ml-2 font-medium">{mk.title}</span>
-                        {mk.description && <span className="ml-2 text-xs text-muted-foreground">{mk.description}</span>}
+                        {mk.description && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {mk.description}
+                          </span>
+                        )}
                       </div>
                       {!locked && (
-                        <Button variant="outline" className="h-6 px-2 text-xs"
-                          disabled={deleteMarkMutation.isPending} onClick={() => deleteMarkMutation.mutate(mk.id)}>
+                        <Button
+                          variant="outline"
+                          className="h-6 px-2 text-xs"
+                          disabled={deleteMarkMutation.isPending}
+                          onClick={() => deleteMarkMutation.mutate(mk.id)}
+                        >
                           Remover
                         </Button>
                       )}
@@ -659,21 +937,45 @@ export default function CasamentoProposalsPage() {
               )}
 
               {!locked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addMarkMutation.mutate() }}>
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addMarkMutation.mutate()
+                  }}
+                >
                   <div className="w-24">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Horário</label>
-                    <input type="time" value={markForm.startTime} required
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Horário
+                    </label>
+                    <input
+                      type="time"
+                      value={markForm.startTime}
+                      required
                       onChange={(e) => setMarkForm((f) => ({ ...f, startTime: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <div className="flex-1 min-w-[8rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Marco</label>
-                    <input value={markForm.title} onChange={(e) => setMarkForm((f) => ({ ...f, title: e.target.value }))} required
-                      maxLength={200} placeholder="Cerimônia, recepção, valsa, jantar…"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                  <div className="min-w-[8rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Marco
+                    </label>
+                    <input
+                      value={markForm.title}
+                      onChange={(e) => setMarkForm((f) => ({ ...f, title: e.target.value }))}
+                      required
+                      maxLength={200}
+                      placeholder="Cerimônia, recepção, valsa, jantar…"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addMarkMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addMarkMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                 </form>
               )}
               {markError && <p className="text-sm text-destructive">{markError}</p>}
@@ -690,23 +992,48 @@ export default function CasamentoProposalsPage() {
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {p.checklist.map((tk) => (
-                    <div key={tk.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={tk.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="flex min-w-0 items-center gap-2">
-                        <input type="checkbox" checked={tk.done}
+                        <input
+                          type="checkbox"
+                          checked={tk.done}
                           disabled={locked || toggleTaskMutation.isPending}
-                          onChange={() => { setTaskError(null); toggleTaskMutation.mutate(tk) }} />
+                          onChange={() => {
+                            setTaskError(null)
+                            toggleTaskMutation.mutate(tk)
+                          }}
+                        />
                         <div className="min-w-0">
-                          <span className={`font-medium ${tk.done ? 'text-muted-foreground line-through' : ''}`}>{tk.title}</span>
-                          {tk.dueDate && <span className="ml-2 text-xs text-muted-foreground">prazo {formatDate(tk.dueDate)}</span>}
-                          {tk.done && tk.doneAt && (
-                            <span className="ml-2 text-xs text-emerald-600">concluída {formatDate(tk.doneAt)}</span>
+                          <span
+                            className={`font-medium ${tk.done ? 'text-muted-foreground line-through' : ''}`}
+                          >
+                            {tk.title}
+                          </span>
+                          {tk.dueDate && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              prazo {formatDate(tk.dueDate)}
+                            </span>
                           )}
-                          {tk.description && <p className="text-xs text-muted-foreground">{tk.description}</p>}
+                          {tk.done && tk.doneAt && (
+                            <span className="ml-2 text-xs text-emerald-600">
+                              concluída {formatDate(tk.doneAt)}
+                            </span>
+                          )}
+                          {tk.description && (
+                            <p className="text-xs text-muted-foreground">{tk.description}</p>
+                          )}
                         </div>
                       </div>
                       {!locked && (
-                        <Button variant="outline" className="h-6 px-2 text-xs"
-                          disabled={deleteTaskMutation.isPending} onClick={() => deleteTaskMutation.mutate(tk.id)}>
+                        <Button
+                          variant="outline"
+                          className="h-6 px-2 text-xs"
+                          disabled={deleteTaskMutation.isPending}
+                          onClick={() => deleteTaskMutation.mutate(tk.id)}
+                        >
                           Remover
                         </Button>
                       )}
@@ -716,21 +1043,44 @@ export default function CasamentoProposalsPage() {
               )}
 
               {!locked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addTaskMutation.mutate() }}>
-                  <div className="flex-1 min-w-[8rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Tarefa</label>
-                    <input value={taskForm.title} onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))} required
-                      maxLength={200} placeholder="Provar bolo, definir trajes, prova do vestido…"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addTaskMutation.mutate()
+                  }}
+                >
+                  <div className="min-w-[8rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Tarefa
+                    </label>
+                    <input
+                      value={taskForm.title}
+                      onChange={(e) => setTaskForm((f) => ({ ...f, title: e.target.value }))}
+                      required
+                      maxLength={200}
+                      placeholder="Provar bolo, definir trajes, prova do vestido…"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-36">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Prazo (opcional)</label>
-                    <input type="date" value={taskForm.dueDate}
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Prazo (opcional)
+                    </label>
+                    <input
+                      type="date"
+                      value={taskForm.dueDate}
                       onChange={(e) => setTaskForm((f) => ({ ...f, dueDate: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addTaskMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addTaskMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                 </form>
               )}
               {taskError && <p className="text-sm text-destructive">{taskError}</p>}
@@ -745,28 +1095,50 @@ export default function CasamentoProposalsPage() {
                 </span>
               </div>
               {(payments.data?.items ?? []).length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhum sinal/parcela registrado ainda.</p>
+                <p className="text-xs text-muted-foreground">
+                  Nenhum sinal/parcela registrado ainda.
+                </p>
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {(payments.data?.items ?? []).map((pay) => (
-                    <div key={pay.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={pay.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="flex min-w-0 items-center gap-2">
-                        <input type="checkbox" checked={pay.paid}
+                        <input
+                          type="checkbox"
+                          checked={pay.paid}
                           disabled={paymentsLocked || setPaidMutation.isPending}
-                          onChange={() => setPaidMutation.mutate({ paymentId: pay.id, paid: !pay.paid })} />
+                          onChange={() =>
+                            setPaidMutation.mutate({ paymentId: pay.id, paid: !pay.paid })
+                          }
+                        />
                         <div className="min-w-0">
-                          <span className={`font-medium ${pay.paid ? 'text-muted-foreground line-through' : ''}`}>
+                          <span
+                            className={`font-medium ${pay.paid ? 'text-muted-foreground line-through' : ''}`}
+                          >
                             {pay.label || (pay.kind === 'sinal' ? 'Sinal' : 'Parcela')}
                           </span>
-                          <span className="ml-2 text-xs text-muted-foreground">vence {formatDate(pay.dueDate)}</span>
-                          {pay.kind === 'sinal' && <Badge variant={pay.paid ? 'success' : 'warning'}>{pay.paid ? 'Sinal pago' : 'Sinal em aberto'}</Badge>}
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            vence {formatDate(pay.dueDate)}
+                          </span>
+                          {pay.kind === 'sinal' && (
+                            <Badge variant={pay.paid ? 'success' : 'warning'}>
+                              {pay.paid ? 'Sinal pago' : 'Sinal em aberto'}
+                            </Badge>
+                          )}
                         </div>
                       </div>
                       <div className="flex shrink-0 items-center gap-2">
                         <span className="tabular-nums">{formatBrl(pay.amountCents)}</span>
                         {!paymentsLocked && (
-                          <Button variant="outline" className="h-6 px-2 text-xs"
-                            disabled={deletePaymentMutation.isPending} onClick={() => deletePaymentMutation.mutate(pay.id)}>
+                          <Button
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
+                            disabled={deletePaymentMutation.isPending}
+                            onClick={() => deletePaymentMutation.mutate(pay.id)}
+                          >
                             Remover
                           </Button>
                         )}
@@ -777,39 +1149,80 @@ export default function CasamentoProposalsPage() {
               )}
 
               {!paymentsLocked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addPaymentMutation.mutate() }}>
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addPaymentMutation.mutate()
+                  }}
+                >
                   <div className="w-28">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipo</label>
-                    <select value={paymentForm.kind}
-                      onChange={(e) => setPaymentForm((f) => ({ ...f, kind: e.target.value as 'sinal' | 'parcela' }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Tipo
+                    </label>
+                    <select
+                      value={paymentForm.kind}
+                      onChange={(e) =>
+                        setPaymentForm((f) => ({
+                          ...f,
+                          kind: e.target.value as 'sinal' | 'parcela',
+                        }))
+                      }
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    >
                       <option value="sinal">Sinal</option>
                       <option value="parcela">Parcela</option>
                     </select>
                   </div>
-                  <div className="flex-1 min-w-[7rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Rótulo (opcional)</label>
-                    <input value={paymentForm.label} maxLength={100} placeholder="Parcela 2/6…"
+                  <div className="min-w-[7rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Rótulo (opcional)
+                    </label>
+                    <input
+                      value={paymentForm.label}
+                      maxLength={100}
+                      placeholder="Parcela 2/6…"
                       onChange={(e) => setPaymentForm((f) => ({ ...f, label: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-36">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Vencimento</label>
-                    <input type="date" value={paymentForm.dueDate} required
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Vencimento
+                    </label>
+                    <input
+                      type="date"
+                      value={paymentForm.dueDate}
+                      required
                       onChange={(e) => setPaymentForm((f) => ({ ...f, dueDate: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-24">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Valor (R$)</label>
-                    <input type="number" min="0.01" step="0.01" value={paymentForm.amount} required
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Valor (R$)
+                    </label>
+                    <input
+                      type="number"
+                      min="0.01"
+                      step="0.01"
+                      value={paymentForm.amount}
+                      required
                       onChange={(e) => setPaymentForm((f) => ({ ...f, amount: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addPaymentMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addPaymentMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                   <p className="w-full text-xs text-muted-foreground">
-                    Pagamento é confirmado À MÃO pela equipe (Pix conferido) até o pagamento online chegar.
-                    O lembrete automático avisa o casal 3 dias antes de cada vencimento (configurável).
+                    Pagamento é confirmado À MÃO pela equipe (Pix conferido) até o pagamento online
+                    chegar. O lembrete automático avisa o casal 3 dias antes de cada vencimento
+                    (configurável).
                   </p>
                 </form>
               )}
@@ -819,10 +1232,17 @@ export default function CasamentoProposalsPage() {
             {/* Status */}
             {ALLOWED_NEXT[p.status].length > 0 ? (
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Mudar status para…</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Mudar status para…
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {ALLOWED_NEXT[p.status].map((next) => (
-                    <Button key={next} variant="outline" className="h-8 px-3 text-xs" onClick={() => setStatusTarget(next)}>
+                    <Button
+                      key={next}
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => setStatusTarget(next)}
+                    >
                       {statusLabel(next)}
                     </Button>
                   ))}
@@ -844,7 +1264,9 @@ export default function CasamentoProposalsPage() {
         confirmLabel="Mudar status"
         destructive={false}
         loading={statusMutation.isPending}
-        onConfirm={() => { if (statusTarget) statusMutation.mutate(statusTarget) }}
+        onConfirm={() => {
+          if (statusTarget) statusMutation.mutate(statusTarget)
+        }}
       />
     </div>
   )

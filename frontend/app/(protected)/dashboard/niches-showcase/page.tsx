@@ -8,13 +8,13 @@ import { useState } from 'react'
 import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
-import { ApiError } from '@/lib/api/client'
 import {
   getNicheShowcase,
   setNicheShowcase,
   type ShowcaseGrid,
   type ShowcaseRow,
 } from '@/lib/api/admin/niche-showcase'
+import { ApiError } from '@/lib/api/client'
 import { formatMonthlyPrice, getCatalogEntry } from '@/lib/profiles/profile-catalog'
 import { PALETTES } from '@/lib/themes/palettes'
 
@@ -71,7 +71,9 @@ export default function NichesShowcasePage() {
     return (
       <div className="space-y-6">
         <PageHeader title="Acesso restrito" description="Esta área é restrita ao super-admin." />
-        <Link href="/dashboard"><Button variant="outline">Voltar ao dashboard</Button></Link>
+        <Link href="/dashboard">
+          <Button variant="outline">Voltar ao dashboard</Button>
+        </Link>
       </div>
     )
   }
@@ -100,19 +102,31 @@ export default function NichesShowcasePage() {
           return (
             <div key={row.profileId} className="px-4 py-3">
               <div className="flex items-center gap-3">
-                <span className="w-6 text-right text-xs tabular-nums text-muted-foreground">{i + 1}</span>
-                <span className="size-4 shrink-0 rounded" style={{ background: colorFor(row.paletteId) }} />
+                <span className="w-6 text-right text-xs text-muted-foreground tabular-nums">
+                  {i + 1}
+                </span>
+                <span
+                  className="size-4 shrink-0 rounded"
+                  style={{ background: colorFor(row.paletteId) }}
+                />
                 <div className="min-w-0 flex-1">
                   <div className="flex flex-wrap items-baseline gap-x-2">
                     <span className="font-medium">{row.productName}</span>
-                    <span className="text-xs text-muted-foreground">{row.subdomain}.meadadigital.com</span>
+                    <span className="text-xs text-muted-foreground">
+                      {row.subdomain}.meadadigital.com
+                    </span>
                   </div>
                   {catalog?.tagline && (
-                    <p className="mt-0.5 truncate text-xs text-muted-foreground">{catalog.tagline}</p>
+                    <p className="mt-0.5 truncate text-xs text-muted-foreground">
+                      {catalog.tagline}
+                    </p>
                   )}
                 </div>
                 {catalog && (
-                  <span className="shrink-0 text-sm font-semibold tabular-nums" style={{ color: colorFor(row.paletteId) }}>
+                  <span
+                    className="shrink-0 text-sm font-semibold tabular-nums"
+                    style={{ color: colorFor(row.paletteId) }}
+                  >
                     {formatMonthlyPrice(catalog.priceMonthly)}
                   </span>
                 )}
@@ -133,20 +147,34 @@ export default function NichesShowcasePage() {
                     onClick={() => setExpanded(isOpen ? null : row.profileId)}
                     aria-label={isOpen ? 'Recolher detalhes' : 'Ver o que o produto faz'}
                   >
-                    <ChevronDown className={`size-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`} />
+                    <ChevronDown
+                      className={`size-3.5 transition-transform ${isOpen ? 'rotate-180' : ''}`}
+                    />
                   </Button>
                 ) : null}
                 <div className="flex shrink-0 gap-1">
-                  <Button variant="outline" className="h-7 w-7 p-0" disabled={i === 0} onClick={() => move(rows, i, -1)} aria-label="Subir">
+                  <Button
+                    variant="outline"
+                    className="h-7 w-7 p-0"
+                    disabled={i === 0}
+                    onClick={() => move(rows, i, -1)}
+                    aria-label="Subir"
+                  >
                     <ArrowUp className="size-3.5" />
                   </Button>
-                  <Button variant="outline" className="h-7 w-7 p-0" disabled={i === rows.length - 1} onClick={() => move(rows, i, 1)} aria-label="Descer">
+                  <Button
+                    variant="outline"
+                    className="h-7 w-7 p-0"
+                    disabled={i === rows.length - 1}
+                    onClick={() => move(rows, i, 1)}
+                    aria-label="Descer"
+                  >
                     <ArrowDown className="size-3.5" />
                   </Button>
                 </div>
               </div>
               {isOpen && catalog?.highlights?.length ? (
-                <ul className="ml-9 mt-2 list-disc space-y-1 pl-4 text-xs text-muted-foreground">
+                <ul className="mt-2 ml-9 list-disc space-y-1 pl-4 text-xs text-muted-foreground">
                   {catalog.highlights.map((h, hi) => (
                     <li key={hi}>{h}</li>
                   ))}
