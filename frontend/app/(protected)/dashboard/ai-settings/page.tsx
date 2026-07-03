@@ -11,6 +11,7 @@ import { Card, Section } from '@/components/ui/card'
 import { PageSkeleton } from '@/components/ui/skeleton'
 import { getMe } from '@/lib/api/me'
 import { getMyAiSettings, upsertMyAiSettings } from '@/lib/supabase/ai_settings'
+import { useOnSync } from '@/lib/use-synced-form'
 
 /** Converte string do textarea para o valor a gravar: vazio/whitespace → null. */
 function orNull(s: string): string | null {
@@ -58,8 +59,7 @@ export default function AiSettingsPage() {
   })
 
   // Sincroniza o estado local quando os dados chegam (data === null → mantém vazio).
-  useEffect(() => {
-    if (data) {
+  useOnSync(data, (data) => {
       setTone(data.tone ?? '')
       setSystemRules(data.systemRules ?? '')
       setRestrictions(data.restrictions ?? '')
@@ -67,8 +67,7 @@ export default function AiSettingsPage() {
       setWelcomeMessage(data.welcomeMessage ?? '')
       setReactivationDays(data.reactivationDays != null ? String(data.reactivationDays) : '')
       setReactivationMessage(data.reactivationMessage ?? '')
-    }
-  }, [data])
+  })
 
   const mutation = useMutation({
     mutationFn: () =>

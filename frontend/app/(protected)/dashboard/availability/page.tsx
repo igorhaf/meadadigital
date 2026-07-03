@@ -18,6 +18,7 @@ import {
   type AvailabilitySlot,
 } from '@/lib/api/availability'
 import { getMe } from '@/lib/api/me'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -165,15 +166,13 @@ function NewSlotDialog({
   const [slotMinutes, setSlotMinutes] = useState(30)
   const [serverError, setServerError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (open) {
+  useResetWhen(open, () => {
       setWeekday(1)
       setStartsAt('09:00')
       setEndsAt('12:00')
       setSlotMinutes(30)
       setServerError(null)
-    }
-  }, [open])
+  })
 
   const mutation = useMutation({
     mutationFn: () =>

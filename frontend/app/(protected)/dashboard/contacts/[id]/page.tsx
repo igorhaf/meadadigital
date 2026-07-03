@@ -19,6 +19,7 @@ import {
   updateContactBirthDate,
   updateContactName,
 } from '@/lib/supabase/contacts'
+import { useOnSync } from '@/lib/use-synced-form'
 
 /**
  * Detalhe de um contato (SDK + RLS). Mostra nome (editável inline), telefone (read-only),
@@ -63,12 +64,10 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
   })
 
   // Sincroniza os rascunhos (nome + nascimento) quando o contato carrega.
-  useEffect(() => {
-    if (contact) {
-      setNameDraft(contact.name ?? '')
-      setBirthDraft(contact.birthDate ?? '')
-    }
-  }, [contact])
+  useOnSync(contact, (c) => {
+    setNameDraft(c.name ?? '')
+    setBirthDraft(c.birthDate ?? '')
+  })
 
   const nameMutation = useMutation({
     mutationFn: (name: string) => updateContactName(id, name),

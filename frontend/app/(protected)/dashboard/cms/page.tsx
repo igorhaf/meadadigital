@@ -1,4 +1,5 @@
 'use client'
+import { useOnSync } from '@/lib/use-synced-form'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { Menu, MessagesSquare, Settings, X } from 'lucide-react'
@@ -109,26 +110,23 @@ export default function CmsEditorPage() {
   const selected = pages.find((p) => p.id === selectedId) ?? null
 
   // sincroniza estado do site quando carrega.
-  useEffect(() => {
-    if (site) {
-      setDomain(site.domain ?? '')
-      setPrimaryColor(site.theme?.primaryColor ?? '#0f172a')
-      setDark(site.theme?.dark === true)
-      setPreset(site.theme?.preset === 'meada-dark' ? 'meada-dark' : '')
-      setThemeId(site.theme?.themeId ?? '')
-    }
-  }, [site])
+  useOnSync(site, (s) => {
+    setDomain(s.domain ?? '')
+    setPrimaryColor(s.theme?.primaryColor ?? '#0f172a')
+    setDark(s.theme?.dark === true)
+    setPreset(s.theme?.preset === 'meada-dark' ? 'meada-dark' : '')
+    setThemeId(s.theme?.themeId ?? '')
+  })
 
-  // seleciona a 1ª página (home preferida) ao carregar.
-  useEffect(() => {
-    if (pages.length > 0 && (selectedId === null || !pages.some((p) => p.id === selectedId))) {
-      const home = pages.find((p) => p.isHome) ?? pages[0]
-      setSelectedId(home.id)
-    }
-  }, [pages, selectedId])
+  // seleciona a 1ª página (home preferida) ao carregar — ajuste de estado durante o render
+  // (padrão React de estado derivado; roda de novo imediatamente com o novo selectedId).
+  if (pages.length > 0 && (selectedId === null || !pages.some((p) => p.id === selectedId))) {
+    const home = pages.find((p) => p.isHome) ?? pages[0]
+    setSelectedId(home.id)
+  }
 
   // carrega o conteúdo da página selecionada no editor; zera seleção e expande todas as linhas (troca de página).
-  useEffect(() => {
+  useOnSync(selectedId, () => {
     if (selected) {
       const rows = selected.blocks ?? []
       setTitle(selected.title)
@@ -137,30 +135,31 @@ export default function CmsEditorPage() {
       setExpanded(new Set(rows.map((r) => r.id)))
     }
     setSelection(null)
-  }, [selectedId]) // eslint-disable-line react-hooks/exhaustive-deps
+  })
 
-  // se o nó selecionado sumiu da árvore atual, fecha o painel direito.
-  useEffect(() => {
-    if (!selection) return
+  // se o nó selecionado sumiu da árvore atual, fecha o painel direito (ajuste durante o render:
+  // setSelection(null) só dispara quando a seleção ficou inválida — um re-render e converge).
+  const selectionValida = (): boolean => {
+    if (!selection) return true
     const row = tree.find((r) => r.id === selection.rowId)
-    if (!row) { setSelection(null); return }
-    if (selection.kind === 'row') return
+    if (!row) return false
+    if (selection.kind === 'row') return true
     const col = row.columns.find((c) => c.id === selection.colId)
-    if (!col) { setSelection(null); return }
-    if (selection.kind === 'column') return
+    if (!col) return false
+    if (selection.kind === 'column') return true
     const block = col.blocks.find((b) => b.id === selection.blockId)
-    if (!block) { setSelection(null); return }
-    if (selection.kind === 'block') return
+    if (!block) return false
+    if (selection.kind === 'block') return true
     if (selection.kind === 'slot') {
       // slotId tem que ser um slot válido do tipo do bloco.
-      if (!slotsForType(block.type).some((s) => s.id === selection.slotId)) setSelection(null)
-      return
+      return slotsForType(block.type).some((s) => s.id === selection.slotId)
     }
     // kind === 'item': o fieldKey tem que ser um repeater do schema E o índice existir no array.
     const items = getItems(block.props as Record<string, unknown>, selection.fieldKey)
     const isRepeater = blockSchema(block.type)?.fields.some((f) => f.key === selection.fieldKey && f.type === 'repeater')
-    if (!isRepeater || selection.itemIndex < 0 || selection.itemIndex >= items.length) setSelection(null)
-  }, [tree, selection])
+    return !!isRepeater && selection.itemIndex >= 0 && selection.itemIndex < items.length
+  }
+  if (!selectionValida()) setSelection(null)
 
   // Escape fecha o painel direito.
   useEffect(() => {

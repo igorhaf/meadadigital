@@ -1,8 +1,9 @@
 'use client'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -45,7 +46,7 @@ function centsToReais(cents: number | null): string {
  *  - service presente → modo EDIÇÃO (pré-popula, updateService pelo id; companyId não é
  *    necessário no UPDATE — o RLS garante que o serviço é da empresa do tenant).
  *
- * O reset() num useEffect sincroniza o form ao abrir/trocar de registro (evita valores
+ * O reset() via useResetWhen sincroniza o form ao abrir/trocar de registro (evita valores
  * stale entre aberturas).
  */
 export function CreateServiceDialog({
@@ -70,16 +71,14 @@ export function CreateServiceDialog({
     formState: { errors, isSubmitting },
   } = useForm<ServiceForm>({ resolver: zodResolver(serviceSchema) })
 
-  useEffect(() => {
-    if (open) {
-      reset({
-        name: service?.name ?? '',
-        description: service?.description ?? '',
-        priceReais: centsToReais(service?.priceCents ?? null),
-      })
-      setServerError(null)
-    }
-  }, [open, service, reset])
+  useResetWhen(open ? (service?.id ?? 'create') : null, () => {
+    reset({
+      name: service?.name ?? '',
+      description: service?.description ?? '',
+      priceReais: centsToReais(service?.priceCents ?? null),
+    })
+    setServerError(null)
+  })
 
   const mutation = useMutation({
     mutationFn: (values: ServiceForm) => {

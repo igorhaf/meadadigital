@@ -1,7 +1,8 @@
 'use client'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -33,15 +34,13 @@ export function KnowledgeUploadDialog({
   const [serverError, setServerError] = useState<string | null>(null)
 
   // Limpa o form sempre que abre (sem estado stale entre aberturas).
-  useEffect(() => {
-    if (open) {
+  useResetWhen(open, () => {
       setTitle('')
       setFile(null)
       setValidationError(null)
       setServerError(null)
       if (fileRef.current) fileRef.current.value = ''
-    }
-  }, [open])
+  })
 
   const mutation = useMutation({
     mutationFn: () => uploadDocument(file!, title.trim()),

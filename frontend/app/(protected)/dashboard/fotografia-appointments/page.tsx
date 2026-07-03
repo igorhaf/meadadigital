@@ -1,7 +1,7 @@
 'use client'
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
@@ -30,6 +30,7 @@ import {
   type ConflictDetail,
   type FotografiaSession,
 } from '@/profiles/fotografia/fotografia-types'
+import { useOnSync } from '@/lib/use-synced-form'
 
 function StatusBadge({ status }: { status: FotografiaAppointmentStatusId }) {
   const variant =
@@ -104,13 +105,11 @@ export default function FotografiaAppointmentsPage() {
   const professionals = useQuery({ queryKey: ['fotografia-appt-professionals'], queryFn: () => listProfessionals({ onlyActive: true }) })
   const packages = useQuery({ queryKey: ['fotografia-appt-packages'], queryFn: () => listPackages({ onlyActive: true }) })
 
-  useEffect(() => {
-    if (detail) {
-      setMaterialLink(detail.deliveryLink ?? '')
-      setMaterialNotes(detail.notes ?? '')
-      setMaterialError(null)
-    }
-  }, [detail])
+  useOnSync(detail, (d) => {
+    setMaterialLink(d.deliveryLink ?? '')
+    setMaterialNotes(d.notes ?? '')
+    setMaterialError(null)
+  })
 
   const createMutation = useMutation({
     mutationFn: () => {

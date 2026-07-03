@@ -1,8 +1,9 @@
 'use client'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
@@ -44,14 +45,12 @@ export function CreateInvitationDialog({
     formState: { errors, isSubmitting },
   } = useForm<InviteForm>({ resolver: zodResolver(inviteSchema) })
 
-  useEffect(() => {
-    if (open) {
-      reset({ email: '' })
-      setCreated(null)
-      setServerError(null)
-      setCopied(false)
-    }
-  }, [open, reset])
+  useResetWhen(open, () => {
+    reset({ email: '' })
+    setCreated(null)
+    setServerError(null)
+    setCopied(false)
+  })
 
   const mutation = useMutation({
     mutationFn: (values: InviteForm) => createInvitation(values.email),

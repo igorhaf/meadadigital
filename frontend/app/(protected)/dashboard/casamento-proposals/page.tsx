@@ -1,7 +1,7 @@
 'use client'
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
@@ -47,6 +47,7 @@ import {
   type WeddingChecklistTask,
   type WeddingProposal,
 } from '@/profiles/casamento/casamento-types'
+import { useOnSync } from '@/lib/use-synced-form'
 
 function StatusBadge({ status }: { status: WeddingProposalStatusId }) {
   const variant =
@@ -355,12 +356,10 @@ export default function CasamentoProposalsPage() {
   const paymentsLocked = p ? p.status === 'recusada' || p.status === 'cancelada' : true
 
   // reseta forms locais ao trocar de proposta (não a cada refetch — preserva digitação).
-  const pId = p?.id
-  useEffect(() => {
+  useOnSync(p?.id, () => {
     setCouponCode(''); setCouponError(null)
     setPaymentForm(EMPTY_PAYMENT); setPaymentError(null)
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pId])
+  })
 
   return (
     <div className="space-y-6">

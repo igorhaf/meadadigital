@@ -15,6 +15,7 @@ import {
   saveMyBusinessHours,
   type BusinessHour,
 } from '@/lib/supabase/business_hours'
+import { useOnSync } from '@/lib/use-synced-form'
 
 const WEEKDAYS = [
   'Domingo',
@@ -63,11 +64,7 @@ export default function BusinessHoursPage() {
   })
 
   // Sincroniza o estado editável local quando os dados chegam.
-  useEffect(() => {
-    if (data) {
-      setRows(buildSevenRows(data))
-    }
-  }, [data])
+  useOnSync(data, (d) => setRows(buildSevenRows(d)))
 
   const mutation = useMutation({
     mutationFn: (toSave: BusinessHour[]) => saveMyBusinessHours(me!.companyId!, toSave),

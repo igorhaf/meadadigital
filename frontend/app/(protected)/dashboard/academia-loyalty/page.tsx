@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
@@ -15,6 +15,7 @@ import {
   updateLoyaltyConfig,
 } from '@/lib/api/academia/loyalty'
 import { listMemberships } from '@/lib/api/academia/memberships'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   enabled: boolean
@@ -29,7 +30,6 @@ type FormState = {
  */
 export default function AcademiaLoyaltyPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
   const [contactId, setContactId] = useState('')
@@ -41,16 +41,12 @@ export default function AcademiaLoyaltyPage() {
     queryFn: () => getLoyaltyConfig(),
   })
 
-  useEffect(() => {
-    if (config) {
-      setForm({
-        enabled: config.enabled,
-        pointsPerCheckin: String(config.pointsPerCheckin),
-        rewardThreshold: config.rewardThreshold !== null ? String(config.rewardThreshold) : '',
-        rewardText: config.rewardText ?? '',
-      })
-    }
-  }, [config])
+  const [form, setForm] = useSyncedForm(config, (d): FormState => ({
+    enabled: d.enabled,
+    pointsPerCheckin: String(d.pointsPerCheckin),
+    rewardThreshold: d.rewardThreshold !== null ? String(d.rewardThreshold) : '',
+    rewardText: d.rewardText ?? '',
+  }))
 
   const { data: membershipsData } = useQuery({
     queryKey: ['academia-memberships', 'loyalty-select'],

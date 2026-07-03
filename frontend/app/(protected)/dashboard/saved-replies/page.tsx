@@ -22,6 +22,7 @@ import {
   updateSavedReply,
   type SavedReply,
 } from '@/lib/api/saved-replies'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 // title 1..80, body 1..2000 — espelha os CHECKs do banco (saved_replies).
 const replySchema = z.object({
@@ -81,12 +82,10 @@ export default function SavedRepliesPage() {
     formState: { errors, isSubmitting },
   } = useForm<ReplyForm>({ resolver: zodResolver(replySchema) })
 
-  useEffect(() => {
-    if (dialogOpen) {
-      reset({ title: editing?.title ?? '', body: editing?.body ?? '' })
-      setServerError(null)
-    }
-  }, [dialogOpen, editing, reset])
+  useResetWhen(dialogOpen ? (editing?.id ?? 'create') : null, () => {
+    reset({ title: editing?.title ?? '', body: editing?.body ?? '' })
+    setServerError(null)
+  })
 
   const isEdit = editing != null
 

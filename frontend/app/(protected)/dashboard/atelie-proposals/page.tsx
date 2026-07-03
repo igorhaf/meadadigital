@@ -1,7 +1,7 @@
 'use client'
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { ApiError } from '@/lib/api/client'
@@ -51,6 +51,7 @@ import {
   type AtelieFitting,
   type AtelieProposal,
 } from '@/profiles/atelie/atelie-types'
+import { useOnSync } from '@/lib/use-synced-form'
 
 function StatusBadge({ status }: { status: AtelieProposalStatusId }) {
   const variant =
@@ -346,16 +347,13 @@ export default function AtelieProposalsPage() {
   const locked = p ? ITEMS_LOCKED[p.status] : true
 
   // Sincroniza o form do sinal ao abrir o detalhe de OUTRA proposta (não a cada refetch — preserva digitação).
-  const pId = p?.id
-  useEffect(() => {
-    if (p) {
-      setDepositForm({ value: p.depositCents != null ? String(p.depositCents / 100) : '', paid: p.depositPaid })
-      setDepositError(null)
-      setCouponCode(''); setCouponError(null)
-      setMeasurementForm(EMPTY_MEASUREMENT); setMeasurementError(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pId])
+  useOnSync(p?.id, () => {
+    if (!p) return
+    setDepositForm({ value: p.depositCents != null ? String(p.depositCents / 100) : '', paid: p.depositPaid })
+    setDepositError(null)
+    setCouponCode(''); setCouponError(null)
+    setMeasurementForm(EMPTY_MEASUREMENT); setMeasurementError(null)
+  })
 
   /** Move a prova/ajuste no índice `idx` para `idx+delta` e persiste a nova ordem. */
   function moveFitting(fittings: AtelieFitting[], idx: number, delta: number) {
