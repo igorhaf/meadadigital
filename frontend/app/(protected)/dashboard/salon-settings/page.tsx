@@ -10,7 +10,13 @@ import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/salon/config'
 import { useSyncedForm } from '@/lib/use-synced-form'
 
-type FormState = { opensAt: string; closesAt: string; bufferMinutes: number }
+type FormState = {
+  opensAt: string
+  closesAt: string
+  bufferMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+}
 
 function hhmm(t: string): string {
   return t?.slice(0, 5) ?? ''
@@ -34,6 +40,8 @@ export default function SalonSettingsPage() {
     opensAt: hhmm(d.opensAt),
     closesAt: hhmm(d.closesAt),
     bufferMinutes: d.bufferMinutes,
+    reminderEnabled: d.reminderEnabled ?? true,
+    autoCompleteEnabled: d.autoCompleteEnabled ?? false,
   }))
 
   const saveMutation = useMutation({
@@ -126,6 +134,45 @@ export default function SalonSettingsPage() {
             <p className="text-xs text-muted-foreground">
               Mudanças afetam apenas agendamentos <strong>futuros</strong>.
             </p>
+
+            <Section title="Automações">
+              <div className="space-y-4">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.reminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, reminderEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Lembrete de véspera pelo WhatsApp
+                    <span className="block text-xs text-muted-foreground">
+                      Mensagem fixa na véspera de cada horário agendado/confirmado (&quot;confirma?&quot;).
+                      Remarcar reenvia; a resposta cai no fluxo normal da IA.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.autoCompleteEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Concluir automaticamente horários confirmados que já passaram
+                    <span className="block text-xs text-muted-foreground">
+                      Confirmado com horário no passado vira &quot;realizado&quot; (sem mensagem). Faltas
+                      continuam sendo marcadas manualmente.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </Section>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {saved && <p className="text-sm text-emerald-600">Configurações salvas.</p>}

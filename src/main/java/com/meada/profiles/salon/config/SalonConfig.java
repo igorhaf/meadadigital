@@ -12,10 +12,12 @@ public record SalonConfig(
     UUID companyId,
     LocalTime opensAt,
     LocalTime closesAt,
-    int bufferMinutes) {
+    int bufferMinutes,
+    boolean reminderEnabled,
+    boolean autoCompleteEnabled) {
 
-    /** Defaults cravados (decisão): 09:00–20:00, sem buffer. */
+    /** Defaults cravados (decisão): 09:00–20:00, sem buffer; lembrete ON, auto-transição OFF. */
     public static SalonConfig defaultFor(UUID companyId) {
-        return new SalonConfig(companyId, LocalTime.of(9, 0), LocalTime.of(20, 0), 0);
+        return new SalonConfig(companyId, LocalTime.of(9, 0), LocalTime.of(20, 0), 0, true, false);
     }
 }

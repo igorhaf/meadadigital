@@ -30,6 +30,8 @@ export type Config = {
   opensAt: string
   closesAt: string
   bufferMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
 }
 
 /** Agendamento (espelha SalonAppointment). startAt/endAt em ISO-8601 instant. */

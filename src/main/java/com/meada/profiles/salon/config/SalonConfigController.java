@@ -41,7 +41,9 @@ public class SalonConfigController {
     public record ConfigRequest(
         @NotBlank String opensAt,
         @NotBlank String closesAt,
-        @Min(0) int bufferMinutes) {}
+        @Min(0) int bufferMinutes,
+        Boolean reminderEnabled,
+        Boolean autoCompleteEnabled) {}
 
     @GetMapping("/api/salon/config")
     public ResponseEntity<Object> get(
@@ -74,7 +76,9 @@ public class SalonConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.bufferMinutes()));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
+            req.bufferMinutes(), req.reminderEnabled() == null || req.reminderEnabled(),
+            Boolean.TRUE.equals(req.autoCompleteEnabled())));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }
