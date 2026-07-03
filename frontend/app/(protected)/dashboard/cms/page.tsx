@@ -13,6 +13,9 @@ import { Modal } from '@/components/ui/modal'
 import { Section } from '@/components/ui/card'
 import { FieldRenderer } from '@/components/cms/field-renderer'
 import { renderCmsBlock, cmsShellStyle, RowSection } from '@/components/cms/cms-render'
+import { getMe } from '@/lib/api/me'
+import { themesForProfile, recommendedArchetypes } from '@/lib/cms/themes/theme-catalog'
+import { pageTemplateById, templatesForProfile, TEMPLATE_CATEGORIES } from '@/lib/cms/templates/page-templates'
 import { TreePanel, type Selection } from '@/components/cms/explorer/tree-panel'
 import {
   addBlockToColumn,
@@ -88,9 +91,17 @@ export default function CmsEditorPage() {
   const [primaryColor, setPrimaryColor] = useState('#0f172a')
   const [dark, setDark] = useState(false)
   const [preset, setPreset] = useState<'' | 'meada-dark'>('')
+  const [themeId, setThemeId] = useState<string>('') // '' = não usa catálogo (preset/genérico)
+
+  // perfil do tenant: define quais 10 temas do catálogo aparecem (afinidade por nicho).
+  const meQuery = useQuery({ queryKey: ['me'], queryFn: getMe })
+  const profileId = meQuery.data?.profileId ?? 'generic'
+  const catalogThemes = themesForProfile(profileId)
+  const recommended = recommendedArchetypes(profileId)
 
   const [newSlug, setNewSlug] = useState('')
   const [newTitle, setNewTitle] = useState('')
+  const [newTemplate, setNewTemplate] = useState<string>('landing') // template de estrutura inicial
   const [createError, setCreateError] = useState<string | null>(null)
 
   const site = data?.site
@@ -104,6 +115,7 @@ export default function CmsEditorPage() {
       setPrimaryColor(site.theme?.primaryColor ?? '#0f172a')
       setDark(site.theme?.dark === true)
       setPreset(site.theme?.preset === 'meada-dark' ? 'meada-dark' : '')
+      setThemeId(site.theme?.themeId ?? '')
     }
   }, [site])
 
@@ -180,10 +192,19 @@ export default function CmsEditorPage() {
     },
   })
   const createPageMut = useMutation({
-    mutationFn: () => createCmsPage(newSlug, newTitle),
+    // cria a página e, se um template de estrutura foi escolhido, grava os blocos do template nela.
+    mutationFn: async () => {
+      const p = await createCmsPage(newSlug, newTitle)
+      const tpl = pageTemplateById(newTemplate)
+      if (tpl && tpl.id !== 'blank') {
+        const blocks = tpl.build()
+        if (blocks.length > 0) await saveCmsPage(p.id, { blocks })
+      }
+      return p
+    },
     onSuccess: (p: CmsPage) => {
       qc.invalidateQueries({ queryKey: ['cms-site'] })
-      setSelectedId(p.id); setNewSlug(''); setNewTitle(''); setCreateError(null)
+      setSelectedId(p.id); setNewSlug(''); setNewTitle(''); setNewTemplate('landing'); setCreateError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'page_slug_taken') setCreateError('Já existe uma página com esse endereço.')
@@ -205,7 +226,11 @@ export default function CmsEditorPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['cms-site'] }),
   })
   const themeMut = useMutation({
-    mutationFn: () => setCmsTheme({ primaryColor, dark, preset: preset || undefined }),
+    // themeId (catálogo) tem precedência; se setado, vai sozinho. Senão, preset/genérico.
+    mutationFn: () =>
+      themeId
+        ? setCmsTheme({ themeId })
+        : setCmsTheme({ primaryColor, dark, preset: preset || undefined }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['cms-site'] }),
   })
   const domainMut = useMutation({
@@ -318,7 +343,9 @@ export default function CmsEditorPage() {
     return <div className="flex h-full items-center justify-center text-sm text-muted-foreground">Carregando…</div>
   }
 
-  const shell = cmsShellStyle({ primaryColor, dark, preset: preset || undefined })
+  const shell = cmsShellStyle(
+    themeId ? { themeId } : { primaryColor, dark, preset: preset || undefined },
+  )
 
   // nós selecionados resolvidos a partir da árvore (pro painel direito).
   const selRow = selection ? tree.find((r) => r.id === selection.rowId) ?? null : null
@@ -643,52 +670,152 @@ export default function CmsEditorPage() {
                 </button>
               ))}
             </div>
-            <div className="mt-4 flex flex-wrap items-end gap-2 border-t border-border pt-4">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Endereço (slug)</label>
-                <input value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="servicos"
-                  className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <div className="mt-4 border-t border-border pt-4">
+              {/* SELETOR DE TIPO DE PÁGINA: o tenant escolhe um template de estrutura (landing,
+                  sobre, serviços...) e a página já nasce montada com os blocos do propósito. */}
+              <p className="mb-1 text-xs font-medium text-muted-foreground">Tipo de página (começa pronta para editar)</p>
+              <p className="mb-3 text-[11px] text-muted-foreground">
+                As marcadas com <span className="font-medium text-primary">★</span> combinam com o seu segmento.
+              </p>
+              {TEMPLATE_CATEGORIES.map((cat) => {
+                const items = templatesForProfile(profileId).filter((t) => t.category === cat.id)
+                if (items.length === 0) return null
+                return (
+                  <div key={cat.id} className="mb-3">
+                    <p className="mb-1.5 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground/70">{cat.label}</p>
+                    <div className="grid grid-cols-2 gap-2 sm:grid-cols-4 lg:grid-cols-6">
+                      {items.map((tpl) => {
+                        const active = newTemplate === tpl.id
+                        const aff = tpl.affinity.includes(profileId)
+                        return (
+                          <button
+                            key={tpl.id}
+                            type="button"
+                            onClick={() => setNewTemplate(tpl.id)}
+                            title={tpl.description}
+                            className={`relative flex flex-col items-center gap-1 rounded-lg border p-2 text-center transition ${
+                              active ? 'border-primary bg-primary/5 ring-2 ring-primary/30' : 'border-border hover:border-primary/50'
+                            }`}
+                          >
+                            {aff && <span className="absolute right-1 top-1 text-[10px] text-primary">★</span>}
+                            <span className="text-xl">{tpl.icon}</span>
+                            <span className="text-[11px] font-medium leading-tight">{tpl.name}</span>
+                          </button>
+                        )
+                      })}
+                    </div>
+                  </div>
+                )
+              })}
+              {pageTemplateById(newTemplate) && (
+                <p className="mb-3 mt-1 text-xs text-muted-foreground">{pageTemplateById(newTemplate)!.description}</p>
+              )}
+              <div className="flex flex-wrap items-end gap-2">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Endereço (slug)</label>
+                  <input value={newSlug} onChange={(e) => setNewSlug(e.target.value)} placeholder="servicos"
+                    className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Título</label>
+                  <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Serviços"
+                    className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                </div>
+                <Button type="button" disabled={createPageMut.isPending || !newSlug.trim()}
+                  onClick={() => createPageMut.mutate()}>
+                  {createPageMut.isPending ? 'Criando…' : 'Criar página'}
+                </Button>
               </div>
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Título</label>
-                <input value={newTitle} onChange={(e) => setNewTitle(e.target.value)} placeholder="Serviços"
-                  className="rounded-md border border-border bg-background px-3 py-2 text-sm" />
-              </div>
-              <Button type="button" variant="outline" disabled={createPageMut.isPending || !newSlug.trim()}
-                onClick={() => createPageMut.mutate()}>Nova página</Button>
             </div>
             {createError && <p className="mt-2 text-sm text-destructive">{createError}</p>}
           </Section>
 
           {/* Tema */}
           <Section title="Tema">
-            <div className="flex flex-wrap items-end gap-4">
-              <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Preset</label>
-                <select value={preset} onChange={(e) => setPreset(e.target.value as '' | 'meada-dark')}
-                  className="h-9 rounded-md border border-border bg-background px-2 text-sm">
-                  <option value="">Genérico (cor + claro/escuro)</option>
-                  <option value="meada-dark">Meada (dark-glass + gradiente)</option>
-                </select>
+            {/* GALERIA DE TEMAS do catálogo (10 por nicho, recomendados destacados). Escolher um
+                tema do catálogo desliga o preset/genérico (themeId tem precedência no render). */}
+            <p className="mb-3 text-sm text-muted-foreground">
+              Escolha um tema pronto para o seu segmento — paleta, tipografia e layout combinando com o
+              nicho. Os marcados com <span className="font-medium text-primary">★ Recomendado</span> são
+              os que mais combinam com o seu negócio.
+            </p>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+              {catalogThemes.map((t) => {
+                const isRec = recommended.includes(t.archetype)
+                const active = themeId === t.id
+                return (
+                  <button
+                    key={t.id}
+                    type="button"
+                    onClick={() => { setThemeId(t.id); setPreset('') }}
+                    className={`group rounded-lg border p-2 text-left transition ${
+                      active ? 'border-primary ring-2 ring-primary/40' : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    {/* swatch do tema: barra com bg + primária/secundária/accent */}
+                    <div
+                      className="mb-2 flex h-14 items-end gap-1 overflow-hidden rounded-md p-1.5"
+                      style={{ background: t.palette.bg }}
+                    >
+                      <span className="h-6 flex-1 rounded" style={{ background: t.palette.primary }} />
+                      <span className="h-6 w-2 rounded" style={{ background: t.palette.secondary }} />
+                      <span className="h-6 w-2 rounded" style={{ background: t.palette.accent }} />
+                    </div>
+                    <div className="flex items-center justify-between gap-1">
+                      <span className="text-xs font-semibold">{t.name}</span>
+                      {isRec && <span className="text-[10px] font-medium text-primary">★</span>}
+                    </div>
+                    <p className="mt-0.5 line-clamp-2 text-[10px] leading-tight text-muted-foreground">
+                      {t.description}
+                    </p>
+                  </button>
+                )
+              })}
+            </div>
+
+            {/* Opções avançadas: presets antigos (genérico/Meada). Escolher um deles limpa o themeId. */}
+            <details className="mt-4">
+              <summary className="cursor-pointer text-xs font-medium text-muted-foreground">
+                Opções avançadas (cor manual / preset Meada)
+              </summary>
+              <div className="mt-3 flex flex-wrap items-end gap-4">
+                <div>
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Preset</label>
+                  <select value={preset} onChange={(e) => { setPreset(e.target.value as '' | 'meada-dark'); setThemeId('') }}
+                    className="h-9 rounded-md border border-border bg-background px-2 text-sm">
+                    <option value="">Genérico (cor + claro/escuro)</option>
+                    <option value="meada-dark">Meada (dark-glass + gradiente)</option>
+                  </select>
+                </div>
+                {preset === '' && !themeId && (
+                  <>
+                    <div>
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Cor primária</label>
+                      <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)}
+                        className="h-9 w-16 rounded-md border border-border bg-background" />
+                    </div>
+                    <label className="flex items-center gap-2 text-sm">
+                      <input type="checkbox" checked={dark} onChange={(e) => setDark(e.target.checked)} /> Fundo escuro
+                    </label>
+                  </>
+                )}
+                {preset === 'meada-dark' && (
+                  <p className="max-w-xs text-xs text-muted-foreground">
+                    Preset da marca Meada: fundo near-black, gradiente azul→roxo→rosa e fonte Geist. Use com os blocos <strong>Meada · *</strong>.
+                  </p>
+                )}
               </div>
-              {preset === '' && (
-                <>
-                  <div>
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Cor primária</label>
-                    <input type="color" value={primaryColor} onChange={(e) => setPrimaryColor(e.target.value)}
-                      className="h-9 w-16 rounded-md border border-border bg-background" />
-                  </div>
-                  <label className="flex items-center gap-2 text-sm">
-                    <input type="checkbox" checked={dark} onChange={(e) => setDark(e.target.checked)} /> Fundo escuro
-                  </label>
-                </>
+            </details>
+
+            <div className="mt-4">
+              <Button type="button" disabled={themeMut.isPending} onClick={() => themeMut.mutate()}>
+                {themeMut.isPending ? 'Salvando…' : 'Salvar tema'}
+              </Button>
+              {themeId && (
+                <span className="ml-3 text-xs text-muted-foreground">
+                  Tema selecionado: <strong>{catalogThemes.find((t) => t.id === themeId)?.name}</strong>
+                </span>
               )}
-              {preset === 'meada-dark' && (
-                <p className="max-w-xs text-xs text-muted-foreground">
-                  Preset da marca Meada: fundo near-black, gradiente azul→roxo→rosa e fonte Geist. Use com os blocos <strong>Meada · *</strong>.
-                </p>
-              )}
-              <Button type="button" variant="outline" disabled={themeMut.isPending} onClick={() => themeMut.mutate()}>Salvar tema</Button>
             </div>
           </Section>
 

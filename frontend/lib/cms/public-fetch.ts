@@ -9,7 +9,9 @@ import { normalizeToTree } from './cms-tree'
 
 export type CmsNavItem = { pageSlug: string; title: string; isHome: boolean }
 export type CmsThemePreset = 'meada-dark'
-export type CmsTheme = { primaryColor?: string; dark?: boolean; preset?: CmsThemePreset }
+/** themeId = `{nicho}-{archetype}` do catálogo (lib/cms/themes). Quando presente, tem precedência
+ * sobre primaryColor/dark — resolve paleta+forma+layout completos do tema escolhido. */
+export type CmsTheme = { primaryColor?: string; dark?: boolean; preset?: CmsThemePreset; themeId?: string }
 /** blocks agora é a ÁRVORE (CmsRow[]); normalizeToTree converte o flat legado na leitura. */
 export type PublicCmsView = { title: string; blocks: CmsRow[]; theme: CmsTheme | null; nav: CmsNavItem[] }
 

@@ -1,0 +1,152 @@
+/**
+ * Folha de estilo do SISTEMA DE TEMAS do CMS. Escopada em `.cms-shell` (o <main> do site público e
+ * do preview). Faz os 26 blocos existentes — que usam classes Tailwind inline — responderem aos
+ * tokens do tema (--cms-radius, --cms-shadow, --cms-bg-muted, --cms-accent) e às FLAGS de layout
+ * (data-hero, data-card), SEM reescrever cada componente de bloco.
+ *
+ * Só atua quando o tema é do CATÁLOGO (o shell ganha as vars/data-attrs). Sem themeId, as vars não
+ * existem e os fallbacks abaixo (var(--x, <default>)) preservam o visual antigo — retrocompatível.
+ */
+
+/* ---- forma: raio e sombra dos cards/superfícies ------------------------------
+   Os blocos usam .rounded-lg / .rounded-3xl e borders black/10. Reaproveitamos esses ganchos. */
+.cms-shell .rounded-lg {
+  border-radius: var(--cms-radius, 0.5rem);
+}
+.cms-shell .rounded-2xl,
+.cms-shell .rounded-3xl {
+  border-radius: calc(var(--cms-radius, 1rem) * 1.5);
+}
+
+/* cards com borda neutra (feature_grid, columns, services, faq, gallery, testimonials...) herdam a
+   borda do tema e a sombra do tema. */
+.cms-shell .border-black\/10,
+.cms-shell .border-white\/10 {
+  border-color: var(--cms-border, rgba(0, 0, 0, 0.1));
+}
+
+/* sombra do tema aplicada aos cards quando data-card pede elevação. */
+.cms-shell[data-card='shadow'] .rounded-lg,
+.cms-shell[data-card='shadow'] .rounded-2xl,
+.cms-shell[data-card='elevated'] .rounded-lg,
+.cms-shell[data-card='elevated'] .rounded-2xl {
+  box-shadow: var(--cms-shadow, none);
+}
+.cms-shell[data-card='elevated'] .rounded-lg {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+.cms-shell[data-card='elevated'] .rounded-lg:hover {
+  transform: translateY(-3px);
+}
+/* flat/outline: sem sombra, borda mais presente */
+.cms-shell[data-card='flat'] .rounded-lg {
+  box-shadow: none;
+}
+.cms-shell[data-card='outline'] .rounded-lg {
+  box-shadow: none;
+  border-width: 1.5px;
+}
+
+/* ---- fundo suave das seções alternadas: usa --cms-bg-muted -------------------
+   Vários blocos usam bg-white/60 ou rgba pequenos pra seção suave. Mapeamos pro tom do tema. */
+.cms-shell .bg-white\/60,
+.cms-shell .bg-black\/5,
+.cms-shell .bg-black\/\[0\.04\] {
+  background-color: var(--cms-bg-muted, rgba(0, 0, 0, 0.04));
+}
+
+/* ---- accent: links e detalhes secundários -----------------------------------
+   Onde os blocos usam a primária pra TUDO, deixamos o accent disponível em utilitários próprios. */
+.cms-shell .cms-accent {
+  color: var(--cms-accent, var(--cms-primary));
+}
+
+/* ---- tipografia de heading: caixa-alta + tracking (editorial/luxo) ----------- */
+.cms-shell h1,
+.cms-shell h2 {
+  text-transform: var(--cms-heading-transform, none);
+  letter-spacing: var(--cms-heading-tracking, normal);
+}
+
+/* ---- HERO: variações de layout via data-hero --------------------------------
+   O HeroBlock renderiza um grid md:grid-cols-2 (conteúdo + imagem). Cada layout reescreve isso. */
+
+/* centered: uma coluna, tudo centralizado, imagem abaixo e menor. */
+.cms-shell[data-hero='centered'] section > .grid {
+  grid-template-columns: 1fr !important;
+  text-align: center;
+  justify-items: center;
+}
+.cms-shell[data-hero='centered'] section > .grid [data-slot='image'] {
+  max-width: 42rem;
+  margin-top: 2rem;
+}
+
+/* split: conteúdo à esquerda, imagem à direita (padrão md:grid-cols-2 já faz). Reforça alinhamento. */
+.cms-shell[data-hero='split'] section > .grid {
+  grid-template-columns: 1fr 1fr;
+  text-align: left;
+}
+
+/* split-reverse: imagem à esquerda, conteúdo à direita. */
+.cms-shell[data-hero='split-reverse'] section > .grid {
+  grid-template-columns: 1fr 1fr;
+  text-align: left;
+  direction: rtl;
+}
+.cms-shell[data-hero='split-reverse'] section > .grid > * {
+  direction: ltr;
+}
+
+/* minimal: sem imagem em destaque, conteúdo enxuto e centralizado, muito respiro. */
+.cms-shell[data-hero='minimal'] section > .grid {
+  grid-template-columns: 1fr !important;
+  text-align: center;
+  justify-items: center;
+}
+.cms-shell[data-hero='minimal'] section > .grid [data-slot='image'] {
+  display: none;
+}
+.cms-shell[data-hero='minimal'] section {
+  padding-top: var(--cms-section-py, 6rem);
+  padding-bottom: var(--cms-section-py, 6rem);
+}
+
+/* overlay: imagem ao fundo, conteúdo sobreposto e centralizado (rústico/luxo). */
+.cms-shell[data-hero='overlay'] section > .grid {
+  grid-template-columns: 1fr !important;
+  text-align: center;
+  justify-items: center;
+  position: relative;
+}
+.cms-shell[data-hero='overlay'] section > .grid [data-slot='image'] {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  opacity: 0.22;
+  z-index: 0;
+  border-radius: 0;
+  margin: 0;
+}
+.cms-shell[data-hero='overlay'] section > .grid [data-slot='content'] {
+  position: relative;
+  z-index: 1;
+}
+
+/* ---- densidade: padding vertical das seções ---------------------------------
+   Aplica o ritmo do tema às seções (py-12/py-20 dos blocos viram a densidade escolhida). */
+.cms-shell[data-card] section {
+  padding-top: var(--cms-section-py, 4rem);
+  padding-bottom: var(--cms-section-py, 4rem);
+}
+
+@media (max-width: 768px) {
+  /* no mobile, todos os heros colapsam pra uma coluna centralizada (legibilidade). */
+  .cms-shell[data-hero] section > .grid {
+    grid-template-columns: 1fr !important;
+    text-align: center;
+    direction: ltr;
+  }
+}

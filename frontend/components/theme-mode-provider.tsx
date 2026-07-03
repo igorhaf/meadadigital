@@ -49,11 +49,17 @@ export function ThemeModeProvider({ children }: { children: React.ReactNode }) {
   // o script inline do layout já aplicou a classe correta antes da hidratação (sem flash).
   const [mode, setModeState] = useState<ThemeMode>('light')
 
-  // Hidrata o estado a partir do localStorage no mount (client only).
+  // Hidrata o estado a partir do localStorage no mount (client only). 'system' legado vira 'light'
+  // (o produto só tem claro/escuro agora — resquício do toggle de 3 estados).
   useEffect(() => {
     const stored = localStorage.getItem(STORAGE_KEY) as ThemeMode | null
-    if (stored === 'light' || stored === 'dark' || stored === 'system') {
-      setModeState(stored)
+    if (stored === 'dark') {
+      setModeState('dark')
+    } else if (stored === 'system') {
+      setModeState('light')
+      localStorage.setItem(STORAGE_KEY, 'light')
+    } else {
+      setModeState('light')
     }
   }, [])
 
@@ -77,8 +83,11 @@ export function ThemeModeProvider({ children }: { children: React.ReactNode }) {
   }, [])
 
   const cycle = useCallback(() => {
+    // Alterna SOMENTE claro ↔ escuro (o 'system' foi removido do toggle — produto só tem 2 modos).
+    // Se o estado vier de um valor antigo 'system' (localStorage legado), trata como claro e
+    // alterna pra escuro.
     setModeState((prev) => {
-      const next: ThemeMode = prev === 'light' ? 'dark' : prev === 'dark' ? 'system' : 'light'
+      const next: ThemeMode = prev === 'dark' ? 'light' : 'dark'
       localStorage.setItem(STORAGE_KEY, next)
       return next
     })

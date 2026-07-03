@@ -25,8 +25,17 @@ services:
     environment:
       # sidecar pelo nome do serviço (não localhost — ver nota de rede).
       - KNOWLEDGE_EMBEDDING_ENDPOINT=http://embeddings:7080
+      # Supabase LOCAL roda no HOST (escuta em 0.0.0.0); dentro do container 127.0.0.1 = o próprio
+      # container. Usa o IP do WSL (mesmo que o frontend), alcançável do container. Sem alterar o .env.
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${SUPABASE_HOST_IP:-172.27.153.135}:54322/postgres
+      - SUPABASE_JWKS_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321/auth/v1/.well-known/jwks.json
+      - SUPABASE_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321
       # CORS: domínio-base + os 10 subdomínios de produto + legado localhost:3000.
-      - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://meada.meadadigital.local,http://processo.meadadigital.local,http://dental.meadadigital.local,http://sushi.meadadigital.local,http://mesa.meadadigital.local,http://salao.meadadigital.local,http://pousada.meadadigital.local,http://academia.meadadigital.local,http://pet.meadadigital.local,http://oficina.meadadigital.local,http://nutri.meadadigital.local,http://localhost:3000
+      # AdminCorsConfig usa setAllowedOriginPatterns → aceita curinga de subdomínio.
+      # http://*.meadadigital.local cobre TODOS os subdomínios de nicho E os slugs de empresa
+      # (suplementos-modelo, belezapura, ...) — necessário pro impersonate, onde o dashboard
+      # abre em {slug}.meadadigital.local e chama api.meadadigital.local cross-origin.
+      - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://*.meadadigital.local,http://localhost:3000
     ports:
       - "8095:8095"   # exposto p/ debugging host-side (o smoke E2E bate aqui direto também)
     volumes:
@@ -53,6 +62,10 @@ services:
       - CMS_BACKEND_URL=http://backend:8095
       # hot-reload de FS dentro do Docker (o inotify nem sempre propaga via bind mount).
       - WATCHPACK_POLLING=true
+      # Supabase LOCAL roda no HOST e escuta em 0.0.0.0; o IP do WSL funciona TANTO no browser
+      # (é o próprio host) QUANTO no SSR dentro do container. Default = IP atual do WSL;
+      # se o WSL trocar o IP no boot, exporte SUPABASE_HOST_IP=<novo ip> antes do compose up.
+      - NEXT_PUBLIC_SUPABASE_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321
     ports:
       - "3000:3000"   # exposto p/ debugging host-side
     volumes:

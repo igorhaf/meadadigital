@@ -34,6 +34,16 @@ http://api.meadadigital.local {
 	reverse_proxy backend:8095
 }
 
+# Catch-all dos SUBDOMÍNIOS DE EMPRESA (slug.meadadigital.local) — qualquer host *.meadadigital.local
+# que NÃO casou os blocos acima (nichos fixos + api) cai aqui e vai pro frontend. Necessário porque
+# o "Acessar admin" do root abre {slug}.meadadigital.local/auth/confirm, e os slugs de empresa
+# (suplementos-modelo, belezapura, ...) não estão na lista fixa. O Next resolve o perfil/empresa
+# pelo host (middleware → resolveCompany). Caddy casa o host mais específico primeiro, então
+# api./meada./sushi./... continuam roteando certo; só o resto (slugs) cai neste wildcard.
+http://*.meadadigital.local {
+	reverse_proxy frontend:3000
+}
+
 # =============================================================================
 # CMS — domínios PRÓPRIOS de tenant (SM-N). Template de PRODUÇÃO — NÃO ativar em dev
 # (o dev roda auto_https off; isto exige :443 + emissão de cert real). Em prod, mover o

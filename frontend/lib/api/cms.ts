@@ -10,7 +10,9 @@ import { normalizeToTree } from '@/lib/cms/cms-tree'
 /** preset: tema com identidade própria (ex.: 'meada-dark' = cara da marca Meada). Ausente = tema
  * genérico (primaryColor + dark). theme é JSONB livre no backend — adicionar campo não toca o Spring. */
 export type CmsThemePreset = 'meada-dark'
-export type CmsTheme = { primaryColor?: string; dark?: boolean; preset?: CmsThemePreset }
+/** themeId = `{nicho}-{archetype}` do catálogo de temas (lib/cms/themes). theme é JSONB livre no
+ * backend — adicionar o campo não toca o Spring. */
+export type CmsTheme = { primaryColor?: string; dark?: boolean; preset?: CmsThemePreset; themeId?: string }
 
 export type CmsSite = {
   companyId: string
