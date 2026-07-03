@@ -36,6 +36,9 @@ public class BarberAppointmentRepository {
         rs.getTimestamp("end_at").toInstant(),
         rs.getInt("duration_minutes"),
         (Integer) rs.getObject("price_cents"),
+        rs.getInt("discount_cents"),
+        rs.getString("coupon_code_snapshot"),
+        rs.getBoolean("loyalty_applied"),
         rs.getString("status"),
         rs.getString("notes"),
         rs.getTimestamp("created_at").toInstant(),
@@ -43,7 +46,8 @@ public class BarberAppointmentRepository {
 
     private static final String COLS =
         "id, barber_id, barber_name, service_id, service_name, conversation_id, contact_id, "
-            + "guest_name, guest_phone, start_at, end_at, duration_minutes, price_cents, status, notes, "
+            + "guest_name, guest_phone, start_at, end_at, duration_minutes, price_cents, "
+            + "discount_cents, coupon_code_snapshot, loyalty_applied, status, notes, "
             + "created_at, status_updated_at";
 
     private final JdbcTemplate jdbcTemplate;
@@ -140,7 +144,8 @@ public class BarberAppointmentRepository {
                                                UUID serviceId, String serviceName, Integer priceCents,
                                                int durationMinutes, UUID conversationId, UUID contactId,
                                                String guestName, String guestPhone, Instant startAt,
-                                               String notes) {
+                                               String notes, int discountCents, UUID couponId,
+                                               String couponCodeSnapshot, boolean loyaltyApplied) {
         Instant endAt = startAt.plusSeconds(durationMinutes * 60L);
         Optional<BarberAppointmentConflict> conflict = findConflict(barberId, startAt, endAt);
         if (conflict.isPresent()) {
@@ -149,12 +154,31 @@ public class BarberAppointmentRepository {
         UUID id = jdbcTemplate.queryForObject(
             "insert into barber_appointments (company_id, barber_id, service_id, conversation_id, "
                 + "contact_id, guest_name, guest_phone, start_at, duration_minutes, end_at, service_name, "
-                + "barber_name, price_cents, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+                + "barber_name, price_cents, notes, discount_cents, coupon_id, coupon_code_snapshot, "
+                + "loyalty_applied) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
             UUID.class, companyId, barberId, serviceId, conversationId, contactId, guestName,
             guestPhone, Timestamp.from(startAt), durationMinutes, Timestamp.from(endAt), serviceName,
-            barberName, priceCents, notes);
+            barberName, priceCents, notes, discountCents, couponId, couponCodeSnapshot, loyaltyApplied);
         return findById(companyId, id).orElseThrow();
+    }
+
+    /** Nº de agendamentos REALIZADOS do contato — alimenta a fidelidade #3 e o contexto da IA. */
+    public int countRealizedByContact(UUID companyId, UUID contactId) {
+        Integer n = jdbcTemplate.queryForObject(
+            "select count(*) from barber_appointments where company_id = ? and contact_id = ? "
+                + "and status = 'realizado'",
+            Integer.class, companyId, contactId);
+        return n == null ? 0 : n;
+    }
+
+    /** Agendamentos FUTUROS ativos do contato (para a IA capturar confirmação/cancelamento — #1). */
+    public List<BarberAppointment> listUpcomingByContact(UUID companyId, UUID contactId, int limit) {
+        return jdbcTemplate.query(
+            "select " + COLS + " from barber_appointments where company_id = ? and contact_id = ? "
+                + "and status in ('agendado','confirmado') and start_at >= now() "
+                + "order by start_at asc limit ?",
+            MAPPER, companyId, contactId, limit);
     }
 
     public void updateStatus(UUID companyId, UUID id, String newStatus) {

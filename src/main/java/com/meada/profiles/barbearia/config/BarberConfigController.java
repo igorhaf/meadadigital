@@ -44,7 +44,10 @@ public class BarberConfigController {
         @NotBlank String opensAt,
         @NotBlank String closesAt,
         @Min(1) int slotMinutes,
-        boolean queueEnabled) {}
+        boolean queueEnabled,
+        Boolean reminderEnabled,
+        Boolean autoCompleteEnabled,
+        Boolean upsellEnabled) {}
 
     @GetMapping("/api/barbearia/config")
     public ResponseEntity<Object> get(
@@ -77,8 +80,12 @@ public class BarberConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
+            // ausentes no payload → defaults (lembrete/auto-transição ON, upsell OFF — opt-in explícito).
             return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
-                req.slotMinutes(), req.queueEnabled()));
+                req.slotMinutes(), req.queueEnabled(),
+                req.reminderEnabled() == null || req.reminderEnabled(),
+                req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+                Boolean.TRUE.equals(req.upsellEnabled())));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         } catch (InvalidSlotException e) {

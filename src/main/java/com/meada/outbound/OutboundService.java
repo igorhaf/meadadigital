@@ -101,9 +101,11 @@ public class OutboundService {
     // Camada 8.0 (perfil nutri): pós-processa <consulta_nutri> (agenda) e <entrega_plano> (entrega o body exato).
     private final com.meada.profiles.nutri.appointments.AgendamentoNutriConfirmHandler agendamentoNutriConfirmHandler;
     private final com.meada.profiles.nutri.appointments.EntregaPlanoHandler entregaPlanoHandler;
-    // Camada 8.1 (perfil barbearia): pós-processa <agendamento_barbearia> (marca) e <fila_barbearia> (enfileira).
+    // Camada 8.1 (perfil barbearia): pós-processa <agendamento_barbearia> (marca), <fila_barbearia>
+    // (enfileira) e <confirmacao_barbearia> (o cliente confirma/cancela o horário — onda 1 do backlog #1).
     private final com.meada.profiles.barbearia.appointments.AgendamentoBarbeariaConfirmHandler agendamentoBarbeariaConfirmHandler;
     private final com.meada.profiles.barbearia.queue.EntrarFilaHandler entrarFilaHandler;
+    private final com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler;
     // Camada 8.2 (perfil eventos): pós-processa <proposta_evento> (abre proposta) e <aprovacao_proposta> (muta estado).
     private final com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler;
     private final com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler;
@@ -237,6 +239,7 @@ public class OutboundService {
                            com.meada.profiles.nutri.appointments.EntregaPlanoHandler entregaPlanoHandler,
                            com.meada.profiles.barbearia.appointments.AgendamentoBarbeariaConfirmHandler agendamentoBarbeariaConfirmHandler,
                            com.meada.profiles.barbearia.queue.EntrarFilaHandler entrarFilaHandler,
+                           com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler,
                            com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler,
                            com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler,
                            com.meada.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler,
@@ -301,6 +304,7 @@ public class OutboundService {
         this.entregaPlanoHandler = entregaPlanoHandler;
         this.agendamentoBarbeariaConfirmHandler = agendamentoBarbeariaConfirmHandler;
         this.entrarFilaHandler = entrarFilaHandler;
+        this.confirmacaoBarbeariaHandler = confirmacaoBarbeariaHandler;
         this.propostaEventoConfirmHandler = propostaEventoConfirmHandler;
         this.aprovacaoPropostaHandler = aprovacaoPropostaHandler;
         this.agendamentoEsteticaConfirmHandler = agendamentoEsteticaConfirmHandler;
@@ -454,6 +458,7 @@ public class OutboundService {
         // enfileira o cliente no walk-in. Encadeados (perfil é único; só um age).
         toSend = maybeProcessAgendamentoBarbearia(event, conversationId, toSend);
         toSend = maybeProcessFilaBarbearia(event, conversationId, toSend);
+        toSend = maybeProcessConfirmacaoBarbearia(event, conversationId, toSend);
         // Camada 8.2 (perfil eventos): <proposta_evento> abre a proposta; <aprovacao_proposta> muta o
         // estado da proposta orçada. Encadeados (perfil é único; só um age).
         toSend = maybeProcessPropostaEvento(event, conversationId, toSend);
@@ -940,6 +945,32 @@ public class OutboundService {
             entrarFilaHandler.parseAndEnqueue(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = entrarFilaHandler.stripFilaTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'barbearia' (onda 1 do backlog #1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_barbearia>}, aplica a DECISÃO DO CLIENTE ao agendamento (confirmado/
+     * cancelado — ConfirmacaoBarbeariaHandler valida barreira de contato + máquina de status; fecha o
+     * loop do lembrete "confirma? SIM/CANCELAR" do BarberReminderJob) e devolve um AiResponse com a
+     * tag removida; senão devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoBarbearia(MessageInboundProcessedEvent event,
+                                                        UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoBarbeariaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"barbearia".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoBarbeariaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoBarbeariaHandler.stripConfirmacaoTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

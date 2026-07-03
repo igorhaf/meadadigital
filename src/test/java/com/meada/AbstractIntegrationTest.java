@@ -144,7 +144,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/79_academia_aniversario.sql",
         "db/migrations/80_adega_coupons_loyalty.sql",
         "db/migrations/81_atelie_lembrete_sinal.sql",
-        "db/migrations/82_atelie_onda2.sql"
+        "db/migrations/82_atelie_onda2.sql",
+        "db/migrations/83_barbearia_onda1.sql"
     };
 
     /**
@@ -278,7 +279,8 @@ public abstract class AbstractIntegrationTest {
               pet_appointments, pet_animals, pet_config, pet_services, pet_professionals,
               os_items, service_orders, os_vehicles, os_config, os_mechanics,
               nutri_appointments, nutri_plans, nutri_patients, nutri_config, nutri_professionals,
-              barber_queue_tickets, barber_appointments, barber_config, barber_services, barber_barbers,
+              barber_queue_tickets, barber_appointments, barber_coupons, barber_loyalty_config,
+              barber_config, barber_services, barber_barbers,
               event_timeline_items, event_proposal_items, event_proposals, event_config, event_planners,
               aesthetic_session_notes, aesthetic_appointments, aesthetic_packages,
               aesthetic_procedures, aesthetic_professionals, aesthetic_config,

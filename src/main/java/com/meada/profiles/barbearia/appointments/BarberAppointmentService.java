@@ -6,10 +6,18 @@ import com.meada.profiles.barbearia.barbers.BarberBarber;
 import com.meada.profiles.barbearia.barbers.BarberBarberRepository;
 import com.meada.profiles.barbearia.config.BarberConfig;
 import com.meada.profiles.barbearia.config.BarberConfigRepository;
+import com.meada.profiles.barbearia.coupons.BarberCoupon;
+import com.meada.profiles.barbearia.coupons.BarberCouponRepository;
+import com.meada.profiles.barbearia.loyalty.BarberLoyaltyConfig;
+import com.meada.profiles.barbearia.loyalty.BarberLoyaltyConfigRepository;
 import com.meada.profiles.barbearia.services.BarberService;
 import com.meada.profiles.barbearia.services.BarberServiceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.LocalDate;
 
 import java.time.Instant;
 import java.time.LocalTime;
@@ -36,10 +44,14 @@ public class BarberAppointmentService {
     private static final DateTimeFormatter DATE_FMT = DateTimeFormatter.ofPattern("dd/MM");
     private static final DateTimeFormatter TIME_FMT = DateTimeFormatter.ofPattern("HH:mm");
 
+    private static final Logger log = LoggerFactory.getLogger(BarberAppointmentService.class);
+
     private final BarberAppointmentRepository appointmentRepository;
     private final BarberBarberRepository barberRepository;
     private final BarberServiceRepository serviceRepository;
     private final BarberConfigRepository configRepository;
+    private final BarberCouponRepository couponRepository;
+    private final BarberLoyaltyConfigRepository loyaltyRepository;
     private final BarberAppointmentNotifier notifier;
     private final BarberContextCache contextCache;
 
@@ -47,12 +59,16 @@ public class BarberAppointmentService {
                                     BarberBarberRepository barberRepository,
                                     BarberServiceRepository serviceRepository,
                                     BarberConfigRepository configRepository,
+                                    BarberCouponRepository couponRepository,
+                                    BarberLoyaltyConfigRepository loyaltyRepository,
                                     BarberAppointmentNotifier notifier,
                                     BarberContextCache contextCache) {
         this.appointmentRepository = appointmentRepository;
         this.barberRepository = barberRepository;
         this.serviceRepository = serviceRepository;
         this.configRepository = configRepository;
+        this.couponRepository = couponRepository;
+        this.loyaltyRepository = loyaltyRepository;
         this.notifier = notifier;
         this.contextCache = contextCache;
     }
@@ -83,10 +99,17 @@ public class BarberAppointmentService {
      * Cria um agendamento (status inicial agendado). Valida barbeiro/serviço (existem + ativos),
      * janela de funcionamento (no fuso do tenant), e delega ao repo — que re-verifica conflito por
      * barbeiro na transação. Snapshots de nome/preço/duração vêm de barber+service.
+     *
+     * <p>Onda 1 do backlog: FIDELIDADE #3 (a cada N cortes realizados do contato, este sai GRÁTIS —
+     * desconto = preço, loyalty_applied=true) e CUPOM #12 ({@code couponCode} vem da tag da IA; o
+     * backend valida active/validade/mínimo/max_uses e aplica com clamp ao preço; INVÁLIDO NÃO
+     * ABORTA — o agendamento sai sem desconto, espelho adega). Fidelidade tem precedência (grátis
+     * não acumula cupom). uses do cupom incrementa na MESMA transação.
      */
+    @Transactional
     public BarberAppointment create(UUID companyId, UUID barberId, UUID serviceId, UUID contactId,
                                     UUID conversationId, Instant startAt, String guestName,
-                                    String guestPhone, String notes) {
+                                    String guestPhone, String notes, String couponCode) {
         BarberBarber barber = barberRepository.findById(companyId, barberId)
             .orElseThrow(BarberNotFoundException::new);
         if (!barber.active()) {
@@ -100,13 +123,54 @@ public class BarberAppointmentService {
         BarberConfig config = configRepository.findByCompany(companyId);
         requireInsideHours(startAt, service.durationMinutes(), config);
 
+        Integer price = service.priceCents();
+        int discount = 0;
+        UUID couponId = null;
+        String couponSnapshot = null;
+        boolean loyaltyApplied = false;
+
+        // FIDELIDADE #3: conta os REALIZADOS do contato ANTES de inserir (espelho sushi/adega).
+        if (price != null && price > 0 && contactId != null) {
+            BarberLoyaltyConfig loyalty = loyaltyRepository.findByCompany(companyId);
+            if (loyalty.enabled()) {
+                int realized = appointmentRepository.countRealizedByContact(companyId, contactId);
+                if (realized > 0 && realized % loyalty.thresholdCuts() == 0) {
+                    discount = price;
+                    loyaltyApplied = true;
+                }
+            }
+        }
+
+        // CUPOM #12: só quando não saiu grátis pela fidelidade; inválido é descartado em silêncio.
+        if (!loyaltyApplied && price != null && couponCode != null && !couponCode.isBlank()) {
+            Optional<BarberCoupon> found = couponRepository.findByCode(companyId, couponCode);
+            BarberCoupon c = found.orElse(null);
+            boolean valid = c != null && c.active()
+                && (c.validUntil() == null || !c.validUntil().isBefore(LocalDate.now(TENANT_ZONE)))
+                && (c.maxUses() == null || c.uses() < c.maxUses())
+                && price >= c.minOrderCents();
+            if (valid) {
+                long raw = "percent".equals(c.kind()) ? (long) price * c.value() / 100L : c.value();
+                discount = (int) Math.min(raw, price);
+                couponId = c.id();
+                couponSnapshot = c.code();
+            } else {
+                log.info("barbearia: cupom '{}' inválido p/ company {} — agendamento segue sem desconto",
+                    couponCode, companyId);
+            }
+        }
+
         BarberAppointment created;
         try {
             created = appointmentRepository.insertAppointment(companyId, barberId, barber.name(),
-                serviceId, service.name(), service.priceCents(), service.durationMinutes(),
-                conversationId, contactId, guestName, guestPhone, startAt, notes);
+                serviceId, service.name(), price, service.durationMinutes(),
+                conversationId, contactId, guestName, guestPhone, startAt, notes,
+                discount, couponId, couponSnapshot, loyaltyApplied);
         } catch (BarberAppointmentRepository.SlotConflictException e) {
             throw new ConflictException(e.conflict());
+        }
+        if (couponId != null) {
+            couponRepository.incrementUses(companyId, couponId);
         }
         contextCache.invalidate(companyId);
         return created;

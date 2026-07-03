@@ -86,6 +86,7 @@ public class AgendamentoBarbeariaConfirmHandler {
         String date = root.path("date").asText(null);
         String startTime = root.path("start_time").asText(null);
         String notes = root.path("notes").asText(null);
+        String cupom = root.path("cupom").asText(null);   // opcional (onda 1, backlog #12) — inválido não aborta
         if (rawBarber == null || rawService == null || date == null || startTime == null) {
             log.warn("barbearia: tag <agendamento_barbearia> com campos faltando p/ conversa {} — não criado",
                 conversationId);
@@ -115,7 +116,7 @@ public class AgendamentoBarbeariaConfirmHandler {
 
         try {
             BarberAppointment a = appointmentService.create(companyId, barberId, serviceId,
-                contactId, conversationId, startAt, guestName, guestPhone, notes);
+                contactId, conversationId, startAt, guestName, guestPhone, notes, cupom);
             log.info("barbearia: agendamento {} criado p/ conversa {} (barbeiro {}, serviço {})",
                 a.id(), conversationId, barberId, serviceId);
             return Optional.of(a);

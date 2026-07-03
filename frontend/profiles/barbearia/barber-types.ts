@@ -32,6 +32,9 @@ export type Config = {
   closesAt: string
   slotMinutes: number
   queueEnabled: boolean
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  upsellEnabled: boolean
 }
 
 /** Agendamento (espelha BarberAppointment). startAt/endAt em ISO-8601 instant. */
@@ -49,10 +52,57 @@ export type Appointment = {
   endAt: string
   durationMinutes: number
   priceCents: number | null
+  discountCents: number
+  couponCodeSnapshot: string | null
+  loyaltyApplied: boolean
   status: BarberAppointmentStatusId
   notes: string | null
   createdAt: string
   statusUpdatedAt: string
+}
+
+/** Cupom de desconto (onda 1, backlog #12 — espelha BarberCoupon; clone do motor adega/atelie). */
+export type BarberCoupon = {
+  id: string
+  companyId: string
+  code: string
+  kind: 'percent' | 'fixed'
+  value: number
+  minOrderCents: number
+  maxUses: number | null
+  uses: number
+  validUntil: string | null
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/** Fidelidade "a cada N cortes, 1 grátis" (onda 1, backlog #3 — espelha BarberLoyaltyConfig). */
+export type BarberLoyaltyConfig = {
+  companyId: string
+  enabled: boolean
+  thresholdCuts: number
+}
+
+/** Linha agregada do relatório (onda 1, backlog #15). */
+export type BarberReportRow = {
+  month?: string
+  barberName?: string
+  serviceName?: string
+  count: number
+  noShows?: number
+  totalCents: number
+}
+
+export type BarberReportSummary = {
+  months: number
+  realizedCount: number
+  noShowCount: number
+  cancelledCount: number
+  totalCents: number
+  byMonth: BarberReportRow[]
+  byBarber: BarberReportRow[]
+  byService: BarberReportRow[]
 }
 
 /**

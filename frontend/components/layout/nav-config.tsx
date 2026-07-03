@@ -379,6 +379,9 @@ const BARBEARIA_GROUP: NavGroup = {
     { label: 'Serviços', href: '/dashboard/barber-services', icon: Wand2 },
     { label: 'Agenda', href: '/dashboard/barber-appointments', icon: CalendarClock },
     { label: 'Fila', href: '/dashboard/barber-queue', icon: ListOrdered },
+    { label: 'Cupons', href: '/dashboard/barber-coupons', icon: Ticket },
+    { label: 'Fidelidade', href: '/dashboard/barber-loyalty', icon: Award },
+    { label: 'Relatórios', href: '/dashboard/barber-reports', icon: BarChart3 },
     { label: 'Configurações', href: '/dashboard/barber-settings', icon: Settings },
   ],
 }

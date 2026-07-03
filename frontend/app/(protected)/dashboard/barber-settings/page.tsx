@@ -9,7 +9,10 @@ import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getConfig, updateConfig } from '@/lib/api/barbearia/config'
 
-type FormState = { opensAt: string; closesAt: string; slotMinutes: number; queueEnabled: boolean }
+type FormState = {
+  opensAt: string; closesAt: string; slotMinutes: number; queueEnabled: boolean
+  reminderEnabled: boolean; autoCompleteEnabled: boolean; upsellEnabled: boolean
+}
 
 function hhmm(t: string): string {
   return t?.slice(0, 5) ?? ''
@@ -35,6 +38,9 @@ export default function BarberSettingsPage() {
       setForm({
         opensAt: hhmm(data.opensAt), closesAt: hhmm(data.closesAt),
         slotMinutes: data.slotMinutes, queueEnabled: data.queueEnabled,
+        reminderEnabled: data.reminderEnabled ?? true,
+        autoCompleteEnabled: data.autoCompleteEnabled ?? true,
+        upsellEnabled: data.upsellEnabled ?? false,
       })
     }
   }, [data])
@@ -115,6 +121,44 @@ export default function BarberSettingsPage() {
               <p className="mt-1 text-xs text-muted-foreground">
                 Desligado: a IA só oferece marcar horário; quem manda mensagem não entra na fila.
               </p>
+            </Section>
+
+            <Section title="Automação (onda 1 do backlog)">
+              <div className="space-y-3">
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" checked={form.reminderEnabled} className="mt-0.5"
+                    onChange={(e) => setForm((f) => f && { ...f, reminderEnabled: e.target.checked })} />
+                  <span>
+                    Lembrete de confirmação nas 24h antes do horário
+                    <span className="block text-xs text-muted-foreground">
+                      "Confirma seu corte amanhã 15h? Responda SIM ou CANCELAR" — a resposta do cliente
+                      confirma ou libera o horário automaticamente.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" checked={form.autoCompleteEnabled} className="mt-0.5"
+                    onChange={(e) => setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })} />
+                  <span>
+                    Auto-transição de status
+                    <span className="block text-xs text-muted-foreground">
+                      Confirmado com horário passado vira "realizado" (alimenta fidelidade e relatório);
+                      fila de dias anteriores expira sozinha.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input type="checkbox" checked={form.upsellEnabled} className="mt-0.5"
+                    onChange={(e) => setForm((f) => f && { ...f, upsellEnabled: e.target.checked })} />
+                  <span>
+                    Upsell da IA (uma sugestão por conversa)
+                    <span className="block text-xs text-muted-foreground">
+                      No fechamento do agendamento, a IA pode sugerir UMA vez um serviço complementar do
+                      catálogo (barba, sobrancelha…), sem insistir. Desligado = sem sugestão.
+                    </span>
+                  </span>
+                </label>
+              </div>
             </Section>
 
             <p className="text-xs text-muted-foreground">

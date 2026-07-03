@@ -40,14 +40,16 @@ public class BarberConfigService {
 
     @Transactional
     public BarberConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
-                               int slotMinutes, boolean queueEnabled) {
+                               int slotMinutes, boolean queueEnabled, boolean reminderEnabled,
+                               boolean autoCompleteEnabled, boolean upsellEnabled) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
         if (slotMinutes <= 0) {
             throw new InvalidSlotException();
         }
-        BarberConfig saved = repository.upsert(companyId, opensAt, closesAt, slotMinutes, queueEnabled);
+        BarberConfig saved = repository.upsert(companyId, opensAt, closesAt, slotMinutes, queueEnabled,
+            reminderEnabled, autoCompleteEnabled, upsellEnabled);
         auditLogger.log(companyId, userId, "barber_config_updated", "barber_config", companyId,
             Map.of("slot_minutes", slotMinutes, "queue_enabled", queueEnabled));
         contextCache.invalidate(companyId);

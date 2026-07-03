@@ -6,6 +6,9 @@ export type UpdateConfigInput = {
   closesAt: string // "HH:MM"
   slotMinutes: number
   queueEnabled: boolean
+  reminderEnabled?: boolean
+  autoCompleteEnabled?: boolean
+  upsellEnabled?: boolean
 }
 
 export function getConfig(): Promise<Config> {

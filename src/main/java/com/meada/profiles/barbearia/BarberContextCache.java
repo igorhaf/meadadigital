@@ -8,6 +8,8 @@ import com.meada.profiles.barbearia.barbers.BarberBarber;
 import com.meada.profiles.barbearia.barbers.BarberBarberRepository;
 import com.meada.profiles.barbearia.config.BarberConfig;
 import com.meada.profiles.barbearia.config.BarberConfigRepository;
+import com.meada.profiles.barbearia.loyalty.BarberLoyaltyConfig;
+import com.meada.profiles.barbearia.loyalty.BarberLoyaltyConfigRepository;
 import com.meada.profiles.barbearia.queue.BarberQueueRepository;
 import com.meada.profiles.barbearia.queue.BarberQueueTicket;
 import com.meada.profiles.barbearia.services.BarberService;
@@ -54,18 +56,21 @@ public class BarberContextCache {
     private final BarberAppointmentRepository appointmentRepository;
     private final BarberQueueRepository queueRepository;
     private final BarberConfigRepository configRepository;
+    private final BarberLoyaltyConfigRepository loyaltyRepository;
     private final Cache<String, String> cache;
 
     public BarberContextCache(BarberBarberRepository barberRepository,
                               BarberServiceRepository serviceRepository,
                               BarberAppointmentRepository appointmentRepository,
                               BarberQueueRepository queueRepository,
-                              BarberConfigRepository configRepository) {
+                              BarberConfigRepository configRepository,
+                              BarberLoyaltyConfigRepository loyaltyRepository) {
         this.barberRepository = barberRepository;
         this.serviceRepository = serviceRepository;
         this.appointmentRepository = appointmentRepository;
         this.queueRepository = queueRepository;
         this.configRepository = configRepository;
+        this.loyaltyRepository = loyaltyRepository;
         this.cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(10))
             .maximumSize(1000)
@@ -141,6 +146,41 @@ public class BarberContextCache {
             } else {
                 sb.append("HISTÓRICO DO CLIENTE: primeira vez (sem agendamentos anteriores).\n\n");
             }
+
+            // --- AGENDAMENTOS FUTUROS (onda 1, backlog #1 — a IA captura confirmação/cancelamento) ---
+            List<BarberAppointment> upcoming = appointmentRepository.listUpcomingByContact(companyId, contactId, 5);
+            if (!upcoming.isEmpty()) {
+                sb.append("AGENDAMENTOS FUTUROS DO CLIENTE (use o id EXATO na tag de confirmação):\n");
+                for (BarberAppointment a : upcoming) {
+                    ZonedDateTime z = a.startAt().atZone(TENANT_ZONE);
+                    sb.append("- ").append(a.id()).append(" · ").append(a.serviceName())
+                        .append(" ").append(DATE_FMT.format(z)).append(" às ").append(TIME_FMT.format(z))
+                        .append(" com ").append(a.barberName())
+                        .append(" · status ").append(a.status()).append("\n");
+                }
+                sb.append("Quando o cliente CONFIRMAR um horário futuro (ex.: responder SIM ao lembrete) ou "
+                    + "pedir para DESMARCAR, sua ÚLTIMA mensagem deve TERMINAR com a tag (linha própria):\n"
+                    + "<confirmacao_barbearia>{\"appointment_id\":\"UUID\",\"decisao\":\"confirmado|cancelado\"}"
+                    + "</confirmacao_barbearia>\n"
+                    + "Você só REFLETE a decisão do cliente — NUNCA confirme ou cancele sem ele pedir.\n\n");
+            }
+
+            // --- FIDELIDADE (onda 1, backlog #3) — a IA só INFORMA; quem aplica é o sistema ---
+            BarberLoyaltyConfig loyalty = loyaltyRepository.findByCompany(companyId);
+            if (loyalty.enabled()) {
+                int realized = appointmentRepository.countRealizedByContact(companyId, contactId);
+                int threshold = loyalty.thresholdCuts();
+                sb.append("FIDELIDADE (a cada ").append(threshold).append(" cortes realizados, o próximo é GRÁTIS — "
+                    + "aplicado AUTOMATICAMENTE pelo sistema no agendamento): o cliente tem ")
+                    .append(realized).append(" corte(s) realizado(s). ");
+                if (realized > 0 && realized % threshold == 0) {
+                    sb.append("O PRÓXIMO agendamento dele sai grátis — pode avisar!");
+                } else {
+                    sb.append("Faltam ").append(threshold - (realized % threshold))
+                        .append(" para o próximo grátis.");
+                }
+                sb.append(" Você INFORMA o saldo; NUNCA aplica/promete desconto por conta própria.\n\n");
+            }
         } else {
             sb.append("CLIENTE NÃO IDENTIFICADO pelo telefone. Peça o nome para registrar o "
                 + "agendamento ou a entrada na fila.\n\n");
@@ -167,13 +207,23 @@ public class BarberContextCache {
             .append("Quando MARCAR HORÁRIO estiver definido (barbeiro + serviço + dia + hora), sua ÚLTIMA "
                 + "mensagem deve TERMINAR com a tag (em uma linha própria, sem markdown):\n")
             .append("<agendamento_barbearia>{\"barber_id\":\"UUID\",\"service_id\":\"UUID\","
-                + "\"date\":\"YYYY-MM-DD\",\"start_time\":\"HH:MM\",\"notes\":\"...\"}</agendamento_barbearia>\n")
+                + "\"date\":\"YYYY-MM-DD\",\"start_time\":\"HH:MM\",\"notes\":\"...\","
+                + "\"cupom\":\"CODIGO ou omitido\"}</agendamento_barbearia>\n")
+            .append("Se o cliente informar um CUPOM de desconto, inclua o código no campo \"cupom\" — quem "
+                + "VALIDA e CALCULA o desconto é o sistema; você NUNCA confirma valor de desconto por conta "
+                + "própria (se o cupom for inválido, o agendamento sai sem desconto).\n")
             .append("Quando ENTRAR NA FILA estiver definido (serviço + opcionalmente um barbeiro), sua "
                 + "ÚLTIMA mensagem deve TERMINAR com a tag (em uma linha própria, sem markdown):\n")
             .append("<fila_barbearia>{\"service_id\":\"UUID\",\"barber_id\":\"UUID ou null\","
                 + "\"notes\":\"...\"}</fila_barbearia>\n")
             .append("Use os ids EXATOS das listas acima. barber_id null na fila = qualquer barbeiro. Só "
-                + "emita a tag na confirmação final.\n\n");
+                + "emita a tag na confirmação final.\n");
+        if (config.upsellEnabled()) {
+            sb.append("UPSELL LIGADO (onda 1, backlog #4): no FECHAMENTO do agendamento você PODE sugerir "
+                + "UMA ÚNICA vez incluir um serviço complementar DA LISTA acima (ex.: barba, sobrancelha), "
+                + "citando a duração/preço do catálogo; se o cliente recusar ou ignorar, NÃO insista.\n");
+        }
+        sb.append("\n");
 
         return sb.toString();
     }

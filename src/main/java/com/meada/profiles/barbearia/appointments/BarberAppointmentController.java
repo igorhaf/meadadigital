@@ -131,7 +131,7 @@ public class BarberAppointmentController {
         }
         try {
             BarberAppointment created = service.create(companyId, req.barberId(), req.serviceId(),
-                null, null, startAt, req.guestName(), req.guestPhone(), req.notes());
+                null, null, startAt, req.guestName(), req.guestPhone(), req.notes(), null);
             return ResponseEntity.status(201).body(created);
         } catch (BarberNotFoundException e) {
             return error(404, "Not Found", "barber_not_found");

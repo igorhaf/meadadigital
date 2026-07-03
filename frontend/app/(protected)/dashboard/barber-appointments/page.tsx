@@ -25,6 +25,7 @@ import {
 } from '@/profiles/barbearia/barber-appointment-status'
 import {
   formatDate,
+  formatPrice,
   formatTime,
   type Appointment,
   type ConflictDetail,
@@ -190,6 +191,8 @@ export default function BarberAppointmentsPage() {
                       <div className="flex items-center gap-2">
                         <span className="font-medium">{a.guestName}</span>
                         <StatusBadge status={a.status} />
+                        {a.loyaltyApplied && <Badge variant="success">grátis · fidelidade</Badge>}
+                        {a.couponCodeSnapshot && <Badge variant="info">cupom {a.couponCodeSnapshot}</Badge>}
                       </div>
                       <p className="text-xs text-muted-foreground">
                         {a.serviceName} · {a.barberName} · {formatTime(a.startAt)}–{formatTime(a.endAt)}
@@ -301,6 +304,18 @@ export default function BarberAppointmentsPage() {
                 <div><dt className="text-xs text-muted-foreground">Horário</dt><dd>{formatTime(detail.startAt)}–{formatTime(detail.endAt)}</dd></div>
                 <div><dt className="text-xs text-muted-foreground">Telefone</dt><dd>{detail.guestPhone ?? '—'}</dd></div>
                 <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{detail.conversationId ? 'WhatsApp' : 'Manual'}</dd></div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Valor</dt>
+                  <dd>
+                    {detail.priceCents == null ? '—' : formatPrice(detail.priceCents - detail.discountCents)}
+                    {detail.loyaltyApplied && <span className="ml-1 text-xs text-emerald-600">grátis (fidelidade)</span>}
+                    {detail.couponCodeSnapshot && !detail.loyaltyApplied && detail.discountCents > 0 && (
+                      <span className="ml-1 text-xs text-muted-foreground">
+                        (cupom {detail.couponCodeSnapshot}: −{formatPrice(detail.discountCents)})
+                      </span>
+                    )}
+                  </dd>
+                </div>
                 {detail.notes && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Observações</dt><dd>{detail.notes}</dd></div>}
               </dl>
             </Card>
