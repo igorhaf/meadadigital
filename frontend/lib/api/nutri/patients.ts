@@ -36,11 +36,17 @@ export function getPatient(id: string): Promise<NutriPatient> {
 }
 
 export function createPatient(input: CreatePatientInput): Promise<NutriPatient> {
-  return apiFetch<NutriPatient>('/api/nutri/patients', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<NutriPatient>('/api/nutri/patients', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updatePatient(id: string, input: UpdatePatientInput): Promise<NutriPatient> {
-  return apiFetch<NutriPatient>(`/api/nutri/patients/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<NutriPatient>(`/api/nutri/patients/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function archivePatient(id: string): Promise<NutriPatient> {

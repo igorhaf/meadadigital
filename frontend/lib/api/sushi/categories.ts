@@ -9,11 +9,17 @@ export function listCategories(): Promise<{ items: Category[] }> {
 }
 
 export function createCategory(input: CreateCategoryInput): Promise<Category> {
-  return apiFetch<Category>('/api/sushi/categories', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Category>('/api/sushi/categories', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateCategory(id: string, input: UpdateCategoryInput): Promise<Category> {
-  return apiFetch<Category>(`/api/sushi/categories/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Category>(`/api/sushi/categories/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCategory(id: string): Promise<Category> {

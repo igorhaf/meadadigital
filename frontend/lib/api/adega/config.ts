@@ -16,5 +16,8 @@ export function getConfig(): Promise<AdegaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<AdegaConfig> {
-  return apiFetch<AdegaConfig>('/api/adega/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<AdegaConfig>('/api/adega/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

@@ -21,5 +21,8 @@ export function getConfig(): Promise<SushiConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<SushiConfig> {
-  return apiFetch<SushiConfig>('/api/sushi/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<SushiConfig>('/api/sushi/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

@@ -18,5 +18,8 @@ export function getConfig(): Promise<LavanderiaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<LavanderiaConfig> {
-  return apiFetch<LavanderiaConfig>('/api/lavanderia/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<LavanderiaConfig>('/api/lavanderia/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

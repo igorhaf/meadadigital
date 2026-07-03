@@ -47,9 +47,9 @@ export type ConversationWithContact = {
 }
 
 const SELECT_WITH_CONTACT =
-  'id, status, handled_by, marked_unread, scheduling_intent, cancellation_intent, '
-  + 'complaint_intent, extracted_data, last_message_at, team_id, '
-  + 'contact:contacts(name, phone_number)'
+  'id, status, handled_by, marked_unread, scheduling_intent, cancellation_intent, ' +
+  'complaint_intent, extracted_data, last_message_at, team_id, ' +
+  'contact:contacts(name, phone_number)'
 
 /** jsonb cru do scheduling_intent (snake_case, como o PostgREST devolve). */
 type SchedulingIntentRow = {
@@ -258,9 +258,7 @@ export async function setConversationMarkedUnread(
  * "Marcar como tratado" no detalhe quando já lidou com o pedido — a seção e o badge
  * somem. Idempotente (zerar uma coluna já null é no-op). Retorna a conversa atualizada.
  */
-export async function clearSchedulingIntent(
-  id: string,
-): Promise<ConversationWithContact> {
+export async function clearSchedulingIntent(id: string): Promise<ConversationWithContact> {
   const supabase = createClient()
   const { data, error } = await supabase
     .from('conversations')

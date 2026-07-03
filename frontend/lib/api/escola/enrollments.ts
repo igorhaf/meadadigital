@@ -11,7 +11,13 @@ export type CreateEnrollmentInput = {
 }
 
 export function listEnrollments(
-  opts: { status?: string; classId?: string; studentId?: string; page?: number; pageSize?: number } = {},
+  opts: {
+    status?: string
+    classId?: string
+    studentId?: string
+    page?: number
+    pageSize?: number
+  } = {},
 ): Promise<EnrollmentPage> {
   const p = new URLSearchParams()
   if (opts.status) p.set('status', opts.status)
@@ -28,11 +34,18 @@ export function getEnrollment(id: string): Promise<EscolaEnrollment> {
 }
 
 export function createEnrollment(input: CreateEnrollmentInput): Promise<EscolaEnrollment> {
-  return apiFetch<EscolaEnrollment>('/api/escola/enrollments', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<EscolaEnrollment>('/api/escola/enrollments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateEnrollmentStatus(id: string, newStatus: EscolaEnrollmentStatusId): Promise<EscolaEnrollment> {
+export function updateEnrollmentStatus(
+  id: string,
+  newStatus: EscolaEnrollmentStatusId,
+): Promise<EscolaEnrollment> {
   return apiFetch<EscolaEnrollment>(`/api/escola/enrollments/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

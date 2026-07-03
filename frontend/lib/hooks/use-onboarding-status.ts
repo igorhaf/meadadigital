@@ -50,12 +50,9 @@ export function useOnboardingStatus(enabled: boolean): OnboardingStatus {
       (v) => v != null && v.trim().length > 0,
     )
 
-  const completedSteps = [
-    faqsConfigured,
-    servicesConfigured,
-    hoursConfigured,
-    aiConfigured,
-  ].filter(Boolean).length
+  const completedSteps = [faqsConfigured, servicesConfigured, hoursConfigured, aiConfigured].filter(
+    Boolean,
+  ).length
 
   const isPending =
     enabled && (faqs.isPending || services.isPending || hours.isPending || ai.isPending)

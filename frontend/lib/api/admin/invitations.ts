@@ -37,7 +37,9 @@ function qs(filters: InvitationFilters): string {
 }
 
 /** Lista TODOS os convites do SaaS (cross-tenant). Endpoint /all (distinto do tenant). */
-export async function getAllInvitations(filters: InvitationFilters = {}): Promise<AdminInvitationPage> {
+export async function getAllInvitations(
+  filters: InvitationFilters = {},
+): Promise<AdminInvitationPage> {
   return apiFetch<AdminInvitationPage>(`/admin/invitations/all${qs(filters)}`)
 }
 

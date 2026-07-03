@@ -21,8 +21,13 @@ export type UpdateSessionInput = {
 
 export function listSessions(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string; professionalId?: string
-    contactId?: string; page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    professionalId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<SessionPage> {
   const p = new URLSearchParams()
@@ -42,18 +47,26 @@ export function getSession(id: string): Promise<FotografiaSession> {
 }
 
 export function createSession(input: CreateSessionInput): Promise<FotografiaSession> {
-  return apiFetch<FotografiaSession>('/api/fotografia/sessions', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<FotografiaSession>('/api/fotografia/sessions', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateSessionStatus(id: string, newStatus: FotografiaAppointmentStatusId): Promise<FotografiaSession> {
+export function updateSessionStatus(
+  id: string,
+  newStatus: FotografiaAppointmentStatusId,
+): Promise<FotografiaSession> {
   return apiFetch<FotografiaSession>(`/api/fotografia/sessions/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }
 
 /** Grava/edita o link do material entregue e/ou as observações da sessão. */
 export function updateSession(id: string, input: UpdateSessionInput): Promise<FotografiaSession> {
   return apiFetch<FotografiaSession>(`/api/fotografia/sessions/${id}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }

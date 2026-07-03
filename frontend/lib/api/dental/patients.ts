@@ -26,7 +26,10 @@ export function createPatient(input: CreatePatientInput): Promise<Patient> {
 }
 
 export function updatePatient(id: string, input: UpdatePatientInput): Promise<Patient> {
-  return apiFetch<Patient>(`/api/dental/patients/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Patient>(`/api/dental/patients/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function deletePatient(id: string): Promise<void> {

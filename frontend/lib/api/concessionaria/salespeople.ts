@@ -9,7 +9,9 @@ export type CreateSalespersonInput = {
 
 export type UpdateSalespersonInput = Partial<CreateSalespersonInput> & { active?: boolean }
 
-export function listSalespeople(opts: { onlyActive?: boolean } = {}): Promise<{ items: Salesperson[] }> {
+export function listSalespeople(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: Salesperson[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: Salesperson[] }>(`/api/concessionaria/salespeople${qs}`)
 }
@@ -19,16 +21,23 @@ export function getSalesperson(id: string): Promise<Salesperson> {
 }
 
 export function createSalesperson(input: CreateSalespersonInput): Promise<Salesperson> {
-  return apiFetch<Salesperson>('/api/concessionaria/salespeople', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Salesperson>('/api/concessionaria/salespeople', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateSalesperson(id: string, input: UpdateSalespersonInput): Promise<Salesperson> {
-  return apiFetch<Salesperson>(`/api/concessionaria/salespeople/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Salesperson>(`/api/concessionaria/salespeople/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleSalesperson(id: string, active: boolean): Promise<Salesperson> {
   return apiFetch<Salesperson>(`/api/concessionaria/salespeople/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

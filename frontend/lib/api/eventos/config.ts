@@ -11,5 +11,8 @@ export function getConfig(): Promise<EventConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<EventConfig> {
-  return apiFetch<EventConfig>('/api/eventos/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<EventConfig>('/api/eventos/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

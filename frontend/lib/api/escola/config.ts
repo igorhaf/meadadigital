@@ -13,5 +13,8 @@ export function getConfig(): Promise<EscolaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<EscolaConfig> {
-  return apiFetch<EscolaConfig>('/api/escola/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<EscolaConfig>('/api/escola/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

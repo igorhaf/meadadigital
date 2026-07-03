@@ -32,11 +32,17 @@ export function createCoupon(input: CreateCouponInput): Promise<Coupon> {
 }
 
 export function updateCoupon(id: string, input: UpdateCouponInput): Promise<Coupon> {
-  return apiFetch<Coupon>(`/api/academia/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Coupon>(`/api/academia/coupons/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCoupon(id: string, active: boolean): Promise<Coupon> {
-  return apiFetch<Coupon>(`/api/academia/coupons/${id}/toggle`, { method: 'PATCH', body: JSON.stringify({ active }) })
+  return apiFetch<Coupon>(`/api/academia/coupons/${id}/toggle`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  })
 }
 
 export function deleteCoupon(id: string): Promise<void> {
@@ -45,6 +51,7 @@ export function deleteCoupon(id: string): Promise<void> {
 
 export function validateCoupon(code: string, subtotalCents: number): Promise<CouponValidation> {
   return apiFetch<CouponValidation>('/api/academia/coupons/validate', {
-    method: 'POST', body: JSON.stringify({ code, subtotalCents }),
+    method: 'POST',
+    body: JSON.stringify({ code, subtotalCents }),
   })
 }

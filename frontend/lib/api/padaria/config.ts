@@ -22,5 +22,8 @@ export function getConfig(): Promise<PadariaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<PadariaConfig> {
-  return apiFetch<PadariaConfig>('/api/padaria/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<PadariaConfig>('/api/padaria/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

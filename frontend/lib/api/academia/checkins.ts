@@ -9,7 +9,10 @@ export type CreateCheckinInput = {
 }
 
 export function createCheckin(input: CreateCheckinInput): Promise<Checkin> {
-  return apiFetch<Checkin>('/api/academia/checkins', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Checkin>('/api/academia/checkins', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function listCheckins(

@@ -16,10 +16,13 @@ export function listPayments(enrollmentId: string): Promise<PaymentsResponse> {
 
 export function recordPayment(enrollmentId: string, input: RecordPaymentInput): Promise<Payment> {
   return apiFetch<Payment>(`/api/cursos/enrollments/${enrollmentId}/payments`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
 export function deletePayment(enrollmentId: string, paymentId: string): Promise<void> {
-  return apiFetch<void>(`/api/cursos/enrollments/${enrollmentId}/payments/${paymentId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/cursos/enrollments/${enrollmentId}/payments/${paymentId}`, {
+    method: 'DELETE',
+  })
 }

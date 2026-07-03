@@ -13,7 +13,13 @@ export type CreateMembershipInput = {
 }
 
 export function listMemberships(
-  opts: { status?: string; planId?: string; classId?: string; page?: number; pageSize?: number } = {},
+  opts: {
+    status?: string
+    planId?: string
+    classId?: string
+    page?: number
+    pageSize?: number
+  } = {},
 ): Promise<MembershipPage> {
   const p = new URLSearchParams()
   if (opts.status) p.set('status', opts.status)
@@ -30,11 +36,18 @@ export function getMembership(id: string): Promise<Membership> {
 }
 
 export function createMembership(input: CreateMembershipInput): Promise<Membership> {
-  return apiFetch<Membership>('/api/academia/memberships', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Membership>('/api/academia/memberships', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateMembershipStatus(id: string, newStatus: AcademiaMembershipStatusId): Promise<Membership> {
+export function updateMembershipStatus(
+  id: string,
+  newStatus: AcademiaMembershipStatusId,
+): Promise<Membership> {
   return apiFetch<Membership>(`/api/academia/memberships/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

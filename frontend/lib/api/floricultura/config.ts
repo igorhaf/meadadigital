@@ -16,5 +16,8 @@ export function getConfig(): Promise<FloriculturaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<FloriculturaConfig> {
-  return apiFetch<FloriculturaConfig>('/api/floricultura/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<FloriculturaConfig>('/api/floricultura/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

@@ -12,5 +12,8 @@ export function getConfig(): Promise<DermatologiaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<DermatologiaConfig> {
-  return apiFetch<DermatologiaConfig>('/api/dermatologia/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<DermatologiaConfig>('/api/dermatologia/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

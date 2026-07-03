@@ -13,17 +13,28 @@ export type UpdateCatalogItemInput = Partial<CreateCatalogItemInput> & {
   clearNotes?: boolean
 }
 
-export function listCatalog(opts: { onlyActive?: boolean } = {}): Promise<{ items: AtelieCatalogItem[] }> {
+export function listCatalog(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: AtelieCatalogItem[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: AtelieCatalogItem[] }>(`/api/atelie/catalog${qs}`)
 }
 
 export function createCatalogItem(input: CreateCatalogItemInput): Promise<AtelieCatalogItem> {
-  return apiFetch<AtelieCatalogItem>('/api/atelie/catalog', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<AtelieCatalogItem>('/api/atelie/catalog', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateCatalogItem(id: string, input: UpdateCatalogItemInput): Promise<AtelieCatalogItem> {
-  return apiFetch<AtelieCatalogItem>(`/api/atelie/catalog/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+export function updateCatalogItem(
+  id: string,
+  input: UpdateCatalogItemInput,
+): Promise<AtelieCatalogItem> {
+  return apiFetch<AtelieCatalogItem>(`/api/atelie/catalog/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function deleteCatalogItem(id: string): Promise<void> {

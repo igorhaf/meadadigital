@@ -39,12 +39,7 @@ export type Product = {
 
 /** Status de um pedido (espelha ModaInfantilOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'separando'
-  | 'enviado'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'separando' | 'enviado' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Forma de entrega de um pedido (espelha ModaInfantilFulfillment). */
 export type Fulfillment = 'entrega' | 'retirada'

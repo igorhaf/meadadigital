@@ -16,5 +16,8 @@ export function getConfig(): Promise<PizzariaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<PizzariaConfig> {
-  return apiFetch<PizzariaConfig>('/api/pizzaria/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<PizzariaConfig>('/api/pizzaria/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

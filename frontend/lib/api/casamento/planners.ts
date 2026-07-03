@@ -9,7 +9,9 @@ export type CreatePlannerInput = {
 
 export type UpdatePlannerInput = Partial<CreatePlannerInput> & { active?: boolean }
 
-export function listPlanners(opts: { onlyActive?: boolean } = {}): Promise<{ items: WeddingPlanner[] }> {
+export function listPlanners(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: WeddingPlanner[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: WeddingPlanner[] }>(`/api/casamento/planners${qs}`)
 }
@@ -19,16 +21,23 @@ export function getPlanner(id: string): Promise<WeddingPlanner> {
 }
 
 export function createPlanner(input: CreatePlannerInput): Promise<WeddingPlanner> {
-  return apiFetch<WeddingPlanner>('/api/casamento/planners', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<WeddingPlanner>('/api/casamento/planners', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updatePlanner(id: string, input: UpdatePlannerInput): Promise<WeddingPlanner> {
-  return apiFetch<WeddingPlanner>(`/api/casamento/planners/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<WeddingPlanner>(`/api/casamento/planners/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function togglePlanner(id: string, active: boolean): Promise<WeddingPlanner> {
   return apiFetch<WeddingPlanner>(`/api/casamento/planners/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

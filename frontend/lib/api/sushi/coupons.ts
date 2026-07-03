@@ -21,7 +21,10 @@ export function createCoupon(input: CreateCouponInput): Promise<Coupon> {
 }
 
 export function updateCoupon(id: string, input: UpdateCouponInput): Promise<Coupon> {
-  return apiFetch<Coupon>(`/api/sushi/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Coupon>(`/api/sushi/coupons/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCoupon(id: string): Promise<Coupon> {

@@ -12,7 +12,12 @@ import { normalizeToTree } from '@/lib/cms/cms-tree'
 export type CmsThemePreset = 'meada-dark'
 /** themeId = `{nicho}-{archetype}` do catálogo de temas (lib/cms/themes). theme é JSONB livre no
  * backend — adicionar o campo não toca o Spring. */
-export type CmsTheme = { primaryColor?: string; dark?: boolean; preset?: CmsThemePreset; themeId?: string }
+export type CmsTheme = {
+  primaryColor?: string
+  dark?: boolean
+  preset?: CmsThemePreset
+  themeId?: string
+}
 
 export type CmsSite = {
   companyId: string
@@ -31,7 +36,7 @@ export type CmsPage = {
   companyId: string
   pageSlug: string
   title: string
-  blocks: CmsRow[]   // árvore (linhas → colunas → blocos); normalizada na leitura
+  blocks: CmsRow[] // árvore (linhas → colunas → blocos); normalizada na leitura
   isHome: boolean
   position: number
   published: boolean
@@ -48,15 +53,24 @@ export async function getCmsSite(): Promise<CmsSiteView> {
 }
 
 export function setCmsPublished(published: boolean): Promise<CmsSite> {
-  return apiFetch<CmsSite>('/api/cms/site/publish', { method: 'PUT', body: JSON.stringify({ published }) })
+  return apiFetch<CmsSite>('/api/cms/site/publish', {
+    method: 'PUT',
+    body: JSON.stringify({ published }),
+  })
 }
 
 export function setCmsTheme(theme: CmsTheme): Promise<CmsSite> {
-  return apiFetch<CmsSite>('/api/cms/site/theme', { method: 'PUT', body: JSON.stringify({ theme }) })
+  return apiFetch<CmsSite>('/api/cms/site/theme', {
+    method: 'PUT',
+    body: JSON.stringify({ theme }),
+  })
 }
 
 export function setCmsDomain(domain: string | null): Promise<CmsSite> {
-  return apiFetch<CmsSite>('/api/cms/site/domain', { method: 'PUT', body: JSON.stringify({ domain }) })
+  return apiFetch<CmsSite>('/api/cms/site/domain', {
+    method: 'PUT',
+    body: JSON.stringify({ domain }),
+  })
 }
 
 export function startDomainVerification(): Promise<CmsSite> {
@@ -68,7 +82,10 @@ export function verifyDomain(): Promise<CmsSite> {
 }
 
 export function createCmsPage(pageSlug: string, title: string): Promise<CmsPage> {
-  return apiFetch<CmsPage>('/api/cms/pages', { method: 'POST', body: JSON.stringify({ pageSlug, title }) })
+  return apiFetch<CmsPage>('/api/cms/pages', {
+    method: 'POST',
+    body: JSON.stringify({ pageSlug, title }),
+  })
 }
 
 export function saveCmsPage(

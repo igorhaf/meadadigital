@@ -20,7 +20,9 @@ export type UpdatePackageInput = {
   active?: boolean
 }
 
-export function listPackages(opts: { onlyActive?: boolean } = {}): Promise<{ items: FotografiaPackage[] }> {
+export function listPackages(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: FotografiaPackage[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: FotografiaPackage[] }>(`/api/fotografia/packages${qs}`)
 }
@@ -30,16 +32,23 @@ export function getPackage(id: string): Promise<FotografiaPackage> {
 }
 
 export function createPackage(input: CreatePackageInput): Promise<FotografiaPackage> {
-  return apiFetch<FotografiaPackage>('/api/fotografia/packages', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<FotografiaPackage>('/api/fotografia/packages', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updatePackage(id: string, input: UpdatePackageInput): Promise<FotografiaPackage> {
-  return apiFetch<FotografiaPackage>(`/api/fotografia/packages/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<FotografiaPackage>(`/api/fotografia/packages/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function togglePackage(id: string, active: boolean): Promise<FotografiaPackage> {
   return apiFetch<FotografiaPackage>(`/api/fotografia/packages/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

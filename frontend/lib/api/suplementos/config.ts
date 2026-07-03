@@ -16,5 +16,8 @@ export function getConfig(): Promise<SuplementosConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<SuplementosConfig> {
-  return apiFetch<SuplementosConfig>('/api/suplementos/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<SuplementosConfig>('/api/suplementos/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

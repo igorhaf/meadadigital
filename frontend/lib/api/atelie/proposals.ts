@@ -1,10 +1,10 @@
 import { apiFetch } from '@/lib/api/client'
-import type { AtelieProposalStatusId } from '@/profiles/atelie/atelie-proposal-status'
 import type { AtelieProjectTypeId } from '@/profiles/atelie/atelie-project-type'
+import type { AtelieProposalStatusId } from '@/profiles/atelie/atelie-proposal-status'
 import type {
+  AtelieFitting,
   AtelieProposal,
   AtelieProposalItem,
-  AtelieFitting,
   FittingStatusId,
 } from '@/profiles/atelie/atelie-types'
 
@@ -44,7 +44,13 @@ export type UpdateFittingInput = {
 }
 
 export function listProposals(
-  opts: { status?: string; artisanId?: string; contactId?: string; page?: number; pageSize?: number } = {},
+  opts: {
+    status?: string
+    artisanId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
+  } = {},
 ): Promise<ProposalPage> {
   const p = new URLSearchParams()
   if (opts.status) p.set('status', opts.status)
@@ -61,20 +67,29 @@ export function getProposal(id: string): Promise<AtelieProposal> {
 }
 
 export function openProposal(input: OpenProposalInput): Promise<AtelieProposal> {
-  return apiFetch<AtelieProposal>('/api/atelie/proposals', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<AtelieProposal>('/api/atelie/proposals', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 // ---- Itens de ORÇAMENTO (entram no total) ----
 
 export function addItem(proposalId: string, input: AddItemInput): Promise<AtelieProposalItem> {
   return apiFetch<AtelieProposalItem>(`/api/atelie/proposals/${proposalId}/items`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
-export function updateItem(proposalId: string, itemId: string, input: UpdateItemInput): Promise<AtelieProposalItem> {
+export function updateItem(
+  proposalId: string,
+  itemId: string,
+  input: UpdateItemInput,
+): Promise<AtelieProposalItem> {
   return apiFetch<AtelieProposalItem>(`/api/atelie/proposals/${proposalId}/items/${itemId}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
@@ -86,37 +101,61 @@ export function deleteItem(proposalId: string, itemId: string): Promise<void> {
 
 export function addFitting(proposalId: string, input: AddFittingInput): Promise<AtelieFitting> {
   return apiFetch<AtelieFitting>(`/api/atelie/proposals/${proposalId}/fittings`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
-export function updateFitting(proposalId: string, fittingId: string, input: UpdateFittingInput): Promise<AtelieFitting> {
+export function updateFitting(
+  proposalId: string,
+  fittingId: string,
+  input: UpdateFittingInput,
+): Promise<AtelieFitting> {
   return apiFetch<AtelieFitting>(`/api/atelie/proposals/${proposalId}/fittings/${fittingId}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
 export function deleteFitting(proposalId: string, fittingId: string): Promise<void> {
-  return apiFetch<void>(`/api/atelie/proposals/${proposalId}/fittings/${fittingId}`, { method: 'DELETE' })
-}
-
-export function reorderFittings(proposalId: string, orderedIds: string[]): Promise<{ items: AtelieFitting[] }> {
-  return apiFetch<{ items: AtelieFitting[] }>(`/api/atelie/proposals/${proposalId}/fittings/reorder`, {
-    method: 'PATCH', body: JSON.stringify({ orderedIds }),
+  return apiFetch<void>(`/api/atelie/proposals/${proposalId}/fittings/${fittingId}`, {
+    method: 'DELETE',
   })
 }
 
-export function transitionFitting(proposalId: string, fittingId: string, status: FittingStatusId): Promise<AtelieFitting> {
-  return apiFetch<AtelieFitting>(`/api/atelie/proposals/${proposalId}/fittings/${fittingId}/status`, {
-    method: 'PATCH', body: JSON.stringify({ status }),
-  })
+export function reorderFittings(
+  proposalId: string,
+  orderedIds: string[],
+): Promise<{ items: AtelieFitting[] }> {
+  return apiFetch<{ items: AtelieFitting[] }>(
+    `/api/atelie/proposals/${proposalId}/fittings/reorder`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ orderedIds }),
+    },
+  )
+}
+
+export function transitionFitting(
+  proposalId: string,
+  fittingId: string,
+  status: FittingStatusId,
+): Promise<AtelieFitting> {
+  return apiFetch<AtelieFitting>(
+    `/api/atelie/proposals/${proposalId}/fittings/${fittingId}/status`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ status }),
+    },
+  )
 }
 
 // ---- Cupom na proposta (onda 2, backlog #13 — aplicado pelo painel) ----
 
 export function applyCoupon(id: string, code: string): Promise<AtelieProposal> {
   return apiFetch<AtelieProposal>(`/api/atelie/proposals/${id}/coupon`, {
-    method: 'PATCH', body: JSON.stringify({ code }),
+    method: 'PATCH',
+    body: JSON.stringify({ code }),
   })
 }
 
@@ -133,14 +172,19 @@ export type DepositInput = {
 
 export function updateDeposit(id: string, input: DepositInput): Promise<AtelieProposal> {
   return apiFetch<AtelieProposal>(`/api/atelie/proposals/${id}/deposit`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
 // ---- Status ----
 
-export function updateProposalStatus(id: string, newStatus: AtelieProposalStatusId): Promise<AtelieProposal> {
+export function updateProposalStatus(
+  id: string,
+  newStatus: AtelieProposalStatusId,
+): Promise<AtelieProposal> {
   return apiFetch<AtelieProposal>(`/api/atelie/proposals/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

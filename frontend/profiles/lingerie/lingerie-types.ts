@@ -38,12 +38,7 @@ export type Product = {
 
 /** Status de um pedido (espelha LingerieOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'separando'
-  | 'enviado'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'separando' | 'enviado' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Forma de entrega de um pedido (espelha LingerieFulfillment). */
 export type Fulfillment = 'entrega' | 'retirada'

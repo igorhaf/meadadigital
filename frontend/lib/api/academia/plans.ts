@@ -19,11 +19,17 @@ export function createPlan(input: CreatePlanInput): Promise<Plan> {
 }
 
 export function updatePlan(id: string, input: UpdatePlanInput): Promise<Plan> {
-  return apiFetch<Plan>(`/api/academia/plans/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Plan>(`/api/academia/plans/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function togglePlan(id: string, active: boolean): Promise<Plan> {
-  return apiFetch<Plan>(`/api/academia/plans/${id}/toggle`, { method: 'PATCH', body: JSON.stringify({ active }) })
+  return apiFetch<Plan>(`/api/academia/plans/${id}/toggle`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  })
 }
 
 export function deletePlan(id: string): Promise<void> {

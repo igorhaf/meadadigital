@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { LegalCase, LegalCaseUpdate } from '@/profiles/legal/legal-types'
 import type { LegalCaseStatusId } from '@/profiles/legal/legal-case-status'
+import type { LegalCase, LegalCaseUpdate } from '@/profiles/legal/legal-types'
 
 type CasePage = { items: LegalCase[]; total: number; page: number; pageSize: number }
 
@@ -37,7 +37,10 @@ export function createCase(input: CreateCaseInput): Promise<LegalCase> {
 }
 
 export function updateCase(id: string, input: UpdateCaseInput): Promise<LegalCase> {
-  return apiFetch<LegalCase>(`/api/legal/cases/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<LegalCase>(`/api/legal/cases/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateCaseStatus(id: string, newStatus: LegalCaseStatusId): Promise<LegalCase> {

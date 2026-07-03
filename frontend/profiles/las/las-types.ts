@@ -41,12 +41,7 @@ export type Product = {
 
 /** Status de um pedido (espelha LasOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'separando'
-  | 'enviado'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'separando' | 'enviado' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Forma de entrega de um pedido (espelha LasFulfillment). */
 export type Fulfillment = 'entrega' | 'retirada'

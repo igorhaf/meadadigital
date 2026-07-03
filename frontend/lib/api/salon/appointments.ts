@@ -15,8 +15,13 @@ export type CreateAppointmentInput = {
 
 export function listAppointments(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string; professionalId?: string
-    contactId?: string; page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    professionalId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<AppointmentPage> {
   const p = new URLSearchParams()
@@ -36,11 +41,18 @@ export function getAppointment(id: string): Promise<Appointment> {
 }
 
 export function createAppointment(input: CreateAppointmentInput): Promise<Appointment> {
-  return apiFetch<Appointment>('/api/salon/appointments', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Appointment>('/api/salon/appointments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateAppointmentStatus(id: string, newStatus: SalonAppointmentStatusId): Promise<Appointment> {
+export function updateAppointmentStatus(
+  id: string,
+  newStatus: SalonAppointmentStatusId,
+): Promise<Appointment> {
   return apiFetch<Appointment>(`/api/salon/appointments/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

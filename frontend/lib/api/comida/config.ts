@@ -16,5 +16,8 @@ export function getConfig(): Promise<ComidaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<ComidaConfig> {
-  return apiFetch<ComidaConfig>('/api/comida/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<ComidaConfig>('/api/comida/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

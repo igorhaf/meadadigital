@@ -17,16 +17,23 @@ export function listCoupons(): Promise<{ items: ComidaCoupon[] }> {
 }
 
 export function createCoupon(input: CreateCouponInput): Promise<ComidaCoupon> {
-  return apiFetch<ComidaCoupon>('/api/comida/coupons', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<ComidaCoupon>('/api/comida/coupons', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateCoupon(id: string, input: UpdateCouponInput): Promise<ComidaCoupon> {
-  return apiFetch<ComidaCoupon>(`/api/comida/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<ComidaCoupon>(`/api/comida/coupons/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCoupon(id: string, active: boolean): Promise<ComidaCoupon> {
   return apiFetch<ComidaCoupon>(`/api/comida/coupons/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

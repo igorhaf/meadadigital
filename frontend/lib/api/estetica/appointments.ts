@@ -2,7 +2,12 @@ import { apiFetch } from '@/lib/api/client'
 import type { AestheticAppointmentStatusId } from '@/profiles/estetica/aesthetic-appointment-status'
 import type { AestheticAppointment, AestheticSessionNote } from '@/profiles/estetica/estetica-types'
 
-type AppointmentPage = { items: AestheticAppointment[]; total: number; page: number; pageSize: number }
+type AppointmentPage = {
+  items: AestheticAppointment[]
+  total: number
+  page: number
+  pageSize: number
+}
 
 export type CreateAppointmentInput = {
   professionalId: string
@@ -22,8 +27,13 @@ export type SessionNoteInput = {
 
 export function listAppointments(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string
-    professionalId?: string; contactId?: string; page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    professionalId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<AppointmentPage> {
   const p = new URLSearchParams()
@@ -43,12 +53,19 @@ export function getAppointment(id: string): Promise<AestheticAppointment> {
 }
 
 export function createAppointment(input: CreateAppointmentInput): Promise<AestheticAppointment> {
-  return apiFetch<AestheticAppointment>('/api/estetica/appointments', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<AestheticAppointment>('/api/estetica/appointments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateAppointmentStatus(id: string, newStatus: AestheticAppointmentStatusId): Promise<AestheticAppointment> {
+export function updateAppointmentStatus(
+  id: string,
+  newStatus: AestheticAppointmentStatusId,
+): Promise<AestheticAppointment> {
   return apiFetch<AestheticAppointment>(`/api/estetica/appointments/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }
 
@@ -58,8 +75,12 @@ export function getSessionNote(appointmentId: string): Promise<AestheticSessionN
   return apiFetch<AestheticSessionNote>(`/api/estetica/appointments/${appointmentId}/note`)
 }
 
-export function upsertSessionNote(appointmentId: string, input: SessionNoteInput): Promise<AestheticSessionNote> {
+export function upsertSessionNote(
+  appointmentId: string,
+  input: SessionNoteInput,
+): Promise<AestheticSessionNote> {
   return apiFetch<AestheticSessionNote>(`/api/estetica/appointments/${appointmentId}/note`, {
-    method: 'PUT', body: JSON.stringify(input),
+    method: 'PUT',
+    body: JSON.stringify(input),
   })
 }

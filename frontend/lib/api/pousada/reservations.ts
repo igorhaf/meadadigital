@@ -16,8 +16,13 @@ export type CreateReservationInput = {
 
 export function listReservations(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string; roomId?: string
-    contactId?: string; page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    roomId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<ReservationPage> {
   const p = new URLSearchParams()
@@ -37,11 +42,18 @@ export function getReservation(id: string): Promise<Reservation> {
 }
 
 export function createReservation(input: CreateReservationInput): Promise<Reservation> {
-  return apiFetch<Reservation>('/api/pousada/reservations', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Reservation>('/api/pousada/reservations', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateReservationStatus(id: string, newStatus: PousadaReservationStatusId): Promise<Reservation> {
+export function updateReservationStatus(
+  id: string,
+  newStatus: PousadaReservationStatusId,
+): Promise<Reservation> {
   return apiFetch<Reservation>(`/api/pousada/reservations/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

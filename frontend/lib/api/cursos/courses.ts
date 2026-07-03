@@ -20,11 +20,17 @@ export function createCourse(input: CreateCourseInput): Promise<Course> {
 }
 
 export function updateCourse(id: string, input: UpdateCourseInput): Promise<Course> {
-  return apiFetch<Course>(`/api/cursos/courses/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Course>(`/api/cursos/courses/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCourse(id: string, active: boolean): Promise<Course> {
-  return apiFetch<Course>(`/api/cursos/courses/${id}/toggle`, { method: 'PATCH', body: JSON.stringify({ active }) })
+  return apiFetch<Course>(`/api/cursos/courses/${id}/toggle`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  })
 }
 
 export function deleteCourse(id: string): Promise<void> {

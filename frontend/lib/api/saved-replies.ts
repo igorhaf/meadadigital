@@ -25,11 +25,7 @@ export async function createSavedReply(title: string, body: string): Promise<Sav
 }
 
 /** Atualiza uma resposta pronta {title, body}. 204 No Content. */
-export async function updateSavedReply(
-  id: string,
-  title: string,
-  body: string,
-): Promise<void> {
+export async function updateSavedReply(id: string, title: string, body: string): Promise<void> {
   return apiFetch<void>(`/admin/saved-replies/${id}`, {
     method: 'PUT',
     body: JSON.stringify({ title, body }),

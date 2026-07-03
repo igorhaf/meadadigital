@@ -21,16 +21,23 @@ export function getService(id: string): Promise<Service> {
 }
 
 export function createService(input: CreateServiceInput): Promise<Service> {
-  return apiFetch<Service>('/api/barbearia/services', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Service>('/api/barbearia/services', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateService(id: string, input: UpdateServiceInput): Promise<Service> {
-  return apiFetch<Service>(`/api/barbearia/services/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Service>(`/api/barbearia/services/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleService(id: string, active: boolean): Promise<Service> {
   return apiFetch<Service>(`/api/barbearia/services/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

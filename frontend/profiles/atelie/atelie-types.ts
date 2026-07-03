@@ -1,5 +1,5 @@
-import type { AtelieProposalStatusId } from './atelie-proposal-status'
 import type { AtelieProjectTypeId } from './atelie-project-type'
+import type { AtelieProposalStatusId } from './atelie-proposal-status'
 
 /** Artesão/responsável do tenant atelie (espelha AtelieArtisan). */
 export type AtelieArtisan = {

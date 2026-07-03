@@ -17,11 +17,20 @@ export function listOrderStatuses(): Promise<{ items: OrderStatusDef[] }> {
 }
 
 export function createOrderStatus(input: CreateOrderStatusInput): Promise<OrderStatusDef> {
-  return apiFetch<OrderStatusDef>('/api/sushi/order-statuses', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<OrderStatusDef>('/api/sushi/order-statuses', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateOrderStatus(id: string, input: UpdateOrderStatusInput): Promise<OrderStatusDef> {
-  return apiFetch<OrderStatusDef>(`/api/sushi/order-statuses/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+export function updateOrderStatus(
+  id: string,
+  input: UpdateOrderStatusInput,
+): Promise<OrderStatusDef> {
+  return apiFetch<OrderStatusDef>(`/api/sushi/order-statuses/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function deleteOrderStatus(id: string): Promise<void> {

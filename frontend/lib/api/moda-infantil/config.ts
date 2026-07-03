@@ -16,5 +16,8 @@ export function getConfig(): Promise<ModaInfantilConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<ModaInfantilConfig> {
-  return apiFetch<ModaInfantilConfig>('/api/moda-infantil/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<ModaInfantilConfig>('/api/moda-infantil/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

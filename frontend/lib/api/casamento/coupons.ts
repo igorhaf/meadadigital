@@ -17,16 +17,23 @@ export function listCoupons(): Promise<{ items: WeddingCoupon[] }> {
 }
 
 export function createCoupon(input: CreateCouponInput): Promise<WeddingCoupon> {
-  return apiFetch<WeddingCoupon>('/api/casamento/coupons', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<WeddingCoupon>('/api/casamento/coupons', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateCoupon(id: string, input: UpdateCouponInput): Promise<WeddingCoupon> {
-  return apiFetch<WeddingCoupon>(`/api/casamento/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<WeddingCoupon>(`/api/casamento/coupons/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCoupon(id: string, active: boolean): Promise<WeddingCoupon> {
   return apiFetch<WeddingCoupon>(`/api/casamento/coupons/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

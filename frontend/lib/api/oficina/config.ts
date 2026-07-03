@@ -11,5 +11,8 @@ export function getConfig(): Promise<OficinaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<OficinaConfig> {
-  return apiFetch<OficinaConfig>('/api/oficina/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<OficinaConfig>('/api/oficina/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

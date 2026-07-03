@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { Order } from '@/profiles/otica/otica-types'
 import type { OticaOrderStatusId } from '@/profiles/otica/otica-order-status'
+import type { Order } from '@/profiles/otica/otica-types'
 
 type OrderPage = { items: Order[]; total: number; page: number; pageSize: number }
 

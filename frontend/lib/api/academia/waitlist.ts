@@ -19,11 +19,15 @@ export function listWaitlist(
 }
 
 export function enqueueWaitlist(input: EnqueueWaitlistInput): Promise<WaitlistEntry> {
-  return apiFetch<WaitlistEntry>('/api/academia/waitlist', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<WaitlistEntry>('/api/academia/waitlist', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateWaitlistStatus(id: string, status: WaitlistStatusId): Promise<WaitlistEntry> {
   return apiFetch<WaitlistEntry>(`/api/academia/waitlist/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ status }),
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
   })
 }

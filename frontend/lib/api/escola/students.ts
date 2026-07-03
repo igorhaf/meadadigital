@@ -33,11 +33,17 @@ export function getStudent(id: string): Promise<EscolaStudent> {
 }
 
 export function createStudent(input: CreateStudentInput): Promise<EscolaStudent> {
-  return apiFetch<EscolaStudent>('/api/escola/students', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<EscolaStudent>('/api/escola/students', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateStudent(id: string, input: UpdateStudentInput): Promise<EscolaStudent> {
-  return apiFetch<EscolaStudent>(`/api/escola/students/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<EscolaStudent>(`/api/escola/students/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function deleteStudent(id: string): Promise<void> {

@@ -23,5 +23,7 @@ export function getProfiles(): Promise<{ items: ProfileCatalogItem[] }> {
 
 /** Valida se o usuário logado pode acessar o subdomínio dado (camada 7.0). */
 export function getProfileMatch(subdomain: string): Promise<ProfileMatch> {
-  return apiFetch<ProfileMatch>(`/admin/me/profile-match?subdomain=${encodeURIComponent(subdomain)}`)
+  return apiFetch<ProfileMatch>(
+    `/admin/me/profile-match?subdomain=${encodeURIComponent(subdomain)}`,
+  )
 }

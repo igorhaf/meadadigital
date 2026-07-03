@@ -1,6 +1,6 @@
-import { createClient } from './client'
-
 import type { Company } from '@/lib/api/companies'
+
+import { createClient } from './client'
 
 /**
  * Leitura da empresa do tenant logado via Supabase SDK + RLS (NÃO via Spring).

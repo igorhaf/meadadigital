@@ -25,12 +25,16 @@ export function createService(input: CreateOfferingInput): Promise<Offering> {
 }
 
 export function updateService(id: string, input: UpdateOfferingInput): Promise<Offering> {
-  return apiFetch<Offering>(`/api/salon/services/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Offering>(`/api/salon/services/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleService(id: string, active: boolean): Promise<Offering> {
   return apiFetch<Offering>(`/api/salon/services/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

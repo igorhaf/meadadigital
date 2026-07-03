@@ -1,6 +1,6 @@
+import type { OticaCategoryId } from './otica-categories'
 import type { OticaExamStatusId } from './otica-exam-status'
 import type { OticaOrderStatusId } from './otica-order-status'
-import type { OticaCategoryId } from './otica-categories'
 
 /**
  * Tipos do perfil otica (loja de ótica, camada 8.12) — HÍBRIDO de DOIS fluxos:
@@ -188,7 +188,10 @@ export function formatBrl(cents: number): string {
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 

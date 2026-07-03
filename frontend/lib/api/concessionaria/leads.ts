@@ -29,7 +29,10 @@ export function getLead(id: string): Promise<Lead> {
 }
 
 export function createLead(input: CreateLeadInput): Promise<Lead> {
-  return apiFetch<Lead>('/api/concessionaria/leads', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Lead>('/api/concessionaria/leads', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateLeadStatus(
@@ -38,12 +41,14 @@ export function updateLeadStatus(
   lostReason?: string | null,
 ): Promise<Lead> {
   return apiFetch<Lead>(`/api/concessionaria/leads/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus, lostReason: lostReason ?? null }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus, lostReason: lostReason ?? null }),
   })
 }
 
 export function assignSalesperson(id: string, salespersonId: string): Promise<Lead> {
   return apiFetch<Lead>(`/api/concessionaria/leads/${id}/salesperson`, {
-    method: 'PATCH', body: JSON.stringify({ salespersonId }),
+    method: 'PATCH',
+    body: JSON.stringify({ salespersonId }),
   })
 }

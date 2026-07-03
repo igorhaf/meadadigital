@@ -45,31 +45,37 @@ function qs(params: Record<string, string | number | undefined>): string {
   return s ? `?${s}` : ''
 }
 
-export function getGlobalAuditLogs(filters: {
-  companyId?: string
-  action?: string
-  entity?: string
-  page?: number
-  pageSize?: number
-} = {}): Promise<Page<GlobalAuditLog>> {
+export function getGlobalAuditLogs(
+  filters: {
+    companyId?: string
+    action?: string
+    entity?: string
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<Page<GlobalAuditLog>> {
   return apiFetch<Page<GlobalAuditLog>>(`/admin/audit/all${qs(filters)}`)
 }
 
-export function getGlobalAccessLogs(filters: {
-  action?: string
-  ip?: string
-  userAgent?: string
-  page?: number
-  pageSize?: number
-} = {}): Promise<Page<GlobalAccessLog>> {
+export function getGlobalAccessLogs(
+  filters: {
+    action?: string
+    ip?: string
+    userAgent?: string
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<Page<GlobalAccessLog>> {
   return apiFetch<Page<GlobalAccessLog>>(`/admin/security/access-logs/all${qs(filters)}`)
 }
 
-export function getAdminActions(filters: {
-  action?: string
-  targetType?: string
-  page?: number
-  pageSize?: number
-} = {}): Promise<Page<AdminActionRow>> {
+export function getAdminActions(
+  filters: {
+    action?: string
+    targetType?: string
+    page?: number
+    pageSize?: number
+  } = {},
+): Promise<Page<AdminActionRow>> {
   return apiFetch<Page<AdminActionRow>>(`/admin/actions${qs(filters)}`)
 }

@@ -22,11 +22,17 @@ export function getClient(id: string): Promise<LegalClient> {
 }
 
 export function createClient(input: CreateClientInput): Promise<LegalClient> {
-  return apiFetch<LegalClient>('/api/legal/clients', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<LegalClient>('/api/legal/clients', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateClient(id: string, input: UpdateClientInput): Promise<LegalClient> {
-  return apiFetch<LegalClient>(`/api/legal/clients/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<LegalClient>(`/api/legal/clients/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function deleteClient(id: string): Promise<void> {

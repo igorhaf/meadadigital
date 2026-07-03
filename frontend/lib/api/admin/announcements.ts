@@ -44,7 +44,10 @@ export function createAnnouncement(input: CreateAnnouncementInput): Promise<Anno
   })
 }
 
-export function updateAnnouncement(id: string, input: UpdateAnnouncementInput): Promise<Announcement> {
+export function updateAnnouncement(
+  id: string,
+  input: UpdateAnnouncementInput,
+): Promise<Announcement> {
   return apiFetch<Announcement>(`/admin/announcements/${id}`, {
     method: 'PATCH',
     body: JSON.stringify(input),

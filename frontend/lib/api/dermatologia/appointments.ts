@@ -2,7 +2,12 @@ import { apiFetch } from '@/lib/api/client'
 import type { DermatologiaAppointmentStatusId } from '@/profiles/dermatologia/dermatologia-appointment-status'
 import type { DermatologiaAppointment } from '@/profiles/dermatologia/dermatologia-types'
 
-type AppointmentPage = { items: DermatologiaAppointment[]; total: number; page: number; pageSize: number }
+type AppointmentPage = {
+  items: DermatologiaAppointment[]
+  total: number
+  page: number
+  pageSize: number
+}
 
 export type CreateAppointmentInput = {
   professionalId: string
@@ -14,8 +19,14 @@ export type CreateAppointmentInput = {
 
 export function listAppointments(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string; professionalId?: string
-    patientId?: string; contactId?: string; page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    professionalId?: string
+    patientId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<AppointmentPage> {
   const p = new URLSearchParams()
@@ -36,11 +47,18 @@ export function getAppointment(id: string): Promise<DermatologiaAppointment> {
 }
 
 export function createAppointment(input: CreateAppointmentInput): Promise<DermatologiaAppointment> {
-  return apiFetch<DermatologiaAppointment>('/api/dermatologia/appointments', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<DermatologiaAppointment>('/api/dermatologia/appointments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateAppointmentStatus(id: string, newStatus: DermatologiaAppointmentStatusId): Promise<DermatologiaAppointment> {
+export function updateAppointmentStatus(
+  id: string,
+  newStatus: DermatologiaAppointmentStatusId,
+): Promise<DermatologiaAppointment> {
   return apiFetch<DermatologiaAppointment>(`/api/dermatologia/appointments/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

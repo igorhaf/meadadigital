@@ -41,12 +41,7 @@ export type Product = {
 
 /** Status de um pedido (espelha SuplementosOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'em_preparo'
-  | 'saiu_entrega'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'em_preparo' | 'saiu_entrega' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Item de um pedido (snapshot de produto/variante/preço no momento do pedido). */
 export type OrderItem = {

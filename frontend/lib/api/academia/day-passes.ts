@@ -15,7 +15,10 @@ export function listDayPasses(): Promise<{ items: DayPass[] }> {
 }
 
 export function createDayPass(input: CreateDayPassInput): Promise<DayPass> {
-  return apiFetch<DayPass>('/api/academia/day-passes', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<DayPass>('/api/academia/day-passes', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function payDayPass(id: string): Promise<DayPass> {

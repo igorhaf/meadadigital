@@ -13,8 +13,12 @@ export type CreateExamInput = {
 
 export function listExams(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string; professionalId?: string
-    page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    professionalId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<ExamPage> {
   const p = new URLSearchParams()
@@ -33,11 +37,18 @@ export function getExam(id: string): Promise<ExamAppointment> {
 }
 
 export function createExam(input: CreateExamInput): Promise<ExamAppointment> {
-  return apiFetch<ExamAppointment>('/api/otica/exams', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<ExamAppointment>('/api/otica/exams', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateExamStatus(id: string, newStatus: OticaExamStatusId): Promise<ExamAppointment> {
+export function updateExamStatus(
+  id: string,
+  newStatus: OticaExamStatusId,
+): Promise<ExamAppointment> {
   return apiFetch<ExamAppointment>(`/api/otica/exams/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

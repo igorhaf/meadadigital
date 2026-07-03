@@ -12,5 +12,8 @@ export function getConfig(): Promise<FotografiaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<FotografiaConfig> {
-  return apiFetch<FotografiaConfig>('/api/fotografia/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<FotografiaConfig>('/api/fotografia/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

@@ -17,7 +17,9 @@ export type UpdateProcedureTypeInput = {
   active?: boolean
 }
 
-export function listProcedureTypes(opts: { onlyActive?: boolean } = {}): Promise<{ items: DermatologiaProcedureType[] }> {
+export function listProcedureTypes(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: DermatologiaProcedureType[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: DermatologiaProcedureType[] }>(`/api/dermatologia/procedure-types${qs}`)
 }
@@ -26,17 +28,32 @@ export function getProcedureType(id: string): Promise<DermatologiaProcedureType>
   return apiFetch<DermatologiaProcedureType>(`/api/dermatologia/procedure-types/${id}`)
 }
 
-export function createProcedureType(input: CreateProcedureTypeInput): Promise<DermatologiaProcedureType> {
-  return apiFetch<DermatologiaProcedureType>('/api/dermatologia/procedure-types', { method: 'POST', body: JSON.stringify(input) })
+export function createProcedureType(
+  input: CreateProcedureTypeInput,
+): Promise<DermatologiaProcedureType> {
+  return apiFetch<DermatologiaProcedureType>('/api/dermatologia/procedure-types', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateProcedureType(id: string, input: UpdateProcedureTypeInput): Promise<DermatologiaProcedureType> {
-  return apiFetch<DermatologiaProcedureType>(`/api/dermatologia/procedure-types/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+export function updateProcedureType(
+  id: string,
+  input: UpdateProcedureTypeInput,
+): Promise<DermatologiaProcedureType> {
+  return apiFetch<DermatologiaProcedureType>(`/api/dermatologia/procedure-types/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
-export function toggleProcedureType(id: string, active: boolean): Promise<DermatologiaProcedureType> {
+export function toggleProcedureType(
+  id: string,
+  active: boolean,
+): Promise<DermatologiaProcedureType> {
   return apiFetch<DermatologiaProcedureType>(`/api/dermatologia/procedure-types/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

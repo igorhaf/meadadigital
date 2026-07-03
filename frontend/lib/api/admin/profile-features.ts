@@ -20,7 +20,11 @@ export function getProfileFeatures(): Promise<ProfileFeatureGrid> {
   return apiFetch<ProfileFeatureGrid>('/admin/profile-features')
 }
 
-export function setProfileFeature(profileId: string, featureKey: string, enabled: boolean): Promise<unknown> {
+export function setProfileFeature(
+  profileId: string,
+  featureKey: string,
+  enabled: boolean,
+): Promise<unknown> {
   return apiFetch<unknown>(`/admin/profile-features/${profileId}/${featureKey}`, {
     method: 'PUT',
     body: JSON.stringify({ enabled }),

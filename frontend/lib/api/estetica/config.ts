@@ -12,5 +12,8 @@ export function getConfig(): Promise<AestheticConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<AestheticConfig> {
-  return apiFetch<AestheticConfig>('/api/estetica/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<AestheticConfig>('/api/estetica/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

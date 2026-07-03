@@ -29,12 +29,7 @@ export type MenuItem = {
 
 /** Status de um pedido (espelha PizzariaOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'em_preparo'
-  | 'saiu_entrega'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'em_preparo' | 'saiu_entrega' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Opção escolhida num item de pedido (snapshot de label+delta no momento do pedido). */
 export type OrderItemOption = {

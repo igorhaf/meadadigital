@@ -24,8 +24,15 @@ export async function getConversationTags(conversationId: string): Promise<Tag[]
   return (data ?? [])
     .map((row) => (Array.isArray(row.tag) ? row.tag[0] : row.tag))
     .filter(
-      (t): t is { id: string; name: string; color: string; created_at: string; deleted_at: string | null } =>
-        t != null && t.deleted_at == null,
+      (
+        t,
+      ): t is {
+        id: string
+        name: string
+        color: string
+        created_at: string
+        deleted_at: string | null
+      } => t != null && t.deleted_at == null,
     )
     .map((t) => ({
       id: t.id,
@@ -74,10 +81,7 @@ export async function getAllConversationTags(): Promise<Record<string, Tag[]>> {
  * se a tag já estiver aplicada, o INSERT viola a PK; o caller (autocomplete) só oferece
  * tags ainda não aplicadas, então o caso normal não colide.
  */
-export async function addTagToConversation(
-  conversationId: string,
-  tagId: string,
-): Promise<void> {
+export async function addTagToConversation(conversationId: string, tagId: string): Promise<void> {
   const supabase = createClient()
   const { error } = await supabase
     .from('conversation_tags')

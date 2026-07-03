@@ -15,5 +15,8 @@ export function getConfig(): Promise<WeddingConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<WeddingConfig> {
-  return apiFetch<WeddingConfig>('/api/casamento/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<WeddingConfig>('/api/casamento/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

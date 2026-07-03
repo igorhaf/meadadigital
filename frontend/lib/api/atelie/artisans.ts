@@ -9,7 +9,9 @@ export type CreateArtisanInput = {
 
 export type UpdateArtisanInput = Partial<CreateArtisanInput> & { active?: boolean }
 
-export function listArtisans(opts: { onlyActive?: boolean } = {}): Promise<{ items: AtelieArtisan[] }> {
+export function listArtisans(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: AtelieArtisan[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: AtelieArtisan[] }>(`/api/atelie/artisans${qs}`)
 }
@@ -19,16 +21,23 @@ export function getArtisan(id: string): Promise<AtelieArtisan> {
 }
 
 export function createArtisan(input: CreateArtisanInput): Promise<AtelieArtisan> {
-  return apiFetch<AtelieArtisan>('/api/atelie/artisans', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<AtelieArtisan>('/api/atelie/artisans', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateArtisan(id: string, input: UpdateArtisanInput): Promise<AtelieArtisan> {
-  return apiFetch<AtelieArtisan>(`/api/atelie/artisans/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<AtelieArtisan>(`/api/atelie/artisans/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleArtisan(id: string, active: boolean): Promise<AtelieArtisan> {
   return apiFetch<AtelieArtisan>(`/api/atelie/artisans/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

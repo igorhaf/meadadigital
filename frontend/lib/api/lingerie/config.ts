@@ -16,5 +16,8 @@ export function getConfig(): Promise<LingerieConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<LingerieConfig> {
-  return apiFetch<LingerieConfig>('/api/lingerie/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<LingerieConfig>('/api/lingerie/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

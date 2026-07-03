@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
+import type { EscolaPeriod, EscolaVisit } from '@/profiles/escola/escola-types'
 import type { EscolaVisitStatusId } from '@/profiles/escola/escola-visit-status'
-import type { EscolaVisit, EscolaPeriod } from '@/profiles/escola/escola-types'
 
 type VisitPage = { items: EscolaVisit[]; total: number; page: number; pageSize: number }
 
@@ -31,11 +31,18 @@ export function getVisit(id: string): Promise<EscolaVisit> {
 }
 
 export function createVisit(input: CreateVisitInput): Promise<EscolaVisit> {
-  return apiFetch<EscolaVisit>('/api/escola/visits', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<EscolaVisit>('/api/escola/visits', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateVisitStatus(id: string, newStatus: EscolaVisitStatusId): Promise<EscolaVisit> {
+export function updateVisitStatus(
+  id: string,
+  newStatus: EscolaVisitStatusId,
+): Promise<EscolaVisit> {
   return apiFetch<EscolaVisit>(`/api/escola/visits/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

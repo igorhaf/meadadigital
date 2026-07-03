@@ -14,7 +14,13 @@ export type CreateReservationInput = {
 }
 
 export function listReservations(
-  opts: { status?: string; dateFrom?: string; dateTo?: string; page?: number; pageSize?: number } = {},
+  opts: {
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    page?: number
+    pageSize?: number
+  } = {},
 ): Promise<ReservationPage> {
   const p = new URLSearchParams()
   if (opts.status) p.set('status', opts.status)
@@ -37,7 +43,10 @@ export function createReservation(input: CreateReservationInput): Promise<Reserv
   })
 }
 
-export function updateReservationStatus(id: string, newStatus: ReservationStatusId): Promise<Reservation> {
+export function updateReservationStatus(
+  id: string,
+  newStatus: ReservationStatusId,
+): Promise<Reservation> {
   return apiFetch<Reservation>(`/api/restaurant/reservations/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ newStatus }),

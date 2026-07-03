@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { OsStatusId } from '@/profiles/oficina/os-status'
 import type { OsItem, OsItemKind, ServiceOrder } from '@/profiles/oficina/oficina-types'
+import type { OsStatusId } from '@/profiles/oficina/os-status'
 
 type OrderPage = { items: ServiceOrder[]; total: number; page: number; pageSize: number }
 
@@ -33,8 +33,14 @@ export type UpdateItemInput = Partial<AddItemInput>
 
 export function listOrders(
   opts: {
-    status?: string; mechanicId?: string; vehicleId?: string; contactId?: string
-    dateFrom?: string; dateTo?: string; page?: number; pageSize?: number
+    status?: string
+    mechanicId?: string
+    vehicleId?: string
+    contactId?: string
+    dateFrom?: string
+    dateTo?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<OrderPage> {
   const p = new URLSearchParams()
@@ -55,20 +61,34 @@ export function getOrder(id: string): Promise<ServiceOrder> {
 }
 
 export function openOrder(input: OpenOrderInput): Promise<ServiceOrder> {
-  return apiFetch<ServiceOrder>('/api/oficina/orders', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<ServiceOrder>('/api/oficina/orders', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateOrder(id: string, input: UpdateOrderInput): Promise<ServiceOrder> {
-  return apiFetch<ServiceOrder>(`/api/oficina/orders/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<ServiceOrder>(`/api/oficina/orders/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function addItem(orderId: string, input: AddItemInput): Promise<OsItem> {
-  return apiFetch<OsItem>(`/api/oficina/orders/${orderId}/items`, { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<OsItem>(`/api/oficina/orders/${orderId}/items`, {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateItem(orderId: string, itemId: string, input: UpdateItemInput): Promise<OsItem> {
+export function updateItem(
+  orderId: string,
+  itemId: string,
+  input: UpdateItemInput,
+): Promise<OsItem> {
   return apiFetch<OsItem>(`/api/oficina/orders/${orderId}/items/${itemId}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
@@ -78,6 +98,7 @@ export function deleteItem(orderId: string, itemId: string): Promise<void> {
 
 export function updateOrderStatus(id: string, newStatus: OsStatusId): Promise<ServiceOrder> {
   return apiFetch<ServiceOrder>(`/api/oficina/orders/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

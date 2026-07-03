@@ -9,7 +9,9 @@ export type CreatePlannerInput = {
 
 export type UpdatePlannerInput = Partial<CreatePlannerInput> & { active?: boolean }
 
-export function listPlanners(opts: { onlyActive?: boolean } = {}): Promise<{ items: EventPlanner[] }> {
+export function listPlanners(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: EventPlanner[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: EventPlanner[] }>(`/api/eventos/planners${qs}`)
 }
@@ -19,16 +21,23 @@ export function getPlanner(id: string): Promise<EventPlanner> {
 }
 
 export function createPlanner(input: CreatePlannerInput): Promise<EventPlanner> {
-  return apiFetch<EventPlanner>('/api/eventos/planners', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<EventPlanner>('/api/eventos/planners', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updatePlanner(id: string, input: UpdatePlannerInput): Promise<EventPlanner> {
-  return apiFetch<EventPlanner>(`/api/eventos/planners/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<EventPlanner>(`/api/eventos/planners/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function togglePlanner(id: string, active: boolean): Promise<EventPlanner> {
   return apiFetch<EventPlanner>(`/api/eventos/planners/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

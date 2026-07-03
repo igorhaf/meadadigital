@@ -21,11 +21,18 @@ export function getTicket(id: string): Promise<QueueTicket> {
 }
 
 export function enqueue(input: EnqueueInput): Promise<QueueTicket> {
-  return apiFetch<QueueTicket>('/api/barbearia/queue', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<QueueTicket>('/api/barbearia/queue', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateTicketStatus(id: string, newStatus: BarberQueueStatusId): Promise<QueueTicket> {
+export function updateTicketStatus(
+  id: string,
+  newStatus: BarberQueueStatusId,
+): Promise<QueueTicket> {
   return apiFetch<QueueTicket>(`/api/barbearia/queue/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

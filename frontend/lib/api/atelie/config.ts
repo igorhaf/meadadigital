@@ -12,5 +12,8 @@ export function getConfig(): Promise<AtelieConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<AtelieConfig> {
-  return apiFetch<AtelieConfig>('/api/atelie/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<AtelieConfig>('/api/atelie/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }
