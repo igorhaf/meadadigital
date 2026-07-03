@@ -1,5 +1,9 @@
 package com.meada.profiles.comida.orders;
 
+import com.meada.profiles.comida.coupons.ComidaCoupon;
+import com.meada.profiles.comida.coupons.ComidaCouponRepository;
+import com.meada.profiles.comida.loyalty.ComidaLoyaltyConfig;
+import com.meada.profiles.comida.loyalty.ComidaLoyaltyConfigRepository;
 import com.meada.profiles.comida.menu.ComidaMenuOption;
 import com.meada.profiles.comida.menu.ComidaMenuOptionRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -7,6 +11,8 @@ import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDate;
+import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -25,13 +31,21 @@ public class ComidaOrderRepository {
     /** Alguma opção pedida é inválida/indisponível/de outro item — o pedido NÃO é criado. */
     public static class InvalidOptionException extends RuntimeException {}
 
+    private static final ZoneId BR = ZoneId.of("America/Sao_Paulo");
+
     private final JdbcTemplate jdbcTemplate;
     private final ComidaMenuOptionRepository optionRepository;
+    private final ComidaCouponRepository couponRepository;
+    private final ComidaLoyaltyConfigRepository loyaltyRepository;
 
     public ComidaOrderRepository(JdbcTemplate jdbcTemplate,
-                                 ComidaMenuOptionRepository optionRepository) {
+                                 ComidaMenuOptionRepository optionRepository,
+                                 ComidaCouponRepository couponRepository,
+                                 ComidaLoyaltyConfigRepository loyaltyRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.optionRepository = optionRepository;
+        this.couponRepository = couponRepository;
+        this.loyaltyRepository = loyaltyRepository;
     }
 
     private final RowMapper<ComidaOrderItemOption> ITEM_OPTION_MAPPER = (rs, rn) -> new ComidaOrderItemOption(
@@ -57,8 +71,12 @@ public class ComidaOrderRepository {
             (UUID) rs.getObject("conversation_id"),
             rs.getString("status"),
             rs.getInt("subtotal_cents"),
+            rs.getInt("discount_cents"),
             rs.getInt("delivery_fee_cents"),
             rs.getInt("total_cents"),
+            rs.getString("coupon_code_snapshot"),
+            rs.getBoolean("loyalty_applied"),
+            rs.getString("zone_name_snapshot"),
             rs.getString("delivery_address"),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
@@ -70,8 +88,9 @@ public class ComidaOrderRepository {
     }
 
     private static final String ORDER_SELECT =
-        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.delivery_fee_cents, "
-            + "o.total_cents, o.delivery_address, o.notes, o.rejection_reason, o.created_at, "
+        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.discount_cents, "
+            + "o.delivery_fee_cents, o.total_cents, o.coupon_code_snapshot, o.loyalty_applied, "
+            + "o.zone_name_snapshot, o.delivery_address, o.notes, o.rejection_reason, o.created_at, "
             + "o.status_updated_at, ct.name as contact_name, ct.phone_number as contact_phone "
             + "from comida_orders o join contacts ct on ct.id = o.contact_id ";
 
@@ -131,14 +150,18 @@ public class ComidaOrderRepository {
                 it.unitPriceCents(), options));
         }
         return new ComidaOrder(o.id(), o.conversationId(), o.status(), o.subtotalCents(),
-            o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.notes(), o.rejectionReason(),
+            o.discountCents(), o.deliveryFeeCents(), o.totalCents(), o.couponCodeSnapshot(),
+            o.loyaltyApplied(), o.zoneNameSnapshot(), o.deliveryAddress(), o.notes(), o.rejectionReason(),
             o.createdAt(), o.statusUpdatedAt(), o.contactName(), o.contactPhone(), withOpts);
     }
 
     /**
      * Cria o pedido + itens + opções numa transação. Os preços/nomes são lidos do cardápio AGORA
      * (snapshot); para cada linha, {@code unit_price = base + Σ deltas} das opções escolhidas. O
-     * subtotal é a soma de unit_price × qtd; o total = subtotal + delivery_fee. Linhas cujo
+     * subtotal é a soma de unit_price × qtd. Aplica cupom (onda 1 #1, best-effort: inválido NÃO
+     * aborta — apenas não desconta) + fidelidade (onda 1 #2 — conta os entregues do contato ANTES
+     * de inserir); discount = min(subtotal, cupom+fidelidade); total = subtotal − discount +
+     * delivery_fee (a taxa já vem resolvida pelo service — zona #8 ou flat). Linhas cujo
      * menu_item não existe/não é do tenant são IGNORADAS (o handler já validou). Se alguma opção
      * pedida é inválida/indisponível/de outro item, lança {@link InvalidOptionException} (pedido NÃO
      * criado com opção fantasma). Lança IllegalArgumentException se, após filtrar, não sobrar linha.
@@ -146,7 +169,8 @@ public class ComidaOrderRepository {
     @Transactional
     public ComidaOrder createOrder(UUID companyId, UUID conversationId, UUID contactId,
                                    String deliveryAddress, List<OrderLineInput> lines,
-                                   int deliveryFeeCents, String notes) {
+                                   String couponCode, int deliveryFeeCents, String zoneNameSnapshot,
+                                   String notes) {
         // Snapshot de preço+nome+opções por linha (lê do cardápio do tenant).
         record OptSnap(UUID menuOptionId, String groupLabel, String optionLabel, int delta) {}
         record Snap(UUID menuItemId, String name, int unitPrice, int qtd, List<OptSnap> options) {}
@@ -187,15 +211,56 @@ public class ComidaOrderRepository {
         if (snaps.isEmpty()) {
             throw new IllegalArgumentException("nenhum item válido no pedido");
         }
-        int total = subtotal + deliveryFeeCents;
+
+        // Cupom (onda 1 #1, best-effort — inválido NÃO aborta, o pedido sai sem o desconto).
+        UUID couponId = null;
+        String couponSnapshot = null;
+        int couponDiscount = 0;
+        if (couponCode != null && !couponCode.isBlank()) {
+            Optional<ComidaCoupon> maybe = couponRepository.findByCode(companyId, couponCode);
+            if (maybe.isPresent()) {
+                ComidaCoupon c = maybe.get();
+                LocalDate today = LocalDate.now(BR);
+                boolean valid = c.active()
+                    && (c.validUntil() == null || !c.validUntil().isBefore(today))
+                    && subtotal >= c.minOrderCents()
+                    && (c.maxUses() == null || c.uses() < c.maxUses());
+                if (valid) {
+                    couponDiscount = "percent".equals(c.kind())
+                        ? subtotal * c.value() / 100
+                        : c.value();
+                    couponId = c.id();
+                    couponSnapshot = c.code();
+                }
+            }
+        }
+
+        // Fidelidade (onda 1 #2) — conta os pedidos ENTREGUES do contato ANTES de inserir o novo.
+        boolean loyaltyApplied = false;
+        int loyaltyDiscount = 0;
+        ComidaLoyaltyConfig loyalty = loyaltyRepository.findByCompany(companyId);
+        if (loyalty.enabled()) {
+            long deliveredCount = countDeliveredForContact(companyId, contactId);
+            if (deliveredCount > 0 && deliveredCount % loyalty.thresholdOrders() == 0) {
+                loyaltyApplied = true;
+                loyaltyDiscount = "percent".equals(loyalty.rewardKind())
+                    ? subtotal * loyalty.rewardValue() / 100
+                    : loyalty.rewardValue();
+            }
+        }
+
+        // Desconto total clampado ao subtotal (total nunca negativo).
+        int discount = Math.min(subtotal, couponDiscount + loyaltyDiscount);
+        int total = subtotal - discount + deliveryFeeCents;
 
         // status default 'aguardando' (não passamos status — ESCAPADA 1).
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into comida_orders (company_id, conversation_id, contact_id, subtotal_cents, "
-                + "delivery_fee_cents, total_cents, delivery_address, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, conversationId, contactId, subtotal, deliveryFeeCents, total,
-            deliveryAddress, notes);
+                + "discount_cents, delivery_fee_cents, total_cents, coupon_id, coupon_code_snapshot, "
+                + "loyalty_applied, zone_name_snapshot, delivery_address, notes) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, conversationId, contactId, subtotal, discount, deliveryFeeCents,
+            total, couponId, couponSnapshot, loyaltyApplied, zoneNameSnapshot, deliveryAddress, notes);
 
         for (Snap s : snaps) {
             UUID orderItemId = jdbcTemplate.queryForObject(
@@ -210,7 +275,37 @@ public class ComidaOrderRepository {
                     orderItemId, opt.menuOptionId(), opt.groupLabel(), opt.optionLabel(), opt.delta());
             }
         }
+        // Incrementa uses do cupom aplicado (mesma transação).
+        if (couponId != null) {
+            couponRepository.incrementUses(companyId, couponId);
+        }
+
         return findById(companyId, orderId).orElseThrow();
+    }
+
+    /**
+     * Conta os pedidos ENTREGUES de um contato ({@code status = 'entregue'}). Usado pela fidelidade
+     * (onda 1 #2) e pelo progresso que a IA anuncia no contexto.
+     */
+    public long countDeliveredForContact(UUID companyId, UUID contactId) {
+        Long n = jdbcTemplate.queryForObject(
+            "select count(*) from comida_orders "
+                + "where company_id = ? and contact_id = ? and status = 'entregue'",
+            Long.class, companyId, contactId);
+        return n == null ? 0L : n;
+    }
+
+    /** Endereço do ÚLTIMO pedido do contato (onda 1 #10 — a IA oferece reusar). */
+    public Optional<String> findLastAddressForContact(UUID companyId, UUID contactId) {
+        if (contactId == null) {
+            return Optional.empty();
+        }
+        return jdbcTemplate.query(
+                "select delivery_address from comida_orders "
+                    + "where company_id = ? and contact_id = ? and delivery_address is not null "
+                    + "order by created_at desc limit 1",
+                (rs, rn) -> rs.getString("delivery_address"), companyId, contactId)
+            .stream().findFirst();
     }
 
     /**

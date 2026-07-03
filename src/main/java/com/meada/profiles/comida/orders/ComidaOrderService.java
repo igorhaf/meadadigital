@@ -2,6 +2,8 @@ package com.meada.profiles.comida.orders;
 
 import com.meada.profiles.comida.ComidaConfig;
 import com.meada.profiles.comida.ComidaConfigRepository;
+import com.meada.profiles.comida.zones.ComidaDeliveryZone;
+import com.meada.profiles.comida.zones.ComidaDeliveryZoneRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
@@ -31,13 +33,16 @@ public class ComidaOrderService {
 
     private final ComidaOrderRepository orderRepository;
     private final ComidaConfigRepository configRepository;
+    private final ComidaDeliveryZoneRepository zoneRepository;
     private final ComidaOrderNotifier notifier;
 
     public ComidaOrderService(ComidaOrderRepository orderRepository,
                               ComidaConfigRepository configRepository,
+                              ComidaDeliveryZoneRepository zoneRepository,
                               ComidaOrderNotifier notifier) {
         this.orderRepository = orderRepository;
         this.configRepository = configRepository;
+        this.zoneRepository = zoneRepository;
         this.notifier = notifier;
     }
 
@@ -51,16 +56,26 @@ public class ComidaOrderService {
     public static class InvalidStatusException extends RuntimeException {}
 
     /**
-     * Cria um pedido a partir das linhas confirmadas pela IA. A taxa de entrega vem do config do
-     * restaurante (0 se ausente). O repositório faz o snapshot de preço+nome+opções e recalcula os
-     * totais (descarta o total da IA).
+     * Cria um pedido a partir das linhas confirmadas pela IA. A taxa de entrega vem da ZONA (onda 1
+     * #8 — {@code zoneId} da tag; zona ausente/inválida/inativa → taxa FLAT da config, nunca aborta)
+     * e o nome da zona vira snapshot no pedido. O repositório faz o snapshot de preço+nome+opções,
+     * aplica cupom (#1) + fidelidade (#2) e recalcula os totais (descarta o total da IA).
      */
     @Transactional
     public ComidaOrder create(UUID companyId, UUID conversationId, UUID contactId,
-                              String deliveryAddress, List<OrderLineInput> lines, String notes) {
+                              String deliveryAddress, List<OrderLineInput> lines, String couponCode,
+                              UUID zoneId, String notes) {
         ComidaConfig config = configRepository.findByCompany(companyId);
+        int deliveryFee = config.deliveryFeeCents();
+        String zoneName = null;
+        Optional<ComidaDeliveryZone> zone = zoneRepository.findActiveById(companyId, zoneId);
+        if (zone.isPresent()) {
+            deliveryFee = zone.get().feeCents();
+            zoneName = zone.get().name();
+        }
         return orderRepository.createOrder(
-            companyId, conversationId, contactId, deliveryAddress, lines, config.deliveryFeeCents(), notes);
+            companyId, conversationId, contactId, deliveryAddress, lines, couponCode, deliveryFee,
+            zoneName, notes);
     }
 
     public List<ComidaOrder> list(UUID companyId, String status, int limit, int offset) {

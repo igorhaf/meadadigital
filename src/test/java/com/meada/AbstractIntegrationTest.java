@@ -146,7 +146,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/81_atelie_lembrete_sinal.sql",
         "db/migrations/82_atelie_onda2.sql",
         "db/migrations/83_barbearia_onda1.sql",
-        "db/migrations/84_casamento_onda1.sql"
+        "db/migrations/84_casamento_onda1.sql",
+        "db/migrations/85_comida_onda1.sql"
     };
 
     /**
@@ -286,6 +287,7 @@ public abstract class AbstractIntegrationTest {
               aesthetic_session_notes, aesthetic_appointments, aesthetic_packages,
               aesthetic_procedures, aesthetic_professionals, aesthetic_config,
               comida_order_item_options, comida_order_items, comida_orders,
+              comida_coupons, comida_loyalty_config, comida_delivery_zones,
               comida_menu_item_options, comida_menu_items, comida_config,
               floricultura_order_item_options, floricultura_order_items, floricultura_orders,
               floricultura_catalog_item_options, floricultura_catalog_items, floricultura_config,

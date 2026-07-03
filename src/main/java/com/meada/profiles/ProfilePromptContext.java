@@ -698,9 +698,13 @@ public class ProfilePromptContext {
         }
         if ("comida".equals(profileId)) {
             // comida (8.4): persona + cardápio (itens, opções/adicionais com deltas) + taxa/mínimo +
-            // instruções da tag <pedido_comida>. IGNORA conversationId (o contexto é o cardápio, igual
-            // sushi). O pedido nasce 'aguardando' (gate de aceite humano no painel — ESCAPADA 1).
-            return persona + comidaMenuCache.menuSegment(companyId);
+            // instruções da tag <pedido_comida>. ONDA 1 do backlog: resolve o CONTATO da conversa para
+            // anunciar o progresso da fidelidade (#2) e oferecer o endereço do último pedido (#10);
+            // injeta zonas de entrega (#8), campo cupom (#1) e upsell controlado (#4). O pedido nasce
+            // 'aguardando' (gate de aceite humano no painel — ESCAPADA 1).
+            UUID contactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + comidaMenuCache.menuSegment(companyId, contactId);
         }
         if ("floricultura".equals(profileId)) {
             // floricultura (8.5): persona + catálogo (itens + opções de cor/tamanho) + taxa/mínimo +

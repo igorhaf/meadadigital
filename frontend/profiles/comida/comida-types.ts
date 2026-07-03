@@ -55,14 +55,19 @@ export type OrderItem = {
   options: OrderItemOption[]
 }
 
-/** Pedido (espelha ComidaOrder). rejectionReason preenchido só quando status = recusado. */
+/** Pedido (espelha ComidaOrder). rejectionReason preenchido só quando status = recusado.
+ * Onda 1 do backlog: desconto (cupom #1 + fidelidade #2, já embutido no totalCents) e zona (#8). */
 export type Order = {
   id: string
   conversationId: string
   status: OrderStatus
   subtotalCents: number
+  discountCents: number
   deliveryFeeCents: number
   totalCents: number
+  couponCodeSnapshot: string | null
+  loyaltyApplied: boolean
+  zoneNameSnapshot: string | null
   deliveryAddress: string
   notes: string | null
   rejectionReason: string | null
@@ -71,6 +76,60 @@ export type Order = {
   contactName: string | null
   contactPhone: string | null
   items: OrderItem[]
+}
+
+/** Cupom de desconto (onda 1, backlog #1 — espelha ComidaCoupon; motor sushi/adega). */
+export type ComidaCoupon = {
+  id: string
+  companyId: string
+  code: string
+  kind: 'percent' | 'fixed'
+  value: number
+  minOrderCents: number
+  maxUses: number | null
+  uses: number
+  validUntil: string | null
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/** Config de fidelidade por contagem (onda 1, backlog #2 — espelha ComidaLoyaltyConfig). */
+export type ComidaLoyaltyConfig = {
+  enabled: boolean
+  thresholdOrders: number
+  rewardKind: 'percent' | 'fixed'
+  rewardValue: number
+}
+
+/** Zona de entrega com taxa própria (onda 1, backlog #8 — espelha ComidaDeliveryZone). */
+export type ComidaDeliveryZone = {
+  id: string
+  companyId: string
+  name: string
+  feeCents: number
+  active: boolean
+  createdAt: string
+  updatedAt: string
+}
+
+/** Linhas agregadas do relatório de vendas (onda 1, backlog #15). */
+export type ComidaReportRow = {
+  month?: string
+  item?: string
+  hour?: number
+  count: number
+  totalCents?: number
+}
+
+export type ComidaReportSummary = {
+  months: number
+  totalCount: number
+  totalCents: number
+  avgTicketCents: number
+  byMonth: ComidaReportRow[]
+  topItems: ComidaReportRow[]
+  byHour: ComidaReportRow[]
 }
 
 /** Colunas do Kanban (status em andamento) na ordem do fluxo. */

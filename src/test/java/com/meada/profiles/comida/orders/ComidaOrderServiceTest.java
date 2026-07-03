@@ -65,7 +65,7 @@ class ComidaOrderServiceTest extends AbstractIntegrationTest {
     private ComidaOrder seedOrder() {
         ComidaMenuItem item = menuService.create(COMPANY, USER, "X-Burger", null, 2500, "lanches");
         return service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item.id(), 2, List.of())), null);
+            List.of(new OrderLineInput(item.id(), 2, List.of())), null, null, null);
     }
 
     @Test
@@ -137,6 +137,100 @@ class ComidaOrderServiceTest extends AbstractIntegrationTest {
         assertThat(cancelled.status()).isEqualTo("cancelado");
         assertThat(fakeEvolution.sent()).hasSize(1);
         assertThat(fakeEvolution.sent().get(0).text()).contains("cancelado");
+    }
+
+    // -------------------------------------------------------------------------
+    // ONDA 1 do backlog: cupom (#1), fidelidade (#2) e taxa por zona (#8) na criação.
+    // -------------------------------------------------------------------------
+
+    private UUID seedMenuItem(String name, int price) {
+        UUID id = UUID.randomUUID();
+        jdbcTemplate.update(
+            "insert into comida_menu_items (id, company_id, name, price_cents, category, available) "
+                + "values (?, ?, ?, ?, 'lanches', true)",
+            id, COMPANY, name, price);
+        return id;
+    }
+
+    private void seedCoupon(String code, String kind, int value, int minOrder) {
+        jdbcTemplate.update(
+            "insert into comida_coupons (company_id, code, kind, value, min_order_cents) values (?, ?, ?, ?, ?)",
+            COMPANY, code, kind, value, minOrder);
+    }
+
+    @Test
+    @DisplayName("cupom válido aplica desconto + incrementa uses; inválido é SILENCIOSO (sem desconto)")
+    void coupon_appliedOrSilentlyIgnored() {
+        UUID item = seedMenuItem("X-Salada", 2000);
+        seedCoupon("DEZ", "percent", 10, 0);
+
+        ComidaOrder withCoupon = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(item, 2, List.of())), "dez", null, null);   // case-insensitive
+        assertThat(withCoupon.discountCents()).isEqualTo(400);
+        assertThat(withCoupon.totalCents()).isEqualTo(3600);
+        assertThat(withCoupon.couponCodeSnapshot()).isEqualTo("DEZ");
+        assertThat(jdbcTemplate.queryForObject(
+            "select uses from comida_coupons where company_id = ? and code = 'DEZ'",
+            Integer.class, COMPANY)).isEqualTo(1);
+
+        ComidaOrder invalid = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(item, 1, List.of())), "NAOEXISTE", null, null);
+        assertThat(invalid.discountCents()).isZero();
+        assertThat(invalid.couponCodeSnapshot()).isNull();
+    }
+
+    @Test
+    @DisplayName("fidelidade: no pedido seguinte ao N-ésimo ENTREGUE, desconto automático + loyalty_applied")
+    void loyalty_appliedOnThreshold() {
+        jdbcTemplate.update(
+            "update comida_loyalty_config set enabled = true, threshold_orders = 2, reward_kind = 'percent', "
+                + "reward_value = 50 where company_id = ?", COMPANY);
+        jdbcTemplate.update(
+            "insert into comida_loyalty_config (company_id, enabled, threshold_orders, reward_kind, reward_value) "
+                + "select ?, true, 2, 'percent', 50 where not exists "
+                + "(select 1 from comida_loyalty_config where company_id = ?)", COMPANY, COMPANY);
+        UUID item = seedMenuItem("Prato", 3000);
+
+        // 2 pedidos ENTREGUES no histórico do contato.
+        for (int i = 0; i < 2; i++) {
+            ComidaOrder o = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+                List.of(new OrderLineInput(item, 1, List.of())), null, null, null);
+            jdbcTemplate.update("update comida_orders set status = 'entregue' where id = ?", o.id());
+        }
+
+        ComidaOrder third = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(item, 1, List.of())), null, null, null);
+        assertThat(third.loyaltyApplied()).isTrue();
+        assertThat(third.discountCents()).isEqualTo(1500);
+        assertThat(third.totalCents()).isEqualTo(1500);
+    }
+
+    @Test
+    @DisplayName("zona ativa resolve a taxa + snapshot do nome; zona inválida/inativa → taxa flat")
+    void zone_feeResolution() {
+        jdbcTemplate.update(
+            "insert into comida_config (company_id, delivery_fee_cents, min_order_cents) values (?, 500, 0) "
+                + "on conflict (company_id) do update set delivery_fee_cents = 500", COMPANY);
+        UUID zone = UUID.randomUUID();
+        jdbcTemplate.update(
+            "insert into comida_delivery_zones (id, company_id, name, fee_cents) values (?, ?, 'Centro', 900)",
+            zone, COMPANY);
+        UUID inactive = UUID.randomUUID();
+        jdbcTemplate.update(
+            "insert into comida_delivery_zones (id, company_id, name, fee_cents, active) values (?, ?, 'Longe', 1500, false)",
+            inactive, COMPANY);
+        UUID item = seedMenuItem("Combo", 4000);
+
+        ComidaOrder zoned = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(item, 1, List.of())), null, zone, null);
+        assertThat(zoned.deliveryFeeCents()).isEqualTo(900);
+        assertThat(zoned.zoneNameSnapshot()).isEqualTo("Centro");
+        assertThat(zoned.totalCents()).isEqualTo(4900);
+
+        ComidaOrder fallback = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(item, 1, List.of())), null, inactive, null);
+        assertThat(fallback.deliveryFeeCents()).isEqualTo(500);
+        assertThat(fallback.zoneNameSnapshot()).isNull();
     }
 
     record SentMessage(String instanceName, String token, String number, String text) {}

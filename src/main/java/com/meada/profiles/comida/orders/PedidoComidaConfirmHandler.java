@@ -146,9 +146,26 @@ public class PedidoComidaConfirmHandler {
             lines.add(new OrderLineInput(itemId, qtd, optionIds));
         }
 
+        // Cupom (onda 1 #1) e zona de entrega (onda 1 #8) — OPCIONAIS na tag; quem valida/calcula é o
+        // backend (cupom inválido não aborta; zona inválida → taxa flat).
+        String couponCode = root.path("cupom").asText(null);
+        if (couponCode != null && couponCode.isBlank()) {
+            couponCode = null;
+        }
+        UUID zoneId = null;
+        String rawZone = root.path("zona_id").asText(null);
+        if (rawZone != null && !rawZone.isBlank()) {
+            try {
+                zoneId = UUID.fromString(rawZone);
+            } catch (IllegalArgumentException e) {
+                log.warn("comida: zona_id não-UUID '{}' na tag <pedido_comida> p/ conversa {} — usando taxa flat",
+                    rawZone, conversationId);
+            }
+        }
+
         try {
             ComidaOrder order = orderService.create(companyId, conversationId, contactId,
-                endereco.strip(), lines, null);
+                endereco.strip(), lines, couponCode, zoneId, null);
             log.info("comida: pedido {} criado p/ conversa {} ({} itens, total {} cents)",
                 order.id(), conversationId, lines.size(), order.totalCents());
             return Optional.of(order);

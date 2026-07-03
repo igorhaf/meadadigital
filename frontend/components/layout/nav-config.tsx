@@ -417,6 +417,10 @@ const COMIDA_GROUP: NavGroup = {
   items: [
     { label: 'Cardápio', href: '/dashboard/comida-menu', icon: UtensilsCrossed },
     { label: 'Pedidos', href: '/dashboard/comida-orders', icon: ClipboardList },
+    { label: 'Cupons', href: '/dashboard/comida-coupons', icon: Ticket },
+    { label: 'Fidelidade', href: '/dashboard/comida-loyalty', icon: Award },
+    { label: 'Zonas de entrega', href: '/dashboard/comida-zones', icon: Package },
+    { label: 'Relatórios', href: '/dashboard/comida-reports', icon: BarChart3 },
     { label: 'Configurações', href: '/dashboard/comida-settings', icon: Settings },
   ],
 }
