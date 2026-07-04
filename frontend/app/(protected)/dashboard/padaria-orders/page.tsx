@@ -9,7 +9,8 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
-import { listOrders, updateOrderStatus } from '@/lib/api/padaria/orders'
+import { ApiError } from '@/lib/api/client'
+import { listOrders, updateDeposit, updateOrderStatus } from '@/lib/api/padaria/orders'
 import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import { fulfillmentLabel } from '@/profiles/padaria/padaria-fulfillment'
 import { periodLabel } from '@/profiles/padaria/padaria-period'
@@ -48,6 +49,7 @@ function scheduleLine(order: Order): string | null {
 function OrderCard({
   order,
   onAccept,
+  onDeposit,
   onReject,
   onAdvance,
   onCancel,
@@ -56,6 +58,7 @@ function OrderCard({
 }: {
   order: Order
   onAccept: (o: Order) => void
+  onDeposit: (o: Order) => void
   onReject: (o: Order) => void
   onAdvance: (o: Order) => void
   onCancel: (o: Order) => void
@@ -101,6 +104,14 @@ function OrderCard({
         {order.fulfillment === 'entrega' && order.deliveryAddress && (
           <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
         )}
+        {order.depositCents != null && order.depositCents > 0 && (
+          <p className="text-xs">
+            <Badge variant={order.depositPaid ? 'success' : 'warning'}>
+              {order.depositPaid ? 'Sinal recebido' : 'Sinal pendente'}
+            </Badge>
+            <span className="ml-1 text-muted-foreground">{formatBrl(order.depositCents)}</span>
+          </p>
+        )}
         <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
         <div className="flex gap-1 pt-1">
           {awaiting ? (
@@ -119,6 +130,14 @@ function OrderCard({
                 onClick={() => onReject(order)}
               >
                 Recusar
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onDeposit(order)}
+              >
+                Sinal
               </Button>
             </>
           ) : (
@@ -176,6 +195,28 @@ export default function PadariaOrdersPage() {
     enabled: tab === 'historico',
   })
 
+  const [depositTarget, setDepositTarget] = useState<Order | null>(null)
+  const [depositValue, setDepositValue] = useState('')
+  const [depositPaid, setDepositPaid] = useState(false)
+  const [depositError, setDepositError] = useState<string | null>(null)
+
+  const depositMutation = useMutation({
+    mutationFn: async (order: Order) => {
+      const cents = depositValue === '' ? null : Math.round(Number(depositValue) * 100)
+      return updateDeposit(order.id, { depositCents: cents, depositPaid })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['padaria-orders'] })
+      setDepositTarget(null)
+      setDepositError(null)
+    },
+    onError: (e) => {
+      if (e instanceof ApiError && e.reason === 'invalid_deposit')
+        setDepositError('Para marcar como recebido, informe um valor de sinal maior que zero.')
+      else setDepositError('Erro ao salvar o sinal.')
+    },
+  })
+
   const statusMutation = useMutation({
     mutationFn: ({ id, status, reason }: { id: string; status: OrderStatus; reason?: string }) =>
       updateOrderStatus(id, status, reason),
@@ -191,7 +232,7 @@ export default function PadariaOrdersPage() {
     if (next) statusMutation.mutate({ id: o.id, status: next })
   }
 
-  const busy = statusMutation.isPending
+  const busy = statusMutation.isPending || depositMutation.isPending
 
   const allActiveForDnd = active.data?.items ?? []
 
@@ -279,6 +320,14 @@ export default function PadariaOrdersPage() {
                           order={o}
                           busy={busy}
                           dragProps={dnd.cardProps(o.id)}
+                          onDeposit={(ord) => {
+                            setDepositTarget(ord)
+                            setDepositValue(
+                              ord.depositCents != null ? String(ord.depositCents / 100) : '',
+                            )
+                            setDepositPaid(ord.depositPaid)
+                            setDepositError(null)
+                          }}
                           onAccept={accept}
                           onReject={(ord) => {
                             setRejectReason('')
@@ -347,6 +396,57 @@ export default function PadariaOrdersPage() {
           }
         }}
       />
+
+      {/* Sinal/entrada (onda #1 — registro manual até o gateway #50). */}
+      <Modal
+        open={depositTarget !== null}
+        onClose={() => setDepositTarget(null)}
+        title="Sinal / entrada da encomenda"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Com sinal registrado e não recebido, o ACEITE da encomenda fica bloqueado até a
+            confirmação (Pix/dinheiro conferido fora do app, por enquanto).
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="w-32">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Valor (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={depositValue}
+                onChange={(e) => setDepositValue(e.target.value)}
+                placeholder="0,00"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <label className="flex h-9 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={depositPaid}
+                onChange={(e) => setDepositPaid(e.target.checked)}
+              />
+              Recebido
+            </label>
+          </div>
+          {depositError && <p className="text-sm text-destructive">{depositError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDepositTarget(null)}>
+              Voltar
+            </Button>
+            <Button
+              disabled={depositMutation.isPending}
+              onClick={() => depositTarget && depositMutation.mutate(depositTarget)}
+            >
+              {depositMutation.isPending ? 'Salvando…' : 'Salvar sinal'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Recusar (gate de aceite): Modal com motivo OPCIONAL (AlertDialog não tem campo de texto livre). */}
       <Modal

@@ -97,6 +97,9 @@ export type Order = {
   contactName: string | null
   contactPhone: string | null
   items: OrderItem[]
+  depositCents: number | null
+  depositPaid: boolean
+  depositPaidAt: string | null
 }
 
 /** Colunas do Kanban (status em andamento) na ordem do fluxo. */

@@ -108,6 +108,10 @@ public class PadariaMenuCache {
             .append("Use os menu_item_id e option_id EXATOS do cardápio acima. Item sem opção → omita "
                 + "\"options\"; item sem placa → cake_message null. Em 'retirada', delivery_address é null. "
                 + "Em pedido só de pronta-entrega, pickup_or_delivery_date e delivery_period podem ser null. "
+                + "ANTES de fechar, você PODE oferecer UMA ÚNICA sugestão de complemento do PRÓPRIO "
+                + "cardápio (vela, refrigerante, docinhos, cartão) — sem insistir se o cliente "
+                + "recusar. Se a encomenda tiver SINAL registrado pela padaria, informe o valor e que "
+                + "a produção começa após a confirmação do sinal — você NUNCA confirma pagamento. "
                 + "ANTES da tag, escreva a confirmação humana normal (\"Confirmado: 1 Bolo de Chocolate "
                 + "(Grande), retirada dia 25/12 de manhã, placa 'Parabéns'. Total R$ X.\"). NÃO emita a tag "
                 + "sem TODOS os dados. A data NÃO pode ser no passado nem antes da antecedência mínima.\n");

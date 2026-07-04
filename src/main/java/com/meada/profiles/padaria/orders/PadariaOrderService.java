@@ -49,6 +49,8 @@ public class PadariaOrderService {
 
     /** Status alvo desconhecido (→ 400 invalid_status). */
     public static class InvalidStatusException extends RuntimeException {}
+    public static class DepositRequiredException extends RuntimeException {}
+    public static class InvalidDepositException extends RuntimeException {}
 
     /**
      * Cria um pedido a partir das linhas confirmadas pela IA. A taxa de entrega + o lead default vêm
@@ -100,6 +102,12 @@ public class PadariaOrderService {
             throw new InvalidStatusTransitionException();
         }
 
+        // Onda #1: sinal REGISTRADO e não pago trava o ACEITE da encomenda (409 deposit_required).
+        if (from == PadariaOrderStatus.AGUARDANDO && newStatus == PadariaOrderStatus.EM_PREPARO
+                && current.depositCents() != null && current.depositCents() > 0 && !current.depositPaid()) {
+            throw new DepositRequiredException();
+        }
+
         // rejection_reason só faz sentido na recusa; nas demais transições passa null.
         String reasonToPersist = newStatus == PadariaOrderStatus.RECUSADO ? rejectionReason : null;
         orderRepository.updateStatus(companyId, id, newStatus.id(), reasonToPersist);
@@ -114,5 +122,22 @@ public class PadariaOrderService {
         }
 
         return orderRepository.findById(companyId, id).orElseThrow(OrderNotFoundException::new);
+    }
+
+    /**
+     * Registra o sinal da encomenda e/ou marca como recebido (onda #1 — manual até o gateway #50).
+     * Marcar pago exige valor &gt; 0 (400 invalid_deposit). Com sinal pendente o aceite
+     * (aguardando→em_preparo) fica bloqueado — pagar libera o gate.
+     */
+    @Transactional
+    public PadariaOrder setDeposit(UUID companyId, UUID id, Integer depositCents, boolean depositPaid) {
+        if (depositCents != null && depositCents < 0) {
+            throw new InvalidDepositException();
+        }
+        if (depositPaid && (depositCents == null || depositCents <= 0)) {
+            throw new InvalidDepositException();
+        }
+        return orderRepository.updateDeposit(companyId, id, depositCents, depositPaid)
+            .orElseThrow(OrderNotFoundException::new);
     }
 }

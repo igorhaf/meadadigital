@@ -91,6 +91,9 @@ public class PadariaOrderRepository {
             rs.getString("delivery_address"),
             dd == null ? null : dd.toLocalDate(),
             rs.getString("delivery_period"),
+            rs.getObject("deposit_cents") == null ? null : rs.getInt("deposit_cents"),
+            rs.getBoolean("deposit_paid"),
+            rs.getTimestamp("deposit_paid_at") == null ? null : rs.getTimestamp("deposit_paid_at").toInstant(),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
             rs.getTimestamp("created_at").toInstant(),
@@ -102,7 +105,8 @@ public class PadariaOrderRepository {
 
     private static final String ORDER_SELECT =
         "select o.id, o.conversation_id, o.status, o.fulfillment, o.subtotal_cents, o.delivery_fee_cents, "
-            + "o.total_cents, o.delivery_address, o.pickup_or_delivery_date, o.delivery_period, o.notes, "
+            + "o.total_cents, o.delivery_address, o.pickup_or_delivery_date, o.delivery_period, "
+            + "o.deposit_cents, o.deposit_paid, o.deposit_paid_at, o.notes, "
             + "o.rejection_reason, o.created_at, o.status_updated_at, "
             + "ct.name as contact_name, ct.phone_number as contact_phone "
             + "from padaria_orders o join contacts ct on ct.id = o.contact_id ";
@@ -164,7 +168,7 @@ public class PadariaOrderRepository {
         }
         return new PadariaOrder(o.id(), o.conversationId(), o.status(), o.fulfillment(), o.subtotalCents(),
             o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.pickupOrDeliveryDate(),
-            o.deliveryPeriod(), o.notes(), o.rejectionReason(), o.createdAt(), o.statusUpdatedAt(),
+            o.deliveryPeriod(), o.depositCents(), o.depositPaid(), o.depositPaidAt(), o.notes(), o.rejectionReason(), o.createdAt(), o.statusUpdatedAt(),
             o.contactName(), o.contactPhone(), withOpts);
     }
 
@@ -315,5 +319,18 @@ public class PadariaOrderRepository {
                     + "where company_id = ? and id = ?",
                 newStatus, companyId, id);
         }
+    }
+
+    /** Registra/atualiza o sinal da encomenda (onda #1). deposit_paid_at preservado enquanto pago. */
+    public Optional<PadariaOrder> updateDeposit(UUID companyId, UUID id, Integer depositCents, boolean depositPaid) {
+        int n = jdbcTemplate.update(
+            "update padaria_orders set deposit_cents = ?, deposit_paid = ?, "
+                + "deposit_paid_at = case when ? then coalesce(deposit_paid_at, now()) end "
+                + "where company_id = ? and id = ?",
+            depositCents, depositPaid, depositPaid, companyId, id);
+        if (n == 0) {
+            return Optional.empty();
+        }
+        return findById(companyId, id);
     }
 }

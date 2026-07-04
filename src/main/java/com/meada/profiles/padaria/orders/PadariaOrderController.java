@@ -104,6 +104,33 @@ public class PadariaOrderController {
             return error(404, "Not Found", "order_not_found");
         } catch (InvalidStatusTransitionException e) {
             return error(409, "Conflict", "invalid_status_transition");
+        } catch (PadariaOrderService.DepositRequiredException e) {
+            return error(409, "Conflict", "deposit_required");
+        }
+    }
+
+    // ---- PATCH deposit (onda #1 — sinal manual até o gateway #50) -------------
+
+    public record DepositRequest(Integer depositCents, Boolean depositPaid) {}
+
+    @PatchMapping("/api/padaria/orders/{id}/deposit")
+    public ResponseEntity<Object> deposit(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id,
+            @RequestBody DepositRequest req) {
+        UUID companyId;
+        try {
+            companyId = profileGuard.requirePadaria(user);
+        } catch (WrongProfileException e) {
+            return error(403, "Forbidden", "forbidden_wrong_profile");
+        }
+        try {
+            return ResponseEntity.ok(service.setDeposit(companyId, id, req.depositCents(),
+                Boolean.TRUE.equals(req.depositPaid())));
+        } catch (PadariaOrderService.OrderNotFoundException e) {
+            return error(404, "Not Found", "order_not_found");
+        } catch (PadariaOrderService.InvalidDepositException e) {
+            return error(400, "Bad Request", "invalid_deposit");
         }
     }
 }
