@@ -26,15 +26,18 @@ public class PapelariaCatalogService {
     private final PapelariaCatalogOptionRepository optionRepository;
     private final AuditLogger auditLogger;
     private final PapelariaCatalogCache catalogCache;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public PapelariaCatalogService(PapelariaCatalogItemRepository repository,
                                    PapelariaCatalogOptionRepository optionRepository,
                                    AuditLogger auditLogger,
-                                   PapelariaCatalogCache catalogCache) {
+                                   PapelariaCatalogCache catalogCache,
+                                   org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.repository = repository;
         this.optionRepository = optionRepository;
         this.auditLogger = auditLogger;
         this.catalogCache = catalogCache;
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     /** Categoria inválida (→ 400 invalid_category no controller). */
@@ -180,5 +183,43 @@ public class PapelariaCatalogService {
         if (PapelariaCategory.fromId(category).isEmpty()) {
             throw new InvalidCategoryException();
         }
+    }
+
+    // -------------------------------------------------------------------------
+    // Faixas de tiragem (onda 1, backlog #2)
+    // -------------------------------------------------------------------------
+
+    public static class InvalidTierException extends RuntimeException {}
+
+    public java.util.List<PapelariaItemTier> listTiers(UUID companyId, UUID itemId) {
+        repository.findById(companyId, itemId).orElseThrow(CatalogItemNotFoundException::new);
+        return jdbcTemplate.query(
+            "select min_qty, unit_price_cents from papelaria_item_tiers where item_id = ? order by min_qty",
+            (rs, rn) -> new PapelariaItemTier(rs.getInt("min_qty"), rs.getInt("unit_price_cents")),
+            itemId);
+    }
+
+    /** Substitui TODAS as faixas do item (replace-all transacional). min_qty único e >= 1. */
+    @org.springframework.transaction.annotation.Transactional
+    public java.util.List<PapelariaItemTier> replaceTiers(UUID companyId, UUID userId, UUID itemId,
+                                                          java.util.List<PapelariaItemTier> tiers) {
+        repository.findById(companyId, itemId).orElseThrow(CatalogItemNotFoundException::new);
+        java.util.Set<Integer> seen = new java.util.HashSet<>();
+        for (PapelariaItemTier t : tiers) {
+            if (t.minQty() < 1 || t.unitPriceCents() < 0 || !seen.add(t.minQty())) {
+                throw new InvalidTierException();
+            }
+        }
+        jdbcTemplate.update("delete from papelaria_item_tiers where item_id = ?", itemId);
+        for (PapelariaItemTier t : tiers) {
+            jdbcTemplate.update(
+                "insert into papelaria_item_tiers (company_id, item_id, min_qty, unit_price_cents) "
+                    + "values (?, ?, ?, ?)",
+                companyId, itemId, t.minQty(), t.unitPriceCents());
+        }
+        auditLogger.log(companyId, userId, "papelaria_tiers_updated", "papelaria_catalog_item",
+            itemId, java.util.Map.of("tiers", tiers.size()));
+        catalogCache.invalidate(companyId);
+        return listTiers(companyId, itemId);
     }
 }

@@ -371,6 +371,71 @@ class PapelariaOrderServiceTest extends AbstractIntegrationTest {
         assertThat(entregue.status()).isEqualTo("entregue");
     }
 
+    // -------------------------------------------------------------------------
+    // Onda 1 do backlog (#1 sinal no gate da arte · #2 faixas de tiragem)
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("sinal registrado e não pago: aprovar a arte NÃO produz; pagar move automaticamente")
+    void depositGate_approveWaitsAndPaymentMoves() {
+        PapelariaCatalogItem bloco = readyItem();
+        PapelariaOrder order = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(bloco.id(), 2, List.of(), null)), null, null, null);
+        service.updateStatus(COMPANY, order.id(), "aceito", null);
+        service.setArtUrl(COMPANY, order.id(), "https://arte.exemplo/v1.png");  // → arte_aprovacao
+
+        service.setDeposit(COMPANY, order.id(), 10000, false);
+
+        // aprovar com sinal pendente: arte aprovada, mas fica em arte_aprovacao (aguardando sinal).
+        PapelariaOrder waiting = service.approveArt(COMPANY, order.id());
+        assertThat(waiting.artApproved()).isTrue();
+        assertThat(waiting.status()).isEqualTo("arte_aprovacao");
+
+        // transição manual também bloqueada → deposit_required.
+        assertThatThrownBy(() -> service.updateStatus(COMPANY, order.id(), "em_producao", null))
+            .isInstanceOf(PapelariaOrderService.DepositRequiredException.class);
+
+        // sinal pago com arte aprovada → move automaticamente pra em_producao.
+        PapelariaOrder producing = service.setDeposit(COMPANY, order.id(), 10000, true);
+        assertThat(producing.status()).isEqualTo("em_producao");
+        assertThat(producing.depositPaidAt()).isNotNull();
+    }
+
+    @Test
+    @DisplayName("marcar sinal pago sem valor → invalid_deposit; sem sinal registrado a produção é livre")
+    void depositValidationAndFreeFlow() {
+        PapelariaCatalogItem bloco = readyItem();
+        PapelariaOrder order = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(bloco.id(), 1, List.of(), null)), null, null, null);
+
+        assertThatThrownBy(() -> service.setDeposit(COMPANY, order.id(), null, true))
+            .isInstanceOf(PapelariaOrderService.InvalidDepositException.class);
+
+        service.updateStatus(COMPANY, order.id(), "aceito", null);
+        service.setArtUrl(COMPANY, order.id(), "https://arte.exemplo/v1.png");
+        assertThat(service.approveArt(COMPANY, order.id()).status()).isEqualTo("em_producao");
+    }
+
+    @Test
+    @DisplayName("faixa de tiragem: maior min_qty <= quantity vira o preço-base; sem faixa, compat")
+    void tierPricing() {
+        PapelariaCatalogItem convite = catalogService.create(COMPANY, USER, "Convite Faixa", null, 800,
+            "convites", false, null, null);
+        catalogService.replaceTiers(COMPANY, USER, convite.id(), List.of(
+            new com.meada.profiles.papelaria.catalog.PapelariaItemTier(50, 600),
+            new com.meada.profiles.papelaria.catalog.PapelariaItemTier(100, 450)));
+
+        // 30 un < 50 → preço-base do item (800).
+        PapelariaOrder small = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(convite.id(), 30, List.of(), null)), null, null, null);
+        assertThat(small.subtotalCents()).isEqualTo(30 * 800);
+
+        // 120 un → faixa 100+ (450/un).
+        PapelariaOrder big = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(convite.id(), 120, List.of(), null)), null, null, null);
+        assertThat(big.subtotalCents()).isEqualTo(120 * 450);
+    }
+
     record SentMessage(String instanceName, String token, String number, String text) {}
 
     static class FakeEvolutionSender implements EvolutionSender {

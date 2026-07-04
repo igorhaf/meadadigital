@@ -9,7 +9,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
-import { approveArt, listOrders, setArtUrl, updateOrderStatus } from '@/lib/api/papelaria/orders'
+import { ApiError } from '@/lib/api/client'
+import {
+  approveArt,
+  listOrders,
+  setArtUrl,
+  updateDeposit,
+  updateOrderStatus,
+} from '@/lib/api/papelaria/orders'
 import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import { fulfillmentLabel } from '@/profiles/papelaria/papelaria-fulfillment'
 import { periodLabel } from '@/profiles/papelaria/papelaria-period'
@@ -57,6 +64,7 @@ function OrderCard({
   onReject,
   onUploadArt,
   onApproveArt,
+  onDeposit,
   onSendToProduction,
   onAdvance,
   onCancel,
@@ -68,6 +76,7 @@ function OrderCard({
   onReject: (o: Order) => void
   onUploadArt: (o: Order) => void
   onApproveArt: (o: Order) => void
+  onDeposit: (o: Order) => void
   onSendToProduction: (o: Order) => void
   onAdvance: (o: Order) => void
   onCancel: (o: Order) => void
@@ -111,6 +120,20 @@ function OrderCard({
         {schedule && <p className="text-xs font-medium text-muted-foreground">📅 {schedule}</p>}
         {order.fulfillment === 'entrega' && order.deliveryAddress && (
           <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
+        )}
+        {/* Sinal/entrada (onda #1): selo de pendente/recebido quando registrado. */}
+        {order.depositCents != null && order.depositCents > 0 && (
+          <p className="text-xs">
+            <Badge variant={order.depositPaid ? 'success' : 'warning'}>
+              {order.depositPaid ? 'Sinal recebido' : 'Sinal pendente'}
+            </Badge>
+            <span className="ml-1 text-muted-foreground">
+              {(order.depositCents / 100).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              })}
+            </span>
+          </p>
         )}
         {/* PROVA DE ARTE (ESCAPADA 8.15): mostra a arte enviada + se já foi aprovada. */}
         {order.artUrl && (
@@ -167,6 +190,14 @@ function OrderCard({
                 variant="outline"
                 className="h-7 px-2 text-xs"
                 disabled={busy}
+                onClick={() => onDeposit(order)}
+              >
+                Sinal
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
                 onClick={() => onCancel(order)}
               >
                 Cancelar
@@ -181,6 +212,14 @@ function OrderCard({
                 onClick={() => onUploadArt(order)}
               >
                 Reenviar arte
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onDeposit(order)}
+              >
+                Sinal
               </Button>
               {!order.artApproved && (
                 <Button
@@ -252,6 +291,10 @@ export default function PapelariaOrdersPage() {
   const [rejectTarget, setRejectTarget] = useState<Order | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [artTarget, setArtTarget] = useState<Order | null>(null)
+  const [depositTarget, setDepositTarget] = useState<Order | null>(null)
+  const [depositValue, setDepositValue] = useState('')
+  const [depositPaid, setDepositPaid] = useState(false)
+  const [depositError, setDepositError] = useState<string | null>(null)
   const [artUrlInput, setArtUrlInput] = useState('')
   const [artError, setArtError] = useState<string | null>(null)
 
@@ -359,7 +402,28 @@ export default function PapelariaOrdersPage() {
     setRejectReason('')
   }
 
-  const busy = statusMutation.isPending || approveMutation.isPending || artMutation.isPending
+  const depositMutation = useMutation({
+    mutationFn: async (order: Order) => {
+      const cents = depositValue === '' ? null : Math.round(Number(depositValue) * 100)
+      return updateDeposit(order.id, { depositCents: cents, depositPaid })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['papelaria-orders'] })
+      setDepositTarget(null)
+      setDepositError(null)
+    },
+    onError: (e) => {
+      if (e instanceof ApiError && e.reason === 'invalid_deposit')
+        setDepositError('Para marcar como recebido, informe um valor de sinal maior que zero.')
+      else setDepositError('Erro ao salvar o sinal.')
+    },
+  })
+
+  const busy =
+    statusMutation.isPending ||
+    approveMutation.isPending ||
+    artMutation.isPending ||
+    depositMutation.isPending
 
   const allActive = active.data?.items ?? []
   const historyItems = (history.data?.items ?? []).filter(
@@ -426,6 +490,14 @@ export default function PapelariaOrdersPage() {
                           }}
                           onUploadArt={openArt}
                           onApproveArt={(ord) => approveMutation.mutate(ord.id)}
+                          onDeposit={(ord) => {
+                            setDepositTarget(ord)
+                            setDepositValue(
+                              ord.depositCents != null ? String(ord.depositCents / 100) : '',
+                            )
+                            setDepositPaid(ord.depositPaid)
+                            setDepositError(null)
+                          }}
                           onSendToProduction={sendToProduction}
                           onAdvance={advance}
                           onCancel={setCancelTarget}
@@ -490,6 +562,58 @@ export default function PapelariaOrdersPage() {
           }
         }}
       />
+
+      {/* Sinal/entrada (onda #1 — registro manual até o gateway #50). */}
+      <Modal
+        open={depositTarget !== null}
+        onClose={() => setDepositTarget(null)}
+        title="Sinal / entrada do pedido"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Com sinal registrado e não recebido, a arte aprovada NÃO entra em produção até a
+            confirmação. Marcar como recebido com a arte já aprovada envia o pedido pra produção
+            automaticamente.
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="w-32">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Valor (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={depositValue}
+                onChange={(e) => setDepositValue(e.target.value)}
+                placeholder="0,00"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <label className="flex h-9 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={depositPaid}
+                onChange={(e) => setDepositPaid(e.target.checked)}
+              />
+              Recebido
+            </label>
+          </div>
+          {depositError && <p className="text-sm text-destructive">{depositError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDepositTarget(null)}>
+              Voltar
+            </Button>
+            <Button
+              disabled={depositMutation.isPending}
+              onClick={() => depositTarget && depositMutation.mutate(depositTarget)}
+            >
+              {depositMutation.isPending ? 'Salvando…' : 'Salvar sinal'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Recusar (gate de aceite): Modal com motivo OPCIONAL (AlertDialog não tem campo de texto livre). */}
       <Modal

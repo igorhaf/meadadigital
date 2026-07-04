@@ -75,3 +75,20 @@ contrato; assinatura recorrente; combo/cupom; pagamento real (Stripe #50); gráf
 - Base de conhecimento (RAG): disponível como em todo perfil. Cache `PapelariaCatalogCache` TTL 60s
   (ignora conversationId; ensina as 2 tags).
 - Guard `/api/papelaria/**` → 403 `forbidden_wrong_profile`. Paleta `lavanda`. Tenant: `igorhaf26`.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_PAPELARIA #1/#2/#5, migration 95)
+
+- **Sinal pra liberar a produção (#1):** `deposit_cents/paid/paid_at` no pedido (PATCH
+  `/api/papelaria/orders/{id}/deposit`, registro manual até o gateway #50). Com sinal REGISTRADO
+  e não pago: aprovar a arte seta `art_approved` mas o pedido FICA em `arte_aprovacao`
+  aguardando o sinal (a IA/notificação avisam o valor); a transição manual pra `em_producao` →
+  **409 `deposit_required`**. Marcar o sinal como pago com a arte já aprovada MOVE
+  automaticamente pra produção (fecha o loop). Painel: selo + modal "Sinal" no card.
+- **Preço por faixa de tiragem (#2, `papelaria_item_tiers`):** faixas `min_qty →
+  unit_price_cents` por item; no cálculo da linha, a faixa com MAIOR `min_qty ≤ quantity` vira
+  o preço-base (+ Σ deltas); sem faixa → preço do item (compat). GET/PUT
+  `/api/papelaria/catalog/{id}/tiers`; editor "Tiragem" no catálogo; o cache injeta a tabela
+  ("50+ un = X · 100+ = Y") pra IA estimular tiragem maior — preço sempre do catálogo.
+- **Upsell na persona (#5, sem DDL):** o cache autoriza UMA sugestão de item complementar de
+  OUTRA categoria (convite → save the date/tags/menu), sem insistir; e instrui a IA a informar
+  o sinal registrado sem nunca confirmar pagamento.

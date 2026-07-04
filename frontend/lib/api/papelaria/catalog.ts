@@ -103,3 +103,17 @@ export function deleteOption(itemId: string, optionId: string): Promise<void> {
     method: 'DELETE',
   })
 }
+
+export type ItemTier = { minQty: number; unitPriceCents: number }
+
+export function listTiers(itemId: string): Promise<{ items: ItemTier[] }> {
+  return apiFetch<{ items: ItemTier[] }>(`/api/papelaria/catalog/${itemId}/tiers`)
+}
+
+/** Substitui TODAS as faixas de tiragem do item (onda #2). */
+export function putTiers(itemId: string, tiers: ItemTier[]): Promise<{ items: ItemTier[] }> {
+  return apiFetch<{ items: ItemTier[] }>(`/api/papelaria/catalog/${itemId}/tiers`, {
+    method: 'PUT',
+    body: JSON.stringify({ tiers }),
+  })
+}

@@ -14,11 +14,15 @@ import {
   deleteCatalogItem,
   deleteOption,
   listCatalog,
+  listTiers,
+  putTiers,
   toggleCatalogItem,
   toggleOption,
   updateCatalogItem,
   updateOption,
+  type ItemTier,
 } from '@/lib/api/papelaria/catalog'
+import { useOnSync } from '@/lib/use-synced-form'
 import {
   PAPELARIA_CATEGORIES,
   type PapelariaCategoryId,
@@ -70,6 +74,8 @@ export default function PapelariaCatalogPage() {
 
   // Modal secundário de opções: aberto pelo botão "Opções" do card.
   const [optionsItem, setOptionsItem] = useState<CatalogItem | null>(null)
+  // Modal secundário de faixas de tiragem (onda #2).
+  const [tiersItem, setTiersItem] = useState<CatalogItem | null>(null)
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['papelaria-catalog'],
@@ -237,6 +243,13 @@ export default function PapelariaCatalogPage() {
                           <Button
                             variant="outline"
                             className="h-7 px-2 text-xs"
+                            onClick={() => setTiersItem(it)}
+                          >
+                            Tiragem
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
                             onClick={() => openEdit(it)}
                           >
                             Editar
@@ -388,6 +401,20 @@ export default function PapelariaCatalogPage() {
       >
         {liveOptionsItem ? (
           <OptionsEditor item={liveOptionsItem} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Item não encontrado.</p>
+        )}
+      </Modal>
+
+      {/* Modal secundário: faixas de preço por TIRAGEM (onda #2) */}
+      <Modal
+        open={tiersItem !== null}
+        onClose={() => setTiersItem(null)}
+        title={tiersItem ? `Faixas de tiragem — ${tiersItem.name}` : 'Faixas de tiragem'}
+        size="md"
+      >
+        {tiersItem ? (
+          <TiersEditor item={tiersItem} />
         ) : (
           <p className="text-sm text-muted-foreground">Item não encontrado.</p>
         )}
@@ -572,6 +599,132 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
           </Button>
         )}
       </form>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+/**
+ * Editor das faixas de preço por TIRAGEM do item (onda #2): a faixa com maior "a partir de"
+ * ≤ quantidade define o preço/un da linha do pedido; sem faixas, vale o preço-base do item.
+ */
+function TiersEditor({ item }: { item: CatalogItem }) {
+  const qc = useQueryClient()
+  const [rows, setRows] = useState<{ minQty: string; price: string }[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  const { data, isPending } = useQuery({
+    queryKey: ['papelaria-tiers', item.id],
+    queryFn: () => listTiers(item.id),
+  })
+
+  useOnSync(data, (d) => {
+    setRows(
+      d.items.map((t: ItemTier) => ({
+        minQty: String(t.minQty),
+        price: String(t.unitPriceCents / 100),
+      })),
+    )
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const tiers = rows
+        .filter((r) => r.minQty !== '' && r.price !== '')
+        .map((r) => ({
+          minQty: Math.max(1, Math.round(Number(r.minQty))),
+          unitPriceCents: Math.max(0, Math.round(Number(r.price) * 100)),
+        }))
+      return putTiers(item.id, tiers)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['papelaria-tiers', item.id] })
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    },
+    onError: (e) => {
+      if (e instanceof ApiError && e.reason === 'invalid_tier')
+        setError('Faixas inválidas: "a partir de" precisa ser único e maior que zero.')
+      else setError('Erro ao salvar as faixas.')
+    },
+  })
+
+  if (isPending) return <p className="text-sm text-muted-foreground">Carregando…</p>
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Preço por unidade conforme a quantidade (a faixa com maior &quot;a partir de&quot; vale).
+        Sem faixas, vale o preço-base (
+        {(item.priceCents / 100).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        })}
+        /un).
+      </p>
+      <div className="space-y-2">
+        {rows.map((r, i) => (
+          <div key={i} className="flex items-end gap-2">
+            <div className="w-28">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                A partir de (un)
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={r.minQty}
+                onChange={(e) =>
+                  setRows((rs) =>
+                    rs.map((x, j) => (j === i ? { ...x, minQty: e.target.value } : x)),
+                  )
+                }
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="w-32">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Preço/un (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={r.price}
+                onChange={(e) =>
+                  setRows((rs) => rs.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))
+                }
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="h-8 px-2 text-xs"
+              onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
+            >
+              Remover
+            </Button>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          className="h-8 px-3 text-xs"
+          onClick={() => setRows((rs) => [...rs, { minQty: '', price: '' }])}
+        >
+          Adicionar faixa
+        </Button>
+        <Button
+          className="h-8 px-3 text-xs"
+          disabled={saveMutation.isPending}
+          onClick={() => saveMutation.mutate()}
+        >
+          {saveMutation.isPending ? 'Salvando…' : 'Salvar faixas'}
+        </Button>
+        {saved && <span className="text-xs text-emerald-600">Salvo.</span>}
+      </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )

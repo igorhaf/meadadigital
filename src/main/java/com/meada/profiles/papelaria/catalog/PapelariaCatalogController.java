@@ -18,6 +18,7 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PatchMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestParam;
@@ -117,6 +118,47 @@ public class PapelariaCatalogController {
         return service.get(companyId, id)
             .<ResponseEntity<Object>>map(ResponseEntity::ok)
             .orElseGet(() -> error(404, "Not Found", "catalog_item_not_found"));
+    }
+
+    // ---- Faixas de tiragem (onda 1, backlog #2) ------------------------------
+
+    public record TierRequest(java.util.List<PapelariaItemTier> tiers) {}
+
+    @GetMapping("/api/papelaria/catalog/{id}/tiers")
+    public ResponseEntity<Object> listTiers(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id) {
+        UUID companyId;
+        try {
+            companyId = profileGuard.requirePapelaria(user);
+        } catch (WrongProfileException e) {
+            return error(403, "Forbidden", "forbidden_wrong_profile");
+        }
+        try {
+            return ResponseEntity.ok(Map.of("items", service.listTiers(companyId, id)));
+        } catch (PapelariaCatalogService.CatalogItemNotFoundException e) {
+            return error(404, "Not Found", "catalog_item_not_found");
+        }
+    }
+
+    @PutMapping("/api/papelaria/catalog/{id}/tiers")
+    public ResponseEntity<Object> putTiers(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id, @RequestBody TierRequest req) {
+        UUID companyId;
+        try {
+            companyId = profileGuard.requirePapelaria(user);
+        } catch (WrongProfileException e) {
+            return error(403, "Forbidden", "forbidden_wrong_profile");
+        }
+        try {
+            return ResponseEntity.ok(Map.of("items", service.replaceTiers(companyId, user.userId(), id,
+                req.tiers() == null ? java.util.List.of() : req.tiers())));
+        } catch (PapelariaCatalogService.CatalogItemNotFoundException e) {
+            return error(404, "Not Found", "catalog_item_not_found");
+        } catch (PapelariaCatalogService.InvalidTierException e) {
+            return error(400, "Bad Request", "invalid_tier");
+        }
     }
 
     // ---- POST cria ----------------------------------------------------------
