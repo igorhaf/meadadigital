@@ -23,6 +23,9 @@ export type Config = {
   examDurationMinutes: number
   minOrderCents: number
   leadTimeDaysDefault: number
+  examReminderEnabled: boolean
+  pickupFollowupEnabled: boolean
+  pickupFollowupDays: number
 }
 
 // ─────────────────────────── FLUXO A — exames de vista ───────────────────────────

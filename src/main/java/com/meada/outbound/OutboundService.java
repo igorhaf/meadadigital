@@ -109,6 +109,7 @@ public class OutboundService {
     private final com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler;
     private final com.meada.profiles.pousada.reservations.ConfirmacaoPousadaHandler confirmacaoPousadaHandler;
     private final com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler;
+    private final com.meada.profiles.otica.appointments.ConfirmacaoExameHandler confirmacaoExameHandler;
     // Camada 8.2 (perfil eventos): pós-processa <proposta_evento> (abre proposta) e <aprovacao_proposta> (muta estado).
     private final com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler;
     private final com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler;
@@ -250,6 +251,7 @@ public class OutboundService {
                            com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler,
                            com.meada.profiles.pousada.reservations.ConfirmacaoPousadaHandler confirmacaoPousadaHandler,
                            com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler,
+                           com.meada.profiles.otica.appointments.ConfirmacaoExameHandler confirmacaoExameHandler,
                            com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler,
                            com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler,
                            com.meada.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler,
@@ -320,6 +322,7 @@ public class OutboundService {
         this.confirmacaoReservaHandler = confirmacaoReservaHandler;
         this.confirmacaoPousadaHandler = confirmacaoPousadaHandler;
         this.confirmacaoPetHandler = confirmacaoPetHandler;
+        this.confirmacaoExameHandler = confirmacaoExameHandler;
         this.propostaEventoConfirmHandler = propostaEventoConfirmHandler;
         this.aprovacaoPropostaHandler = aprovacaoPropostaHandler;
         this.agendamentoEsteticaConfirmHandler = agendamentoEsteticaConfirmHandler;
@@ -482,6 +485,8 @@ public class OutboundService {
         toSend = maybeProcessConfirmacaoPousada(event, conversationId, toSend);
         // Onda pet 1: <confirmacao_pet> reflete o SIM/desmarcar do lembrete de véspera.
         toSend = maybeProcessConfirmacaoPet(event, conversationId, toSend);
+        // Onda ótica 1: <confirmacao_exame> reflete o SIM/desmarcar do lembrete de exame.
+        toSend = maybeProcessConfirmacaoExame(event, conversationId, toSend);
         // Camada 8.2 (perfil eventos): <proposta_evento> abre a proposta; <aprovacao_proposta> muta o
         // estado da proposta orçada. Encadeados (perfil é único; só um age).
         toSend = maybeProcessPropostaEvento(event, conversationId, toSend);
@@ -1077,6 +1082,33 @@ public class OutboundService {
             confirmacaoPetHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = confirmacaoPetHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'otica' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_exame>}, aplica a DECISÃO DO CLIENTE ao exame (confirmado/cancelado —
+     * ConfirmacaoExameHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete de véspera do OticaReminderJob) e devolve um AiResponse com a tag removida; senão
+     * devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoExame(MessageInboundProcessedEvent event,
+                                                    UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoExameHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"otica".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoExameHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoExameHandler.stripConfirmacaoTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

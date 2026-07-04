@@ -40,12 +40,16 @@ public class OticaConfigService {
 
     @Transactional
     public OticaConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
-                              int examDurationMinutes, int minOrderCents, int leadTimeDaysDefault) {
+                              int examDurationMinutes, int minOrderCents, int leadTimeDaysDefault,
+                              boolean examReminderEnabled, boolean pickupFollowupEnabled,
+                              int pickupFollowupDays) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
         OticaConfig saved = repository.upsert(
-            companyId, opensAt, closesAt, examDurationMinutes, minOrderCents, leadTimeDaysDefault);
+            companyId, opensAt, closesAt, examDurationMinutes, minOrderCents, leadTimeDaysDefault,
+            examReminderEnabled, pickupFollowupEnabled,
+            Math.max(1, Math.min(30, pickupFollowupDays)));
         auditLogger.log(companyId, userId, "otica_config_updated", "otica_config", companyId,
             Map.of("exam_duration_minutes", examDurationMinutes, "min_order_cents", minOrderCents,
                 "lead_time_days_default", leadTimeDaysDefault));

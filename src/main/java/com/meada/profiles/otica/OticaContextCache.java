@@ -96,6 +96,27 @@ public class OticaContextCache {
             }
             sb.append("\n");
         }
+
+        // --- EXAMES FUTUROS DO CLIENTE (onda 1, backlog #1 — a IA captura confirmação/cancelamento) ---
+        if (contactId != null) {
+            java.util.List<com.meada.profiles.otica.appointments.OticaExamAppointment> upcoming =
+                examRepository.listByContact(companyId, contactId, true);
+            if (!upcoming.isEmpty()) {
+                sb.append("EXAMES FUTUROS DESTE CLIENTE (use o id EXATO na tag de confirmação):\n");
+                for (var e : upcoming) {
+                    java.time.ZonedDateTime z = e.startAt().atZone(java.time.ZoneId.of("America/Sao_Paulo"));
+                    sb.append("- ").append(e.id()).append(" · ")
+                        .append(java.time.format.DateTimeFormatter.ofPattern("dd/MM HH:mm").format(z))
+                        .append(" com ").append(e.professionalName())
+                        .append(" · status ").append(e.status()).append("\n");
+                }
+                sb.append("Quando o cliente CONFIRMAR um exame futuro (ex.: responder SIM ao lembrete) ou "
+                    + "pedir para DESMARCAR, sua ÚLTIMA mensagem deve TERMINAR com a tag (linha própria):\n"
+                    + "<confirmacao_exame>{\"exam_id\":\"UUID\",\"decisao\":\"confirmado|cancelado\"}"
+                    + "</confirmacao_exame>\n"
+                    + "Você só REFLETE a decisão do cliente — NUNCA confirme ou cancele sem ele pedir.\n\n");
+            }
+        }
         sb.append(buildSlotsSegment(companyId, config, pros));
 
         // ===== FLUXO B — ENCOMENDA =====

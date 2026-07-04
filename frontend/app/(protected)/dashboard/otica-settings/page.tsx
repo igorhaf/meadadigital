@@ -16,6 +16,9 @@ type FormState = {
   examDurationMinutes: number
   minOrder: string // reais
   leadTimeDaysDefault: number
+  examReminderEnabled: boolean
+  pickupFollowupEnabled: boolean
+  pickupFollowupDays: string
 }
 
 function hhmm(t: string): string {
@@ -43,6 +46,9 @@ export default function OticaSettingsPage() {
     examDurationMinutes: d.examDurationMinutes,
     minOrder: String(d.minOrderCents / 100),
     leadTimeDaysDefault: d.leadTimeDaysDefault,
+    examReminderEnabled: d.examReminderEnabled ?? true,
+    pickupFollowupEnabled: d.pickupFollowupEnabled ?? true,
+    pickupFollowupDays: String(d.pickupFollowupDays ?? 3),
   }))
 
   const saveMutation = useMutation({
@@ -54,6 +60,9 @@ export default function OticaSettingsPage() {
         examDurationMinutes: form.examDurationMinutes,
         minOrderCents: Math.max(0, Math.round(Number(form.minOrder || 0) * 100)),
         leadTimeDaysDefault: form.leadTimeDaysDefault,
+        examReminderEnabled: form.examReminderEnabled,
+        pickupFollowupEnabled: form.pickupFollowupEnabled,
+        pickupFollowupDays: Math.max(1, Math.min(30, Number(form.pickupFollowupDays) || 3)),
       })
     },
     onSuccess: () => {
@@ -173,6 +182,60 @@ export default function OticaSettingsPage() {
             <p className="text-xs text-muted-foreground">
               Mudanças afetam apenas exames <strong>futuros</strong> e novos pedidos.
             </p>
+
+            <Section title="Automações">
+              <div className="space-y-4">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.examReminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, examReminderEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Lembrete de exame na véspera
+                    <span className="block text-xs text-muted-foreground">
+                      &quot;Seu exame é amanhã às 14h — confirma?&quot; A resposta cai na conversa
+                      com a IA (confirmar ou desmarcar, liberando o horário).
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.pickupFollowupEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, pickupFollowupEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Aviso de óculos pronto parado
+                    <span className="block text-xs text-muted-foreground">
+                      Pedido em &quot;pronto&quot; sem retirada recebe um lembrete gentil após a
+                      janela abaixo (1x por vez).
+                    </span>
+                  </span>
+                </label>
+                <div className="w-44">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Dias em pronto até o aviso
+                  </label>
+                  <input
+                    type="number"
+                    min={1}
+                    max={30}
+                    value={form.pickupFollowupDays}
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, pickupFollowupDays: e.target.value })
+                    }
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
+                </div>
+              </div>
+            </Section>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {saved && <p className="text-sm text-emerald-600">Configurações salvas.</p>}

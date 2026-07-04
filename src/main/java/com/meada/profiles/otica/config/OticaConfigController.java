@@ -47,7 +47,10 @@ public class OticaConfigController {
         @NotBlank String closesAt,
         @Min(15) @Max(240) int examDurationMinutes,
         @Min(0) int minOrderCents,
-        @Min(0) int leadTimeDaysDefault) {}
+        @Min(0) int leadTimeDaysDefault,
+        Boolean examReminderEnabled,
+        Boolean pickupFollowupEnabled,
+        Integer pickupFollowupDays) {}
 
     @GetMapping("/api/otica/config")
     public ResponseEntity<Object> get(
@@ -81,7 +84,10 @@ public class OticaConfigController {
         }
         try {
             return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
-                req.examDurationMinutes(), req.minOrderCents(), req.leadTimeDaysDefault()));
+                req.examDurationMinutes(), req.minOrderCents(), req.leadTimeDaysDefault(),
+                req.examReminderEnabled() == null || req.examReminderEnabled(),
+                req.pickupFollowupEnabled() == null || req.pickupFollowupEnabled(),
+                req.pickupFollowupDays() == null ? 3 : req.pickupFollowupDays()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }
