@@ -152,7 +152,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/87_viagens_onda1.sql",
         "db/migrations/88_sushi_onda2.sql",
         "db/migrations/89_suplementos_onda1.sql",
-        "db/migrations/90_salon_onda1.sql"
+        "db/migrations/90_salon_onda1.sql",
+        "db/migrations/91_restaurant_onda1.sql"
     };
 
     /**

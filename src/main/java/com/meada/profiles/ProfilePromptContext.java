@@ -622,9 +622,11 @@ public class ProfilePromptContext {
             return persona + legalCaseContextCache.contextSegment(companyId, contactId);
         }
         if ("restaurant".equals(profileId)) {
-            // restaurant (7.3): injeta mesas + reservas próximas (por company). IGNORA conversationId
-            // (o contexto é da agenda do restaurante, não do contato).
-            return persona + reservationContextCache.contextSegment(companyId);
+            // restaurant (7.3): mesas + reservas próximas (cache por company) + bloco FRESCO do
+            // contato (onda 1: reservas dele + tag <confirmacao_reserva> do loop de lembrete).
+            UUID restaurantContactId = conversationId == null ? null
+                : conversationRepository.findContactIdByConversation(conversationId).orElse(null);
+            return persona + reservationContextCache.contextSegment(companyId, restaurantContactId);
         }
         if ("dental".equals(profileId)) {
             // dental (7.4): persona base da SM-A (intacta) + contexto dinâmico — paciente identificado

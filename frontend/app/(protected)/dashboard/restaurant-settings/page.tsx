@@ -15,6 +15,8 @@ type FormState = {
   bufferMinutes: number
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
 }
 
 /** Recorta "HH:MM:SS" → "HH:MM" (o backend devolve time com segundos). */
@@ -41,6 +43,8 @@ export default function RestaurantSettingsPage() {
     bufferMinutes: d.bufferMinutes,
     opensAt: hhmm(d.opensAt),
     closesAt: hhmm(d.closesAt),
+    reminderEnabled: d.reminderEnabled ?? true,
+    autoCompleteEnabled: d.autoCompleteEnabled ?? true,
   }))
 
   const saveMutation = useMutation({
@@ -152,6 +156,45 @@ export default function RestaurantSettingsPage() {
               Mudanças afetam apenas reservas <strong>futuras</strong> — reservas já confirmadas
               mantêm a duração do momento em que foram criadas.
             </p>
+
+            <Section title="Automações">
+              <div className="space-y-4">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.reminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, reminderEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Lembrete de véspera com confirmação (SIM/NÃO)
+                    <span className="block text-xs text-muted-foreground">
+                      Na véspera, o cliente recebe &quot;confirma sua mesa?&quot; — SIM confirma e
+                      NÃO cancela (liberando o horário), tudo pela conversa com a IA.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.autoCompleteEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Concluir automaticamente reservas confirmadas que já passaram
+                    <span className="block text-xs text-muted-foreground">
+                      Confirmada com horário no passado (2h de folga) vira &quot;realizada&quot;,
+                      sem mensagem. No-show continua sendo marcado manualmente.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </Section>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {saved && <p className="text-sm text-emerald-600">Configurações salvas.</p>}

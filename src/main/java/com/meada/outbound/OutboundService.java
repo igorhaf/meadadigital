@@ -106,6 +106,7 @@ public class OutboundService {
     private final com.meada.profiles.barbearia.appointments.AgendamentoBarbeariaConfirmHandler agendamentoBarbeariaConfirmHandler;
     private final com.meada.profiles.barbearia.queue.EntrarFilaHandler entrarFilaHandler;
     private final com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler;
+    private final com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler;
     // Camada 8.2 (perfil eventos): pós-processa <proposta_evento> (abre proposta) e <aprovacao_proposta> (muta estado).
     private final com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler;
     private final com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler;
@@ -244,6 +245,7 @@ public class OutboundService {
                            com.meada.profiles.barbearia.appointments.AgendamentoBarbeariaConfirmHandler agendamentoBarbeariaConfirmHandler,
                            com.meada.profiles.barbearia.queue.EntrarFilaHandler entrarFilaHandler,
                            com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler,
+                           com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler,
                            com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler,
                            com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler,
                            com.meada.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler,
@@ -311,6 +313,7 @@ public class OutboundService {
         this.agendamentoBarbeariaConfirmHandler = agendamentoBarbeariaConfirmHandler;
         this.entrarFilaHandler = entrarFilaHandler;
         this.confirmacaoBarbeariaHandler = confirmacaoBarbeariaHandler;
+        this.confirmacaoReservaHandler = confirmacaoReservaHandler;
         this.propostaEventoConfirmHandler = propostaEventoConfirmHandler;
         this.aprovacaoPropostaHandler = aprovacaoPropostaHandler;
         this.agendamentoEsteticaConfirmHandler = agendamentoEsteticaConfirmHandler;
@@ -467,6 +470,8 @@ public class OutboundService {
         toSend = maybeProcessAgendamentoBarbearia(event, conversationId, toSend);
         toSend = maybeProcessFilaBarbearia(event, conversationId, toSend);
         toSend = maybeProcessConfirmacaoBarbearia(event, conversationId, toSend);
+        // Onda restaurant 1: <confirmacao_reserva> reflete o SIM/NÃO do lembrete de véspera.
+        toSend = maybeProcessConfirmacaoReserva(event, conversationId, toSend);
         // Camada 8.2 (perfil eventos): <proposta_evento> abre a proposta; <aprovacao_proposta> muta o
         // estado da proposta orçada. Encadeados (perfil é único; só um age).
         toSend = maybeProcessPropostaEvento(event, conversationId, toSend);
@@ -981,6 +986,33 @@ public class OutboundService {
             confirmacaoBarbeariaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = confirmacaoBarbeariaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'restaurant' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_reserva>}, aplica a DECISÃO DO CLIENTE à reserva (confirmada/cancelada —
+     * ConfirmacaoReservaHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete "confirma? SIM/NÃO" do RestaurantReminderJob) e devolve um AiResponse com a tag
+     * removida; senão devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoReserva(MessageInboundProcessedEvent event,
+                                                      UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoReservaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"restaurant".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoReservaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoReservaHandler.stripConfirmacaoTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());
