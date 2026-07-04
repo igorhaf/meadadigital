@@ -44,7 +44,7 @@ class PousadaConfigServiceTest extends AbstractIntegrationTest {
     @DisplayName("update faz upsert + audita pousada_config_updated")
     void update_audits() {
         PousadaConfig saved = service.update(COMPANY, USER, LocalTime.of(15, 0), LocalTime.of(12, 0),
-            "Cancelamento grátis até 7 dias antes.");
+            "Cancelamento grátis até 7 dias antes.", true, false);
         assertThat(saved.checkInTime()).isEqualTo(LocalTime.of(15, 0));
         assertThat(saved.cancellationPolicy()).contains("7 dias");
         Long audit = jdbcTemplate.queryForObject(

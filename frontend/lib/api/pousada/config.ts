@@ -5,6 +5,8 @@ export type UpdateConfigInput = {
   checkInTime: string // "HH:MM"
   checkOutTime: string // "HH:MM"
   cancellationPolicy?: string | null
+  reminderEnabled?: boolean
+  autoTransitionEnabled?: boolean
 }
 
 export function getConfig(): Promise<Config> {

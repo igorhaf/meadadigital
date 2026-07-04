@@ -110,6 +110,23 @@ public class PousadaContextCache {
             } else {
                 sb.append("HISTÓRICO DO CLIENTE: primeira vez (sem reservas anteriores).\n\n");
             }
+            // --- RESERVAS FUTURAS (onda 1, backlog #2 — a IA captura confirmação/cancelamento) ---
+            List<PousadaReservation> upcoming =
+                reservationRepository.listUpcomingByContact(companyId, contactId, 5);
+            if (!upcoming.isEmpty()) {
+                sb.append("RESERVAS FUTURAS DESTE HÓSPEDE (use o id EXATO na tag de confirmação):\n");
+                for (PousadaReservation r : upcoming) {
+                    sb.append("- ").append(r.id()).append(" · ").append(r.roomName())
+                        .append(", ").append(DATE_FMT.format(r.checkInDate())).append(" a ")
+                        .append(DATE_FMT.format(r.checkOutDate()))
+                        .append(" · status ").append(statusLabel(r.status())).append("\n");
+                }
+                sb.append("Quando o hóspede CONFIRMAR a chegada (ex.: responder SIM ao lembrete) ou "
+                    + "pedir para CANCELAR, sua ÚLTIMA mensagem deve TERMINAR com a tag (linha própria):\n"
+                    + "<confirmacao_pousada>{\"reservation_id\":\"UUID\",\"decisao\":\"confirmado|cancelado\"}"
+                    + "</confirmacao_pousada>\n"
+                    + "Você só REFLETE a decisão do hóspede — NUNCA confirme ou cancele sem ele pedir.\n\n");
+            }
         } else {
             sb.append("CLIENTE NÃO IDENTIFICADO pelo telefone. Peça o nome para registrar a reserva.\n\n");
         }

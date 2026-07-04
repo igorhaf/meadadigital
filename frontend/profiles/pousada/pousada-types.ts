@@ -19,6 +19,8 @@ export type Config = {
   checkInTime: string
   checkOutTime: string
   cancellationPolicy: string | null
+  reminderEnabled: boolean
+  autoTransitionEnabled: boolean
 }
 
 /** Reserva (espelha PousadaReservation). checkInDate/checkOutDate em "YYYY-MM-DD". */

@@ -10,7 +10,13 @@ import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/pousada/config'
 import { useSyncedForm } from '@/lib/use-synced-form'
 
-type FormState = { checkInTime: string; checkOutTime: string; cancellationPolicy: string }
+type FormState = {
+  checkInTime: string
+  checkOutTime: string
+  cancellationPolicy: string
+  reminderEnabled: boolean
+  autoTransitionEnabled: boolean
+}
 
 function hhmm(t: string): string {
   return t?.slice(0, 5) ?? ''
@@ -34,6 +40,8 @@ export default function PousadaSettingsPage() {
     checkInTime: hhmm(d.checkInTime),
     checkOutTime: hhmm(d.checkOutTime),
     cancellationPolicy: d.cancellationPolicy ?? '',
+    reminderEnabled: d.reminderEnabled ?? true,
+    autoTransitionEnabled: d.autoTransitionEnabled ?? false,
   }))
 
   const saveMutation = useMutation({
@@ -43,6 +51,8 @@ export default function PousadaSettingsPage() {
         checkInTime: form.checkInTime,
         checkOutTime: form.checkOutTime,
         cancellationPolicy: form.cancellationPolicy || null,
+        reminderEnabled: form.reminderEnabled,
+        autoTransitionEnabled: form.autoTransitionEnabled,
       })
     },
     onSuccess: () => {
@@ -120,6 +130,45 @@ export default function PousadaSettingsPage() {
             <p className="text-xs text-muted-foreground">
               Mudanças afetam apenas reservas <strong>futuras</strong>.
             </p>
+
+            <Section title="Automações">
+              <div className="space-y-4">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.reminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, reminderEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Lembrete de check-in na véspera
+                    <span className="block text-xs text-muted-foreground">
+                      &quot;Sua estadia começa amanhã — confirma sua chegada?&quot; A resposta cai
+                      na conversa com a IA (confirmar ou cancelar, liberando o quarto).
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.autoTransitionEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, autoTransitionEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Atualizar status vencidos automaticamente
+                    <span className="block text-xs text-muted-foreground">
+                      Confirmado com check-in vencido (1 dia de folga) vira no-show; hospedado com
+                      check-out vencido vira check-out. Sem mensagens. Desligado por padrão.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </Section>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {saved && <p className="text-sm text-emerald-600">Configurações salvas.</p>}
