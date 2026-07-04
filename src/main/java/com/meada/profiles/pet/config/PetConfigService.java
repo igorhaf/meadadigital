@@ -30,11 +30,12 @@ public class PetConfigService {
     }
 
     @Transactional
-    public PetConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt, int bufferMinutes) {
+    public PetConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt, int bufferMinutes,
+                            boolean reminderEnabled) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        PetConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes);
+        PetConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes, reminderEnabled);
         auditLogger.log(companyId, userId, "pet_config_updated", "pet_config", companyId, Map.of("buffer_minutes", bufferMinutes));
         contextCache.invalidate(companyId);
         return saved;

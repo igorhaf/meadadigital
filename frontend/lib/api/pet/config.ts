@@ -5,6 +5,7 @@ export type UpdateConfigInput = {
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
   bufferMinutes: number
+  reminderEnabled?: boolean
 }
 
 export function getConfig(): Promise<PetConfig> {

@@ -69,3 +69,14 @@ mesmo profissional não.
 Prontuário/histórico clínico, carteira de vacinas com agenda, prescrição, internação, pacotes de
 banho recorrentes (assinatura), foto do pet, pagamento online e lembretes automáticos. Esses são
 temas de fases futuras.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_PET #1, migration 94)
+
+- **Lembrete de véspera + confirmação (#1):** `PetReminderJob` (cron 10h) lembra o tutor na
+  véspera ("amanhã o Thor tem banho às 14h com a Duda — confirma?") dos agendamentos
+  agendado/confirmado. Idempotência por (agendamento, start_at) via `reminded_start_at`
+  (remarcar rearma); sem canal marca sem envio. A resposta cai na IA, que emite
+  `<confirmacao_pet>{appointment_id, decisao}` (confirmado|cancelado) com BARREIRA DE CONTATO
+  do tutor — desmarcar LIBERA o slot do profissional. O contexto do tutor ganhou o bloco
+  "AGENDAMENTOS FUTUROS" com os ids + a instrução da tag. Toggle `reminder_enabled` (default
+  ligado) em Configurações. Trava clínica intacta (lembrete administrativo, sem conduta).

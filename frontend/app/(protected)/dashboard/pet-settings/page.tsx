@@ -10,7 +10,12 @@ import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/pet/config'
 import { useSyncedForm } from '@/lib/use-synced-form'
 
-type FormState = { opensAt: string; closesAt: string; bufferMinutes: number }
+type FormState = {
+  opensAt: string
+  closesAt: string
+  bufferMinutes: number
+  reminderEnabled: boolean
+}
 
 function hhmm(t: string): string {
   return t?.slice(0, 5) ?? ''
@@ -34,6 +39,7 @@ export default function PetSettingsPage() {
     opensAt: hhmm(d.opensAt),
     closesAt: hhmm(d.closesAt),
     bufferMinutes: d.bufferMinutes,
+    reminderEnabled: d.reminderEnabled ?? true,
   }))
 
   const saveMutation = useMutation({
@@ -126,6 +132,25 @@ export default function PetSettingsPage() {
             <p className="text-xs text-muted-foreground">
               Mudanças afetam apenas agendamentos <strong>futuros</strong>.
             </p>
+
+            <Section title="Automações">
+              <label className="flex items-start gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  checked={form.reminderEnabled}
+                  className="mt-0.5"
+                  onChange={(e) => setForm((f) => f && { ...f, reminderEnabled: e.target.checked })}
+                />
+                <span>
+                  Lembrete de véspera pelo WhatsApp
+                  <span className="block text-xs text-muted-foreground">
+                    &quot;Amanhã o Thor tem banho às 14h — confirma?&quot; A resposta cai na
+                    conversa com a IA (confirmar ou desmarcar, liberando o horário). Remarcar
+                    reenvia o lembrete.
+                  </span>
+                </span>
+              </label>
+            </Section>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {saved && <p className="text-sm text-emerald-600">Configurações salvas.</p>}

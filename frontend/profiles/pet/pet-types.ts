@@ -31,6 +31,7 @@ export type PetConfig = {
   opensAt: string
   closesAt: string
   bufferMinutes: number
+  reminderEnabled: boolean
 }
 
 /** Espécie do animal (espelha o CHECK de pet_animals.species). */

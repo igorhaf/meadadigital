@@ -108,6 +108,7 @@ public class OutboundService {
     private final com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler;
     private final com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler;
     private final com.meada.profiles.pousada.reservations.ConfirmacaoPousadaHandler confirmacaoPousadaHandler;
+    private final com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler;
     // Camada 8.2 (perfil eventos): pós-processa <proposta_evento> (abre proposta) e <aprovacao_proposta> (muta estado).
     private final com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler;
     private final com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler;
@@ -248,6 +249,7 @@ public class OutboundService {
                            com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler,
                            com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler,
                            com.meada.profiles.pousada.reservations.ConfirmacaoPousadaHandler confirmacaoPousadaHandler,
+                           com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler,
                            com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler,
                            com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler,
                            com.meada.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler,
@@ -317,6 +319,7 @@ public class OutboundService {
         this.confirmacaoBarbeariaHandler = confirmacaoBarbeariaHandler;
         this.confirmacaoReservaHandler = confirmacaoReservaHandler;
         this.confirmacaoPousadaHandler = confirmacaoPousadaHandler;
+        this.confirmacaoPetHandler = confirmacaoPetHandler;
         this.propostaEventoConfirmHandler = propostaEventoConfirmHandler;
         this.aprovacaoPropostaHandler = aprovacaoPropostaHandler;
         this.agendamentoEsteticaConfirmHandler = agendamentoEsteticaConfirmHandler;
@@ -477,6 +480,8 @@ public class OutboundService {
         toSend = maybeProcessConfirmacaoReserva(event, conversationId, toSend);
         // Onda pousada 1: <confirmacao_pousada> reflete o SIM/cancelamento do lembrete de check-in.
         toSend = maybeProcessConfirmacaoPousada(event, conversationId, toSend);
+        // Onda pet 1: <confirmacao_pet> reflete o SIM/desmarcar do lembrete de véspera.
+        toSend = maybeProcessConfirmacaoPet(event, conversationId, toSend);
         // Camada 8.2 (perfil eventos): <proposta_evento> abre a proposta; <aprovacao_proposta> muta o
         // estado da proposta orçada. Encadeados (perfil é único; só um age).
         toSend = maybeProcessPropostaEvento(event, conversationId, toSend);
@@ -1045,6 +1050,33 @@ public class OutboundService {
             confirmacaoPousadaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = confirmacaoPousadaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'pet' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_pet>}, aplica a DECISÃO DO TUTOR ao agendamento (confirmado/cancelado —
+     * ConfirmacaoPetHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete de véspera do PetReminderJob) e devolve um AiResponse com a tag removida; senão
+     * devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoPet(MessageInboundProcessedEvent event,
+                                                  UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoPetHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"pet".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoPetHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoPetHandler.stripConfirmacaoTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());
