@@ -528,6 +528,8 @@ const LAVANDERIA_GROUP: NavGroup = {
   items: [
     { label: 'Serviços', href: '/dashboard/lavanderia-services', icon: WashingMachine },
     { label: 'Pedidos', href: '/dashboard/lavanderia-orders', icon: ClipboardList },
+    { label: 'Cupons', href: '/dashboard/lavanderia-coupons', icon: Ticket },
+    { label: 'Fidelidade', href: '/dashboard/lavanderia-loyalty', icon: Award },
     { label: 'Configurações', href: '/dashboard/lavanderia-settings', icon: Settings },
   ],
 }

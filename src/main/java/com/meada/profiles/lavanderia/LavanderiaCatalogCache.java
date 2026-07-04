@@ -118,6 +118,20 @@ public class LavanderiaCatalogCache {
             sb.append("Pedido mínimo: R$ ").append(formatBrl(config.minOrderCents()))
                 .append(" (avise o cliente se o pedido ficar abaixo).\n");
         }
+        // Onda 1 (backlog #2): serviço EXPRESS — a IA informa a sobretaxa DA CONFIG, nunca inventa.
+        if (config.expressEnabled()) {
+            sb.append("SERVIÇO EXPRESS: quando o cliente tiver PRESSA, ofereça o express — entrega em ")
+                .append(config.expressTurnaroundDays())
+                .append(" dia(s) com sobretaxa de ").append(config.expressSurchargePct())
+                .append("% sobre o subtotal. Se o cliente aceitar, CONFIRME a sobretaxa e acrescente "
+                    + "\"express\":true na tag (quem calcula o valor é o sistema). Sem aceite explícito, "
+                    + "NÃO marque express.\n");
+        }
+        // Onda 1 (backlog #6): cupom — validação e recálculo são do sistema.
+        sb.append("Se o cliente informar um CUPOM de desconto, registre o código no campo \"cupom\" "
+            + "da tag (omita se não houver) — quem VALIDA o cupom, calcula a fidelidade e recalcula o "
+            + "total é o sistema; NUNCA invente desconto nem prometa que o cupom vale antes da "
+            + "validação.\n");
         sb.append("Prazo padrão (turnaround): ").append(config.turnaroundDaysDefault()).append(" dia(s).\n");
         sb.append("CONFIG: delivery_fee_cents=").append(config.deliveryFeeCents())
             .append(", min_order_cents=").append(config.minOrderCents())

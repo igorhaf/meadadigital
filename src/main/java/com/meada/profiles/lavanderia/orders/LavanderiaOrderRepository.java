@@ -1,5 +1,9 @@
 package com.meada.profiles.lavanderia.orders;
 
+import com.meada.profiles.lavanderia.coupons.LavanderiaCoupon;
+import com.meada.profiles.lavanderia.coupons.LavanderiaCouponRepository;
+import com.meada.profiles.lavanderia.loyalty.LavanderiaLoyaltyConfig;
+import com.meada.profiles.lavanderia.loyalty.LavanderiaLoyaltyConfigRepository;
 import com.meada.profiles.lavanderia.services.LavanderiaServiceOption;
 import com.meada.profiles.lavanderia.services.LavanderiaServiceOptionRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
@@ -47,11 +51,17 @@ public class LavanderiaOrderRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final LavanderiaServiceOptionRepository optionRepository;
+    private final LavanderiaCouponRepository couponRepository;
+    private final LavanderiaLoyaltyConfigRepository loyaltyRepository;
 
     public LavanderiaOrderRepository(JdbcTemplate jdbcTemplate,
-                                     LavanderiaServiceOptionRepository optionRepository) {
+                                     LavanderiaServiceOptionRepository optionRepository,
+                                     LavanderiaCouponRepository couponRepository,
+                                     LavanderiaLoyaltyConfigRepository loyaltyRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.optionRepository = optionRepository;
+        this.couponRepository = couponRepository;
+        this.loyaltyRepository = loyaltyRepository;
     }
 
     private final RowMapper<LavanderiaOrderItemOption> ITEM_OPTION_MAPPER = (rs, rn) -> new LavanderiaOrderItemOption(
@@ -78,8 +88,13 @@ public class LavanderiaOrderRepository {
             (UUID) rs.getObject("conversation_id"),
             rs.getString("status"),
             rs.getInt("subtotal_cents"),
+            rs.getInt("discount_cents"),
             rs.getInt("delivery_fee_cents"),
             rs.getInt("total_cents"),
+            rs.getString("coupon_code_snapshot"),
+            rs.getBoolean("loyalty_applied"),
+            rs.getBoolean("express"),
+            rs.getInt("express_surcharge_cents"),
             rs.getString("delivery_address"),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
@@ -94,8 +109,9 @@ public class LavanderiaOrderRepository {
     }
 
     private static final String ORDER_SELECT =
-        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.delivery_fee_cents, "
-            + "o.total_cents, o.delivery_address, o.notes, o.rejection_reason, "
+        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.discount_cents, "
+            + "o.delivery_fee_cents, o.total_cents, o.coupon_code_snapshot, o.loyalty_applied, "
+            + "o.express, o.express_surcharge_cents, o.delivery_address, o.notes, o.rejection_reason, "
             + "o.collect_date, o.delivery_date, o.period, o.created_at, o.status_updated_at, "
             + "ct.name as contact_name, ct.phone_number as contact_phone "
             + "from lavanderia_orders o join contacts ct on ct.id = o.contact_id ";
@@ -154,7 +170,9 @@ public class LavanderiaOrderRepository {
                 it.unitPriceCents(), it.turnaroundSnapshot(), options));
         }
         return new LavanderiaOrder(o.id(), o.conversationId(), o.status(), o.subtotalCents(),
-            o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.notes(), o.rejectionReason(),
+            o.discountCents(), o.deliveryFeeCents(), o.totalCents(), o.couponCode(),
+            o.loyaltyApplied(), o.express(), o.expressSurchargeCents(),
+            o.deliveryAddress(), o.notes(), o.rejectionReason(),
             o.collectDate(), o.deliveryDate(), o.period(),
             o.createdAt(), o.statusUpdatedAt(), o.contactName(), o.contactPhone(), withOpts);
     }
@@ -176,7 +194,9 @@ public class LavanderiaOrderRepository {
     public LavanderiaOrder createOrder(UUID companyId, UUID conversationId, UUID contactId,
                                        String deliveryAddress, List<OrderLineInput> lines,
                                        int deliveryFeeCents, int minOrderCents, String notes,
-                                       LocalDate collectDate, LocalDate requestedDeliveryDate, String period) {
+                                       LocalDate collectDate, LocalDate requestedDeliveryDate, String period,
+                                       String couponCode, boolean express,
+                                       int expressSurchargePct, int expressTurnaroundDays) {
         record OptSnap(UUID serviceOptionId, String groupLabel, String optionLabel, int delta) {}
         record Snap(UUID serviceId, String name, int unitPrice, int qty, int turnaround, List<OptSnap> options) {}
 
@@ -220,11 +240,57 @@ public class LavanderiaOrderRepository {
         if (minOrderCents > 0 && subtotal < minOrderCents) {
             throw new BelowMinimumException(minOrderCents);
         }
-        int total = subtotal + deliveryFeeCents;
 
-        // ESCAPADA: delivery_date MATERIALIZADA = collect + MAX(turnaround). MAX em Java (date + interval
-        // não é IMMUTABLE — lição end_at reaplicada às DATAS).
-        LocalDate firstPossible = collectDate.plusDays(maxTurnaround);
+        // Onda 1 (backlog #6/#5): cupom + fidelidade, na MESMA transação (clone adega).
+        UUID couponId = null;
+        String couponSnapshot = null;
+        int couponDiscount = 0;
+        if (couponCode != null && !couponCode.isBlank()) {
+            Optional<LavanderiaCoupon> maybe = couponRepository.findByCode(companyId, couponCode);
+            if (maybe.isPresent()) {
+                LavanderiaCoupon c = maybe.get();
+                boolean valid = c.active()
+                    && (c.validUntil() == null || !c.validUntil().isBefore(LocalDate.now()))
+                    && (c.maxUses() == null || c.uses() < c.maxUses())
+                    && subtotal >= c.minOrderCents();
+                if (valid) {
+                    couponDiscount = "percent".equals(c.kind())
+                        ? subtotal * c.value() / 100
+                        : c.value();
+                    couponId = c.id();
+                    couponSnapshot = c.code();
+                    couponRepository.incrementUses(companyId, c.id());
+                }
+            }
+        }
+
+        boolean loyaltyApplied = false;
+        int loyaltyDiscount = 0;
+        LavanderiaLoyaltyConfig loyalty = loyaltyRepository.findByCompany(companyId);
+        if (loyalty.enabled()) {
+            Long delivered = jdbcTemplate.queryForObject(
+                "select count(*) from lavanderia_orders where company_id = ? and contact_id = ? "
+                    + "and status = 'entregue'", Long.class, companyId, contactId);
+            long deliveredCount = delivered == null ? 0 : delivered;
+            if (deliveredCount > 0 && deliveredCount % loyalty.thresholdOrders() == 0) {
+                loyaltyApplied = true;
+                loyaltyDiscount = "percent".equals(loyalty.rewardKind())
+                    ? subtotal * loyalty.rewardValue() / 100
+                    : loyalty.rewardValue();
+            }
+        }
+
+        int discount = Math.min(subtotal, couponDiscount + loyaltyDiscount);
+
+        // Onda 1 (backlog #2): EXPRESS substitui o turnaround pelos dias da config e soma a
+        // sobretaxa (% do subtotal) — materializados em Java.
+        int effectiveTurnaround = express ? expressTurnaroundDays : maxTurnaround;
+        int expressSurcharge = express ? subtotal * expressSurchargePct / 100 : 0;
+        int total = subtotal - discount + deliveryFeeCents + expressSurcharge;
+
+        // ESCAPADA: delivery_date MATERIALIZADA = collect + turnaround efetivo. Em Java (date +
+        // interval não é IMMUTABLE — lição end_at reaplicada às DATAS).
+        LocalDate firstPossible = collectDate.plusDays(effectiveTurnaround);
         if (requestedDeliveryDate != null && requestedDeliveryDate.isBefore(firstPossible)) {
             throw new TurnaroundViolationException(firstPossible);
         }
@@ -232,10 +298,12 @@ public class LavanderiaOrderRepository {
 
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into lavanderia_orders (company_id, conversation_id, contact_id, subtotal_cents, "
-                + "delivery_fee_cents, total_cents, delivery_address, notes, "
+                + "discount_cents, delivery_fee_cents, total_cents, coupon_id, coupon_code_snapshot, "
+                + "loyalty_applied, express, express_surcharge_cents, delivery_address, notes, "
                 + "collect_date, delivery_date, period) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, conversationId, contactId, subtotal, deliveryFeeCents, total,
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, conversationId, contactId, subtotal, discount, deliveryFeeCents,
+            total, couponId, couponSnapshot, loyaltyApplied, express, expressSurcharge,
             deliveryAddress, notes,
             java.sql.Date.valueOf(collectDate), java.sql.Date.valueOf(deliveryDate), period);
 

@@ -33,9 +33,20 @@ public class LavanderiaConfigService {
 
     @Transactional
     public LavanderiaConfig update(UUID companyId, UUID userId, int deliveryFeeCents, int minOrderCents,
-                                   int turnaroundDaysDefault) {
+                                   int turnaroundDaysDefault, boolean expressEnabled,
+                                   int expressSurchargePct, int expressTurnaroundDays,
+                                   boolean collectReminderEnabled, boolean readyReminderEnabled,
+                                   int readyReminderDays, boolean reactivationEnabled,
+                                   int reactivationDays, String reactivationCouponCode) {
         LavanderiaConfig saved = repository.upsert(companyId, Math.max(0, deliveryFeeCents),
-            Math.max(0, minOrderCents), Math.max(0, turnaroundDaysDefault));
+            Math.max(0, minOrderCents), Math.max(0, turnaroundDaysDefault), expressEnabled,
+            Math.min(300, Math.max(0, expressSurchargePct)),
+            Math.min(30, Math.max(0, expressTurnaroundDays)),
+            collectReminderEnabled, readyReminderEnabled,
+            Math.min(30, Math.max(1, readyReminderDays)), reactivationEnabled,
+            Math.min(365, Math.max(7, reactivationDays)),
+            reactivationCouponCode == null || reactivationCouponCode.isBlank()
+                ? null : reactivationCouponCode.strip());
         auditLogger.log(companyId, userId, "lavanderia_config_updated", "lavanderia_config", companyId, Map.of());
         catalogCache.invalidate(companyId);
         return saved;

@@ -86,8 +86,18 @@ function OrderCard({
             Coleta {formatDate(order.collectDate)} · {periodLabel(order.period)}
           </Badge>
           <Badge variant="info">Entrega {formatDate(order.deliveryDate)}</Badge>
+          {order.express && <Badge variant="warning">EXPRESS</Badge>}
+          {order.couponCode && <Badge variant="success">cupom {order.couponCode}</Badge>}
+          {order.loyaltyApplied && <Badge variant="success">fidelidade</Badge>}
         </div>
-        <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
+        <p className="text-sm font-semibold tabular-nums">
+          {formatBrl(order.totalCents)}
+          {order.discountCents > 0 && (
+            <span className="ml-1 text-xs font-normal text-muted-foreground">
+              (−{formatBrl(order.discountCents)})
+            </span>
+          )}
+        </p>
         <div className="flex gap-1 pt-1">
           {awaiting ? (
             <>

@@ -33,7 +33,12 @@ public class LavanderiaConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(int deliveryFeeCents, int minOrderCents, int turnaroundDaysDefault) {}
+    public record ConfigRequest(int deliveryFeeCents, int minOrderCents, int turnaroundDaysDefault,
+                                Boolean expressEnabled, Integer expressSurchargePct,
+                                Integer expressTurnaroundDays, Boolean collectReminderEnabled,
+                                Boolean readyReminderEnabled, Integer readyReminderDays,
+                                Boolean reactivationEnabled, Integer reactivationDays,
+                                String reactivationCouponCode) {}
 
     @GetMapping("/api/lavanderia/config")
     public ResponseEntity<Object> get(
@@ -58,6 +63,15 @@ public class LavanderiaConfigController {
             return error(403, "Forbidden", "forbidden_wrong_profile");
         }
         return ResponseEntity.ok(service.update(companyId, user.userId(),
-            req.deliveryFeeCents(), req.minOrderCents(), req.turnaroundDaysDefault()));
+            req.deliveryFeeCents(), req.minOrderCents(), req.turnaroundDaysDefault(),
+            req.expressEnabled() == null || req.expressEnabled(),
+            req.expressSurchargePct() == null ? 50 : req.expressSurchargePct(),
+            req.expressTurnaroundDays() == null ? 1 : req.expressTurnaroundDays(),
+            req.collectReminderEnabled() == null || req.collectReminderEnabled(),
+            req.readyReminderEnabled() == null || req.readyReminderEnabled(),
+            req.readyReminderDays() == null ? 2 : req.readyReminderDays(),
+            req.reactivationEnabled() != null && req.reactivationEnabled(),
+            req.reactivationDays() == null ? 30 : req.reactivationDays(),
+            req.reactivationCouponCode()));
     }
 }
