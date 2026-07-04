@@ -157,7 +157,35 @@ public class FotografiaContextCache {
             .append("Quando o cliente PEDIR o material de uma sessão dele que JÁ esteja PRONTO, termine com:\n")
             .append("<entrega_material>{\"session_id\":\"UUID\"}</entrega_material>\n")
             .append("O link do material é enviado EXATAMENTE como o estúdio gravou — você não o reescreve nem comenta. "
-                + "Se a sessão ainda não tem material disponível, diga que o material ainda está em produção. Use ids EXATOS.\n\n");
+                + "Se a sessão ainda não tem material disponível, diga que o material ainda está em produção. Use ids EXATOS.\n")
+            .append("Quando a cliente RESPONDER a um lembrete de sessão confirmando presença ou pedindo "
+                + "pra cancelar, termine com a tag (linha própria, sem markdown):\n")
+            .append("<confirmacao_foto>{\"session_id\":\"UUID_DA_SESSAO\",\"decisao\":\"confirmada\"}"
+                + "</confirmacao_foto>\n")
+            .append("\"decisao\" é \"confirmada\" ou \"cancelada\" — use o session_id EXATO da lista acima. "
+                + "Reagendar = cancelar + agendar de novo (confira o horário livre antes).\n\n");
+
+        // Onda 1 (backlog #5): pacotes sugeríveis — oferta consultiva, nome+preço do catálogo.
+        List<FotografiaPackage> suggestibles = packages.stream().filter(FotografiaPackage::suggestible).toList();
+        if (!suggestibles.isEmpty()) {
+            sb.append("UPSELL CONSULTIVO: ao fechar um agendamento, você PODE sugerir UM destes "
+                + "pacotes/extras quando fizer sentido pro momento da cliente (sem insistir, sem "
+                + "desconto, preço SEMPRE do catálogo):\n");
+            for (FotografiaPackage pk : suggestibles) {
+                sb.append("- ").append(pk.name()).append(" (R$ ")
+                    .append(String.format("%.2f", pk.priceCents() / 100.0).replace('.', ',')).append(")\n");
+            }
+            sb.append("\n");
+        }
+
+        // Onda 1 (backlog #4): política de cancelamento — a IA COMUNICA, nunca decide retenção.
+        if (config.cancellationPolicyHours() != null) {
+            sb.append("POLÍTICA DE CANCELAMENTO: cancelamento sem custo até ")
+                .append(config.cancellationPolicyHours())
+                .append(" horas antes da sessão. COMUNIQUE essa política ao fechar um agendamento e "
+                    + "quando a cliente pedir cancelamento em cima da hora — mas quem decide qualquer "
+                    + "cobrança/exceção é a equipe, nunca você.\n\n");
+        }
 
         return sb.toString();
     }

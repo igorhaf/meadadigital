@@ -53,7 +53,8 @@ public class FotografiaPackageController {
         @NotNull Integer durationMinutes,
         @NotNull Integer priceCents,
         Integer deliveryDays,
-        String notes) {}
+        String notes,
+        Boolean suggestible) {}
 
     public record UpdateRequest(
         @Size(max = 200) String name,
@@ -62,7 +63,8 @@ public class FotografiaPackageController {
         Integer priceCents,
         Integer deliveryDays,
         String notes,
-        Boolean active) {}
+        Boolean active,
+        Boolean suggestible) {}
 
     public record ToggleRequest(boolean active) {}
 
@@ -107,7 +109,8 @@ public class FotografiaPackageController {
         try {
             int deliveryDays = req.deliveryDays() == null ? 0 : req.deliveryDays();
             return ResponseEntity.status(201).body(service.create(companyId, user.userId(), req.name(),
-                req.category(), req.durationMinutes(), req.priceCents(), deliveryDays, req.notes()));
+                req.category(), req.durationMinutes(), req.priceCents(), deliveryDays, req.notes(),
+                req.suggestible() != null && req.suggestible()));
         } catch (InvalidDurationException e) {
             return error(400, "Bad Request", "invalid_duration");
         } catch (InvalidPriceException e) {
@@ -129,7 +132,8 @@ public class FotografiaPackageController {
         }
         try {
             return ResponseEntity.ok(service.update(companyId, user.userId(), id, req.name(), req.category(),
-                req.durationMinutes(), req.priceCents(), req.deliveryDays(), req.notes(), req.active()));
+                req.durationMinutes(), req.priceCents(), req.deliveryDays(), req.notes(), req.active(),
+                req.suggestible()));
         } catch (PackageNotFoundException e) {
             return error(404, "Not Found", "package_not_found");
         } catch (InvalidDurationException e) {

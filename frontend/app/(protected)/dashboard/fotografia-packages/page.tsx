@@ -24,6 +24,7 @@ type FormState = {
   priceReais: string
   deliveryDays: number
   notes: string
+  suggestible: boolean
 }
 const EMPTY: FormState = {
   name: '',
@@ -32,6 +33,7 @@ const EMPTY: FormState = {
   priceReais: '',
   deliveryDays: 7,
   notes: '',
+  suggestible: false,
 }
 
 function reaisToCents(reais: string): number {
@@ -67,6 +69,7 @@ export default function FotografiaPackagesPage() {
           priceCents,
           deliveryDays: form.deliveryDays,
           notes: form.notes || null,
+          suggestible: form.suggestible,
         })
       }
       return createPackage({
@@ -76,6 +79,7 @@ export default function FotografiaPackagesPage() {
         priceCents,
         deliveryDays: form.deliveryDays,
         notes: form.notes || null,
+        suggestible: form.suggestible,
       })
     },
     onSuccess: () => {
@@ -124,6 +128,7 @@ export default function FotografiaPackagesPage() {
       priceReais: (p.priceCents / 100).toFixed(2),
       deliveryDays: p.deliveryDays,
       notes: p.notes ?? '',
+      suggestible: p.suggestible,
     })
     setFormError(null)
     setModalOpen(true)
@@ -155,6 +160,7 @@ export default function FotografiaPackagesPage() {
                   {p.category && <Badge variant="muted">{p.category}</Badge>}
                   <Badge variant="info">{p.durationMinutes} min</Badge>
                   <Badge variant="success">{formatBrl(p.priceCents)}</Badge>
+                  {p.suggestible && <Badge variant="warning">sugerível pela IA</Badge>}
                   {!p.active && <Badge variant="muted">inativo</Badge>}
                 </div>
                 <p className="text-xs text-muted-foreground">
@@ -286,6 +292,21 @@ export default function FotografiaPackagesPage() {
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
             />
           </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.suggestible}
+              className="mt-0.5"
+              onChange={(e) => setForm((f) => ({ ...f, suggestible: e.target.checked }))}
+            />
+            <span>
+              Sugerível pela IA (upsell consultivo)
+              <span className="block text-xs text-muted-foreground">
+                A IA pode oferecer este pacote como upgrade/extra na conversa — sempre com o preço
+                do catálogo, sem pressão.
+              </span>
+            </span>
+          </label>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
             <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>

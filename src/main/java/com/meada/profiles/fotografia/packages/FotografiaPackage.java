@@ -18,6 +18,7 @@ public record FotografiaPackage(
     int priceCents,
     int deliveryDays,
     boolean active,
+    boolean suggestible,
     String notes,
     Instant createdAt,
     Instant updatedAt) {

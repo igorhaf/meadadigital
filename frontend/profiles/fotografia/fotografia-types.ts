@@ -17,6 +17,11 @@ export type FotografiaConfig = {
   opensAt: string
   closesAt: string
   slotMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  autoDeliverEnabled: boolean
+  postDeliveryUpsellEnabled: boolean
+  cancellationPolicyHours: number | null
 }
 
 /**
@@ -32,6 +37,7 @@ export type FotografiaPackage = {
   priceCents: number
   deliveryDays: number
   active: boolean
+  suggestible: boolean
   notes: string | null
   createdAt: string
   updatedAt: string

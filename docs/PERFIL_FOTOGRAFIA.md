@@ -96,3 +96,38 @@ emitir — o backend snapshota o valor do pacote no catálogo.
 - Base de conhecimento (RAG): disponível como em todo perfil (item "Conhecimento" do nav +
   `{{knowledge}}` do PromptBuilder, sem gate de perfil).
 - Guard `/api/fotografia/**` → 403 `forbidden_wrong_profile`. Paleta `carvao`. Tenant: `igorhaf27`.
+
+## Onda 1 do backlog (migration 105)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_FOTOGRAFIA.md` (#2, #3, #4-parcial e #5):
+
+- **#2 LEMBRETE D-2/D-1 + CONFIRMAÇÃO:** o `FotografiaReminderJob` (cron
+  `${fotografia.reminder-cron:0 50 9 * * *}`) lembra a cliente em D-2 e D-1 (pacote + fotógrafo +
+  hora, pedindo confirmação). Markers `reminded2_start_at`/`reminded1_start_at` = start_at
+  lembrado — **remarcar REARMA** as duas janelas. A resposta fecha o loop via
+  `ConfirmacaoFotografiaHandler` (`<confirmacao_foto>{session_id, decisao:confirmada|cancelada}`,
+  barreira de contato, máquina de status validada). Auto-transição: confirmada vencida →
+  realizada (silenciosa). Toggles `reminder_enabled`/`auto_complete_enabled` (default ON).
+- **#3 ENTREGA NO PRAZO AUTOMATIZADA:** no `delivery_due_date`, sessão `realizada` COM
+  `delivery_link` gravado é entregue automaticamente — o link sai **VERBATIM** (mesma garantia do
+  `EntregaMaterialHandler`, nunca passa pela IA), a sessão vira `entregue` e um convite
+  pós-entrega oferece extras SEM preço (o momento mais quente de compra; toggle
+  `post_delivery_upsell_enabled`). Falha de envio deixa a sessão `realizada` pro retry do próximo
+  tick. Sem link no prazo, a sessão fica em `realizada` (o estúdio resolve no painel). Toggle
+  `auto_deliver_enabled` (default ON).
+- **#5 UPSELL CONSULTIVO:** `fotografia_packages.suggestible` (default false) — o contexto da IA
+  ganha o bloco "UPSELL CONSULTIVO" com os pacotes marcados (nome + preço DO CATÁLOGO, sem
+  pressão/desconto). Checkbox no modal do pacote + badge "sugerível pela IA".
+- **#4-parcial POLÍTICA DE CANCELAMENTO comunicada:** `cancellation_policy_hours` (nullable) na
+  config — a IA COMUNICA a política ao agendar e em pedidos de cancelamento em cima da hora, mas
+  quem decide cobrança/exceção é a equipe. A retenção REAL de sinal fica bloqueada pelo gateway
+  (#50), junto com o **#1 sinal/pré-pagamento** inteiro.
+
+Settings ganhou "Automações" (4 toggles) e "Política de cancelamento". Teste:
+`FotografiaOnda1IntegrationTest` (lembretes+rearm+confirmação com barreira; auto-complete;
+entrega no prazo com link verbatim + convite + toggle).
+
+**Fica pra onda 2** (registrado, não pedido): #1 sinal/pré-pagamento (bloqueado por #50), #6
+assinatura de ensaios (chassi E), #7 reativação anual ("faz 1 ano do ensaio"), #8 gift card,
+#11 dashboard de ocupação, #14 bloqueio de agenda por fotógrafo, #15 galeria com seleção
+(bloqueada por upload).

@@ -21,12 +21,13 @@ public class FotografiaPackageRepository {
         rs.getInt("price_cents"),
         rs.getInt("delivery_days"),
         rs.getBoolean("active"),
+        rs.getBoolean("suggestible"),
         rs.getString("notes"),
         rs.getTimestamp("created_at").toInstant(),
         rs.getTimestamp("updated_at").toInstant());
 
     private static final String COLS =
-        "id, name, category, duration_minutes, price_cents, delivery_days, active, notes, created_at, updated_at";
+        "id, name, category, duration_minutes, price_cents, delivery_days, active, suggestible, notes, created_at, updated_at";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -52,17 +53,17 @@ public class FotografiaPackageRepository {
     }
 
     public FotografiaPackage insert(UUID companyId, String name, String category, int durationMinutes,
-                                    int priceCents, int deliveryDays, String notes) {
+                                    int priceCents, int deliveryDays, String notes, boolean suggestible) {
         UUID id = jdbcTemplate.queryForObject(
-            "insert into fotografia_packages (company_id, name, category, duration_minutes, price_cents, delivery_days, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, name.trim(), category, durationMinutes, priceCents, deliveryDays, notes);
+            "insert into fotografia_packages (company_id, name, category, duration_minutes, price_cents, delivery_days, notes, suggestible) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, name.trim(), category, durationMinutes, priceCents, deliveryDays, notes, suggestible);
         return findById(companyId, id).orElseThrow();
     }
 
     public Optional<FotografiaPackage> update(UUID companyId, UUID id, String name, String category,
                                               Integer durationMinutes, Integer priceCents, Integer deliveryDays,
-                                              String notes, Boolean active) {
+                                              String notes, Boolean active, Boolean suggestible) {
         List<String> sets = new ArrayList<>();
         List<Object> args = new ArrayList<>();
         if (name != null && !name.isBlank()) { sets.add("name = ?"); args.add(name.trim()); }
@@ -72,6 +73,7 @@ public class FotografiaPackageRepository {
         if (deliveryDays != null) { sets.add("delivery_days = ?"); args.add(deliveryDays); }
         if (notes != null) { sets.add("notes = ?"); args.add(notes); }
         if (active != null) { sets.add("active = ?"); args.add(active); }
+        if (suggestible != null) { sets.add("suggestible = ?"); args.add(suggestible); }
         if (!sets.isEmpty()) {
             sets.add("updated_at = now()");
             args.add(companyId);

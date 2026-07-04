@@ -5,6 +5,11 @@ export type UpdateConfigInput = {
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
   slotMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  autoDeliverEnabled: boolean
+  postDeliveryUpsellEnabled: boolean
+  cancellationPolicyHours: number | null
 }
 
 export function getConfig(): Promise<FotografiaConfig> {

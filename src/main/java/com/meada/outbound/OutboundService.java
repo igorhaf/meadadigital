@@ -111,6 +111,7 @@ public class OutboundService {
     private final com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler;
     private final com.meada.profiles.otica.appointments.ConfirmacaoExameHandler confirmacaoExameHandler;
     private final com.meada.profiles.nutri.appointments.ConfirmacaoNutriHandler confirmacaoNutriHandler;
+    private final com.meada.profiles.fotografia.appointments.ConfirmacaoFotografiaHandler confirmacaoFotografiaHandler;
     private final com.meada.profiles.modainfantil.orders.AvisoEstoqueModaHandler avisoEstoqueModaHandler;
     private final com.meada.profiles.lingerie.orders.AvisoEstoqueLingerieHandler avisoEstoqueLingerieHandler;
     private final com.meada.profiles.las.orders.ListaEsperaLasHandler listaEsperaLasHandler;
@@ -257,6 +258,7 @@ public class OutboundService {
                            com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler,
                            com.meada.profiles.otica.appointments.ConfirmacaoExameHandler confirmacaoExameHandler,
                            com.meada.profiles.nutri.appointments.ConfirmacaoNutriHandler confirmacaoNutriHandler,
+                           com.meada.profiles.fotografia.appointments.ConfirmacaoFotografiaHandler confirmacaoFotografiaHandler,
                            com.meada.profiles.modainfantil.orders.AvisoEstoqueModaHandler avisoEstoqueModaHandler,
                            com.meada.profiles.lingerie.orders.AvisoEstoqueLingerieHandler avisoEstoqueLingerieHandler,
                            com.meada.profiles.las.orders.ListaEsperaLasHandler listaEsperaLasHandler,
@@ -332,6 +334,7 @@ public class OutboundService {
         this.confirmacaoPetHandler = confirmacaoPetHandler;
         this.confirmacaoExameHandler = confirmacaoExameHandler;
         this.confirmacaoNutriHandler = confirmacaoNutriHandler;
+        this.confirmacaoFotografiaHandler = confirmacaoFotografiaHandler;
         this.avisoEstoqueModaHandler = avisoEstoqueModaHandler;
         this.avisoEstoqueLingerieHandler = avisoEstoqueLingerieHandler;
         this.listaEsperaLasHandler = listaEsperaLasHandler;
@@ -501,6 +504,7 @@ public class OutboundService {
         toSend = maybeProcessConfirmacaoExame(event, conversationId, toSend);
         // Onda nutri 1: <confirmacao_nutri> reflete o SIM/desmarcar do lembrete de consulta.
         toSend = maybeProcessConfirmacaoNutri(event, conversationId, toSend);
+        toSend = maybeProcessConfirmacaoFotografia(event, conversationId, toSend);
         // Onda moda_infantil 1: <aviso_estoque_moda> registra o avise-me quando voltar.
         toSend = maybeProcessAvisoEstoqueModa(event, conversationId, toSend);
         // Onda lingerie 1: <aviso_estoque_lingerie> registra o avise-me quando voltar.
@@ -1227,6 +1231,31 @@ public class OutboundService {
         contactId.ifPresent(cid ->
             listaEsperaLasHandler.parseAndRegister(event.companyId(), conversationId, cid, reply));
         String stripped = listaEsperaLasHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'fotografia' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_foto>}, aplica a decisão da cliente (confirmada/cancelada, com barreira
+     * de contato) e devolve um AiResponse com a tag removida; senão devolve o original. Fecha o
+     * loop do lembrete D-2/D-1. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoFotografia(MessageInboundProcessedEvent event,
+                                                         UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoFotografiaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"fotografia".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoFotografiaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoFotografiaHandler.stripConfirmacaoTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

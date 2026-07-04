@@ -8,6 +8,7 @@ export type CreatePackageInput = {
   priceCents: number
   deliveryDays: number
   notes?: string | null
+  suggestible?: boolean
 }
 
 export type UpdatePackageInput = {
@@ -18,6 +19,7 @@ export type UpdatePackageInput = {
   deliveryDays?: number
   notes?: string | null
   active?: boolean
+  suggestible?: boolean
 }
 
 export function listPackages(
