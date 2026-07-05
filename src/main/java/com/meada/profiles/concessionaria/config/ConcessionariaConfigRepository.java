@@ -23,7 +23,8 @@ public class ConcessionariaConfigRepository {
     public ConcessionariaConfig findByCompany(UUID companyId) {
         return jdbcTemplate.query(
                 "select business_name, duration_minutes, buffer_minutes, opens_at, closes_at, notes, "
-                    + "followup_enabled, followup_days, testdrive_reminder_enabled, auto_complete_enabled "
+                    + "followup_enabled, followup_days, testdrive_reminder_enabled, auto_complete_enabled, "
+                    + "post_sale_enabled, review_link, service_reminder_enabled, service_reminder_months "
                     + "from concessionaria_config where company_id = ?",
                 (rs, rn) -> new ConcessionariaConfig(
                     companyId,
@@ -36,7 +37,11 @@ public class ConcessionariaConfigRepository {
                     rs.getBoolean("followup_enabled"),
                     rs.getInt("followup_days"),
                     rs.getBoolean("testdrive_reminder_enabled"),
-                    rs.getBoolean("auto_complete_enabled")),
+                    rs.getBoolean("auto_complete_enabled"),
+                    rs.getBoolean("post_sale_enabled"),
+                    rs.getString("review_link"),
+                    rs.getBoolean("service_reminder_enabled"),
+                    rs.getInt("service_reminder_months")),
                 companyId)
             .stream().findFirst().orElse(ConcessionariaConfig.defaultFor(companyId));
     }
@@ -45,12 +50,15 @@ public class ConcessionariaConfigRepository {
     public ConcessionariaConfig upsert(UUID companyId, String businessName, int durationMinutes,
                                        int bufferMinutes, LocalTime opensAt, LocalTime closesAt,
                                        String notes, boolean followupEnabled, int followupDays,
-                                       boolean testdriveReminderEnabled, boolean autoCompleteEnabled) {
+                                       boolean testdriveReminderEnabled, boolean autoCompleteEnabled,
+                                       boolean postSaleEnabled, String reviewLink,
+                                       boolean serviceReminderEnabled, int serviceReminderMonths) {
         jdbcTemplate.update(
             "insert into concessionaria_config "
                 + "(company_id, business_name, duration_minutes, buffer_minutes, opens_at, closes_at, notes, "
-                + "followup_enabled, followup_days, testdrive_reminder_enabled, auto_complete_enabled) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
+                + "followup_enabled, followup_days, testdrive_reminder_enabled, auto_complete_enabled, "
+                + "post_sale_enabled, review_link, service_reminder_enabled, service_reminder_months) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) "
                 + "on conflict (company_id) do update set "
                 + "business_name = excluded.business_name, "
                 + "duration_minutes = excluded.duration_minutes, "
@@ -61,10 +69,15 @@ public class ConcessionariaConfigRepository {
                 + "followup_days = excluded.followup_days, "
                 + "testdrive_reminder_enabled = excluded.testdrive_reminder_enabled, "
                 + "auto_complete_enabled = excluded.auto_complete_enabled, "
+                + "post_sale_enabled = excluded.post_sale_enabled, "
+                + "review_link = excluded.review_link, "
+                + "service_reminder_enabled = excluded.service_reminder_enabled, "
+                + "service_reminder_months = excluded.service_reminder_months, "
                 + "updated_at = now()",
             companyId, businessName, durationMinutes, bufferMinutes,
             Time.valueOf(opensAt), Time.valueOf(closesAt), notes,
-            followupEnabled, followupDays, testdriveReminderEnabled, autoCompleteEnabled);
+            followupEnabled, followupDays, testdriveReminderEnabled, autoCompleteEnabled,
+            postSaleEnabled, reviewLink, serviceReminderEnabled, serviceReminderMonths);
         return findByCompany(companyId);
     }
 }

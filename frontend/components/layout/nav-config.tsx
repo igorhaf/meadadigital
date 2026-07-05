@@ -45,6 +45,7 @@ import {
   PawPrint,
   Pizza,
   Plane,
+  Repeat,
   Scale,
   School,
   Scissors,
@@ -523,6 +524,7 @@ const CONCESSIONARIA_GROUP: NavGroup = {
     { label: 'Leads', href: '/dashboard/concessionaria-leads', icon: Megaphone },
     { label: 'Desejos', href: '/dashboard/concessionaria-wishlists', icon: Star },
     { label: 'Relatórios', href: '/dashboard/concessionaria-reports', icon: BarChart3 },
+    { label: 'Trade-in', href: '/dashboard/concessionaria-tradein', icon: Repeat },
     { label: 'Configurações', href: '/dashboard/concessionaria-settings', icon: Settings },
   ],
 }

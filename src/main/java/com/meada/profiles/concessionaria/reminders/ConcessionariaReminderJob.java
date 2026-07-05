@@ -39,13 +39,16 @@ public class ConcessionariaReminderJob {
 
     private final ConcessionariaJobsRepository jobsRepository;
     private final ConcessionariaTestDriveNotifier notifier;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final ScheduledJobRunRepository jobRunRepository;
 
     public ConcessionariaReminderJob(ConcessionariaJobsRepository jobsRepository,
                                      ConcessionariaTestDriveNotifier notifier,
-                                     ScheduledJobRunRepository jobRunRepository) {
+                                     ScheduledJobRunRepository jobRunRepository,
+                                     org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.jobsRepository = jobsRepository;
         this.notifier = notifier;
+        this.jdbcTemplate = jdbcTemplate;
         this.jobRunRepository = jobRunRepository;
     }
 
@@ -55,6 +58,7 @@ public class ConcessionariaReminderJob {
         var runId = jobRunRepository.start("ConcessionariaReminderJob");
         try {
             runTestDriveReminders();
+            runServiceReminders();
             jobRunRepository.finishSuccess(runId);
         } catch (RuntimeException e) {
             jobRunRepository.finishFailed(runId, e.getMessage());
@@ -91,4 +95,44 @@ public class ConcessionariaReminderJob {
         }
         return touched;
     }
+
+    /**
+     * Onda 2 (backlog #12): revisão programada — N meses após o FECHAMENTO do lead, convite de
+     * revisão/checape (1 toque por lead; opt-in OFF). Traz o cliente de volta pro serviço e
+     * abre caminho pra recompra. Público para os testes.
+     */
+    public int runServiceReminders() {
+        record Due(java.util.UUID leadId, java.util.UUID companyId, java.util.UUID conversationId,
+                   String model) {}
+        java.util.List<Due> due = jdbcTemplate.query(
+            "select l.id, l.company_id, l.conversation_id, l.vehicle_model "
+                + "from concessionaria_leads l "
+                + "join companies co on co.id = l.company_id and co.profile_id = 'concessionaria' "
+                + "join concessionaria_config cfg on cfg.company_id = l.company_id "
+                + "  and cfg.service_reminder_enabled "
+                + "where l.status = 'fechado' "
+                + "and l.conversation_id is not null "
+                + "and l.status_updated_at < now() - make_interval(months => cfg.service_reminder_months) "
+                + "and l.service_reminded_at is null "
+                + "order by l.company_id",
+            (rs, rn) -> new Due((java.util.UUID) rs.getObject("id"),
+                (java.util.UUID) rs.getObject("company_id"),
+                (java.util.UUID) rs.getObject("conversation_id"), rs.getString("vehicle_model")));
+        int touched = 0;
+        for (Due d : due) {
+            try {
+                notifier.notifyStatus(d.companyId(), d.conversationId(),
+                    "Já faz um tempinho que você saiu daqui com o " + d.model()
+                        + " 🚗 Que tal agendar uma revisão/checape? E se estiver pensando em "
+                        + "trocar de carro, temos novidades no pátio — é só chamar!");
+                jdbcTemplate.update(
+                    "update concessionaria_leads set service_reminded_at = now() where id = ?", d.leadId());
+                touched++;
+            } catch (Exception e) {
+                log.warn("concessionaria-service-reminder: failed {} ({})", d.leadId(), e.getMessage());
+            }
+        }
+        return touched;
+    }
+
 }

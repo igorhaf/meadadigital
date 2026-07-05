@@ -127,3 +127,16 @@ enviar.
   mutação.
 - Guard `/api/concessionaria/**` → 403 `forbidden_wrong_profile`. Paleta `meia-noite`.
 - Tenant de teste: `igorhaf28` (Concessionária Modelo).
+
+## Onda 2 do backlog (migration 115)
+
+`docs/FEATURES_SUGERIDAS_CONCESSIONARIA.md` #5/#7/#12: **#5 trade-in**
+(`concessionaria_tradein_offers`): a IA COLETA o usado via `<troca_carro>` (marca/modelo/ano/km/
+estado + valor DECLARADO — `asking_cents` não é avaliação; a IA nunca precifica); a equipe avalia
+no painel (tela "Trade-in": propor abatimento `offer_cents`, aceitar/recusar). **#7 pós-venda:**
+lead FECHADO → parabéns + `review_link` + convite de indicação (toggle ON). **#12 revisão
+programada** (opt-in OFF): N meses após o fechamento (`service_reminder_months` default 12) →
+convite de revisão/checape, 1 toque por lead (`service_reminded_at`), no
+`ConcessionariaReminderJob`. Teste: `ConcessionariaOnda2IntegrationTest`. Fica: #4 reserva com
+sinal (gateway), #6 campanha, #8 indicação, #10 dashboard, #11 CMS c/ estoque, #13 financiamento,
+#16 fotos (upload).

@@ -31,15 +31,21 @@ public class ConcessionariaLeadService {
     private final ConcessionariaVehicleRepository vehicleRepository;
     private final ConcessionariaSalespersonRepository salespersonRepository;
     private final ConcessionariaContextCache contextCache;
+    private final com.meada.profiles.concessionaria.config.ConcessionariaConfigRepository configRepository;
+    private final com.meada.profiles.concessionaria.testdrives.ConcessionariaTestDriveNotifier notifier;
 
     public ConcessionariaLeadService(ConcessionariaLeadRepository leadRepository,
                                      ConcessionariaVehicleRepository vehicleRepository,
                                      ConcessionariaSalespersonRepository salespersonRepository,
-                                     ConcessionariaContextCache contextCache) {
+                                     ConcessionariaContextCache contextCache,
+                                     com.meada.profiles.concessionaria.config.ConcessionariaConfigRepository configRepository,
+                                     com.meada.profiles.concessionaria.testdrives.ConcessionariaTestDriveNotifier notifier) {
         this.leadRepository = leadRepository;
         this.vehicleRepository = vehicleRepository;
         this.salespersonRepository = salespersonRepository;
         this.contextCache = contextCache;
+        this.configRepository = configRepository;
+        this.notifier = notifier;
     }
 
     public static class LeadNotFoundException extends RuntimeException {}
@@ -106,6 +112,23 @@ public class ConcessionariaLeadService {
         String reason = newStatus == LeadStatus.PERDIDO ? lostReason : current.lostReason();
         ConcessionariaLead updated = leadRepository.updateStatus(companyId, id, newStatus.id(), reason)
             .orElseThrow(LeadNotFoundException::new);
+
+        // Onda 2 (backlog #7): venda FECHADA → agradecimento + avaliação + indicação (toggle).
+        if (newStatus == LeadStatus.FECHADO && current.conversationId() != null) {
+            var config = configRepository.findByCompany(companyId);
+            if (config.postSaleEnabled()) {
+                StringBuilder pos = new StringBuilder("Parabéns pelo carro novo! 🚗 Foi um prazer "
+                    + "fazer parte dessa conquista. ");
+                if (config.reviewLink() != null) {
+                    pos.append("Se puder, deixe sua avaliação — ajuda muito a loja: ")
+                        .append(config.reviewLink()).append(" ");
+                }
+                pos.append("E se algum amigo estiver procurando carro, ficaremos felizes com a "
+                    + "indicação!");
+                notifier.notifyStatus(companyId, current.conversationId(), pos.toString());
+            }
+        }
+
         contextCache.invalidate(companyId);
         return updated;
     }
