@@ -77,6 +77,7 @@ public class ComidaOrderRepository {
             rs.getString("coupon_code_snapshot"),
             rs.getBoolean("loyalty_applied"),
             rs.getString("zone_name_snapshot"),
+            rs.getString("fulfillment"),
             rs.getString("delivery_address"),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
@@ -90,7 +91,7 @@ public class ComidaOrderRepository {
     private static final String ORDER_SELECT =
         "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.discount_cents, "
             + "o.delivery_fee_cents, o.total_cents, o.coupon_code_snapshot, o.loyalty_applied, "
-            + "o.zone_name_snapshot, o.delivery_address, o.notes, o.rejection_reason, o.created_at, "
+            + "o.zone_name_snapshot, o.fulfillment, o.delivery_address, o.notes, o.rejection_reason, o.created_at, "
             + "o.status_updated_at, ct.name as contact_name, ct.phone_number as contact_phone "
             + "from comida_orders o join contacts ct on ct.id = o.contact_id ";
 
@@ -151,7 +152,8 @@ public class ComidaOrderRepository {
         }
         return new ComidaOrder(o.id(), o.conversationId(), o.status(), o.subtotalCents(),
             o.discountCents(), o.deliveryFeeCents(), o.totalCents(), o.couponCodeSnapshot(),
-            o.loyaltyApplied(), o.zoneNameSnapshot(), o.deliveryAddress(), o.notes(), o.rejectionReason(),
+            o.loyaltyApplied(), o.zoneNameSnapshot(), o.fulfillment(),
+            o.deliveryAddress(), o.notes(), o.rejectionReason(),
             o.createdAt(), o.statusUpdatedAt(), o.contactName(), o.contactPhone(), withOpts);
     }
 
@@ -170,7 +172,7 @@ public class ComidaOrderRepository {
     public ComidaOrder createOrder(UUID companyId, UUID conversationId, UUID contactId,
                                    String deliveryAddress, List<OrderLineInput> lines,
                                    String couponCode, int deliveryFeeCents, String zoneNameSnapshot,
-                                   String notes) {
+                                   String fulfillment, String notes) {
         // Snapshot de preço+nome+opções por linha (lê do cardápio do tenant).
         record OptSnap(UUID menuOptionId, String groupLabel, String optionLabel, int delta) {}
         record Snap(UUID menuItemId, String name, int unitPrice, int qtd, List<OptSnap> options) {}
@@ -249,18 +251,22 @@ public class ComidaOrderRepository {
             }
         }
 
-        // Desconto total clampado ao subtotal (total nunca negativo).
+        // Desconto total clampado ao subtotal (total nunca negativo). RETIRADA (onda 2, #3)
+        // dispensa taxa (nem zona nem flat) e endereço.
+        boolean retirada = "retirada".equals(fulfillment);
+        int fee = retirada ? 0 : deliveryFeeCents;
         int discount = Math.min(subtotal, couponDiscount + loyaltyDiscount);
-        int total = subtotal - discount + deliveryFeeCents;
+        int total = subtotal - discount + fee;
 
         // status default 'aguardando' (não passamos status — ESCAPADA 1).
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into comida_orders (company_id, conversation_id, contact_id, subtotal_cents, "
                 + "discount_cents, delivery_fee_cents, total_cents, coupon_id, coupon_code_snapshot, "
-                + "loyalty_applied, zone_name_snapshot, delivery_address, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, conversationId, contactId, subtotal, discount, deliveryFeeCents,
-            total, couponId, couponSnapshot, loyaltyApplied, zoneNameSnapshot, deliveryAddress, notes);
+                + "loyalty_applied, zone_name_snapshot, fulfillment, delivery_address, notes) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, conversationId, contactId, subtotal, discount, fee,
+            total, couponId, couponSnapshot, loyaltyApplied, zoneNameSnapshot,
+            retirada ? "retirada" : "entrega", retirada ? null : deliveryAddress, notes);
 
         for (Snap s : snaps) {
             UUID orderItemId = jdbcTemplate.queryForObject(

@@ -75,7 +75,11 @@ function OrderCard({
             </li>
           ))}
         </ul>
-        <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
+        {order.fulfillment === 'retirada' ? (
+          <Badge variant="warning">Retirada no balcão</Badge>
+        ) : (
+          <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
+        )}
         <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
         <div className="flex gap-1 pt-1">
           {awaiting ? (

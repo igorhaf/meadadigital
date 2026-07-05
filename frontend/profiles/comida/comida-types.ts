@@ -63,7 +63,8 @@ export type Order = {
   couponCodeSnapshot: string | null
   loyaltyApplied: boolean
   zoneNameSnapshot: string | null
-  deliveryAddress: string
+  fulfillment: 'entrega' | 'retirada'
+  deliveryAddress: string | null
   notes: string | null
   rejectionReason: string | null
   createdAt: string

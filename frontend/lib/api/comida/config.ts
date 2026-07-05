@@ -4,11 +4,23 @@ import { apiFetch } from '@/lib/api/client'
 export type ComidaConfig = {
   deliveryFeeCents: number
   minOrderCents: number
+  opensAt: string | null
+  closesAt: string | null
+  autoDeliverHours: number | null
+  reactivationEnabled: boolean
+  reactivationDays: number
+  reactivationCouponCode: string | null
 }
 
 export type UpdateConfigInput = {
   deliveryFeeCents: number
   minOrderCents: number
+  opensAt?: string | null
+  closesAt?: string | null
+  autoDeliverHours?: number | null
+  reactivationEnabled: boolean
+  reactivationDays: number
+  reactivationCouponCode?: string | null
 }
 
 export function getConfig(): Promise<ComidaConfig> {
