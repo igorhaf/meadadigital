@@ -149,8 +149,9 @@ export default function SalonSettingsPage() {
                   <span>
                     Lembrete de véspera pelo WhatsApp
                     <span className="block text-xs text-muted-foreground">
-                      Mensagem fixa na véspera de cada horário agendado/confirmado (&quot;confirma?&quot;).
-                      Remarcar reenvia; a resposta cai no fluxo normal da IA.
+                      Mensagem fixa na véspera de cada horário agendado/confirmado
+                      (&quot;confirma?&quot;). Remarcar reenvia; a resposta cai no fluxo normal da
+                      IA.
                     </span>
                   </span>
                 </label>
@@ -166,8 +167,8 @@ export default function SalonSettingsPage() {
                   <span>
                     Concluir automaticamente horários confirmados que já passaram
                     <span className="block text-xs text-muted-foreground">
-                      Confirmado com horário no passado vira &quot;realizado&quot; (sem mensagem). Faltas
-                      continuam sendo marcadas manualmente.
+                      Confirmado com horário no passado vira &quot;realizado&quot; (sem mensagem).
+                      Faltas continuam sendo marcadas manualmente.
                     </span>
                   </span>
                 </label>
