@@ -1,0 +1,240 @@
+{
+  "featured": [
+    {
+      "profileId": "sushi",
+      "productName": "Sushi",
+      "subdomain": "sushi",
+      "paletteId": "tijolo"
+    },
+    {
+      "profileId": "comida",
+      "productName": "Comida",
+      "subdomain": "comida",
+      "paletteId": "terracota"
+    },
+    {
+      "profileId": "dental",
+      "productName": "Dental",
+      "subdomain": "dental",
+      "paletteId": "celeste"
+    },
+    {
+      "profileId": "salon",
+      "productName": "Salão",
+      "subdomain": "salao",
+      "paletteId": "orquidea"
+    },
+    {
+      "profileId": "barbearia",
+      "productName": "Barbearia",
+      "subdomain": "barbearia",
+      "paletteId": "grafite"
+    },
+    {
+      "profileId": "estetica",
+      "productName": "Estética",
+      "subdomain": "estetica",
+      "paletteId": "rosa-po"
+    }
+  ],
+  "all": [
+    {
+      "profileId": "adega",
+      "productName": "Adega",
+      "subdomain": "adega",
+      "paletteId": "beringela"
+    },
+    {
+      "profileId": "atelie",
+      "productName": "Ateliê",
+      "subdomain": "atelie",
+      "paletteId": "orquidea"
+    },
+    {
+      "profileId": "casamento",
+      "productName": "Casamento",
+      "subdomain": "casamento",
+      "paletteId": "trigo"
+    },
+    {
+      "profileId": "concessionaria",
+      "productName": "Concessionária",
+      "subdomain": "concessionaria",
+      "paletteId": "meia-noite"
+    },
+    {
+      "profileId": "cursos",
+      "productName": "Cursos",
+      "subdomain": "cursos",
+      "paletteId": "oliva"
+    },
+    {
+      "profileId": "dermatologia",
+      "productName": "Dermatologia",
+      "subdomain": "dermatologia",
+      "paletteId": "teal"
+    },
+    {
+      "profileId": "escola",
+      "productName": "Escola",
+      "subdomain": "escola",
+      "paletteId": "mostarda"
+    },
+    {
+      "profileId": "floricultura",
+      "productName": "Floricultura",
+      "subdomain": "floricultura",
+      "paletteId": "rosa-po"
+    },
+    {
+      "profileId": "fotografia",
+      "productName": "Fotografia",
+      "subdomain": "fotografia",
+      "paletteId": "carvao"
+    },
+    {
+      "profileId": "lavanderia",
+      "productName": "Lavanderia",
+      "subdomain": "lavanderia",
+      "paletteId": "oceano"
+    },
+    {
+      "profileId": "lingerie",
+      "productName": "Lingerie",
+      "subdomain": "lingerie",
+      "paletteId": "ameixa"
+    },
+    {
+      "profileId": "las",
+      "productName": "Lãs",
+      "subdomain": "las",
+      "paletteId": "ferrugem"
+    },
+    {
+      "profileId": "moda_infantil",
+      "productName": "Moda Infantil",
+      "subdomain": "moda-infantil",
+      "paletteId": "por-do-sol"
+    },
+    {
+      "profileId": "padaria",
+      "productName": "Padaria",
+      "subdomain": "padaria",
+      "paletteId": "abobora"
+    },
+    {
+      "profileId": "papelaria",
+      "productName": "Papelaria",
+      "subdomain": "papelaria",
+      "paletteId": "lavanda"
+    },
+    {
+      "profileId": "pizzaria",
+      "productName": "Pizzaria",
+      "subdomain": "pizzaria",
+      "paletteId": "carmim"
+    },
+    {
+      "profileId": "suplementos",
+      "productName": "Suplementos",
+      "subdomain": "suplementos",
+      "paletteId": "eucalipto"
+    },
+    {
+      "profileId": "sushi",
+      "productName": "Sushi",
+      "subdomain": "sushi",
+      "paletteId": "tijolo"
+    },
+    {
+      "profileId": "viagens",
+      "productName": "Viagens",
+      "subdomain": "viagens",
+      "paletteId": "floresta"
+    },
+    {
+      "profileId": "otica",
+      "productName": "Ótica",
+      "subdomain": "otica",
+      "paletteId": "ardosia"
+    },
+    {
+      "profileId": "comida",
+      "productName": "Comida",
+      "subdomain": "comida",
+      "paletteId": "terracota"
+    },
+    {
+      "profileId": "dental",
+      "productName": "Dental",
+      "subdomain": "dental",
+      "paletteId": "celeste"
+    },
+    {
+      "profileId": "salon",
+      "productName": "Salão",
+      "subdomain": "salao",
+      "paletteId": "orquidea"
+    },
+    {
+      "profileId": "barbearia",
+      "productName": "Barbearia",
+      "subdomain": "barbearia",
+      "paletteId": "grafite"
+    },
+    {
+      "profileId": "estetica",
+      "productName": "Estética",
+      "subdomain": "estetica",
+      "paletteId": "rosa-po"
+    },
+    {
+      "profileId": "legal",
+      "productName": "Legal",
+      "subdomain": "juridico",
+      "paletteId": "indigo"
+    },
+    {
+      "profileId": "restaurant",
+      "productName": "Restaurante",
+      "subdomain": "mesa",
+      "paletteId": "tijolo"
+    },
+    {
+      "profileId": "pousada",
+      "productName": "Pousada",
+      "subdomain": "pousada",
+      "paletteId": "oceano"
+    },
+    {
+      "profileId": "academia",
+      "productName": "Academia",
+      "subdomain": "academia",
+      "paletteId": "pinheiro"
+    },
+    {
+      "profileId": "pet",
+      "productName": "Pet",
+      "subdomain": "pet",
+      "paletteId": "coral"
+    },
+    {
+      "profileId": "oficina",
+      "productName": "Oficina",
+      "subdomain": "oficina",
+      "paletteId": "aco"
+    },
+    {
+      "profileId": "nutri",
+      "productName": "Nutri",
+      "subdomain": "nutri",
+      "paletteId": "salvia"
+    },
+    {
+      "profileId": "eventos",
+      "productName": "Eventos",
+      "subdomain": "eventos",
+      "paletteId": "ambar"
+    }
+  ]
+}
