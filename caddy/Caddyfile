@@ -34,6 +34,13 @@ http://api.meadadigital.local {
 	reverse_proxy backend:8095
 }
 
+# Projeto externo muda (Laravel) — subdomínio próprio, aponta pro nginx do muda.
+# Host explícito casa antes do wildcard *.meadadigital.local abaixo (que vai pro frontend).
+# Prod: muda.meadadigital.com (mesmo reverse_proxy, com TLS).
+http://muda.meadadigital.local {
+	reverse_proxy muda-nginx:80
+}
+
 # Catch-all dos SUBDOMÍNIOS DE EMPRESA (slug.meadadigital.local) — qualquer host *.meadadigital.local
 # que NÃO casou os blocos acima (nichos fixos + api) cai aqui e vai pro frontend. Necessário porque
 # o "Acessar admin" do root abre {slug}.meadadigital.local/auth/confirm, e os slugs de empresa

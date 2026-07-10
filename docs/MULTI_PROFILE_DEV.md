@@ -49,7 +49,11 @@ Fonte de verdade: `src/main/java/com/meada/profiles/ProfileType.java` +
 127.0.0.1 comida.meadadigital.local
 127.0.0.1 pizzaria.meadadigital.local
 127.0.0.1 api.meadadigital.local
+127.0.0.1 muda.meadadigital.local
 ```
+
+> `muda.meadadigital.local` → projeto EXTERNO **muda** (Laravel, em `external_projects/muda`),
+> roteado pelo Caddy pro `muda-nginx`. Em produção é `muda.meadadigital.com`.
 
 (no WSL/Linux: `sudo nano /etc/hosts`.)
 

@@ -103,7 +103,53 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
     networks: [meada]
-    depends_on: [frontend, backend]
+    depends_on: [frontend, backend, muda-nginx]
+
+  # ---------------------------------------------------------------------------
+  # Projeto EXTERNO muda (Laravel/PHP) — external_projects/muda. Integrado ao mesmo
+  # compose e à mesma rede; acessível SÓ via Caddy em http://muda.meadadigital.local
+  # (sem portas expostas no host). Postgres dedicado (desacoplado do Supabase do meada).
+  # ---------------------------------------------------------------------------
+  muda-postgres:
+    image: postgres:16-alpine
+    container_name: muda-postgres
+    environment:
+      POSTGRES_DB: ${MUDA_DB_DATABASE:-muda}
+      POSTGRES_USER: ${MUDA_DB_USERNAME:-muda}
+      POSTGRES_PASSWORD: ${MUDA_DB_PASSWORD:-muda_secret}
+    volumes:
+      - muda-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MUDA_DB_USERNAME:-muda} -d ${MUDA_DB_DATABASE:-muda}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [meada]
+
+  muda-app:
+    build:
+      context: ./external_projects/muda
+      dockerfile: docker/php/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: muda-app
+    working_dir: /var/www/html
+    volumes:
+      - ./external_projects/muda:/var/www/html
+    depends_on:
+      muda-postgres:
+        condition: service_healthy
+    networks: [meada]
+
+  muda-nginx:
+    image: nginx:1.27-alpine
+    container_name: muda-nginx
+    volumes:
+      - ./external_projects/muda:/var/www/html
+      - ./external_projects/muda/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [muda-app]
+    networks: [meada]
 
 networks:
   meada:
@@ -113,3 +159,4 @@ volumes:
   maven-cache:
   caddy-data:
   embedding-models:
+  muda-postgres-data:
