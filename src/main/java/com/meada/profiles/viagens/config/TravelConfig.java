@@ -10,9 +10,12 @@ import java.util.UUID;
 public record TravelConfig(
     UUID companyId,
     String businessName,
-    String notes) {
+    String notes,
+    boolean tripReminderEnabled,
+    boolean quoteFollowupEnabled,
+    int quoteFollowupDays) {
 
     public static TravelConfig defaultFor(UUID companyId) {
-        return new TravelConfig(companyId, null, null);
+        return new TravelConfig(companyId, null, null, true, true, 2);
     }
 }

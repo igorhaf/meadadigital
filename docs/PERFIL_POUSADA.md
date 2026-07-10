@@ -57,3 +57,17 @@ total da estadia (diária × noites) e faz a reserva. Você acompanha tudo pela 
 - **Fuso fixo** America/Sao_Paulo (usado para validar que o check-in não é no passado).
 - **Risco aceito no MVP:** se a IA prometer um período e o backend detectar conflito ao gravar, a
   reserva não é criada — contorne manualmente. É raro.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_POUSADA #2/#4, migration 92)
+
+- **Lembrete de check-in D-1 + confirmação (#2):** `PousadaReminderJob` (cron 9h50) avisa na
+  véspera ("check-in a partir das {hora} — confirma sua chegada?") as reservas
+  reservado/confirmado. Idempotência por (reserva, check_in_date) via `reminded_checkin_date`
+  (remarcar rearma); sem canal marca sem envio. A resposta cai na IA, que emite
+  `<confirmacao_pousada>{reservation_id, decisao}` (confirmado|cancelado) com BARREIRA DE
+  CONTATO — cancelar antecipado LIBERA o quarto pra revenda. O contexto do contato ganhou o
+  bloco "RESERVAS FUTURAS" com os ids + a instrução da tag. Toggle `reminder_enabled` (ON).
+- **Auto-transição opt-in (#4):** com `auto_transition_enabled` (default DESLIGADO — marcar
+  no_show sozinho pune hóspede se a equipe esqueceu o check-in), confirmado com check-in
+  vencido (1 dia de folga) → `no_show`; checked_in com check-out vencido → `checked_out`.
+  Ambas silenciosas.

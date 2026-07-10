@@ -52,7 +52,8 @@ public class FloriculturaCatalogController {
         @NotBlank @Size(max = 120) String name,
         String description,
         @PositiveOrZero int priceCents,
-        @NotBlank String category) {}
+        @NotBlank String category,
+        Boolean suggestible) {}
 
     /** Body de edição de item (PATCH parcial; todos opcionais). */
     public record UpdateCatalogItemRequest(
@@ -60,7 +61,8 @@ public class FloriculturaCatalogController {
         String description,
         @PositiveOrZero Integer priceCents,
         String category,
-        Boolean available) {}
+        Boolean available,
+        Boolean suggestible) {}
 
     public record ToggleRequest(boolean available) {}
 
@@ -125,7 +127,8 @@ public class FloriculturaCatalogController {
         }
         try {
             return ResponseEntity.status(201).body(service.create(
-                companyId, user.userId(), req.name(), req.description(), req.priceCents(), req.category()));
+                companyId, user.userId(), req.name(), req.description(), req.priceCents(), req.category(),
+                req.suggestible() != null && req.suggestible()));
         } catch (InvalidCategoryException e) {
             return error(400, "Bad Request", "invalid_category");
         }
@@ -145,7 +148,8 @@ public class FloriculturaCatalogController {
         }
         try {
             return ResponseEntity.ok(service.update(companyId, user.userId(), id,
-                req.name(), req.description(), req.priceCents(), req.category(), req.available()));
+                req.name(), req.description(), req.priceCents(), req.category(), req.available(),
+                req.suggestible()));
         } catch (InvalidCategoryException e) {
             return error(400, "Bad Request", "invalid_category");
         } catch (CatalogItemNotFoundException e) {

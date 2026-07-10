@@ -1,10 +1,10 @@
 import { apiFetch } from '@/lib/api/client'
 import type { TravelProposalStatusId } from '@/profiles/viagens/travel-proposal-status'
 import type {
+  ItemCategoryId,
+  ItineraryDay,
   Proposal,
   ProposalItem,
-  ItineraryDay,
-  ItemCategoryId,
 } from '@/profiles/viagens/viagens-types'
 
 type ProposalPage = { items: Proposal[]; total: number; page: number; pageSize: number }
@@ -62,8 +62,11 @@ export type UpdateItineraryDayInput = {
 
 export function listProposals(
   opts: {
-    status?: string; consultantId?: string; contactId?: string
-    page?: number; pageSize?: number
+    status?: string
+    consultantId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<ProposalPage> {
   const p = new URLSearchParams()
@@ -81,60 +84,109 @@ export function getProposal(id: string): Promise<Proposal> {
 }
 
 export function openProposal(input: OpenProposalInput): Promise<Proposal> {
-  return apiFetch<Proposal>('/api/viagens/proposals', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Proposal>('/api/viagens/proposals', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateProposal(id: string, input: UpdateProposalInput): Promise<Proposal> {
-  return apiFetch<Proposal>(`/api/viagens/proposals/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Proposal>(`/api/viagens/proposals/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 // ---- Itens de COTAÇÃO (entram no total) ----
 
 export function addItem(proposalId: string, input: AddItemInput): Promise<ProposalItem> {
   return apiFetch<ProposalItem>(`/api/viagens/proposals/${proposalId}/items`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
-export function updateItem(proposalId: string, itemId: string, input: UpdateItemInput): Promise<ProposalItem> {
+export function updateItem(
+  proposalId: string,
+  itemId: string,
+  input: UpdateItemInput,
+): Promise<ProposalItem> {
   return apiFetch<ProposalItem>(`/api/viagens/proposals/${proposalId}/items/${itemId}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
 export function deleteItem(proposalId: string, itemId: string): Promise<void> {
-  return apiFetch<void>(`/api/viagens/proposals/${proposalId}/items/${itemId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/viagens/proposals/${proposalId}/items/${itemId}`, {
+    method: 'DELETE',
+  })
 }
 
 // ---- Dias do ITINERÁRIO (a escapada — NÃO entram no total, ordenados por dayNumber) ----
 
-export function addItineraryDay(proposalId: string, input: AddItineraryDayInput): Promise<ItineraryDay> {
+export function addItineraryDay(
+  proposalId: string,
+  input: AddItineraryDayInput,
+): Promise<ItineraryDay> {
   return apiFetch<ItineraryDay>(`/api/viagens/proposals/${proposalId}/itinerary`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
-export function updateItineraryDay(proposalId: string, dayId: string, input: UpdateItineraryDayInput): Promise<ItineraryDay> {
+export function updateItineraryDay(
+  proposalId: string,
+  dayId: string,
+  input: UpdateItineraryDayInput,
+): Promise<ItineraryDay> {
   return apiFetch<ItineraryDay>(`/api/viagens/proposals/${proposalId}/itinerary/${dayId}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
 export function deleteItineraryDay(proposalId: string, dayId: string): Promise<void> {
-  return apiFetch<void>(`/api/viagens/proposals/${proposalId}/itinerary/${dayId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/viagens/proposals/${proposalId}/itinerary/${dayId}`, {
+    method: 'DELETE',
+  })
 }
 
 /** Reordena os dias do itinerário: envia a lista de ids na ordem desejada (recomputa dayNumber 1..N). */
-export function reorderItineraryDays(proposalId: string, orderedIds: string[]): Promise<{ itinerary: ItineraryDay[] }> {
-  return apiFetch<{ itinerary: ItineraryDay[] }>(`/api/viagens/proposals/${proposalId}/itinerary/reorder`, {
-    method: 'PATCH', body: JSON.stringify({ orderedIds }),
-  })
+export function reorderItineraryDays(
+  proposalId: string,
+  orderedIds: string[],
+): Promise<{ itinerary: ItineraryDay[] }> {
+  return apiFetch<{ itinerary: ItineraryDay[] }>(
+    `/api/viagens/proposals/${proposalId}/itinerary/reorder`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ orderedIds }),
+    },
+  )
 }
 
 // ---- Status ----
 
-export function updateProposalStatus(id: string, newStatus: TravelProposalStatusId): Promise<Proposal> {
+export function updateProposalStatus(
+  id: string,
+  newStatus: TravelProposalStatusId,
+): Promise<Proposal> {
   return apiFetch<Proposal>(`/api/viagens/proposals/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
+  })
+}
+
+export type DepositInput = {
+  depositCents: number | null
+  depositPaid: boolean
+}
+
+/** Registra o sinal/entrada e/ou marca como recebido (onda #1 — manual até o gateway #50). */
+export function updateDeposit(id: string, input: DepositInput): Promise<Proposal> {
+  return apiFetch<Proposal>(`/api/viagens/proposals/${id}/deposit`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }

@@ -39,11 +39,17 @@ export function getVehicle(id: string): Promise<OsVehicle> {
 }
 
 export function createVehicle(input: CreateVehicleInput): Promise<OsVehicle> {
-  return apiFetch<OsVehicle>('/api/oficina/vehicles', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<OsVehicle>('/api/oficina/vehicles', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateVehicle(id: string, input: UpdateVehicleInput): Promise<OsVehicle> {
-  return apiFetch<OsVehicle>(`/api/oficina/vehicles/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<OsVehicle>(`/api/oficina/vehicles/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function archiveVehicle(id: string): Promise<OsVehicle> {

@@ -15,8 +15,14 @@ export type CreateAppointmentInput = {
 
 export function listAppointments(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string; professionalId?: string
-    patientId?: string; contactId?: string; page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    professionalId?: string
+    patientId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<AppointmentPage> {
   const p = new URLSearchParams()
@@ -37,11 +43,18 @@ export function getAppointment(id: string): Promise<NutriAppointment> {
 }
 
 export function createAppointment(input: CreateAppointmentInput): Promise<NutriAppointment> {
-  return apiFetch<NutriAppointment>('/api/nutri/appointments', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<NutriAppointment>('/api/nutri/appointments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateAppointmentStatus(id: string, newStatus: NutriAppointmentStatusId): Promise<NutriAppointment> {
+export function updateAppointmentStatus(
+  id: string,
+  newStatus: NutriAppointmentStatusId,
+): Promise<NutriAppointment> {
   return apiFetch<NutriAppointment>(`/api/nutri/appointments/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

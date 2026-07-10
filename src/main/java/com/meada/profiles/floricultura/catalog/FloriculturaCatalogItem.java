@@ -17,6 +17,7 @@ public record FloriculturaCatalogItem(
     int priceCents,
     String category,
     boolean available,
+    boolean suggestible,
     Instant createdAt,
     Instant updatedAt,
     List<FloriculturaCatalogOption> options) {

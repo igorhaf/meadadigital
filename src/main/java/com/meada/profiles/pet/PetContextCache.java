@@ -155,6 +155,24 @@ public class PetContextCache {
                 sb.append("TUTOR SEM ANIMAIS cadastrados: peça nome, espécie (cão/gato/outro) e raça "
                     + "(opcional) para cadastrar o primeiro animal junto com o agendamento.\n\n");
             }
+            // --- AGENDAMENTOS FUTUROS (onda 1, backlog #1 — a IA captura confirmação/cancelamento) ---
+            List<PetAppointment> upcoming =
+                appointmentRepository.listUpcomingByContact(companyId, contactId, 5);
+            if (!upcoming.isEmpty()) {
+                sb.append("AGENDAMENTOS FUTUROS DO TUTOR (use o id EXATO na tag de confirmação):\n");
+                for (PetAppointment a : upcoming) {
+                    ZonedDateTime z = a.startAt().atZone(TENANT_ZONE);
+                    sb.append("- ").append(a.id()).append(" · ").append(a.animalName())
+                        .append(": ").append(a.serviceName()).append(" ")
+                        .append(DATE_FMT.format(z)).append(" com ").append(a.professionalName())
+                        .append(" · status ").append(a.status()).append("\n");
+                }
+                sb.append("Quando o tutor CONFIRMAR um agendamento futuro (ex.: responder SIM ao lembrete) "
+                    + "ou pedir para DESMARCAR, sua ÚLTIMA mensagem deve TERMINAR com a tag (linha própria):\n"
+                    + "<confirmacao_pet>{\"appointment_id\":\"UUID\",\"decisao\":\"confirmado|cancelado\"}"
+                    + "</confirmacao_pet>\n"
+                    + "Você só REFLETE a decisão do tutor — NUNCA confirme ou cancele sem ele pedir.\n\n");
+            }
         } else {
             sb.append("TUTOR NÃO IDENTIFICADO pelo telefone. Peça os dados para cadastrar.\n\n");
         }

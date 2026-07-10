@@ -96,6 +96,9 @@ public class PapelariaOrderRepository {
             rs.getString("delivery_period"),
             rs.getBoolean("art_approved"),
             rs.getString("art_url"),
+            rs.getObject("deposit_cents") == null ? null : rs.getInt("deposit_cents"),
+            rs.getBoolean("deposit_paid"),
+            rs.getTimestamp("deposit_paid_at") == null ? null : rs.getTimestamp("deposit_paid_at").toInstant(),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
             rs.getTimestamp("created_at").toInstant(),
@@ -108,7 +111,8 @@ public class PapelariaOrderRepository {
     private static final String ORDER_SELECT =
         "select o.id, o.conversation_id, o.status, o.fulfillment, o.subtotal_cents, o.delivery_fee_cents, "
             + "o.total_cents, o.delivery_address, o.pickup_or_delivery_date, o.delivery_period, "
-            + "o.art_approved, o.art_url, o.notes, o.rejection_reason, o.created_at, o.status_updated_at, "
+            + "o.art_approved, o.art_url, o.deposit_cents, o.deposit_paid, o.deposit_paid_at, "
+            + "o.notes, o.rejection_reason, o.created_at, o.status_updated_at, "
             + "ct.name as contact_name, ct.phone_number as contact_phone "
             + "from papelaria_orders o join contacts ct on ct.id = o.contact_id ";
 
@@ -169,7 +173,8 @@ public class PapelariaOrderRepository {
         }
         return new PapelariaOrder(o.id(), o.conversationId(), o.status(), o.fulfillment(), o.subtotalCents(),
             o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.pickupOrDeliveryDate(),
-            o.deliveryPeriod(), o.artApproved(), o.artUrl(), o.notes(), o.rejectionReason(), o.createdAt(),
+            o.deliveryPeriod(), o.artApproved(), o.artUrl(), o.depositCents(), o.depositPaid(),
+            o.depositPaidAt(), o.notes(), o.rejectionReason(), o.createdAt(),
             o.statusUpdatedAt(), o.contactName(), o.contactPhone(), withOpts);
     }
 
@@ -246,7 +251,14 @@ public class PapelariaOrderRepository {
                 maxLead = Math.max(maxLead, lead);
             }
 
-            int unitPrice = base.price() + deltaSum;
+            // Onda #2: faixa de TIRAGEM (maior min_qty <= quantity) substitui o preço-base;
+            // sem faixa cadastrada → unit_price do item (compat). Trava intacta: tudo do catálogo.
+            Integer tierPrice = jdbcTemplate.query(
+                    "select unit_price_cents from papelaria_item_tiers "
+                        + "where item_id = ? and min_qty <= ? order by min_qty desc limit 1",
+                    (trs, trn) -> trs.getInt(1), line.catalogItemId(), line.qtd())
+                .stream().findFirst().orElse(null);
+            int unitPrice = (tierPrice != null ? tierPrice : base.price()) + deltaSum;
             snaps.add(new Snap(line.catalogItemId(), base.name(), unitPrice, line.qtd(),
                 base.madeToOrder(), line.customText(), optSnaps));
             subtotal += unitPrice * line.qtd();   // TIRAGEM: line = unit × quantity.
@@ -354,5 +366,18 @@ public class PapelariaOrderRepository {
                 (rs, rn) -> mapOrder(rs, List.of()), companyId, conversationId)
             .stream().findFirst()
             .map(this::withItems);
+    }
+
+    /** Registra/atualiza o sinal (onda #1). deposit_paid_at preservado enquanto pago. */
+    public Optional<PapelariaOrder> updateDeposit(UUID companyId, UUID id, Integer depositCents, boolean depositPaid) {
+        int n = jdbcTemplate.update(
+            "update papelaria_orders set deposit_cents = ?, deposit_paid = ?, "
+                + "deposit_paid_at = case when ? then coalesce(deposit_paid_at, now()) end, "
+                + "status_updated_at = status_updated_at where company_id = ? and id = ?",
+            depositCents, depositPaid, depositPaid, companyId, id);
+        if (n == 0) {
+            return Optional.empty();
+        }
+        return findById(companyId, id);
     }
 }

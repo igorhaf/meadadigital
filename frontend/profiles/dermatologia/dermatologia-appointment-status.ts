@@ -23,7 +23,10 @@ export type DermatologiaAppointmentStatus = (typeof DERMATOLOGIA_APPOINTMENT_STA
 export type DermatologiaAppointmentStatusId = DermatologiaAppointmentStatus['id']
 
 /** Transições permitidas a partir de cada status (espelha DermatologiaAppointmentStatus.allowedNext). */
-export const ALLOWED_NEXT: Record<DermatologiaAppointmentStatusId, DermatologiaAppointmentStatusId[]> = {
+export const ALLOWED_NEXT: Record<
+  DermatologiaAppointmentStatusId,
+  DermatologiaAppointmentStatusId[]
+> = {
   agendada: ['confirmada', 'cancelada'],
   confirmada: ['realizada', 'cancelada', 'falta'],
   realizada: [],

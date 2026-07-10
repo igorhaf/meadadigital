@@ -5,8 +5,8 @@ import { ChevronDown, LogOut } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
-import { createClient } from '@/lib/supabase/client'
 import type { Me } from '@/lib/api/me'
+import { createClient } from '@/lib/supabase/client'
 import { cn } from '@/lib/utils'
 
 /** Iniciais para o avatar (1-2 letras do email, antes do @). */
@@ -93,7 +93,7 @@ export function UserDropdown({ me }: { me: Me | undefined }) {
             <Menu.Item
               onClick={handleSignOut}
               disabled={signingOut}
-              className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive outline-none data-[highlighted]:bg-destructive/10 disabled:opacity-50"
+              className="flex cursor-pointer items-center gap-2 rounded-md px-3 py-2 text-sm text-destructive outline-none disabled:opacity-50 data-[highlighted]:bg-destructive/10"
             >
               <LogOut className="size-4" />
               {signingOut ? 'Saindo…' : 'Sair'}

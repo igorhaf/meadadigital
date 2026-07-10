@@ -41,7 +41,10 @@ public class CursosConfigController {
     public record ConfigRequest(
         @NotBlank String opensAt,
         @NotBlank String closesAt,
-        String notes) {}
+        String notes,
+        Boolean nudgeEnabled,
+        Integer nudgeDays,
+        String certificateBaseUrl) {}
 
     @GetMapping("/api/cursos/config")
     public ResponseEntity<Object> get(
@@ -74,7 +77,11 @@ public class CursosConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.notes()));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
+                req.notes(),
+                req.nudgeEnabled() == null || req.nudgeEnabled(),
+                req.nudgeDays() == null ? 7 : req.nudgeDays(),
+                req.certificateBaseUrl()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

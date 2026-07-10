@@ -8,12 +8,20 @@ export type SushiConfig = {
   deliveryFeeCents: number
   minOrderCents: number
   schedulingEnabled: boolean
+  upsellEnabled: boolean
+  reactivationEnabled: boolean
+  reactivationDays: number
+  reactivationCouponCode: string | null
 }
 
 export type UpdateConfigInput = {
   deliveryFeeCents: number
   minOrderCents: number
   schedulingEnabled: boolean
+  upsellEnabled?: boolean
+  reactivationEnabled?: boolean
+  reactivationDays?: number
+  reactivationCouponCode?: string | null
 }
 
 export function getConfig(): Promise<SushiConfig> {
@@ -21,5 +29,8 @@ export function getConfig(): Promise<SushiConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<SushiConfig> {
-  return apiFetch<SushiConfig>('/api/sushi/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<SushiConfig>('/api/sushi/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

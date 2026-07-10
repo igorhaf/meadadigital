@@ -88,7 +88,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
         LavanderiaService s = svc("Lavar camisa", 800, 2);
         LocalDate collect = today().plusDays(1);
         LavanderiaOrder order = service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(s.id(), 3, List.of())), null, collect, null, "manha");
+            List.of(new OrderLineInput(s.id(), 3, List.of())), null, collect, null, "manha", null, false);
 
         assertThat(order.status()).isEqualTo("aguardando");
         assertThat(order.collectDate()).isEqualTo(collect);
@@ -109,7 +109,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
         LavanderiaOrder order = service.create(COMPANY, conversationId, contactId, "Rua Y",
             List.of(new OrderLineInput(rapido.id(), 1, List.of()),
                     new OrderLineInput(lento.id(), 1, List.of())),
-            null, collect, null, "tarde");
+            null, collect, null, "tarde", null, false);
 
         // MAX(1, 3) = 3 — NÃO 4 (soma), NÃO 1.
         assertThat(order.deliveryDate()).isEqualTo(collect.plusDays(3));
@@ -126,7 +126,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
 
         TurnaroundViolationOrderException ex = catchThrowableOfType(
             () -> service.create(COMPANY, conversationId, contactId, "Rua Z",
-                List.of(new OrderLineInput(s.id(), 1, List.of())), null, collect, tooSoon, "manha"),
+                List.of(new OrderLineInput(s.id(), 1, List.of())), null, collect, tooSoon, "manha", null, false),
             TurnaroundViolationOrderException.class);
 
         assertThat(ex).isNotNull();
@@ -142,7 +142,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
         LocalDate requested = collect.plusDays(5);   // depois da 1ª possível (collect+2).
 
         LavanderiaOrder order = service.create(COMPANY, conversationId, contactId, "Rua W",
-            List.of(new OrderLineInput(s.id(), 1, List.of())), null, collect, requested, "manha");
+            List.of(new OrderLineInput(s.id(), 1, List.of())), null, collect, requested, "manha", null, false);
         assertThat(order.deliveryDate()).isEqualTo(requested);
     }
 
@@ -152,7 +152,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
         LavanderiaService s = svc("Lavar", 800, 1);
         LocalDate ontem = today().minusDays(1);
         assertThatThrownBy(() -> service.create(COMPANY, conversationId, contactId, "Rua X",
-            List.of(new OrderLineInput(s.id(), 1, List.of())), null, ontem, null, "manha"))
+            List.of(new OrderLineInput(s.id(), 1, List.of())), null, ontem, null, "manha", null, false))
             .isInstanceOf(CollectDateInPastException.class);
         assertThat(jdbcTemplate.queryForObject("select count(*) from lavanderia_orders", Long.class)).isZero();
     }
@@ -162,7 +162,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
     void addressMissing() {
         LavanderiaService s = svc("Lavar", 800, 1);
         assertThatThrownBy(() -> service.create(COMPANY, conversationId, contactId, "  ",
-            List.of(new OrderLineInput(s.id(), 1, List.of())), null, today().plusDays(1), null, "manha"))
+            List.of(new OrderLineInput(s.id(), 1, List.of())), null, today().plusDays(1), null, "manha", null, false))
             .isInstanceOf(AddressRequiredException.class);
     }
 
@@ -171,11 +171,11 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
     void optionDeltas_total() {
         LavanderiaService s = svc("Lavar e passar", 1200, 2);
         LavanderiaServiceOption engomar = catalogService.addOption(COMPANY, USER, s.id(), "Acabamento", "Engomar", 300, 0);
-        configService.update(COMPANY, USER, 700, 0, 1);   // taxa 700.
+        configService.update(COMPANY, USER, 700, 0, 1, true, 50, 1, true, true, 2, false, 30, null);   // taxa 700.
 
         LavanderiaOrder order = service.create(COMPANY, conversationId, contactId, "Rua X",
             List.of(new OrderLineInput(s.id(), 2, List.of(engomar.id()))), null,
-            today().plusDays(1), null, "manha");
+            today().plusDays(1), null, "manha", null, false);
 
         // unit_price = 1200 + 300 = 1500; subtotal = 1500*2 = 3000; total = 3000 + 700 = 3700.
         assertThat(order.items().get(0).unitPriceCents()).isEqualTo(1500);
@@ -188,9 +188,9 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
     @DisplayName("subtotal abaixo do mínimo → 422 BelowMinimum")
     void belowMinimum() {
         LavanderiaService s = svc("Lavar", 800, 1);
-        configService.update(COMPANY, USER, 0, 5000, 1);   // mínimo 5000.
+        configService.update(COMPANY, USER, 0, 5000, 1, true, 50, 1, true, true, 2, false, 30, null);   // mínimo 5000.
         assertThatThrownBy(() -> service.create(COMPANY, conversationId, contactId, "Rua X",
-            List.of(new OrderLineInput(s.id(), 1, List.of())), null, today().plusDays(1), null, "manha"))
+            List.of(new OrderLineInput(s.id(), 1, List.of())), null, today().plusDays(1), null, "manha", null, false))
             .isInstanceOf(BelowMinimumOrderException.class);
         assertThat(jdbcTemplate.queryForObject("select count(*) from lavanderia_orders", Long.class)).isZero();
     }
@@ -203,7 +203,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
         LavanderiaServiceOption optDeOutro = catalogService.addOption(COMPANY, USER, outro.id(), "Acabamento", "Vapor", 100, 0);
         assertThatThrownBy(() -> service.create(COMPANY, conversationId, contactId, "Rua X",
             List.of(new OrderLineInput(s.id(), 1, List.of(optDeOutro.id()))), null,
-            today().plusDays(1), null, "manha"))
+            today().plusDays(1), null, "manha", null, false))
             .isInstanceOf(InvalidOptionException.class);
         assertThat(jdbcTemplate.queryForObject("select count(*) from lavanderia_orders", Long.class)).isZero();
     }
@@ -213,7 +213,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
     void snapshotsPreserved() {
         LavanderiaService s = svc("Lavar camisa", 800, 2);
         LavanderiaOrder order = service.create(COMPANY, conversationId, contactId, "Rua X",
-            List.of(new OrderLineInput(s.id(), 1, List.of())), null, today().plusDays(1), null, "manha");
+            List.of(new OrderLineInput(s.id(), 1, List.of())), null, today().plusDays(1), null, "manha", null, false);
         // muda o serviço depois.
         catalogService.update(COMPANY, USER, s.id(), "Outro nome", null, 9999, null, 9, null, null);
 
@@ -228,7 +228,7 @@ class LavanderiaOrderServiceTest extends AbstractIntegrationTest {
     private LavanderiaOrder seedOrder() {
         LavanderiaService s = svc("Lavar camisa", 800, 1);
         return service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(s.id(), 2, List.of())), null, today().plusDays(1), null, "manha");
+            List.of(new OrderLineInput(s.id(), 2, List.of())), null, today().plusDays(1), null, "manha", null, false);
     }
 
     @Test

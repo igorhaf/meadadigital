@@ -42,14 +42,18 @@ public class ConcessionariaConfigService {
                                        int durationMinutes, int bufferMinutes, LocalTime opensAt,
                                        LocalTime closesAt, String notes, boolean followupEnabled,
                                        int followupDays, boolean testdriveReminderEnabled,
-                                       boolean autoCompleteEnabled) {
+                                       boolean autoCompleteEnabled, boolean postSaleEnabled,
+                                       String reviewLink, boolean serviceReminderEnabled,
+                                       int serviceReminderMonths) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
         ConcessionariaConfig saved =
             repository.upsert(companyId, businessName, durationMinutes, bufferMinutes, opensAt, closesAt,
                 notes, followupEnabled, Math.max(1, followupDays), testdriveReminderEnabled,
-                autoCompleteEnabled);
+                autoCompleteEnabled, postSaleEnabled,
+                reviewLink == null || reviewLink.isBlank() ? null : reviewLink.strip(),
+                serviceReminderEnabled, Math.min(36, Math.max(1, serviceReminderMonths)));
         auditLogger.log(companyId, userId, "concessionaria_config_updated", "concessionaria_config",
             companyId, Map.of("duration_minutes", durationMinutes, "buffer_minutes", bufferMinutes));
         contextCache.invalidate(companyId);

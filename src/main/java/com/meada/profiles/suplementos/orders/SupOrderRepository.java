@@ -140,7 +140,8 @@ public class SupOrderRepository {
     @Transactional
     public SupOrder createOrder(UUID companyId, UUID conversationId, UUID contactId,
                                 String deliveryAddress, List<OrderLineInput> lines,
-                                int deliveryFeeCents, String notes) {
+                                int deliveryFeeCents, Integer freeShippingThresholdCents,
+                                String notes) {
         if (deliveryAddress == null || deliveryAddress.isBlank()) {
             throw new AddressRequiredException();   // SÓ entrega nesta SM.
         }
@@ -191,7 +192,11 @@ public class SupOrderRepository {
             throw new IllegalArgumentException("nenhum item válido no pedido");
         }
 
-        int total = subtotal + deliveryFeeCents;   // SEMPRE entrega — taxa sempre soma.
+        // Frete grátis acima do piso (onda #3b): subtotal >= threshold → taxa zera (materializado).
+        if (freeShippingThresholdCents != null && subtotal >= freeShippingThresholdCents) {
+            deliveryFeeCents = 0;
+        }
+        int total = subtotal + deliveryFeeCents;
 
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into sup_orders (company_id, conversation_id, contact_id, "
@@ -215,16 +220,37 @@ public class SupOrderRepository {
      * Persiste a transição de status + status_updated_at. Service já validou a transição. Quando
      * {@code rejectionReason != null} (recusa), grava também o motivo.
      */
+    @org.springframework.transaction.annotation.Transactional
     public void updateStatus(UUID companyId, UUID id, String newStatus, String rejectionReason) {
+        // ⭐ RESTOCK ao entrar em recusado/cancelado (onda #9, espelho moda_infantil): devolve o
+        // estoque das variantes NA MESMA transação, idempotente via stock_returned.
+        boolean restocks = SuplementosOrderStatus.RECUSADO.id().equals(newStatus)
+            || SuplementosOrderStatus.CANCELADO.id().equals(newStatus);
+        if (restocks) {
+            Boolean alreadyReturned = jdbcTemplate.query(
+                    "select stock_returned from sup_orders where company_id = ? and id = ?",
+                    (rs, rn) -> rs.getBoolean("stock_returned"), companyId, id)
+                .stream().findFirst().orElse(Boolean.TRUE);   // ausente → trata como devolvido (no-op).
+            if (Boolean.FALSE.equals(alreadyReturned)) {
+                record Line(UUID variantId, int qtd) {}
+                List<Line> lines = jdbcTemplate.query(
+                    "select variant_id, qtd from sup_order_items where order_id = ?",
+                    (rs, rn) -> new Line((UUID) rs.getObject("variant_id"), rs.getInt("qtd")), id);
+                for (Line l : lines) {
+                    variantRepository.restockStock(companyId, l.variantId(), l.qtd());
+                }
+            }
+        }
+        String restockSet = restocks ? ", stock_returned = true" : "";
         if (rejectionReason != null) {
             jdbcTemplate.update(
-                "update sup_orders set status = ?, rejection_reason = ?, status_updated_at = now() "
-                    + "where company_id = ? and id = ?",
+                "update sup_orders set status = ?, rejection_reason = ?, status_updated_at = now()"
+                    + restockSet + " where company_id = ? and id = ?",
                 newStatus, rejectionReason, companyId, id);
         } else {
             jdbcTemplate.update(
-                "update sup_orders set status = ?, status_updated_at = now() "
-                    + "where company_id = ? and id = ?",
+                "update sup_orders set status = ?, status_updated_at = now()"
+                    + restockSet + " where company_id = ? and id = ?",
                 newStatus, companyId, id);
         }
     }

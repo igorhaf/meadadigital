@@ -33,14 +33,17 @@ public class OficinaContextCache {
     private final OsMechanicRepository mechanicRepository;
     private final OsVehicleRepository vehicleRepository;
     private final ServiceOrderRepository orderRepository;
+    private final com.meada.profiles.oficina.catalog.OficinaCatalogRepository catalogRepository;
     private final Cache<String, String> cache;
 
     public OficinaContextCache(OsMechanicRepository mechanicRepository,
                                OsVehicleRepository vehicleRepository,
-                               ServiceOrderRepository orderRepository) {
+                               ServiceOrderRepository orderRepository,
+                               com.meada.profiles.oficina.catalog.OficinaCatalogRepository catalogRepository) {
         this.mechanicRepository = mechanicRepository;
         this.vehicleRepository = vehicleRepository;
         this.orderRepository = orderRepository;
+        this.catalogRepository = catalogRepository;
         this.cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(20))
             .maximumSize(1000)
@@ -77,6 +80,22 @@ public class OficinaContextCache {
                     sb.append(" (").append(m.specialty()).append(")");
                 }
                 sb.append("\n");
+            }
+            sb.append("\n");
+        }
+
+        // --- SERVIÇOS TABELADOS (onda 1, backlog #1 — a IA pode pré-preencher a OS) ---
+        java.util.List<com.meada.profiles.oficina.catalog.OficinaCatalogItem> tabelados =
+            catalogRepository.listByCompany(companyId, true);
+        if (!tabelados.isEmpty()) {
+            sb.append("SERVIÇOS/PEÇAS TABELADOS (use o id EXATO no campo servicos da tag; preço do catálogo):\n");
+            for (var t : tabelados) {
+                sb.append("- ").append(t.id()).append(" · ").append(t.name());
+                if (t.category() != null && !t.category().isBlank()) {
+                    sb.append(" [").append(t.category()).append("]");
+                }
+                sb.append(" · R$ ").append(String.format("%d,%02d", t.unitPriceCents() / 100, t.unitPriceCents() % 100))
+                    .append("\n");
             }
             sb.append("\n");
         }
@@ -138,7 +157,12 @@ public class OficinaContextCache {
                 + "própria, sem markdown):\n")
             .append("Cliente COM veículo cadastrado:\n")
             .append("<ordem_servico>{\"vehicle_id\":\"UUID\",\"mechanic_id\":\"UUID|null\","
-                + "\"complaint\":\"...\",\"notes\":\"...\"}</ordem_servico>\n")
+                + "\"complaint\":\"...\",\"notes\":\"...\","
+                + "\"servicos\":[{\"id\":\"UUID_DO_TABELADO\",\"qtd\":N}]}</ordem_servico>\n")
+            .append("O campo servicos é OPCIONAL: use APENAS quando o cliente pedir um serviço "
+                + "TABELADO da lista acima (o preço vem do catálogo do próprio tenant). Quando a "
+                + "queixa exigir diagnóstico, NÃO inclua servicos — a OS abre sem itens e o "
+                + "mecânico orça.\n")
             .append("Cliente SEM veículo (cadastra junto):\n")
             .append("<ordem_servico>{\"new_vehicle\":{\"plate\":\"...\",\"brand\":\"...\",\"model\":\"...\","
                 + "\"year\":2018},\"complaint\":\"...\",\"notes\":\"...\"}</ordem_servico>\n")

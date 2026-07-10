@@ -87,7 +87,16 @@ public class LingerieMenuCache {
                 + "ENTREGA — o endereço, sua ÚLTIMA mensagem deve TERMINAR com a tag (em uma linha "
                 + "própria, sem markdown):\n")
             .append("<pedido_lingerie>{\"items\":[{\"variant_id\":\"UUID_EXATO_DA_VARIANTE\",\"qtd\":N}],"
-                + "\"fulfillment\":\"entrega\",\"endereco\":\"...\",\"total_cents\":NNN}</pedido_lingerie>\n")
+                + "\"fulfillment\":\"entrega\",\"endereco\":\"...\","
+                + "\"cupom\":\"CODIGO_SE_HOUVER\",\"total_cents\":NNN}</pedido_lingerie>\n")
+            .append("Se a cliente informar um CUPOM de desconto, registre o código no campo \"cupom\" "
+                + "(omita se não houver) — quem VALIDA e calcula é o sistema; NUNCA invente desconto "
+                + "(cupom inválido: o pedido sai sem o desconto). Ao fechar, você PODE oferecer UMA "
+                + "ÚNICA vez a peça-par do conjunto ou um complementar do catálogo (meia/modelador) — "
+                + "tom discreto, sem insistir. Se a variante desejada estiver ESGOTADA, ofereça avisar "
+                + "quando voltar; se a cliente aceitar, TERMINE a mensagem com a tag (linha própria): "
+                + "<aviso_estoque_lingerie>{\"variant_id\":\"UUID_DA_VARIANTE\"}</aviso_estoque_lingerie> "
+                + "— NUNCA prometa data de reposição.\n")
             .append("Cada item referencia o variant_id EXATO de uma VARIANTE (combinação tamanho×cor) "
                 + "do catálogo acima — NUNCA o product_id. Só ofereça variantes COM estoque (as "
                 + "marcadas \"esgotado\" NÃO podem ser pedidas). \"fulfillment\" é \"entrega\" (exige "

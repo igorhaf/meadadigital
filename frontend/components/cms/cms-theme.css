@@ -33,7 +33,9 @@
   box-shadow: var(--cms-shadow, none);
 }
 .cms-shell[data-card='elevated'] .rounded-lg {
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
 }
 .cms-shell[data-card='elevated'] .rounded-lg:hover {
   transform: translateY(-3px);

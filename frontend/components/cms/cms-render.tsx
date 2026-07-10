@@ -1,6 +1,10 @@
 import './cms-theme.css'
-import { cn } from '@/lib/utils'
-import { slotRing } from '@/lib/cms/slot-highlight'
+
+import { MeadaFooter, MeadaNavbar } from '@/components/cms/blocks/meada-chrome'
+import { MeadaHero } from '@/components/cms/blocks/meada-hero'
+import { MeadaCta, MeadaPortfolio, MeadaServices } from '@/components/cms/blocks/meada-sections'
+import { NichesGrid } from '@/components/cms/blocks/niches-grid'
+import { ReviewsCarousel } from '@/components/cms/blocks/reviews-carousel'
 import type {
   BannerStripProps,
   CmsBlock,
@@ -14,25 +18,25 @@ import type {
   GalleryProps,
   HeroProps,
   ImageTextSplitProps,
+  LogoStripProps,
   MapProps,
   MarqueeProps,
-  MeadaHeroProps,
   PackagesProps,
   QuoteProps,
+  RatingBadgeProps,
   ServicesProps,
   StatsProps,
   StepsProps,
   TestimonialsProps,
   TextProps,
+  VideoProps,
 } from '@/lib/cms/cms-block-type'
 import type { CmsNavItem, CmsTheme } from '@/lib/cms/public-fetch'
-import { safeUrl, safeFrameSrc } from '@/lib/cms/safe-url'
+import { safeFrameSrc, safeUrl, safeVideoEmbedSrc } from '@/lib/cms/safe-url'
+import { slotRing } from '@/lib/cms/slot-highlight'
 import { themeById } from '@/lib/cms/themes/theme-catalog'
-import { themeToCssVars, themeLayoutAttrs } from '@/lib/cms/themes/theme-tokens'
-import { MeadaHero } from '@/components/cms/blocks/meada-hero'
-import { MeadaCta, MeadaPortfolio, MeadaServices } from '@/components/cms/blocks/meada-sections'
-import { MeadaFooter, MeadaNavbar } from '@/components/cms/blocks/meada-chrome'
-import { NichesGrid } from '@/components/cms/blocks/niches-grid'
+import { themeLayoutAttrs, themeToCssVars } from '@/lib/cms/themes/theme-tokens'
+import { cn } from '@/lib/utils'
 
 /**
  * Renderizador do CMS (SM-N / catálogo ampliado). Renderiza os 18 tipos de bloco. Tema: cor primária
@@ -59,7 +63,8 @@ export function cmsShellStyle(theme: CmsTheme | null): React.CSSProperties {
   if (theme?.preset === 'meada-dark') {
     return {
       ['--cms-primary' as string]: '#3b82f6',
-      ['--cms-gradient' as string]: 'linear-gradient(125deg, #60a5fa 0%, #a855f7 50%, #ec4899 100%)',
+      ['--cms-gradient' as string]:
+        'linear-gradient(125deg, #60a5fa 0%, #a855f7 50%, #ec4899 100%)',
       background: '#000812',
       color: '#ffffff',
       fontFamily: 'var(--font-geist-sans), ui-sans-serif, system-ui, sans-serif',
@@ -98,24 +103,45 @@ function HeroBlock({ props, activeSlot }: { props: HeroProps; activeSlot?: strin
   // anel de destaque pra sub-parte ativa — helper compartilhado; fundo do hero é primário → ring branco.
   const ringIf = (slot: string) => slotRing(activeSlot, slot)
   return (
-    <section className="relative overflow-hidden px-6 py-20 text-center" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
+    <section
+      className="relative overflow-hidden px-6 py-20 text-center"
+      style={{ background: 'var(--cms-primary)', color: '#fff' }}
+    >
       <div className="mx-auto grid max-w-6xl items-center gap-10 md:grid-cols-2 md:text-left">
         <div data-slot="content" className={cn(ringIf('content'))}>
           {props.badge && (
-            <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium uppercase tracking-widest">
+            <span className="inline-block rounded-full bg-white/15 px-3 py-1 text-xs font-medium tracking-widest uppercase">
               {props.badge}
             </span>
           )}
-          {props.title && <h1 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">{props.title}</h1>}
-          {props.subtitle && <p className="mx-auto mt-4 max-w-2xl text-lg opacity-90 md:mx-0">{props.subtitle}</p>}
+          {props.title && (
+            <h1 className="mt-4 text-4xl font-bold tracking-tight md:text-5xl">{props.title}</h1>
+          )}
+          {props.subtitle && (
+            <p className="mx-auto mt-4 max-w-2xl text-lg opacity-90 md:mx-0">{props.subtitle}</p>
+          )}
           <div className="mt-8 flex flex-wrap justify-center gap-3 md:justify-start">
             {props.buttonLabel && safeUrl(props.buttonHref) && (
-              <a href={safeUrl(props.buttonHref)} data-slot="buttonPrimary" className={cn('inline-block rounded-md bg-white px-6 py-3 font-medium text-slate-900 hover:bg-slate-100', ringIf('buttonPrimary'))}>
+              <a
+                href={safeUrl(props.buttonHref)}
+                data-slot="buttonPrimary"
+                className={cn(
+                  'inline-block rounded-md bg-white px-6 py-3 font-medium text-slate-900 hover:bg-slate-100',
+                  ringIf('buttonPrimary'),
+                )}
+              >
                 {props.buttonLabel}
               </a>
             )}
             {props.secondaryButtonLabel && safeUrl(props.secondaryButtonHref) && (
-              <a href={safeUrl(props.secondaryButtonHref)} data-slot="buttonSecondary" className={cn('inline-block rounded-md px-6 py-3 font-medium text-white ring-1 ring-white/40 hover:bg-white/10', ringIf('buttonSecondary'))}>
+              <a
+                href={safeUrl(props.secondaryButtonHref)}
+                data-slot="buttonSecondary"
+                className={cn(
+                  'inline-block rounded-md px-6 py-3 font-medium text-white ring-1 ring-white/40 hover:bg-white/10',
+                  ringIf('buttonSecondary'),
+                )}
+              >
                 {props.secondaryButtonLabel}
               </a>
             )}
@@ -123,7 +149,15 @@ function HeroBlock({ props, activeSlot }: { props: HeroProps; activeSlot?: strin
         </div>
         {safeUrl(props.imageUrl) && (
           /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
-          <img src={safeUrl(props.imageUrl)} alt={props.title || ''} data-slot="image" className={cn('w-full rounded-3xl shadow-2xl md:aspect-[4/3] md:object-cover', ringIf('image'))} />
+          <img
+            src={safeUrl(props.imageUrl)}
+            alt={props.title || ''}
+            data-slot="image"
+            className={cn(
+              'w-full rounded-3xl shadow-2xl md:aspect-[4/3] md:object-cover',
+              ringIf('image'),
+            )}
+          />
         )}
       </div>
     </section>
@@ -135,7 +169,9 @@ function TextBlock({ props }: { props: TextProps }) {
   return (
     <section className="mx-auto max-w-3xl px-6 py-12">
       {paragraphs.map((p, i) => (
-        <p key={i} className="mb-4 whitespace-pre-line leading-relaxed">{p}</p>
+        <p key={i} className="mb-4 leading-relaxed whitespace-pre-line">
+          {p}
+        </p>
       ))}
     </section>
   )
@@ -172,7 +208,10 @@ function ContactBlock({ props }: { props: ContactProps }) {
           {props.hours && <dd>{props.hours}</dd>}
         </dl>
         {waHref && (
-          <a href={waHref} className="mt-6 inline-block rounded-md bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-700">
+          <a
+            href={waHref}
+            className="mt-6 inline-block rounded-md bg-emerald-600 px-6 py-3 font-medium text-white hover:bg-emerald-700"
+          >
             Falar no WhatsApp
           </a>
         )}
@@ -190,9 +229,15 @@ function GalleryBlock({ props }: { props: GalleryProps }) {
           <figure key={i} className="overflow-hidden rounded-lg border border-black/10">
             {safeUrl(img.url) && (
               /* eslint-disable-next-line @next/next/no-img-element -- URLs externas coladas pelo tenant */
-              <img src={safeUrl(img.url)} alt={img.caption || ''} className="h-48 w-full object-cover" />
+              <img
+                src={safeUrl(img.url)}
+                alt={img.caption || ''}
+                className="h-48 w-full object-cover"
+              />
             )}
-            {img.caption && <figcaption className="px-3 py-2 text-sm opacity-70">{img.caption}</figcaption>}
+            {img.caption && (
+              <figcaption className="px-3 py-2 text-sm opacity-70">{img.caption}</figcaption>
+            )}
           </figure>
         ))}
       </div>
@@ -226,7 +271,8 @@ function TestimonialsBlock({ props }: { props: TestimonialsProps }) {
             <blockquote key={i} className="rounded-lg border border-black/10 bg-white/60 p-5">
               <p className="italic">“{t.text}”</p>
               <footer className="mt-3 text-sm font-medium">
-                {t.name}{t.rating && <span className="ml-2 opacity-70">{t.rating}</span>}
+                {t.name}
+                {t.rating && <span className="ml-2 opacity-70">{t.rating}</span>}
               </footer>
             </blockquote>
           ))}
@@ -243,7 +289,14 @@ function MapBlock({ props }: { props: MapProps }) {
       {props.address && <p className="mb-4 text-center opacity-80">{props.address}</p>}
       {safeFrameSrc(props.embedUrl) && (
         <div className="overflow-hidden rounded-lg border border-black/10">
-          <iframe src={safeFrameSrc(props.embedUrl)} title="Mapa" className="h-80 w-full" loading="lazy" sandbox="allow-scripts allow-same-origin allow-popups" referrerPolicy="no-referrer" />
+          <iframe
+            src={safeFrameSrc(props.embedUrl)}
+            title="Mapa"
+            className="h-80 w-full"
+            loading="lazy"
+            sandbox="allow-scripts allow-same-origin allow-popups"
+            referrerPolicy="no-referrer"
+          />
         </div>
       )}
     </section>
@@ -255,10 +308,22 @@ function MapBlock({ props }: { props: MapProps }) {
 function BannerStripBlock({ props, activeSlot }: { props: BannerStripProps; activeSlot?: string }) {
   if (!props.message) return null
   return (
-    <div className="px-6 py-3 text-center text-sm" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
-      <span data-slot="message" className={cn('font-medium', slotRing(activeSlot, 'message'))}>{props.message}</span>
+    <div
+      className="px-6 py-3 text-center text-sm"
+      style={{ background: 'var(--cms-primary)', color: '#fff' }}
+    >
+      <span data-slot="message" className={cn('font-medium', slotRing(activeSlot, 'message'))}>
+        {props.message}
+      </span>
       {props.buttonLabel && safeUrl(props.buttonHref) && (
-        <a href={safeUrl(props.buttonHref)} data-slot="button" className={cn('ml-3 font-semibold underline underline-offset-2 hover:no-underline', slotRing(activeSlot, 'button'))}>
+        <a
+          href={safeUrl(props.buttonHref)}
+          data-slot="button"
+          className={cn(
+            'ml-3 font-semibold underline underline-offset-2 hover:no-underline',
+            slotRing(activeSlot, 'button'),
+          )}
+        >
           {props.buttonLabel} →
         </a>
       )}
@@ -273,7 +338,9 @@ function StatsBlock({ props }: { props: StatsProps }) {
         {(props.items ?? []).map((it, i) => (
           <div key={i} className="text-center">
             <div className="text-3xl font-bold md:text-4xl">{it.value}</div>
-            <div className="mt-1 text-xs uppercase tracking-widest opacity-80 md:text-sm">{it.label}</div>
+            <div className="mt-1 text-xs tracking-widest uppercase opacity-80 md:text-sm">
+              {it.label}
+            </div>
           </div>
         ))}
       </div>
@@ -286,7 +353,14 @@ function FeatureGridBlock({ props }: { props: FeatureGridProps }) {
     <section className="mx-auto max-w-6xl px-6 py-16">
       {(props.title || props.eyebrow) && (
         <div className="mb-10 max-w-2xl">
-          {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+          {props.eyebrow && (
+            <div
+              className="text-xs tracking-widest uppercase"
+              style={{ color: 'var(--cms-primary)' }}
+            >
+              {props.eyebrow}
+            </div>
+          )}
           {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
         </div>
       )}
@@ -303,17 +377,43 @@ function FeatureGridBlock({ props }: { props: FeatureGridProps }) {
   )
 }
 
-function ImageTextSplitBlock({ props, activeSlot }: { props: ImageTextSplitProps; activeSlot?: string }) {
+function ImageTextSplitBlock({
+  props,
+  activeSlot,
+}: {
+  props: ImageTextSplitProps
+  activeSlot?: string
+}) {
   const reverse = props.reverse === true
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
-      <div className={`grid items-center gap-12 md:grid-cols-2 ${reverse ? 'md:[direction:rtl]' : ''}`}>
-        <div className={cn('md:[direction:ltr]', slotRing(activeSlot, 'content', false))} data-slot="content">
-          {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+      <div
+        className={`grid items-center gap-12 md:grid-cols-2 ${reverse ? 'md:[direction:rtl]' : ''}`}
+      >
+        <div
+          className={cn('md:[direction:ltr]', slotRing(activeSlot, 'content', false))}
+          data-slot="content"
+        >
+          {props.eyebrow && (
+            <div
+              className="text-xs tracking-widest uppercase"
+              style={{ color: 'var(--cms-primary)' }}
+            >
+              {props.eyebrow}
+            </div>
+          )}
           {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
           {props.body && <p className="mt-4 whitespace-pre-line opacity-80">{props.body}</p>}
           {props.buttonLabel && safeUrl(props.buttonHref) && (
-            <a href={safeUrl(props.buttonHref)} data-slot="button" className={cn('mt-6 inline-block rounded-md px-6 py-3 font-medium text-white', slotRing(activeSlot, 'button', false))} style={{ background: 'var(--cms-primary)' }}>
+            <a
+              href={safeUrl(props.buttonHref)}
+              data-slot="button"
+              className={cn(
+                'mt-6 inline-block rounded-md px-6 py-3 font-medium text-white',
+                slotRing(activeSlot, 'button', false),
+              )}
+              style={{ background: 'var(--cms-primary)' }}
+            >
               {props.buttonLabel}
             </a>
           )}
@@ -321,7 +421,15 @@ function ImageTextSplitBlock({ props, activeSlot }: { props: ImageTextSplitProps
         {safeUrl(props.imageUrl) && (
           <div className="md:[direction:ltr]">
             {/* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */}
-            <img src={safeUrl(props.imageUrl)} alt={props.title || ''} data-slot="image" className={cn('aspect-[4/3] w-full rounded-3xl object-cover shadow-xl', slotRing(activeSlot, 'image', false))} />
+            <img
+              src={safeUrl(props.imageUrl)}
+              alt={props.title || ''}
+              data-slot="image"
+              className={cn(
+                'aspect-[4/3] w-full rounded-3xl object-cover shadow-xl',
+                slotRing(activeSlot, 'image', false),
+              )}
+            />
           </div>
         )}
       </div>
@@ -335,14 +443,23 @@ function StepsBlock({ props }: { props: StepsProps }) {
       <div className="mx-auto max-w-6xl">
         {(props.title || props.eyebrow) && (
           <div className="mx-auto mb-12 max-w-2xl text-center">
-            {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+            {props.eyebrow && (
+              <div
+                className="text-xs tracking-widest uppercase"
+                style={{ color: 'var(--cms-primary)' }}
+              >
+                {props.eyebrow}
+              </div>
+            )}
             {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
           </div>
         )}
         <div className="grid gap-6 md:grid-cols-3">
           {(props.items ?? []).map((step, i) => (
             <div key={i} className="rounded-2xl border border-black/10 bg-white/60 p-6">
-              <div className="text-5xl font-black" style={{ color: 'var(--cms-primary)' }}>{step.number || `0${i + 1}`}</div>
+              <div className="text-5xl font-black" style={{ color: 'var(--cms-primary)' }}>
+                {step.number || `0${i + 1}`}
+              </div>
               <h3 className="mt-3 font-semibold">{step.title}</h3>
               <p className="mt-2 text-sm opacity-70">{step.description}</p>
             </div>
@@ -355,12 +472,20 @@ function StepsBlock({ props }: { props: StepsProps }) {
 
 function ColumnsBlock({ props }: { props: ColumnsProps }) {
   const items = props.items ?? []
-  const colsClass = items.length === 4 ? 'md:grid-cols-4' : items.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
+  const colsClass =
+    items.length === 4 ? 'md:grid-cols-4' : items.length === 2 ? 'md:grid-cols-2' : 'md:grid-cols-3'
   return (
     <section className="mx-auto max-w-6xl px-6 py-16">
       {(props.title || props.eyebrow) && (
         <div className="mb-10 max-w-2xl">
-          {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+          {props.eyebrow && (
+            <div
+              className="text-xs tracking-widest uppercase"
+              style={{ color: 'var(--cms-primary)' }}
+            >
+              {props.eyebrow}
+            </div>
+          )}
           {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
         </div>
       )}
@@ -383,26 +508,53 @@ function PackagesBlock({ props }: { props: PackagesProps }) {
       <div className="mx-auto max-w-6xl">
         {(props.title || props.eyebrow) && (
           <div className="mb-10 max-w-2xl">
-            {props.eyebrow && <div className="text-xs uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>{props.eyebrow}</div>}
+            {props.eyebrow && (
+              <div
+                className="text-xs tracking-widest uppercase"
+                style={{ color: 'var(--cms-primary)' }}
+              >
+                {props.eyebrow}
+              </div>
+            )}
             {props.title && <h2 className="mt-2 text-3xl font-bold md:text-4xl">{props.title}</h2>}
             {props.subtitle && <p className="mt-2 opacity-70">{props.subtitle}</p>}
           </div>
         )}
         <div className="grid gap-6 md:grid-cols-3">
           {(props.items ?? []).map((p, i) => (
-            <div key={i} className={`overflow-hidden rounded-2xl bg-white shadow-sm ${p.popular ? 'ring-2' : 'ring-1 ring-black/10'}`}
-              style={p.popular ? { ['--tw-ring-color' as string]: 'var(--cms-primary)' } : undefined}>
+            <div
+              key={i}
+              className={`overflow-hidden rounded-2xl bg-white shadow-sm ${p.popular ? 'ring-2' : 'ring-1 ring-black/10'}`}
+              style={
+                p.popular ? { ['--tw-ring-color' as string]: 'var(--cms-primary)' } : undefined
+              }
+            >
               {safeUrl(p.imageUrl) && (
                 /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
-                <img src={safeUrl(p.imageUrl)} alt={p.name} className="aspect-[4/3] w-full object-cover" />
+                <img
+                  src={safeUrl(p.imageUrl)}
+                  alt={p.name}
+                  className="aspect-[4/3] w-full object-cover"
+                />
               )}
               <div className="p-6 text-slate-900">
-                {p.popular && <div className="mb-2 text-xs font-semibold uppercase tracking-widest" style={{ color: 'var(--cms-primary)' }}>Mais escolhido</div>}
+                {p.popular && (
+                  <div
+                    className="mb-2 text-xs font-semibold tracking-widest uppercase"
+                    style={{ color: 'var(--cms-primary)' }}
+                  >
+                    Mais escolhido
+                  </div>
+                )}
                 <h3 className="text-xl font-bold">{p.name}</h3>
                 {p.description && <p className="mt-2 text-sm opacity-70">{p.description}</p>}
                 {p.price && <div className="mt-4 text-3xl font-bold tabular-nums">{p.price}</div>}
                 {p.buttonLabel && (
-                  <a href={safeUrl(p.buttonHref) || '#'} className="mt-6 inline-block w-full rounded-xl py-2.5 text-center font-semibold text-white" style={{ background: 'var(--cms-primary)' }}>
+                  <a
+                    href={safeUrl(p.buttonHref) || '#'}
+                    className="mt-6 inline-block w-full rounded-xl py-2.5 text-center font-semibold text-white"
+                    style={{ background: 'var(--cms-primary)' }}
+                  >
                     {p.buttonLabel}
                   </a>
                 )}
@@ -421,7 +573,9 @@ function MarqueeBlock({ props }: { props: MarqueeProps }) {
   return (
     <section style={{ background: 'var(--cms-primary)', color: '#fff' }}>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-center gap-x-6 gap-y-2 px-6 py-6 text-sm">
-        {props.label && <span className="text-xs uppercase tracking-widest opacity-70">{props.label}</span>}
+        {props.label && (
+          <span className="text-xs tracking-widest uppercase opacity-70">{props.label}</span>
+        )}
         {items.map((it, i) => (
           <span key={i} className="inline-flex items-center gap-2 font-medium tracking-tight">
             {it.name}
@@ -437,7 +591,7 @@ function QuoteBlock({ props }: { props: QuoteProps }) {
   if (!props.text) return null
   return (
     <section className="mx-auto max-w-4xl px-6 py-16 text-center">
-      <p className="text-2xl font-medium leading-snug md:text-3xl">“{props.text}”</p>
+      <p className="text-2xl leading-snug font-medium md:text-3xl">“{props.text}”</p>
       {props.author && (
         <div className="mt-6 text-sm opacity-70">
           <div className="font-semibold opacity-100">{props.author}</div>
@@ -450,17 +604,117 @@ function QuoteBlock({ props }: { props: QuoteProps }) {
 
 function CtaBlock({ props, activeSlot }: { props: CtaProps; activeSlot?: string }) {
   return (
-    <section className="px-6 py-16 text-center" style={{ background: 'var(--cms-primary)', color: '#fff' }}>
+    <section
+      className="px-6 py-16 text-center"
+      style={{ background: 'var(--cms-primary)', color: '#fff' }}
+    >
       <div className="mx-auto max-w-4xl">
         <div data-slot="content" className={cn(slotRing(activeSlot, 'content'))}>
-          {props.title && <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{props.title}</h2>}
+          {props.title && (
+            <h2 className="text-3xl font-bold tracking-tight md:text-4xl">{props.title}</h2>
+          )}
           {props.subtitle && <p className="mx-auto mt-4 max-w-2xl opacity-90">{props.subtitle}</p>}
         </div>
         {props.buttonLabel && safeUrl(props.buttonHref) && (
-          <a href={safeUrl(props.buttonHref)} data-slot="button" className={cn('mt-8 inline-block rounded-md bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-100', slotRing(activeSlot, 'button'))}>
+          <a
+            href={safeUrl(props.buttonHref)}
+            data-slot="button"
+            className={cn(
+              'mt-8 inline-block rounded-md bg-white px-8 py-3 font-semibold text-slate-900 hover:bg-slate-100',
+              slotRing(activeSlot, 'button'),
+            )}
+          >
             {props.buttonLabel}
           </a>
         )}
+      </div>
+    </section>
+  )
+}
+
+// ---- onda 1 de blocos genéricos (prova social e mídia) -----------------------
+// reviews_carousel vive em blocks/reviews-carousel.tsx ('use client' — setas/autoplay).
+
+function VideoBlock({ props }: { props: VideoProps }) {
+  // src SEMPRE reconstruído no player oficial a partir do ID (safeVideoEmbedSrc) — nunca a URL crua.
+  const src = safeVideoEmbedSrc(props.url)
+  return (
+    <section className="mx-auto max-w-4xl px-6 py-12">
+      {props.title && <h2 className="mb-6 text-center text-2xl font-bold">{props.title}</h2>}
+      {src && (
+        <div className="overflow-hidden rounded-2xl border border-black/10 shadow-sm">
+          <iframe
+            src={src}
+            title={props.title || 'Vídeo'}
+            className="aspect-video w-full"
+            loading="lazy"
+            allow="accelerometer; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share"
+            allowFullScreen
+            referrerPolicy="no-referrer"
+          />
+        </div>
+      )}
+      {props.caption && <p className="mt-3 text-center text-sm opacity-70">{props.caption}</p>}
+    </section>
+  )
+}
+
+function RatingBadgeBlock({ props }: { props: RatingBadgeProps }) {
+  if (!props.score && !props.caption) return null
+  return (
+    <section className="px-6 py-8 text-center">
+      <div className="inline-flex flex-wrap items-center justify-center gap-3 rounded-full border border-black/10 bg-white/60 px-6 py-3 text-slate-900 shadow-sm">
+        <span className="text-lg text-amber-400" aria-hidden>
+          ★★★★★
+        </span>
+        {props.score && <span className="text-lg font-bold">{props.score}</span>}
+        {props.caption && <span className="text-sm opacity-70">{props.caption}</span>}
+        {safeUrl(props.href) && (
+          <a
+            href={safeUrl(props.href)}
+            className="text-sm font-medium underline underline-offset-2"
+            style={{ color: 'var(--cms-primary)' }}
+          >
+            Ver avaliações
+          </a>
+        )}
+      </div>
+    </section>
+  )
+}
+
+function LogoStripBlock({ props }: { props: LogoStripProps }) {
+  const items = props.items ?? []
+  if (items.length === 0) return null
+  return (
+    <section className="mx-auto max-w-6xl px-6 py-10">
+      {props.label && (
+        <div className="mb-6 text-center text-xs tracking-widest uppercase opacity-60">
+          {props.label}
+        </div>
+      )}
+      <div className="flex flex-wrap items-center justify-center gap-x-10 gap-y-6">
+        {items.map((it, i) => {
+          const img = safeUrl(it.imageUrl)
+          const content = img ? (
+            /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
+            <img
+              src={img}
+              alt={it.name || ''}
+              className="h-10 w-auto object-contain opacity-70 grayscale transition hover:opacity-100 hover:grayscale-0"
+            />
+          ) : (
+            <span className="text-lg font-semibold tracking-tight opacity-60">{it.name}</span>
+          )
+          const href = safeUrl(it.href)
+          return href ? (
+            <a key={i} href={href}>
+              {content}
+            </a>
+          ) : (
+            <span key={i}>{content}</span>
+          )
+        })}
       </div>
     </section>
   )
@@ -488,6 +742,10 @@ export const blockComponents = {
   marquee: MarqueeBlock,
   quote: QuoteBlock,
   cta: CtaBlock,
+  reviews_carousel: ReviewsCarousel,
+  video: VideoBlock,
+  rating_badge: RatingBadgeBlock,
+  logo_strip: LogoStripBlock,
   meada_hero: MeadaHero,
   meada_services: MeadaServices,
   meada_portfolio: MeadaPortfolio,
@@ -500,34 +758,71 @@ export const blockComponents = {
 /** Renderiza um bloco (com key = block.id). Compartilhado entre CmsRender (público) e o editor. */
 /** opts.activeSlot: SÓ o editor passa, e só pro bloco cujo slot está selecionado — desenha o ring na
  * SUB-PARTE do macro (resolve o destaque sumido em full-bleed). Ausente no /p/ público → render idêntico. */
-export function renderCmsBlock(b: CmsBlock, opts?: { activeSlot?: string }): React.ReactElement | null {
+export function renderCmsBlock(
+  b: CmsBlock,
+  opts?: { activeSlot?: string },
+): React.ReactElement | null {
   switch (b.type) {
-    case 'hero': return <HeroBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
-    case 'text': return <TextBlock key={b.id} props={b.props} />
-    case 'services': return <ServicesBlock key={b.id} props={b.props} />
-    case 'contact': return <ContactBlock key={b.id} props={b.props} />
-    case 'gallery': return <GalleryBlock key={b.id} props={b.props} />
-    case 'faq': return <FaqBlock key={b.id} props={b.props} />
-    case 'testimonials': return <TestimonialsBlock key={b.id} props={b.props} />
-    case 'map': return <MapBlock key={b.id} props={b.props} />
-    case 'banner_strip': return <BannerStripBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
-    case 'stats': return <StatsBlock key={b.id} props={b.props} />
-    case 'feature_grid': return <FeatureGridBlock key={b.id} props={b.props} />
-    case 'image_text_split': return <ImageTextSplitBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
-    case 'steps': return <StepsBlock key={b.id} props={b.props} />
-    case 'columns': return <ColumnsBlock key={b.id} props={b.props} />
-    case 'packages': return <PackagesBlock key={b.id} props={b.props} />
-    case 'marquee': return <MarqueeBlock key={b.id} props={b.props} />
-    case 'quote': return <QuoteBlock key={b.id} props={b.props} />
-    case 'cta': return <CtaBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
-    case 'meada_hero': return <MeadaHero key={b.id} props={b.props} />
-    case 'meada_services': return <MeadaServices key={b.id} props={b.props} />
-    case 'meada_portfolio': return <MeadaPortfolio key={b.id} props={b.props} />
-    case 'meada_cta': return <MeadaCta key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
-    case 'meada_navbar': return <MeadaNavbar key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
-    case 'meada_footer': return <MeadaFooter key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
-    case 'niches_grid': return <NichesGrid key={b.id} props={b.props} />
-    default: return null
+    case 'hero':
+      return <HeroBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'text':
+      return <TextBlock key={b.id} props={b.props} />
+    case 'services':
+      return <ServicesBlock key={b.id} props={b.props} />
+    case 'contact':
+      return <ContactBlock key={b.id} props={b.props} />
+    case 'gallery':
+      return <GalleryBlock key={b.id} props={b.props} />
+    case 'faq':
+      return <FaqBlock key={b.id} props={b.props} />
+    case 'testimonials':
+      return <TestimonialsBlock key={b.id} props={b.props} />
+    case 'map':
+      return <MapBlock key={b.id} props={b.props} />
+    case 'banner_strip':
+      return <BannerStripBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'stats':
+      return <StatsBlock key={b.id} props={b.props} />
+    case 'feature_grid':
+      return <FeatureGridBlock key={b.id} props={b.props} />
+    case 'image_text_split':
+      return <ImageTextSplitBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'steps':
+      return <StepsBlock key={b.id} props={b.props} />
+    case 'columns':
+      return <ColumnsBlock key={b.id} props={b.props} />
+    case 'packages':
+      return <PackagesBlock key={b.id} props={b.props} />
+    case 'marquee':
+      return <MarqueeBlock key={b.id} props={b.props} />
+    case 'quote':
+      return <QuoteBlock key={b.id} props={b.props} />
+    case 'cta':
+      return <CtaBlock key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'reviews_carousel':
+      return <ReviewsCarousel key={b.id} props={b.props} />
+    case 'video':
+      return <VideoBlock key={b.id} props={b.props} />
+    case 'rating_badge':
+      return <RatingBadgeBlock key={b.id} props={b.props} />
+    case 'logo_strip':
+      return <LogoStripBlock key={b.id} props={b.props} />
+    case 'meada_hero':
+      return <MeadaHero key={b.id} props={b.props} />
+    case 'meada_services':
+      return <MeadaServices key={b.id} props={b.props} />
+    case 'meada_portfolio':
+      return <MeadaPortfolio key={b.id} props={b.props} />
+    case 'meada_cta':
+      return <MeadaCta key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'meada_navbar':
+      return <MeadaNavbar key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'meada_footer':
+      return <MeadaFooter key={b.id} props={b.props} activeSlot={opts?.activeSlot} />
+    case 'niches_grid':
+      return <NichesGrid key={b.id} props={b.props} />
+    default:
+      return null
   }
 }
 
@@ -535,9 +830,18 @@ export function renderCmsBlock(b: CmsBlock, opts?: { activeSlot?: string }): Rea
 
 // As 12 strings LITERAIS md:col-span-N (anti-tree-shake do Tailwind 4 — nunca interpolar).
 const COL_SPAN: Record<number, string> = {
-  1: 'md:col-span-1', 2: 'md:col-span-2', 3: 'md:col-span-3', 4: 'md:col-span-4',
-  5: 'md:col-span-5', 6: 'md:col-span-6', 7: 'md:col-span-7', 8: 'md:col-span-8',
-  9: 'md:col-span-9', 10: 'md:col-span-10', 11: 'md:col-span-11', 12: 'md:col-span-12',
+  1: 'md:col-span-1',
+  2: 'md:col-span-2',
+  3: 'md:col-span-3',
+  4: 'md:col-span-4',
+  5: 'md:col-span-5',
+  6: 'md:col-span-6',
+  7: 'md:col-span-7',
+  8: 'md:col-span-8',
+  9: 'md:col-span-9',
+  10: 'md:col-span-10',
+  11: 'md:col-span-11',
+  12: 'md:col-span-12',
 }
 function colSpanClass(w: CmsColumnWidth): string {
   if (w === 'auto') return 'md:col-span-12'
@@ -564,12 +868,18 @@ export type RowInteractive = {
  * pelo editor; no /p/ é undefined e o render fica igual ao de produção. */
 export function RowSection({ row, interactive }: { row: CmsRow; interactive?: RowInteractive }) {
   const p = row.props ?? {}
-  const bgStyle = p.bg === 'primary' ? { background: 'var(--cms-primary)', color: '#fff' }
-    : p.bg === 'muted' ? { background: 'rgba(0,0,0,0.04)' } : undefined
+  const bgStyle =
+    p.bg === 'primary'
+      ? { background: 'var(--cms-primary)', color: '#fff' }
+      : p.bg === 'muted'
+        ? { background: 'rgba(0,0,0,0.04)' }
+        : undefined
   const padY = { none: '', sm: 'py-6', md: 'py-12', lg: 'py-20' }[p.paddingY ?? 'md']
   const gap = { sm: 'gap-4', md: 'gap-6', lg: 'gap-10' }[p.gap ?? 'md']
   const maxW = { narrow: 'max-w-3xl', wide: 'max-w-6xl', full: 'max-w-none' }[p.maxWidth ?? 'wide']
-  const align = { start: 'md:items-start', center: 'md:items-center', stretch: 'md:items-stretch' }[p.align ?? 'stretch']
+  const align = { start: 'md:items-start', center: 'md:items-center', stretch: 'md:items-stretch' }[
+    p.align ?? 'stretch'
+  ]
   const px = p.maxWidth === 'full' ? '' : 'px-6'
 
   // No editor: clicar na seção FORA de um bloco (alvo = a própria <section>) seleciona a LINHA. Destaques
@@ -579,11 +889,14 @@ export function RowSection({ row, interactive }: { row: CmsRow; interactive?: Ro
   // "pular" o conteúdo ao ativar. No /p/ público (sem interactive) a seção é estática.
   const sectionProps = interactive
     ? {
-        onClick: (e: React.MouseEvent) => { if (e.target === e.currentTarget) interactive.onSelectRow?.(row.id) },
+        onClick: (e: React.MouseEvent) => {
+          if (e.target === e.currentTarget) interactive.onSelectRow?.(row.id)
+        },
         className: cn(
-          padY, 'relative cursor-pointer border-l-2 border-transparent transition-colors',
+          padY,
+          'relative cursor-pointer border-l-2 border-transparent transition-colors',
           interactive.selectedRow
-            ? 'ring-2 ring-inset ring-primary/60'
+            ? 'ring-2 ring-primary/60 ring-inset'
             : interactive.containsSelectedBlock && 'border-primary/50 bg-primary/[0.04]',
         ),
       }
@@ -597,7 +910,10 @@ export function RowSection({ row, interactive }: { row: CmsRow; interactive?: Ro
             {(col.blocks ?? []).map((b) => {
               if (!interactive) return renderCmsBlock(b)
               // slot ativo NESTE bloco → destaque vai pra sub-parte (activeSlot) e o ring-do-bloco some.
-              const slotActive = interactive.selectedSlotBlockId === b.id ? (interactive.selectedSlotId ?? undefined) : undefined
+              const slotActive =
+                interactive.selectedSlotBlockId === b.id
+                  ? (interactive.selectedSlotId ?? undefined)
+                  : undefined
               return (
                 // wrapper clicável. No EDITOR:
                 //  - o CONTEÚDO recebe pointer-events:none → links/botões NÃO navegam e o clique
@@ -606,7 +922,10 @@ export function RowSection({ row, interactive }: { row: CmsRow; interactive?: Ro
                 //    blocos full-bleed (meada_*), que antes engoliam o ring-offset atrás do fundo.
                 <div
                   key={b.id}
-                  onClick={(e) => { e.stopPropagation(); interactive.onSelectBlock?.(row.id, col.id, b.id) }}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    interactive.onSelectBlock?.(row.id, col.id, b.id)
+                  }}
                   className="group relative cursor-pointer"
                 >
                   <div className="pointer-events-none">
@@ -620,7 +939,7 @@ export function RowSection({ row, interactive }: { row: CmsRow; interactive?: Ro
                         // hover via group-hover (o overlay é pointer-events-none; quem recebe o
                         // mouse é o wrapper .group).
                         interactive.selectedBlockId === b.id
-                          ? 'ring-2 ring-inset ring-blue-500 bg-blue-500/[0.06]'
+                          ? 'bg-blue-500/[0.06] ring-2 ring-blue-500 ring-inset'
                           : 'ring-inset group-hover:ring-2 group-hover:ring-blue-400/40',
                       )}
                     />
@@ -655,17 +974,27 @@ export function CmsRender({
     (row.columns ?? []).some((col) => (col.blocks ?? []).some((b) => b.type === 'meada_navbar')),
   )
   return (
-    <main className="cms-shell min-h-screen" style={cmsShellStyle(theme)} {...cmsShellLayoutAttrs(theme)}>
+    <main
+      className="cms-shell min-h-screen"
+      style={cmsShellStyle(theme)}
+      {...cmsShellLayoutAttrs(theme)}
+    >
       {nav.length > 1 && !hasOwnNavbar && (
         <nav className="flex flex-wrap items-center justify-center gap-4 border-b border-black/10 px-6 py-4 text-sm">
           {nav.map((n) => (
-            <a key={n.pageSlug} href={n.isHome ? `${navBase || '/'}` : `${navBase}/${n.pageSlug}`} className="hover:underline">
+            <a
+              key={n.pageSlug}
+              href={n.isHome ? `${navBase || '/'}` : `${navBase}/${n.pageSlug}`}
+              className="hover:underline"
+            >
               {n.title || n.pageSlug}
             </a>
           ))}
         </nav>
       )}
-      {blocks.map((row) => <RowSection key={row.id} row={row} />)}
+      {blocks.map((row) => (
+        <RowSection key={row.id} row={row} />
+      ))}
       {blocks.length === 0 && (
         <div className="flex min-h-[50vh] items-center justify-center opacity-50">
           <p>{title || 'Página em construção.'}</p>

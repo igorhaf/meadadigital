@@ -7,6 +7,9 @@ export type UpdateConfigInput = {
   examDurationMinutes: number
   minOrderCents: number
   leadTimeDaysDefault: number
+  examReminderEnabled?: boolean
+  pickupFollowupEnabled?: boolean
+  pickupFollowupDays?: number
 }
 
 export function getConfig(): Promise<Config> {

@@ -89,3 +89,32 @@ Ambas têm namespace próprio, distinto de `<consulta_nutri>`/`<entrega_plano>` 
 - Base de conhecimento (RAG): disponível como em todo perfil (item "Conhecimento" do nav + `{{knowledge}}`
   do PromptBuilder, sem gate).
 - Guard `/api/dermatologia/**` → 403 `forbidden_wrong_profile`. Paleta `teal`. Tenant: `igorhaf22`.
+
+## Onda 1 do backlog (migration 110)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_DERMATOLOGIA.md` (#1, #2 e #5):
+
+- **#1 LEMBRETE D-1 + CONFIRMAÇÃO + PREPARO:** o `DermatologiaReminderJob` (cron
+  `${dermatologia.reminder-cron:0 10 11 * * *}`) lembra o paciente na véspera pedindo SIM e,
+  quando o tipo de atendimento tem `prep_instructions`, **envia a nota de preparo junto,
+  VERBATIM** (mesma garantia do `EntregaPreparoHandler` — preparo mal feito queima dois slots).
+  Marker `reminded_start_at` (remarcar REARMA). A resposta fecha o loop via
+  `ConfirmacaoDermaHandler` (`<confirmacao_derma>{appointment_id, decisao:confirmada|cancelada}`,
+  barreira de contato) + wiring no OutboundService + instrução no contexto. Toggle
+  `reminder_enabled` (default ON). Trava clínica intacta (texto administrativo).
+- **#5 AUTO-REALIZADA:** confirmada vencida → realizada (silenciosa, `auto_complete_enabled`).
+  A variante "→ falta" do backlog ficou **de fora por segurança** (consulta atendida sem baixa
+  viraria falta indevida) — falta continua ação humana no painel.
+- **#2 RECALL DE RETORNO** (opt-in `recall_enabled` **OFF por default** — lição Baileys):
+  paciente ativo sem consulta REALIZADA há `recall_months` (default 6) e sem agendamento futuro
+  → 1 convite por episódio (`recall_reminded_at` re-armado por consulta realizada mais nova).
+  Convite administrativo ("quer agendar uma reavaliação?"), sem conduta clínica.
+
+Settings ganhou a seção "Automações". Teste: `DermatologiaOnda1IntegrationTest` (lembrete com
+preparo verbatim + confirmação com barreira; auto-realizada; recall opt-in com supressão por
+consulta futura).
+
+**Fica pra onda 2** (registrado, não pedido): #3 sinal/pré-pagamento (bloqueado pelo gateway
+#50 — exige preço no procedure_type), #4 pacote multi-sessão (chassi estética), #6 dashboard
+clínico, #7 fila de encaixe, #8 pós-procedimento + NPS, #12 triagem de urgência, #15
+antes/depois (bloqueado por upload/LGPD).

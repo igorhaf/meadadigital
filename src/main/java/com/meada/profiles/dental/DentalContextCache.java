@@ -119,7 +119,12 @@ public class DentalContextCache {
                 + "mensagem deve TERMINAR com a tag (em uma linha própria, sem markdown):\n")
             .append("<consulta>{\"date\":\"YYYY-MM-DD\",\"start_time\":\"HH:MM\",\"type\":\"...\","
                 + "\"notes\":\"...\"}</consulta>\n")
-            .append("Só emita a tag se o paciente já estiver identificado e tudo confirmado.\n\n");
+            .append("Só emita a tag se o paciente já estiver identificado e tudo confirmado.\n")
+            .append("Quando o paciente RESPONDER SIM a um lembrete de consulta, termine com a tag "
+                + "(linha própria, sem markdown): <confirmacao_consulta>{\"appointment_id\":"
+                + "\"UUID_DA_CONSULTA\"}</confirmacao_consulta> — use o id EXATO das consultas dele "
+                + "acima. Se ele pedir pra DESMARCAR/REMARCAR, mantenha a regra: o cancelamento é "
+                + "feito pelo consultório (ofereça os horários livres pra REMARCAR, sem cancelar).\n\n");
 
         return sb.toString();
     }

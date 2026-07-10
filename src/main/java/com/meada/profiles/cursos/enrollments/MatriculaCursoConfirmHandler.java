@@ -73,6 +73,7 @@ public class MatriculaCursoConfirmHandler {
         String rawCourse = root.path("course_id").asText(null);
         String studentNameJson = root.path("student_name").asText(null);
         String notes = root.path("notes").asText(null);
+        String cupom = root.path("cupom").asText(null);
         if (rawCourse == null || rawCourse.isBlank()) {
             log.warn("cursos: tag <matricula_curso> sem course_id p/ conversa {} — matrícula não criada", conversationId);
             return Optional.empty();
@@ -96,7 +97,8 @@ public class MatriculaCursoConfirmHandler {
 
         try {
             CursosEnrollment created = enrollmentService.create(companyId, courseId, contactId,
-                conversationId, studentName, studentPhone, notes);
+                conversationId, studentName, studentPhone,
+                cupom == null || cupom.isBlank() ? null : cupom.strip(), notes);
             log.info("cursos: matrícula {} criada p/ conversa {} (curso {})",
                 created.id(), conversationId, courseId);
             return Optional.of(created);

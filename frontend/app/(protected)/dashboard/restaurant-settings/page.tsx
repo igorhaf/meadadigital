@@ -1,19 +1,22 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
+import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/restaurant/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   durationMinutes: number
   bufferMinutes: number
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
 }
 
 /** Recorta "HH:MM:SS" → "HH:MM" (o backend devolve time com segundos). */
@@ -27,7 +30,6 @@ function hhmm(t: string): string {
  */
 export default function RestaurantSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -36,16 +38,14 @@ export default function RestaurantSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        durationMinutes: data.durationMinutes,
-        bufferMinutes: data.bufferMinutes,
-        opensAt: hhmm(data.opensAt),
-        closesAt: hhmm(data.closesAt),
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    durationMinutes: d.durationMinutes,
+    bufferMinutes: d.bufferMinutes,
+    opensAt: hhmm(d.opensAt),
+    closesAt: hhmm(d.closesAt),
+    reminderEnabled: d.reminderEnabled ?? true,
+    autoCompleteEnabled: d.autoCompleteEnabled ?? true,
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -95,17 +95,32 @@ export default function RestaurantSettingsPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Duração da reserva (minutos)
                   </label>
-                  <input type="number" min={30} max={600} step={15} value={form.durationMinutes}
-                    onChange={(e) => setForm((f) => f && { ...f, durationMinutes: Number(e.target.value) })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                  <input
+                    type="number"
+                    min={30}
+                    max={600}
+                    step={15}
+                    value={form.durationMinutes}
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, durationMinutes: Number(e.target.value) })
+                    }
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Intervalo entre reservas (minutos)
                   </label>
-                  <input type="number" min={0} step={5} value={form.bufferMinutes}
-                    onChange={(e) => setForm((f) => f && { ...f, bufferMinutes: Number(e.target.value) })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                  <input
+                    type="number"
+                    min={0}
+                    step={5}
+                    value={form.bufferMinutes}
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, bufferMinutes: Number(e.target.value) })
+                    }
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
@@ -113,16 +128,26 @@ export default function RestaurantSettingsPage() {
             <Section title="Horário de funcionamento">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Abre às</label>
-                  <input type="time" value={form.opensAt}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Abre às
+                  </label>
+                  <input
+                    type="time"
+                    value={form.opensAt}
                     onChange={(e) => setForm((f) => f && { ...f, opensAt: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha às</label>
-                  <input type="time" value={form.closesAt}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Fecha às
+                  </label>
+                  <input
+                    type="time"
+                    value={form.closesAt}
                     onChange={(e) => setForm((f) => f && { ...f, closesAt: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
@@ -131,6 +156,45 @@ export default function RestaurantSettingsPage() {
               Mudanças afetam apenas reservas <strong>futuras</strong> — reservas já confirmadas
               mantêm a duração do momento em que foram criadas.
             </p>
+
+            <Section title="Automações">
+              <div className="space-y-4">
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.reminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, reminderEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Lembrete de véspera com confirmação (SIM/NÃO)
+                    <span className="block text-xs text-muted-foreground">
+                      Na véspera, o cliente recebe &quot;confirma sua mesa?&quot; — SIM confirma e
+                      NÃO cancela (liberando o horário), tudo pela conversa com a IA.
+                    </span>
+                  </span>
+                </label>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={form.autoCompleteEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })
+                    }
+                  />
+                  <span>
+                    Concluir automaticamente reservas confirmadas que já passaram
+                    <span className="block text-xs text-muted-foreground">
+                      Confirmada com horário no passado (2h de folga) vira &quot;realizada&quot;,
+                      sem mensagem. No-show continua sendo marcado manualmente.
+                    </span>
+                  </span>
+                </label>
+              </div>
+            </Section>
 
             {error && <p className="text-sm text-destructive">{error}</p>}
             {saved && <p className="text-sm text-emerald-600">Configurações salvas.</p>}

@@ -23,6 +23,10 @@ import java.util.Optional;
  * steps, columns), de marketing (banner_strip, marquee, quote, cta) e de pacotes (packages). As props
  * de todos são JSONB livre — adicionar campo a um bloco não toca o backend; só adicionar TIPO novo
  * (como estes) exige editar este enum + o mirror TS + o render + rodar a paridade.
+ *
+ * <p>Onda 1 de blocos genéricos de site (docs/FEATURES_SUGERIDAS_CMS.md): prova social e mídia —
+ * reviews_carousel (avaliações estilo Google), video (YouTube/Vimeo), rating_badge (selo de nota
+ * agregada) e logo_strip (faixa de logos/selos).
  */
 public enum CmsBlockType {
     HERO("hero"),
@@ -43,6 +47,11 @@ public enum CmsBlockType {
     MARQUEE("marquee"),
     QUOTE("quote"),
     CTA("cta"),
+    // Onda 1 de blocos genéricos de site (prova social e mídia):
+    REVIEWS_CAROUSEL("reviews_carousel"),
+    VIDEO("video"),
+    RATING_BADGE("rating_badge"),
+    LOGO_STRIP("logo_strip"),
     // Blocos da marca Meada (preset meada-dark) — identidade visual própria (não tematizáveis):
     MEADA_HERO("meada_hero"),
     MEADA_SERVICES("meada_services"),

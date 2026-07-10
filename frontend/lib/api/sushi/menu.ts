@@ -11,7 +11,9 @@ export type CreateMenuItemInput = {
 
 export type UpdateMenuItemInput = Partial<CreateMenuItemInput> & { available?: boolean }
 
-export function listMenu(opts: { category?: string; available?: boolean } = {}): Promise<{ items: MenuItem[] }> {
+export function listMenu(
+  opts: { category?: string; available?: boolean } = {},
+): Promise<{ items: MenuItem[] }> {
   const p = new URLSearchParams()
   if (opts.category) p.set('category', opts.category)
   if (opts.available) p.set('available', 'true')
@@ -28,7 +30,10 @@ export function createMenuItem(input: CreateMenuItemInput): Promise<MenuItem> {
 }
 
 export function updateMenuItem(id: string, input: UpdateMenuItemInput): Promise<MenuItem> {
-  return apiFetch<MenuItem>(`/api/sushi/menu/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<MenuItem>(`/api/sushi/menu/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleMenuItem(id: string, available: boolean): Promise<MenuItem> {

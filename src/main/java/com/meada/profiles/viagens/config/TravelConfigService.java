@@ -32,8 +32,11 @@ public class TravelConfigService {
     }
 
     @Transactional
-    public TravelConfig update(UUID companyId, UUID userId, String businessName, String notes) {
-        TravelConfig saved = repository.upsert(companyId, businessName, notes);
+    public TravelConfig update(UUID companyId, UUID userId, String businessName, String notes,
+                               boolean tripReminderEnabled, boolean quoteFollowupEnabled,
+                               int quoteFollowupDays) {
+        TravelConfig saved = repository.upsert(companyId, businessName, notes,
+            tripReminderEnabled, quoteFollowupEnabled, quoteFollowupDays);
         auditLogger.log(companyId, userId, "travel_config_updated", "travel_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

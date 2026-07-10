@@ -57,11 +57,11 @@ public class ModaInfantilOrderService {
     @Transactional
     public ModaInfantilOrder create(UUID companyId, UUID conversationId, UUID contactId,
                                     String fulfillment, String deliveryAddress, List<OrderLineInput> lines,
-                                    String notes) {
+                                    String couponCode, String notes) {
         ModaInfantilConfig config = configRepository.findByCompany(companyId);
         return orderRepository.createOrder(
             companyId, conversationId, contactId, fulfillment, deliveryAddress, lines,
-            config.deliveryFeeCents(), notes);
+            couponCode, config.deliveryFeeCents(), notes);
     }
 
     public List<ModaInfantilOrder> list(UUID companyId, String status, int limit, int offset) {

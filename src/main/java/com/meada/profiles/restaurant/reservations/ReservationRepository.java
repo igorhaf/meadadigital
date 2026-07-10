@@ -113,6 +113,15 @@ public class ReservationRepository {
             MAPPER, companyId, Timestamp.from(from), Timestamp.from(to));
     }
 
+    /** Próximas reservas ATIVAS do CONTATO — bloco fresco do contexto (onda 1, tag de confirmação). */
+    public List<Reservation> listUpcomingByContact(UUID companyId, UUID contactId, int limit) {
+        return jdbcTemplate.query(
+            SELECT + "where r.company_id = ? and r.contact_id = ? "
+                + "and r.status in ('pendente','confirmada') and r.start_at >= now() "
+                + "order by r.start_at asc limit " + Math.max(1, limit),
+            MAPPER, companyId, contactId);
+    }
+
     /**
      * Conflito de slot (decisão 5): reserva ATIVA (pendente/confirmada) na MESMA mesa cuja janela
      * sobrepõe [newStart, newEnd). Sobreposição = NOT (existing.end <= newStart OR existing.start

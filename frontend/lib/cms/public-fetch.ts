@@ -11,9 +11,19 @@ export type CmsNavItem = { pageSlug: string; title: string; isHome: boolean }
 export type CmsThemePreset = 'meada-dark'
 /** themeId = `{nicho}-{archetype}` do catálogo (lib/cms/themes). Quando presente, tem precedência
  * sobre primaryColor/dark — resolve paleta+forma+layout completos do tema escolhido. */
-export type CmsTheme = { primaryColor?: string; dark?: boolean; preset?: CmsThemePreset; themeId?: string }
+export type CmsTheme = {
+  primaryColor?: string
+  dark?: boolean
+  preset?: CmsThemePreset
+  themeId?: string
+}
 /** blocks agora é a ÁRVORE (CmsRow[]); normalizeToTree converte o flat legado na leitura. */
-export type PublicCmsView = { title: string; blocks: CmsRow[]; theme: CmsTheme | null; nav: CmsNavItem[] }
+export type PublicCmsView = {
+  title: string
+  blocks: CmsRow[]
+  theme: CmsTheme | null
+  nav: CmsNavItem[]
+}
 
 function backendBase(): string {
   return process.env.CMS_BACKEND_URL || process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8095'
@@ -23,7 +33,12 @@ async function fetchPublic(path: string): Promise<PublicCmsView | null> {
   try {
     const res = await fetch(`${backendBase()}${path}`, { cache: 'no-store' })
     if (!res.ok) return null
-    const view = (await res.json()) as { title: string; blocks: unknown; theme: CmsTheme | null; nav: CmsNavItem[] }
+    const view = (await res.json()) as {
+      title: string
+      blocks: unknown
+      theme: CmsTheme | null
+      nav: CmsNavItem[]
+    }
     return { ...view, blocks: normalizeToTree(view.blocks) }
   } catch {
     return null
@@ -35,7 +50,9 @@ export function fetchHomeBySlug(slug: string): Promise<PublicCmsView | null> {
 }
 
 export function fetchPageBySlug(slug: string, pageSlug: string): Promise<PublicCmsView | null> {
-  return fetchPublic(`/public/cms/by-slug/${encodeURIComponent(slug)}/${encodeURIComponent(pageSlug)}`)
+  return fetchPublic(
+    `/public/cms/by-slug/${encodeURIComponent(slug)}/${encodeURIComponent(pageSlug)}`,
+  )
 }
 
 export function fetchHomeByDomain(host: string): Promise<PublicCmsView | null> {
@@ -43,5 +60,7 @@ export function fetchHomeByDomain(host: string): Promise<PublicCmsView | null> {
 }
 
 export function fetchPageByDomain(host: string, pageSlug: string): Promise<PublicCmsView | null> {
-  return fetchPublic(`/public/cms/by-domain/${encodeURIComponent(pageSlug)}?host=${encodeURIComponent(host)}`)
+  return fetchPublic(
+    `/public/cms/by-domain/${encodeURIComponent(pageSlug)}?host=${encodeURIComponent(host)}`,
+  )
 }

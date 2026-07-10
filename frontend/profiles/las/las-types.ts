@@ -41,12 +41,7 @@ export type Product = {
 
 /** Status de um pedido (espelha LasOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'separando'
-  | 'enviado'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'separando' | 'enviado' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Forma de entrega de um pedido (espelha LasFulfillment). */
 export type Fulfillment = 'entrega' | 'retirada'
@@ -68,6 +63,29 @@ export type OrderItem = {
  * sameLotGuaranteed = true quando a loja garante que todos os novelos saem do mesmo lote de
  * tingimento (mesmo tom).
  */
+/** Cupom de desconto gerido pelo tenant (espelha LasCoupon do backend). */
+export type Coupon = {
+  id: string
+  code: string
+  kind: 'percent' | 'fixed'
+  value: number
+  minOrderCents: number
+  maxUses: number | null
+  uses: number
+  validUntil: string | null
+  active: boolean
+}
+
+/** Referência de rendimento (peça × fio → novelos estimados) da calculadora da IA. */
+export type YieldReference = {
+  id: string
+  pieceType: string
+  yarnSpec: string | null
+  skeins: number
+  notes: string | null
+  active: boolean
+}
+
 export type Order = {
   id: string
   conversationId: string
@@ -75,8 +93,10 @@ export type Order = {
   fulfillment: Fulfillment
   sameLotGuaranteed: boolean
   subtotalCents: number
+  discountCents: number
   deliveryFeeCents: number
   totalCents: number
+  couponCode: string | null
   deliveryAddress: string | null
   notes: string | null
   rejectionReason: string | null

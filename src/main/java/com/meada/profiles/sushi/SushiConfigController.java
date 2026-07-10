@@ -33,7 +33,9 @@ public class SushiConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(int deliveryFeeCents, int minOrderCents, boolean schedulingEnabled) {}
+    public record ConfigRequest(int deliveryFeeCents, int minOrderCents, boolean schedulingEnabled,
+                                Boolean upsellEnabled, Boolean reactivationEnabled,
+                                Integer reactivationDays, String reactivationCouponCode) {}
 
     @GetMapping("/api/sushi/config")
     public ResponseEntity<Object> get(
@@ -58,6 +60,10 @@ public class SushiConfigController {
             return error(403, "Forbidden", "forbidden_wrong_profile");
         }
         return ResponseEntity.ok(service.update(companyId, user.userId(),
-            req.deliveryFeeCents(), req.minOrderCents(), req.schedulingEnabled()));
+            req.deliveryFeeCents(), req.minOrderCents(), req.schedulingEnabled(),
+            req.upsellEnabled() == null || req.upsellEnabled(),
+            Boolean.TRUE.equals(req.reactivationEnabled()),
+            req.reactivationDays() == null ? 21 : req.reactivationDays(),
+            req.reactivationCouponCode()));
     }
 }

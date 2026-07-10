@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -15,6 +14,7 @@ import {
   toggleClass,
   updateClass,
 } from '@/lib/api/academia/classes'
+import { ApiError } from '@/lib/api/client'
 import { dayOfWeekLabel, formatTime, type Class } from '@/profiles/academia/academia-types'
 
 type FormState = {
@@ -26,7 +26,15 @@ type FormState = {
   capacity: string
   instructor: string
 }
-const EMPTY: FormState = { name: '', modality: '', dayOfWeek: '1', startTime: '07:00', durationMinutes: '60', capacity: '12', instructor: '' }
+const EMPTY: FormState = {
+  name: '',
+  modality: '',
+  dayOfWeek: '1',
+  startTime: '07:00',
+  durationMinutes: '60',
+  capacity: '12',
+  instructor: '',
+}
 
 /** Agrupa aulas por dia da semana (0..6); a API já ordena por dia+hora. */
 function groupByDay(items: Class[]): { dow: number; items: Class[] }[] {
@@ -71,7 +79,10 @@ export default function AcademiaClassesPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['academia-classes'] })
-      setModalOpen(false); setEditing(null); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setEditing(null)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: () => setFormError('Erro ao salvar a aula.'),
   })
@@ -91,7 +102,12 @@ export default function AcademiaClassesPage() {
     },
   })
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setFormError(null); setModalOpen(true) }
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY)
+    setFormError(null)
+    setModalOpen(true)
+  }
   function openEdit(c: Class) {
     setEditing(c)
     setForm({
@@ -103,7 +119,8 @@ export default function AcademiaClassesPage() {
       capacity: String(c.capacity),
       instructor: c.instructor ?? '',
     })
-    setFormError(null); setModalOpen(true)
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const groups = groupByDay(data?.items ?? [])
@@ -126,7 +143,9 @@ export default function AcademiaClassesPage() {
         <div className="space-y-8">
           {groups.map((g) => (
             <section key={g.dow} className="space-y-2">
-              <h2 className="text-sm font-semibold text-muted-foreground">{dayOfWeekLabel(g.dow)}</h2>
+              <h2 className="text-sm font-semibold text-muted-foreground">
+                {dayOfWeekLabel(g.dow)}
+              </h2>
               <div className="divide-y divide-border rounded-lg border border-border">
                 {g.items.map((c) => (
                   <div key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
@@ -137,19 +156,36 @@ export default function AcademiaClassesPage() {
                         {!c.active && <Badge variant="muted">inativa</Badge>}
                       </div>
                       <p className="text-xs text-muted-foreground">
-                        {formatTime(c.startTime)} · {c.durationMinutes}min · {c.capacity - c.remainingSlots}/{c.capacity} ocupadas
+                        {formatTime(c.startTime)} · {c.durationMinutes}min ·{' '}
+                        {c.capacity - c.remainingSlots}/{c.capacity} ocupadas
                         {c.instructor ? ` · ${c.instructor}` : ''}
                       </p>
                     </div>
                     <div className="flex shrink-0 items-center gap-3">
                       <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                        <input type="checkbox" checked={c.active} disabled={toggleMutation.isPending}
-                          onChange={() => toggleMutation.mutate(c)} />
+                        <input
+                          type="checkbox"
+                          checked={c.active}
+                          disabled={toggleMutation.isPending}
+                          onChange={() => toggleMutation.mutate(c)}
+                        />
                         ativa
                       </label>
-                      <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(c)}>Editar</Button>
-                      <Button variant="outline" className="h-7 px-2 text-xs"
-                        disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(c.id)}>Excluir</Button>
+                      <Button
+                        variant="outline"
+                        className="h-7 px-2 text-xs"
+                        onClick={() => openEdit(c)}
+                      >
+                        Editar
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="h-7 px-2 text-xs"
+                        disabled={deleteMutation.isPending}
+                        onClick={() => deleteMutation.mutate(c.id)}
+                      >
+                        Excluir
+                      </Button>
                     </div>
                   </div>
                 ))}
@@ -159,57 +195,120 @@ export default function AcademiaClassesPage() {
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar aula' : 'Nova aula'} size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar aula' : 'Nova aula'}
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-                maxLength={200} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                required
+                maxLength={200}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Modalidade</label>
-              <input value={form.modality} onChange={(e) => setForm((f) => ({ ...f, modality: e.target.value }))} required
-                maxLength={100} placeholder="funcional, pilates, yoga…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Modalidade
+              </label>
+              <input
+                value={form.modality}
+                onChange={(e) => setForm((f) => ({ ...f, modality: e.target.value }))}
+                required
+                maxLength={100}
+                placeholder="funcional, pilates, yoga…"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Dia da semana</label>
-              <select value={form.dayOfWeek} onChange={(e) => setForm((f) => ({ ...f, dayOfWeek: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
-                {[0, 1, 2, 3, 4, 5, 6].map((d) => <option key={d} value={d}>{dayOfWeekLabel(d)}</option>)}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Dia da semana
+              </label>
+              <select
+                value={form.dayOfWeek}
+                onChange={(e) => setForm((f) => ({ ...f, dayOfWeek: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
+                {[0, 1, 2, 3, 4, 5, 6].map((d) => (
+                  <option key={d} value={d}>
+                    {dayOfWeekLabel(d)}
+                  </option>
+                ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Hora início</label>
-              <input type="time" value={form.startTime} onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))} required
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Hora início
+              </label>
+              <input
+                type="time"
+                value={form.startTime}
+                onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+                required
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Duração (min)</label>
-              <input type="number" min="15" max="240" step="15" value={form.durationMinutes} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Duração (min)
+              </label>
+              <input
+                type="number"
+                min="15"
+                max="240"
+                step="15"
+                value={form.durationMinutes}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, durationMinutes: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Capacidade</label>
-              <input type="number" min="1" max="100" value={form.capacity} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Capacidade
+              </label>
+              <input
+                type="number"
+                min="1"
+                max="100"
+                value={form.capacity}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Professor</label>
-              <input value={form.instructor} onChange={(e) => setForm((f) => ({ ...f, instructor: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Professor
+              </label>
+              <input
+                value={form.instructor}
+                onChange={(e) => setForm((f) => ({ ...f, instructor: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>

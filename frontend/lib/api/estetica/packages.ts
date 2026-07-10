@@ -13,7 +13,13 @@ export type CreatePackageInput = {
 }
 
 export function listPackages(
-  opts: { status?: string; contactId?: string; procedureId?: string; page?: number; pageSize?: number } = {},
+  opts: {
+    status?: string
+    contactId?: string
+    procedureId?: string
+    page?: number
+    pageSize?: number
+  } = {},
 ): Promise<PackagePage> {
   const p = new URLSearchParams()
   if (opts.status) p.set('status', opts.status)
@@ -30,11 +36,18 @@ export function getPackage(id: string): Promise<AestheticPackage> {
 }
 
 export function createPackage(input: CreatePackageInput): Promise<AestheticPackage> {
-  return apiFetch<AestheticPackage>('/api/estetica/packages', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<AestheticPackage>('/api/estetica/packages', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updatePackageStatus(id: string, newStatus: AestheticPackageStatusId): Promise<AestheticPackage> {
+export function updatePackageStatus(
+  id: string,
+  newStatus: AestheticPackageStatusId,
+): Promise<AestheticPackage> {
   return apiFetch<AestheticPackage>(`/api/estetica/packages/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

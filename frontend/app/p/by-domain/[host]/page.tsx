@@ -15,5 +15,13 @@ export default async function PublicByDomain({ params }: { params: Promise<{ hos
   if (!view) {
     notFound()
   }
-  return <CmsRender title={view.title} blocks={view.blocks} theme={view.theme} nav={view.nav} navBase="" />
+  return (
+    <CmsRender
+      title={view.title}
+      blocks={view.blocks}
+      theme={view.theme}
+      nav={view.nav}
+      navBase=""
+    />
+  )
 }

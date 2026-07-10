@@ -81,3 +81,39 @@ aceite = **aguardando→coletado** (gate humano — receber as peças na coleta)
 - Base de conhecimento (RAG): disponível como em todo perfil — o item "Conhecimento" do nav e a injeção
   `{{knowledge}}` do PromptBuilder valem pra lavanderia automaticamente (sem gate de feature).
 - Guard `/api/lavanderia/**` → 403 `forbidden_wrong_profile`. Paleta `oceano`. Tenant: `igorhaf21`.
+
+## Onda 1 do backlog (migration 103)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_LAVANDERIA.md` (#2, #3, #5, #6, #7 e #14):
+
+- **#2 EXPRESS/24h com sobretaxa:** a config ganhou `express_enabled` (default ON),
+  `express_surcharge_pct` (default 50%) e `express_turnaround_days` (default 1). Quando o cliente
+  tem pressa, a IA oferece o express informando a sobretaxa DA CONFIG e emite `"express":true` na
+  tag; o backend substitui o MAX(turnaround) pelos dias express na `delivery_date` materializada e
+  soma a sobretaxa (`express_surcharge_cents`) ao total. Toggle off → express da tag é ignorado
+  (pedido normal, defensivo). Badge EXPRESS no card do Kanban.
+- **#6 CUPOM** (`lavanderia_coupons`, motor comum `com.meada.common.coupons` — subclasse fina do
+  chassi adega): campo `cupom` na tag; validação (active/validade/mínimo/max_uses) e recálculo no
+  backend; inválido NÃO aborta (sai sem desconto); `uses` incrementa na mesma transação. Tela
+  "Cupons" + endpoints `/api/lavanderia/coupons`.
+- **#5 FIDELIDADE por contagem** (`lavanderia_loyalty_config`, clone adega): a cada
+  `threshold_orders` pedidos ENTREGUES do contato, o próximo ganha o reward (percent/fixed),
+  clampado ao subtotal junto com o cupom. Tela "Fidelidade" + `GET/PUT /api/lavanderia/loyalty`.
+- **#7 LEMBRETE DE COLETA D-1:** pedido `aguardando` com coleta amanhã → "alguém em casa?" 1x por
+  data (`collect_reminded_date`; remarcar REARMA). Toggle `collect_reminder_enabled` (default ON).
+- **#14 LEMBRETE DE PRONTO PARADO:** pedido em `pronto` há `ready_reminder_days` (default 2) →
+  cobra a combinação da entrega, 1 toque por episódio (`ready_reminded_at` vs `status_updated_at`).
+  Toggle `ready_reminder_enabled` (default ON).
+- **#3 REATIVAÇÃO de inativo** (`lavanderia_reactivation_log`, clone sushi): opt-in
+  `reactivation_enabled` **DESLIGADO por default** (lição Baileys — ligar dispara pra base);
+  janela `reactivation_days` (default 30) é também o cooldown; cupom de retorno opcional
+  (`reactivation_coupon_code`) citado só quando ativo/válido; sem conversa → marca sem envio.
+
+Tudo num único `LavanderiaReminderJob` (cron `${lavanderia.reminder-cron:0 40 9 * * *}`,
+instrumentado no `scheduled_job_runs`, métodos públicos testáveis). O total do pedido agora é
+`subtotal − desconto + taxa + sobretaxa express`, tudo materializado em Java. Settings ganhou as
+seções "Serviço express" e "Automações". Teste: `LavanderiaOnda1IntegrationTest` (5 cenários).
+
+**Fica pra onda 2** (registrado, não pedido): #1 assinatura mensal (chassi academia; cobrança
+manual até o gateway #50), #4 pagamento/sinal online (bloqueado por #50), #8 pesagem real com
+reprecificação, #9/#10 rastreio e etiqueta QR, #11 campanha em massa, #16 multi-unidade.

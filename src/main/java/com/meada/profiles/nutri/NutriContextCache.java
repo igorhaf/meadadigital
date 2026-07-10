@@ -130,6 +130,26 @@ public class NutriContextCache {
                 sb.append("CONTATO SEM PACIENTES cadastrados: peça nome e objetivo (texto livre, ex.: "
                     + "emagrecimento/ganho de massa/manutenção) para cadastrar o paciente junto com a consulta.\n\n");
             }
+
+            // --- CONSULTAS FUTURAS (onda 1, backlog #1 — a IA captura confirmação/cancelamento) ---
+            List<NutriAppointment> upcoming =
+                appointmentRepository.listUpcomingByContact(companyId, contactId, 5);
+            if (!upcoming.isEmpty()) {
+                sb.append("CONSULTAS FUTURAS DESTE CONTATO (use o id EXATO na tag de confirmação):\n");
+                for (NutriAppointment a : upcoming) {
+                    ZonedDateTime z = a.startAt().atZone(TENANT_ZONE);
+                    sb.append("- ").append(a.id()).append(" · ").append(a.patientName())
+                        .append(": ").append(DATE_FMT.format(z))
+                        .append(" com ").append(a.professionalName())
+                        .append(" · status ").append(a.status()).append("\n");
+                }
+                sb.append("Quando o contato CONFIRMAR uma consulta futura (ex.: responder SIM ao lembrete) "
+                    + "ou pedir para DESMARCAR, sua ÚLTIMA mensagem deve TERMINAR com a tag (linha própria):\n"
+                    + "<confirmacao_nutri>{\"appointment_id\":\"UUID\",\"decisao\":\"confirmado|cancelado\"}"
+                    + "</confirmacao_nutri>\n"
+                    + "Você só REFLETE a decisão do contato — NUNCA confirme ou cancele sem ele pedir, "
+                    + "e continue SEM falar de dieta/plano (trava clínica).\n\n");
+            }
         } else {
             sb.append("CONTATO NÃO IDENTIFICADO pelo telefone. Peça os dados para cadastrar o paciente.\n\n");
         }

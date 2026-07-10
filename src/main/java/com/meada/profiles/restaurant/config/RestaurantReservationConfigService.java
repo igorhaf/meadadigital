@@ -40,12 +40,14 @@ public class RestaurantReservationConfigService {
 
     @Transactional
     public RestaurantReservationConfig update(UUID companyId, UUID userId, int durationMinutes,
-                                              int bufferMinutes, LocalTime opensAt, LocalTime closesAt) {
+                                              int bufferMinutes, LocalTime opensAt, LocalTime closesAt,
+                                              boolean reminderEnabled, boolean autoCompleteEnabled) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
         RestaurantReservationConfig saved =
-            repository.upsert(companyId, durationMinutes, bufferMinutes, opensAt, closesAt);
+            repository.upsert(companyId, durationMinutes, bufferMinutes, opensAt, closesAt,
+                reminderEnabled, autoCompleteEnabled);
         auditLogger.log(companyId, userId, "restaurant_config_updated", "restaurant_reservation_config",
             companyId, Map.of("duration_minutes", durationMinutes, "buffer_minutes", bufferMinutes));
         contextCache.invalidate(companyId);

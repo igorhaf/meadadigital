@@ -39,12 +39,15 @@ public class DentalClinicConfigService {
 
     @Transactional
     public DentalClinicConfig update(UUID companyId, UUID userId, int durationMinutes,
-                                     int bufferMinutes, LocalTime opensAt, LocalTime closesAt) {
+                                     int bufferMinutes, LocalTime opensAt, LocalTime closesAt,
+                                     boolean reminderEnabled, boolean autoCompleteEnabled,
+                                     boolean recallEnabled, int recallMonths) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
         DentalClinicConfig saved =
-            repository.upsert(companyId, durationMinutes, bufferMinutes, opensAt, closesAt);
+            repository.upsert(companyId, durationMinutes, bufferMinutes, opensAt, closesAt,
+                reminderEnabled, autoCompleteEnabled, recallEnabled, Math.min(36, Math.max(1, recallMonths)));
         auditLogger.log(companyId, userId, "dental_config_updated", "dental_clinic_config",
             companyId, Map.of("duration_minutes", durationMinutes, "buffer_minutes", bufferMinutes));
         contextCache.invalidate(companyId);

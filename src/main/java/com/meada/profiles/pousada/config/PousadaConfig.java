@@ -12,9 +12,11 @@ public record PousadaConfig(
     UUID companyId,
     LocalTime checkInTime,
     LocalTime checkOutTime,
-    String cancellationPolicy) {
+    String cancellationPolicy,
+    boolean reminderEnabled,
+    boolean autoTransitionEnabled) {
 
     public static PousadaConfig defaultFor(UUID companyId) {
-        return new PousadaConfig(companyId, LocalTime.of(14, 0), LocalTime.of(11, 0), null);
+        return new PousadaConfig(companyId, LocalTime.of(14, 0), LocalTime.of(11, 0), null, true, false);
     }
 }

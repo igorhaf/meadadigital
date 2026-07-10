@@ -9,7 +9,9 @@ export type CreateConsultantInput = {
 
 export type UpdateConsultantInput = Partial<CreateConsultantInput> & { active?: boolean }
 
-export function listConsultants(opts: { onlyActive?: boolean } = {}): Promise<{ items: Consultant[] }> {
+export function listConsultants(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: Consultant[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: Consultant[] }>(`/api/viagens/consultants${qs}`)
 }
@@ -19,16 +21,23 @@ export function getConsultant(id: string): Promise<Consultant> {
 }
 
 export function createConsultant(input: CreateConsultantInput): Promise<Consultant> {
-  return apiFetch<Consultant>('/api/viagens/consultants', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Consultant>('/api/viagens/consultants', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateConsultant(id: string, input: UpdateConsultantInput): Promise<Consultant> {
-  return apiFetch<Consultant>(`/api/viagens/consultants/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Consultant>(`/api/viagens/consultants/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleConsultant(id: string, active: boolean): Promise<Consultant> {
   return apiFetch<Consultant>(`/api/viagens/consultants/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

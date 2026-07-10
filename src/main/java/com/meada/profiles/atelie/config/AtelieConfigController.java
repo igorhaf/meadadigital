@@ -30,7 +30,9 @@ public class AtelieConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(String businessName, String notes, Boolean fittingReminderEnabled) {}
+    public record ConfigRequest(String businessName, String notes, Boolean fittingReminderEnabled,
+                                Boolean postDeliveryEnabled, String reviewLink,
+                                Boolean reactivationEnabled, Integer reactivationDays) {}
 
     @GetMapping("/api/atelie/config")
     public ResponseEntity<Object> get(
@@ -58,6 +60,11 @@ public class AtelieConfigController {
         String notes = req.notes() == null || req.notes().isBlank() ? null : req.notes();
         // ausente no payload = mantém o default LIGADO (opt-out explícito).
         boolean fittingReminderEnabled = req.fittingReminderEnabled() == null || req.fittingReminderEnabled();
-        return ResponseEntity.ok(service.update(companyId, user.userId(), businessName, notes, fittingReminderEnabled));
+        return ResponseEntity.ok(service.update(companyId, user.userId(), businessName, notes,
+            fittingReminderEnabled,
+            req.postDeliveryEnabled() == null || req.postDeliveryEnabled(),
+            req.reviewLink(),
+            req.reactivationEnabled() != null && req.reactivationEnabled(),
+            req.reactivationDays() == null ? 90 : req.reactivationDays()));
     }
 }

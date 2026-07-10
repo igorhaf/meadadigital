@@ -2,6 +2,10 @@ package com.meada.profiles.floricultura.orders;
 
 import com.meada.profiles.floricultura.catalog.FloriculturaCatalogOption;
 import com.meada.profiles.floricultura.catalog.FloriculturaCatalogOptionRepository;
+import com.meada.profiles.floricultura.coupons.FloriculturaCoupon;
+import com.meada.profiles.floricultura.coupons.FloriculturaCouponRepository;
+import com.meada.profiles.floricultura.loyalty.FloriculturaLoyaltyConfig;
+import com.meada.profiles.floricultura.loyalty.FloriculturaLoyaltyConfigRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -27,11 +31,17 @@ public class FloriculturaOrderRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final FloriculturaCatalogOptionRepository optionRepository;
+    private final FloriculturaCouponRepository couponRepository;
+    private final FloriculturaLoyaltyConfigRepository loyaltyRepository;
 
     public FloriculturaOrderRepository(JdbcTemplate jdbcTemplate,
-                                 FloriculturaCatalogOptionRepository optionRepository) {
+                                 FloriculturaCatalogOptionRepository optionRepository,
+                                      FloriculturaCouponRepository couponRepository,
+                                      FloriculturaLoyaltyConfigRepository loyaltyRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.optionRepository = optionRepository;
+        this.couponRepository = couponRepository;
+        this.loyaltyRepository = loyaltyRepository;
     }
 
     private final RowMapper<FloriculturaOrderItemOption> ITEM_OPTION_MAPPER = (rs, rn) -> new FloriculturaOrderItemOption(
@@ -58,8 +68,12 @@ public class FloriculturaOrderRepository {
             (UUID) rs.getObject("conversation_id"),
             rs.getString("status"),
             rs.getInt("subtotal_cents"),
+            rs.getInt("discount_cents"),
             rs.getInt("delivery_fee_cents"),
             rs.getInt("total_cents"),
+            rs.getString("coupon_code_snapshot"),
+            rs.getBoolean("loyalty_applied"),
+            rs.getBoolean("anonymous"),
             rs.getString("delivery_address"),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
@@ -75,8 +89,9 @@ public class FloriculturaOrderRepository {
     }
 
     private static final String ORDER_SELECT =
-        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.delivery_fee_cents, "
-            + "o.total_cents, o.delivery_address, o.notes, o.rejection_reason, "
+        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.discount_cents, "
+            + "o.delivery_fee_cents, o.total_cents, o.coupon_code_snapshot, o.loyalty_applied, "
+            + "o.anonymous, o.delivery_address, o.notes, o.rejection_reason, "
             + "o.delivery_date, o.delivery_period, o.recipient_name, o.card_message, o.created_at, "
             + "o.status_updated_at, ct.name as contact_name, ct.phone_number as contact_phone "
             + "from floricultura_orders o join contacts ct on ct.id = o.contact_id ";
@@ -137,7 +152,9 @@ public class FloriculturaOrderRepository {
                 it.unitPriceCents(), options));
         }
         return new FloriculturaOrder(o.id(), o.conversationId(), o.status(), o.subtotalCents(),
-            o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.notes(), o.rejectionReason(),
+            o.discountCents(), o.deliveryFeeCents(), o.totalCents(), o.couponCode(),
+            o.loyaltyApplied(), o.anonymous(),
+            o.deliveryAddress(), o.notes(), o.rejectionReason(),
             o.deliveryDate(), o.deliveryPeriod(), o.recipientName(), o.cardMessage(),
             o.createdAt(), o.statusUpdatedAt(), o.contactName(), o.contactPhone(), withOpts);
     }
@@ -155,7 +172,8 @@ public class FloriculturaOrderRepository {
                                    String deliveryAddress, List<OrderLineInput> lines,
                                    int deliveryFeeCents, String notes,
                                    java.time.LocalDate deliveryDate, String deliveryPeriod,
-                                   String recipientName, String cardMessage) {
+                                   String recipientName, String cardMessage,
+                                   String couponCode, boolean anonymous) {
         // Snapshot de preço+nome+opções por linha (lê do cardápio do tenant).
         record OptSnap(UUID catalogOptionId, String groupLabel, String optionLabel, int delta) {}
         record Snap(UUID catalogItemId, String name, int unitPrice, int qtd, List<OptSnap> options) {}
@@ -196,17 +214,57 @@ public class FloriculturaOrderRepository {
         if (snaps.isEmpty()) {
             throw new IllegalArgumentException("nenhum item válido no pedido");
         }
-        int total = subtotal + deliveryFeeCents;
+
+        // Onda 1 (backlog #7/#8): cupom + fidelidade na MESMA transação (clone adega).
+        UUID couponId = null;
+        String couponSnapshot = null;
+        int couponDiscount = 0;
+        if (couponCode != null && !couponCode.isBlank()) {
+            java.util.Optional<FloriculturaCoupon> maybe = couponRepository.findByCode(companyId, couponCode);
+            if (maybe.isPresent()) {
+                FloriculturaCoupon c = maybe.get();
+                boolean valid = c.active()
+                    && (c.validUntil() == null || !c.validUntil().isBefore(java.time.LocalDate.now()))
+                    && (c.maxUses() == null || c.uses() < c.maxUses())
+                    && subtotal >= c.minOrderCents();
+                if (valid) {
+                    couponDiscount = "percent".equals(c.kind()) ? subtotal * c.value() / 100 : c.value();
+                    couponId = c.id();
+                    couponSnapshot = c.code();
+                    couponRepository.incrementUses(companyId, c.id());
+                }
+            }
+        }
+
+        boolean loyaltyApplied = false;
+        int loyaltyDiscount = 0;
+        FloriculturaLoyaltyConfig loyalty = loyaltyRepository.findByCompany(companyId);
+        if (loyalty.enabled()) {
+            Long delivered = jdbcTemplate.queryForObject(
+                "select count(*) from floricultura_orders where company_id = ? and contact_id = ? "
+                    + "and status = 'entregue'", Long.class, companyId, contactId);
+            long deliveredCount = delivered == null ? 0 : delivered;
+            if (deliveredCount > 0 && deliveredCount % loyalty.thresholdOrders() == 0) {
+                loyaltyApplied = true;
+                loyaltyDiscount = "percent".equals(loyalty.rewardKind())
+                    ? subtotal * loyalty.rewardValue() / 100
+                    : loyalty.rewardValue();
+            }
+        }
+
+        int discount = Math.min(subtotal, couponDiscount + loyaltyDiscount);
+        int total = subtotal - discount + deliveryFeeCents;
 
         // status default 'aguardando' (não passamos status — gate de aceite). + ESCAPADA: entrega
-        // agendada (data/período), destinatário e cartão.
+        // agendada (data/período), destinatário e cartão; anonymous = presente surpresa (#13).
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into floricultura_orders (company_id, conversation_id, contact_id, subtotal_cents, "
-                + "delivery_fee_cents, total_cents, delivery_address, notes, "
+                + "discount_cents, delivery_fee_cents, total_cents, coupon_id, coupon_code_snapshot, "
+                + "loyalty_applied, anonymous, delivery_address, notes, "
                 + "delivery_date, delivery_period, recipient_name, card_message) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, conversationId, contactId, subtotal, deliveryFeeCents, total,
-            deliveryAddress, notes,
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, conversationId, contactId, subtotal, discount, deliveryFeeCents,
+            total, couponId, couponSnapshot, loyaltyApplied, anonymous, deliveryAddress, notes,
             java.sql.Date.valueOf(deliveryDate), deliveryPeriod, recipientName, cardMessage);
 
         for (Snap s : snaps) {

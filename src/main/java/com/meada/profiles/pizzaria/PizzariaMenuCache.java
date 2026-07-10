@@ -85,7 +85,8 @@ public class PizzariaMenuCache {
                 + "\"tá certo\", \"fechou\") E já tiver informado o endereço de entrega, sua ÚLTIMA "
                 + "mensagem deve TERMINAR com a tag (em uma linha própria, sem markdown):\n")
             .append("<pedido_pizza>{\"items\":[{\"item_id\":\"UUID_EXATO_DO_CARDÁPIO\",\"qtd\":N,"
-                + "\"options\":[\"UUID_DA_OPCAO\"]}],\"endereco\":\"...\",\"total_cents\":NNN}"
+                + "\"options\":[\"UUID_DA_OPCAO\"]}],\"endereco\":\"...\","
+                + "\"cupom\":\"CODIGO_SE_HOUVER\",\"total_cents\":NNN}"
                 + "</pedido_pizza>\n")
             .append("Cada item simples (bebida, sobremesa, borda, combo) usa \"item_id\" + \"options\" "
                 + "(lista de UUIDs das opções escolhidas dos grupos acima); item sem opção → omita "
@@ -97,6 +98,13 @@ public class PizzariaMenuCache {
                 + "QUEIJOS\"],\"options\":[\"UUID_TAMANHO_G\",\"UUID_BORDA_RECHEADA\"],\"qtd\":1}. O preço "
                 + "da pizza meio-a-meio é o do sabor MAIS CARO (regra da casa) + as opções; o sistema "
                 + "calcula — NUNCA invente o total.\n")
+            .append("Se o cliente informar um CUPOM de desconto, registre o código no campo \"cupom\" "
+                + "(omita se não houver) — quem VALIDA o cupom, calcula a fidelidade e recalcula o "
+                + "total é o sistema; NUNCA invente desconto nem prometa que o cupom vale (se for "
+                + "inválido, o pedido sai sem o desconto). ANTES de fechar, você PODE oferecer UMA "
+                + "ÚNICA sugestão de complemento do PRÓPRIO cardápio (borda recheada, bebida ou "
+                + "sobremesa que combine com o carrinho) — no máximo uma vez, sem insistir se o "
+                + "cliente recusar. ")
             .append("Use os item_id, option_id e flavor (UUIDs) EXATOS do cardápio acima. ANTES da tag, "
                 + "escreva a confirmação humana normal (\"Confirmado: 1 pizza G meio Portuguesa/meio "
                 + "Quatro Queijos com borda recheada + 1 Refri, total R$ X, entrega na Rua Y.\"). NÃO "

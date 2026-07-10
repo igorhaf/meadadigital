@@ -96,6 +96,15 @@ public class PousadaReservationRepository {
     }
 
     /** Histórico do contato (mais recentes primeiro). */
+    /** Próximas reservas ATIVAS do contato — bloco do contexto (onda 1, tag de confirmação). */
+    public List<PousadaReservation> listUpcomingByContact(UUID companyId, UUID contactId, int limit) {
+        return jdbcTemplate.query(
+            "select " + COLS + " from pousada_reservations where company_id = ? and contact_id = ? "
+                + "and status in ('reservado','confirmado') and check_in_date >= current_date "
+                + "order by check_in_date asc limit " + Math.max(1, limit),
+            MAPPER, companyId, contactId);
+    }
+
     public List<PousadaReservation> listByContact(UUID companyId, UUID contactId, int limit) {
         return jdbcTemplate.query(
             "select " + COLS + " from pousada_reservations where company_id = ? and contact_id = ? "

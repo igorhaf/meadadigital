@@ -41,6 +41,7 @@ import java.util.UUID;
 public class BarberQueueService {
 
     private final BarberQueueRepository queueRepository;
+    private final com.meada.profiles.barbearia.appointments.BarberAppointmentService appointmentService;
     private final BarberBarberRepository barberRepository;
     private final BarberServiceRepository serviceRepository;
     private final BarberConfigRepository configRepository;
@@ -52,8 +53,10 @@ public class BarberQueueService {
                               BarberServiceRepository serviceRepository,
                               BarberConfigRepository configRepository,
                               BarberAppointmentNotifier notifier,
-                              BarberContextCache contextCache) {
+                              BarberContextCache contextCache,
+                              com.meada.profiles.barbearia.appointments.BarberAppointmentService appointmentService) {
         this.queueRepository = queueRepository;
+        this.appointmentService = appointmentService;
         this.barberRepository = barberRepository;
         this.serviceRepository = serviceRepository;
         this.configRepository = configRepository;
@@ -126,6 +129,43 @@ public class BarberQueueService {
      * Transição manual do ticket (PATCH pelo painel — a IA NÃO move). Valida a transição. Quando vira
      * 'chamado', grava called_at e NOTIFICA o cliente ("chegou sua vez"). Os demais não notificam.
      */
+    /** Ticket sem barbeiro definido não converte (→ 400 barber_required no controller). */
+    public static class BarberRequiredException extends RuntimeException {}
+
+    /**
+     * Onda 2 (backlog #8): converte um ticket CHAMADO em atendimento IMEDIATO do barbeiro —
+     * cria o agendamento (start=agora, snapshots do ticket, conflito re-verificado pelo service
+     * da agenda) e muta o ticket pra 'atendido'. Une fila e agenda: o corte entra no funil
+     * (fidelidade conta, relatórios enxergam). {@code barberId} pode sobrepor o do ticket
+     * ("qualquer barbeiro" → o barbeiro livre que puxou).
+     */
+    @org.springframework.transaction.annotation.Transactional
+    public com.meada.profiles.barbearia.appointments.BarberAppointment convertToAppointment(
+            UUID companyId, UUID ticketId, UUID barberId) {
+        BarberQueueTicket current = queueRepository.findById(companyId, ticketId)
+            .orElseThrow(TicketNotFoundException::new);
+        BarberQueueStatus from = BarberQueueStatus.fromId(current.status())
+            .orElseThrow(InvalidStatusException::new);
+        if (from != BarberQueueStatus.CHAMADO && from != BarberQueueStatus.AGUARDANDO) {
+            throw new InvalidStatusTransitionException();
+        }
+        UUID effectiveBarber = barberId != null ? barberId : current.barberId();
+        if (effectiveBarber == null) {
+            throw new BarberRequiredException();
+        }
+        // Cria o atendimento AGORA (conflito por barbeiro re-verificado na transação da agenda;
+        // sem cupom — walk-in). Snapshots vêm do catálogo pelo próprio create.
+        com.meada.profiles.barbearia.appointments.BarberAppointment appointment =
+            appointmentService.create(companyId, effectiveBarber, current.serviceId(),
+                current.contactId(), current.conversationId(), java.time.Instant.now(),
+                current.guestName(), current.guestPhone(),
+                current.notes() == null ? "walk-in (fila)" : current.notes() + " · walk-in (fila)",
+                null);
+        queueRepository.updateStatus(companyId, ticketId, BarberQueueStatus.ATENDIDO.id(), false);
+        contextCache.invalidate(companyId);
+        return appointment;
+    }
+
     @Transactional
     public BarberQueueTicket updateStatus(UUID companyId, UUID id, String newStatusId) {
         BarberQueueStatus newStatus = BarberQueueStatus.fromId(newStatusId)

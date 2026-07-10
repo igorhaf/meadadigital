@@ -134,10 +134,7 @@ export async function updateContactName(id: string, name: string): Promise<Conta
  */
 export async function updateContactBirthDate(id: string, birthDate: string | null): Promise<void> {
   const supabase = createClient()
-  const { error } = await supabase
-    .from('contacts')
-    .update({ birth_date: birthDate })
-    .eq('id', id)
+  const { error } = await supabase.from('contacts').update({ birth_date: birthDate }).eq('id', id)
 
   if (error) {
     throw error

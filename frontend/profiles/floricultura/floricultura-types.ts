@@ -15,6 +15,27 @@ export type CatalogOption = {
 }
 
 /** Item de cardápio (espelha FloriculturaCatalogItem do backend) + suas opções. */
+/** Cupom de desconto gerido pelo tenant (espelha FloriculturaCoupon do backend). */
+export type Coupon = {
+  id: string
+  code: string
+  kind: 'percent' | 'fixed'
+  value: number
+  minOrderCents: number
+  maxUses: number | null
+  uses: number
+  validUntil: string | null
+  active: boolean
+}
+
+/** Configuração de fidelidade (a cada N pedidos entregues, o próximo ganha um desconto). */
+export type LoyaltyConfig = {
+  enabled: boolean
+  thresholdOrders: number
+  rewardKind: 'percent' | 'fixed'
+  rewardValue: number
+}
+
 export type CatalogItem = {
   id: string
   name: string
@@ -22,6 +43,7 @@ export type CatalogItem = {
   priceCents: number
   category: FloriculturaCategoryId
   available: boolean
+  suggestible: boolean
   createdAt: string
   updatedAt: string
   options: CatalogOption[]
@@ -29,12 +51,7 @@ export type CatalogItem = {
 
 /** Status de um pedido (espelha FloriculturaOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'em_preparo'
-  | 'saiu_entrega'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'em_preparo' | 'saiu_entrega' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Opção escolhida num item de pedido (snapshot de label+delta no momento do pedido). */
 export type OrderItemOption = {
@@ -61,8 +78,12 @@ export type Order = {
   conversationId: string
   status: OrderStatus
   subtotalCents: number
+  discountCents: number
   deliveryFeeCents: number
   totalCents: number
+  couponCode: string | null
+  loyaltyApplied: boolean
+  anonymous: boolean
   deliveryAddress: string
   notes: string | null
   rejectionReason: string | null

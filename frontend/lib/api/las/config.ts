@@ -4,12 +4,12 @@ import { apiFetch } from '@/lib/api/client'
 export type LasConfig = {
   deliveryFeeCents: number
   minOrderCents: number
+  reactivationEnabled: boolean
+  reactivationDays: number
+  reactivationCouponCode: string | null
 }
 
-export type UpdateConfigInput = {
-  deliveryFeeCents: number
-  minOrderCents: number
-}
+export type UpdateConfigInput = LasConfig
 
 export function getConfig(): Promise<LasConfig> {
   return apiFetch<LasConfig>('/api/las/config')

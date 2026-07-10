@@ -31,13 +31,21 @@ public class PizzariaOrderRepository {
     /** Algum sabor (fração) pedido não existe/não é do tenant/não é pizza — o pedido NÃO é criado. */
     public static class InvalidFlavorException extends RuntimeException {}
 
+    private static final java.time.ZoneId BR = java.time.ZoneId.of("America/Sao_Paulo");
+
     private final JdbcTemplate jdbcTemplate;
     private final PizzariaMenuOptionRepository optionRepository;
+    private final com.meada.profiles.pizzaria.coupons.PizzariaCouponRepository couponRepository;
+    private final com.meada.profiles.pizzaria.loyalty.PizzariaLoyaltyConfigRepository loyaltyRepository;
 
     public PizzariaOrderRepository(JdbcTemplate jdbcTemplate,
-                                 PizzariaMenuOptionRepository optionRepository) {
+                                 PizzariaMenuOptionRepository optionRepository,
+                                 com.meada.profiles.pizzaria.coupons.PizzariaCouponRepository couponRepository,
+                                 com.meada.profiles.pizzaria.loyalty.PizzariaLoyaltyConfigRepository loyaltyRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.optionRepository = optionRepository;
+        this.couponRepository = couponRepository;
+        this.loyaltyRepository = loyaltyRepository;
     }
 
     private final RowMapper<PizzariaOrderItemOption> ITEM_OPTION_MAPPER = (rs, rn) -> new PizzariaOrderItemOption(
@@ -72,8 +80,11 @@ public class PizzariaOrderRepository {
             (UUID) rs.getObject("conversation_id"),
             rs.getString("status"),
             rs.getInt("subtotal_cents"),
+            rs.getInt("discount_cents"),
             rs.getInt("delivery_fee_cents"),
             rs.getInt("total_cents"),
+            rs.getString("coupon_code_snapshot"),
+            rs.getBoolean("loyalty_applied"),
             rs.getString("delivery_address"),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
@@ -85,8 +96,9 @@ public class PizzariaOrderRepository {
     }
 
     private static final String ORDER_SELECT =
-        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.delivery_fee_cents, "
-            + "o.total_cents, o.delivery_address, o.notes, o.rejection_reason, o.created_at, "
+        "select o.id, o.conversation_id, o.status, o.subtotal_cents, o.discount_cents, "
+            + "o.delivery_fee_cents, o.total_cents, o.coupon_code_snapshot, o.loyalty_applied, "
+            + "o.delivery_address, o.notes, o.rejection_reason, o.created_at, "
             + "o.status_updated_at, ct.name as contact_name, ct.phone_number as contact_phone "
             + "from pizzaria_orders o join contacts ct on ct.id = o.contact_id ";
 
@@ -150,7 +162,8 @@ public class PizzariaOrderRepository {
                 it.unitPriceCents(), options, flavors));
         }
         return new PizzariaOrder(o.id(), o.conversationId(), o.status(), o.subtotalCents(),
-            o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.notes(), o.rejectionReason(),
+            o.discountCents(), o.deliveryFeeCents(), o.totalCents(), o.couponCode(),
+            o.loyaltyApplied(), o.deliveryAddress(), o.notes(), o.rejectionReason(),
             o.createdAt(), o.statusUpdatedAt(), o.contactName(), o.contactPhone(), withOpts);
     }
 
@@ -177,7 +190,7 @@ public class PizzariaOrderRepository {
     @Transactional
     public PizzariaOrder createOrder(UUID companyId, UUID conversationId, UUID contactId,
                                    String deliveryAddress, List<OrderLineInput> lines,
-                                   int deliveryFeeCents, String notes) {
+                                   String couponCode, int deliveryFeeCents, String notes) {
         // Snapshot de preço+nome+opções+sabores por linha (lê do cardápio do tenant).
         record OptSnap(UUID menuOptionId, String groupLabel, String optionLabel, int delta) {}
         record FlavorSnap(UUID menuItemId, int fractionIndex, String name, int priceCents) {}
@@ -270,15 +283,62 @@ public class PizzariaOrderRepository {
         if (snaps.isEmpty()) {
             throw new IllegalArgumentException("nenhum item válido no pedido");
         }
-        int total = subtotal + deliveryFeeCents;
+        // Cupom (backlog #1, best-effort — inválido NÃO aborta, o pedido sai sem o desconto).
+        UUID couponId = null;
+        String couponSnapshot = null;
+        int couponDiscount = 0;
+        if (couponCode != null && !couponCode.isBlank()) {
+            java.util.Optional<com.meada.profiles.pizzaria.coupons.PizzariaCoupon> maybe =
+                couponRepository.findByCode(companyId, couponCode);
+            if (maybe.isPresent()) {
+                com.meada.profiles.pizzaria.coupons.PizzariaCoupon c = maybe.get();
+                java.time.LocalDate today = java.time.LocalDate.now(BR);
+                boolean valid = c.active()
+                    && (c.validUntil() == null || !c.validUntil().isBefore(today))
+                    && subtotal >= c.minOrderCents()
+                    && (c.maxUses() == null || c.uses() < c.maxUses());
+                if (valid) {
+                    couponDiscount = "percent".equals(c.kind())
+                        ? subtotal * c.value() / 100
+                        : c.value();
+                    couponId = c.id();
+                    couponSnapshot = c.code();
+                }
+            }
+        }
+
+        // Fidelidade (backlog #2) — conta os ENTREGUES do contato ANTES de inserir o novo.
+        boolean loyaltyApplied = false;
+        int loyaltyDiscount = 0;
+        com.meada.profiles.pizzaria.loyalty.PizzariaLoyaltyConfig loyalty =
+            loyaltyRepository.findByCompany(companyId);
+        if (loyalty.enabled()) {
+            long deliveredCount = countDeliveredForContact(companyId, contactId);
+            if (deliveredCount > 0 && deliveredCount % loyalty.thresholdOrders() == 0) {
+                loyaltyApplied = true;
+                loyaltyDiscount = "percent".equals(loyalty.rewardKind())
+                    ? subtotal * loyalty.rewardValue() / 100
+                    : loyalty.rewardValue();
+            }
+        }
+
+        // Desconto total clampado ao subtotal (total nunca negativo).
+        int discount = Math.min(subtotal, couponDiscount + loyaltyDiscount);
+        int total = subtotal - discount + deliveryFeeCents;
 
         // status default 'aguardando' (não passamos status — ESCAPADA 1).
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into pizzaria_orders (company_id, conversation_id, contact_id, subtotal_cents, "
-                + "delivery_fee_cents, total_cents, delivery_address, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, conversationId, contactId, subtotal, deliveryFeeCents, total,
-            deliveryAddress, notes);
+                + "discount_cents, delivery_fee_cents, total_cents, coupon_id, coupon_code_snapshot, "
+                + "loyalty_applied, delivery_address, notes) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, conversationId, contactId, subtotal, discount, deliveryFeeCents,
+            total, couponId, couponSnapshot, loyaltyApplied, deliveryAddress, notes);
+
+        // Incrementa uses do cupom aplicado (mesma transação).
+        if (couponId != null) {
+            couponRepository.incrementUses(companyId, couponId);
+        }
 
         for (Snap s : snaps) {
             UUID orderItemId = jdbcTemplate.queryForObject(
@@ -319,5 +379,17 @@ public class PizzariaOrderRepository {
                     + "where company_id = ? and id = ?",
                 newStatus, companyId, id);
         }
+    }
+
+    /**
+     * Conta os pedidos ENTREGUES de um contato ({@code status = 'entregue'} — terminal
+     * não-recusado/não-cancelado do chassi). Usado pela fidelidade (backlog #2).
+     */
+    public long countDeliveredForContact(UUID companyId, UUID contactId) {
+        Long n = jdbcTemplate.queryForObject(
+            "select count(*) from pizzaria_orders "
+                + "where company_id = ? and contact_id = ? and status = 'entregue'",
+            Long.class, companyId, contactId);
+        return n == null ? 0L : n;
     }
 }

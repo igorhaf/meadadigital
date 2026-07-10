@@ -24,7 +24,10 @@ export type UpdatePlanInput = {
   notes?: string | null
 }
 
-export function listPlans(patientId: string, opts: { status?: string } = {}): Promise<{ items: NutriPlan[] }> {
+export function listPlans(
+  patientId: string,
+  opts: { status?: string } = {},
+): Promise<{ items: NutriPlan[] }> {
   const p = new URLSearchParams()
   p.set('patientId', patientId)
   if (opts.status) p.set('status', opts.status)
@@ -44,7 +47,10 @@ export function createPlan(input: CreatePlanInput): Promise<NutriPlan> {
 }
 
 export function updatePlan(id: string, input: UpdatePlanInput): Promise<NutriPlan> {
-  return apiFetch<NutriPlan>(`/api/nutri/plans/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<NutriPlan>(`/api/nutri/plans/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function archivePlan(id: string): Promise<NutriPlan> {

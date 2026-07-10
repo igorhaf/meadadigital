@@ -78,3 +78,19 @@ preço — o backend snapshota a mensalidade do curso.
 - Base de conhecimento (RAG): disponível como em todo perfil (item "Conhecimento" do nav +
   `{{knowledge}}` do PromptBuilder, sem gate de perfil).
 - Guard `/api/cursos/**` → 403 `forbidden_wrong_profile`. Paleta `oliva`. Tenant: `igorhaf31`.
+
+## Onda 1 do backlog (migration 117)
+
+`docs/FEATURES_SUGERIDAS_CURSOS.md` #1/#2/#3: **#1 certificado de conclusão** — CONCLUIDA emite
+`cursos_certificates` (código único ABCD-EFGH-IJKL, snapshots, idempotente por matrícula) e envia
+o link (`certificate_base_url` da config; vazio = só o código); verificação PÚBLICA sem auth em
+`GET /public/cursos/certificados/{code}` (HTML A4 imprimível; 404 pra código inválido); lista no
+painel via `GET /api/cursos/certificates`. **#2 nudge anti-abandono** — matrícula ativa parada há
+`nudge_days` (default 7) no mesmo módulo, com próximo módulo existente → 1 toque por episódio
+("você está em 3/8 — o próximo é X"; `nudge_sent_at` re-armado quando o progresso avança) via
+`CursosNudgeJob` (cron 12:30, default ON — funil ativo). **#3 cupom** (`cursos_coupons`, motor
+comum): campo `cupom` na tag `<matricula_curso>`; desconto validado no backend sobre a MENSALIDADE
+snapshotada (`discount_cents`); inválido não aborta. Settings ganhou "Automações e certificado".
+Teste: `CursosOnda1IntegrationTest`. Fica: #4 cobrança online (gateway), #5 régua de
+inadimplência, #6 quiz, #7 win-back, #8 upsell fim de trilha, #9 combos, #15 CMS, #16 vídeo/PDF
+(upload).

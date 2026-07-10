@@ -27,15 +27,18 @@ public class LingerieProductService {
     private final LingerieVariantRepository variantRepository;
     private final AuditLogger auditLogger;
     private final LingerieMenuCache menuCache;
+    private final com.meada.profiles.lingerie.alerts.LingerieStockAlertService stockAlertService;
 
     public LingerieProductService(LingerieProductRepository repository,
                                   LingerieVariantRepository variantRepository,
                                   AuditLogger auditLogger,
-                                  LingerieMenuCache menuCache) {
+                                  LingerieMenuCache menuCache,
+                                  com.meada.profiles.lingerie.alerts.LingerieStockAlertService stockAlertService) {
         this.repository = repository;
         this.variantRepository = variantRepository;
         this.auditLogger = auditLogger;
         this.menuCache = menuCache;
+        this.stockAlertService = stockAlertService;
     }
 
     /** Categoria inválida (→ 400 invalid_category no controller). */
@@ -148,6 +151,9 @@ public class LingerieProductService {
                                          String size, String color, String sku, Integer priceCents,
                                          Integer stockQty, Boolean available, boolean clearPrice) {
         requireProduct(companyId, productId);
+        // Onda 1 (avise-me): captura o estoque ANTES pra detectar reposição 0 → N.
+        Integer previousStock = variantRepository.findById(companyId, productId, variantId)
+            .map(LingerieVariant::stockQty).orElse(null);
         if (size != null && !size.isBlank()) {
             requireValidSize(size);
         }
@@ -158,6 +164,9 @@ public class LingerieProductService {
                 .orElseThrow(VariantNotFoundException::new);
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateVariantException();   // mexer em size/color pode colidir com o UNIQUE.
+        }
+        if (previousStock != null && previousStock == 0 && updated.stockQty() > 0) {
+            stockAlertService.notifyBackInStock(companyId, variantId);
         }
         auditLogger.log(companyId, userId, "lingerie_variant_updated", "lingerie_variant", variantId, Map.of());
         menuCache.invalidate(companyId);

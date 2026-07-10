@@ -167,7 +167,13 @@ public class DermatologiaContextCache {
             .append("Quando o paciente PEDIR as orientações de preparo de uma consulta dele que TENHA preparo, termine com:\n")
             .append("<entrega_preparo>{\"appointment_id\":\"UUID\"}</entrega_preparo>\n")
             .append("O texto de preparo é enviado EXATAMENTE como o médico gravou — você não o reescreve nem comenta. "
-                + "Se a consulta não tem preparo, diga que não há orientação específica. Use ids EXATOS.\n\n");
+                + "Se a consulta não tem preparo, diga que não há orientação específica. Use ids EXATOS.\n")
+            .append("Quando o paciente RESPONDER a um lembrete de consulta (SIM confirma / pedir pra "
+                + "desmarcar cancela), termine com a tag (linha própria, sem markdown):\n")
+            .append("<confirmacao_derma>{\"appointment_id\":\"UUID_DA_CONSULTA\","
+                + "\"decisao\":\"confirmada\"}</confirmacao_derma>\n")
+            .append("\"decisao\" é \"confirmada\" ou \"cancelada\" — use o appointment_id EXATO das "
+                + "consultas do paciente acima. Reagendar = cancelar + agendar de novo.\n\n");
 
         return sb.toString();
     }

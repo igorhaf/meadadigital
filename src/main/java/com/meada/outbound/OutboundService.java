@@ -106,6 +106,20 @@ public class OutboundService {
     private final com.meada.profiles.barbearia.appointments.AgendamentoBarbeariaConfirmHandler agendamentoBarbeariaConfirmHandler;
     private final com.meada.profiles.barbearia.queue.EntrarFilaHandler entrarFilaHandler;
     private final com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler;
+    private final com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler;
+    private final com.meada.profiles.pousada.reservations.ConfirmacaoPousadaHandler confirmacaoPousadaHandler;
+    private final com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler;
+    private final com.meada.profiles.otica.appointments.ConfirmacaoExameHandler confirmacaoExameHandler;
+    private final com.meada.profiles.nutri.appointments.ConfirmacaoNutriHandler confirmacaoNutriHandler;
+    private final com.meada.profiles.fotografia.appointments.ConfirmacaoFotografiaHandler confirmacaoFotografiaHandler;
+    private final com.meada.profiles.estetica.appointments.ConfirmacaoEsteticaHandler confirmacaoEsteticaHandler;
+    private final com.meada.profiles.dermatologia.appointments.ConfirmacaoDermaHandler confirmacaoDermaHandler;
+    private final com.meada.profiles.atelie.proposals.ConfirmacaoProvaHandler confirmacaoProvaHandler;
+    private final com.meada.profiles.concessionaria.tradein.TrocaCarroHandler trocaCarroHandler;
+    private final com.meada.profiles.dental.appointments.ConfirmacaoConsultaHandler confirmacaoConsultaHandler;
+    private final com.meada.profiles.modainfantil.orders.AvisoEstoqueModaHandler avisoEstoqueModaHandler;
+    private final com.meada.profiles.lingerie.orders.AvisoEstoqueLingerieHandler avisoEstoqueLingerieHandler;
+    private final com.meada.profiles.las.orders.ListaEsperaLasHandler listaEsperaLasHandler;
     // Camada 8.2 (perfil eventos): pós-processa <proposta_evento> (abre proposta) e <aprovacao_proposta> (muta estado).
     private final com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler;
     private final com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler;
@@ -244,6 +258,20 @@ public class OutboundService {
                            com.meada.profiles.barbearia.appointments.AgendamentoBarbeariaConfirmHandler agendamentoBarbeariaConfirmHandler,
                            com.meada.profiles.barbearia.queue.EntrarFilaHandler entrarFilaHandler,
                            com.meada.profiles.barbearia.appointments.ConfirmacaoBarbeariaHandler confirmacaoBarbeariaHandler,
+                           com.meada.profiles.restaurant.reservations.ConfirmacaoReservaHandler confirmacaoReservaHandler,
+                           com.meada.profiles.pousada.reservations.ConfirmacaoPousadaHandler confirmacaoPousadaHandler,
+                           com.meada.profiles.pet.appointments.ConfirmacaoPetHandler confirmacaoPetHandler,
+                           com.meada.profiles.otica.appointments.ConfirmacaoExameHandler confirmacaoExameHandler,
+                           com.meada.profiles.nutri.appointments.ConfirmacaoNutriHandler confirmacaoNutriHandler,
+                           com.meada.profiles.fotografia.appointments.ConfirmacaoFotografiaHandler confirmacaoFotografiaHandler,
+                           com.meada.profiles.estetica.appointments.ConfirmacaoEsteticaHandler confirmacaoEsteticaHandler,
+                           com.meada.profiles.dermatologia.appointments.ConfirmacaoDermaHandler confirmacaoDermaHandler,
+                           com.meada.profiles.atelie.proposals.ConfirmacaoProvaHandler confirmacaoProvaHandler,
+                           com.meada.profiles.concessionaria.tradein.TrocaCarroHandler trocaCarroHandler,
+                           com.meada.profiles.dental.appointments.ConfirmacaoConsultaHandler confirmacaoConsultaHandler,
+                           com.meada.profiles.modainfantil.orders.AvisoEstoqueModaHandler avisoEstoqueModaHandler,
+                           com.meada.profiles.lingerie.orders.AvisoEstoqueLingerieHandler avisoEstoqueLingerieHandler,
+                           com.meada.profiles.las.orders.ListaEsperaLasHandler listaEsperaLasHandler,
                            com.meada.profiles.eventos.proposals.PropostaEventoConfirmHandler propostaEventoConfirmHandler,
                            com.meada.profiles.eventos.proposals.AprovacaoPropostaHandler aprovacaoPropostaHandler,
                            com.meada.profiles.estetica.appointments.AgendamentoEsteticaConfirmHandler agendamentoEsteticaConfirmHandler,
@@ -311,6 +339,20 @@ public class OutboundService {
         this.agendamentoBarbeariaConfirmHandler = agendamentoBarbeariaConfirmHandler;
         this.entrarFilaHandler = entrarFilaHandler;
         this.confirmacaoBarbeariaHandler = confirmacaoBarbeariaHandler;
+        this.confirmacaoReservaHandler = confirmacaoReservaHandler;
+        this.confirmacaoPousadaHandler = confirmacaoPousadaHandler;
+        this.confirmacaoPetHandler = confirmacaoPetHandler;
+        this.confirmacaoExameHandler = confirmacaoExameHandler;
+        this.confirmacaoNutriHandler = confirmacaoNutriHandler;
+        this.confirmacaoFotografiaHandler = confirmacaoFotografiaHandler;
+        this.confirmacaoEsteticaHandler = confirmacaoEsteticaHandler;
+        this.confirmacaoDermaHandler = confirmacaoDermaHandler;
+        this.confirmacaoProvaHandler = confirmacaoProvaHandler;
+        this.trocaCarroHandler = trocaCarroHandler;
+        this.confirmacaoConsultaHandler = confirmacaoConsultaHandler;
+        this.avisoEstoqueModaHandler = avisoEstoqueModaHandler;
+        this.avisoEstoqueLingerieHandler = avisoEstoqueLingerieHandler;
+        this.listaEsperaLasHandler = listaEsperaLasHandler;
         this.propostaEventoConfirmHandler = propostaEventoConfirmHandler;
         this.aprovacaoPropostaHandler = aprovacaoPropostaHandler;
         this.agendamentoEsteticaConfirmHandler = agendamentoEsteticaConfirmHandler;
@@ -467,6 +509,27 @@ public class OutboundService {
         toSend = maybeProcessAgendamentoBarbearia(event, conversationId, toSend);
         toSend = maybeProcessFilaBarbearia(event, conversationId, toSend);
         toSend = maybeProcessConfirmacaoBarbearia(event, conversationId, toSend);
+        // Onda restaurant 1: <confirmacao_reserva> reflete o SIM/NÃO do lembrete de véspera.
+        toSend = maybeProcessConfirmacaoReserva(event, conversationId, toSend);
+        // Onda pousada 1: <confirmacao_pousada> reflete o SIM/cancelamento do lembrete de check-in.
+        toSend = maybeProcessConfirmacaoPousada(event, conversationId, toSend);
+        // Onda pet 1: <confirmacao_pet> reflete o SIM/desmarcar do lembrete de véspera.
+        toSend = maybeProcessConfirmacaoPet(event, conversationId, toSend);
+        // Onda ótica 1: <confirmacao_exame> reflete o SIM/desmarcar do lembrete de exame.
+        toSend = maybeProcessConfirmacaoExame(event, conversationId, toSend);
+        // Onda nutri 1: <confirmacao_nutri> reflete o SIM/desmarcar do lembrete de consulta.
+        toSend = maybeProcessConfirmacaoNutri(event, conversationId, toSend);
+        toSend = maybeProcessConfirmacaoFotografia(event, conversationId, toSend);
+        toSend = maybeProcessConfirmacaoEstetica(event, conversationId, toSend);
+        toSend = maybeProcessConfirmacaoDerma(event, conversationId, toSend);
+        toSend = maybeProcessConfirmacaoProva(event, conversationId, toSend);
+        toSend = maybeProcessTrocaCarro(event, conversationId, toSend);
+        toSend = maybeProcessConfirmacaoConsulta(event, conversationId, toSend);
+        // Onda moda_infantil 1: <aviso_estoque_moda> registra o avise-me quando voltar.
+        toSend = maybeProcessAvisoEstoqueModa(event, conversationId, toSend);
+        // Onda lingerie 1: <aviso_estoque_lingerie> registra o avise-me quando voltar.
+        toSend = maybeProcessAvisoEstoqueLingerie(event, conversationId, toSend);
+        toSend = maybeProcessListaEsperaLas(event, conversationId, toSend);
         // Camada 8.2 (perfil eventos): <proposta_evento> abre a proposta; <aprovacao_proposta> muta o
         // estado da proposta orçada. Encadeados (perfil é único; só um age).
         toSend = maybeProcessPropostaEvento(event, conversationId, toSend);
@@ -981,6 +1044,359 @@ public class OutboundService {
             confirmacaoBarbeariaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
         }
         String stripped = confirmacaoBarbeariaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'restaurant' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_reserva>}, aplica a DECISÃO DO CLIENTE à reserva (confirmada/cancelada —
+     * ConfirmacaoReservaHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete "confirma? SIM/NÃO" do RestaurantReminderJob) e devolve um AiResponse com a tag
+     * removida; senão devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoReserva(MessageInboundProcessedEvent event,
+                                                      UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoReservaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"restaurant".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoReservaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoReservaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'pousada' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_pousada>}, aplica a DECISÃO DO HÓSPEDE à reserva (confirmado/cancelado —
+     * ConfirmacaoPousadaHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete de check-in D-1 do PousadaReminderJob) e devolve um AiResponse com a tag removida;
+     * senão devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoPousada(MessageInboundProcessedEvent event,
+                                                      UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoPousadaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"pousada".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoPousadaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoPousadaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'pet' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_pet>}, aplica a DECISÃO DO TUTOR ao agendamento (confirmado/cancelado —
+     * ConfirmacaoPetHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete de véspera do PetReminderJob) e devolve um AiResponse com a tag removida; senão
+     * devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoPet(MessageInboundProcessedEvent event,
+                                                  UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoPetHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"pet".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoPetHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoPetHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'otica' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_exame>}, aplica a DECISÃO DO CLIENTE ao exame (confirmado/cancelado —
+     * ConfirmacaoExameHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete de véspera do OticaReminderJob) e devolve um AiResponse com a tag removida; senão
+     * devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoExame(MessageInboundProcessedEvent event,
+                                                    UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoExameHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"otica".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoExameHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoExameHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'nutri' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_nutri>}, aplica a DECISÃO DO CONTATO à consulta (confirmado/cancelado —
+     * ConfirmacaoNutriHandler valida barreira de contato + máquina de status; fecha o loop do
+     * lembrete de véspera do NutriReminderJob) e devolve um AiResponse com a tag removida; senão
+     * devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoNutri(MessageInboundProcessedEvent event,
+                                                    UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoNutriHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"nutri".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoNutriHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoNutriHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'moda_infantil' (onda 1) e a resposta da IA contenha a tag
+     * {@code <aviso_estoque_moda>}, registra o avise-me da variante esgotada para o contato da
+     * conversa e devolve um AiResponse com a tag removida; senão devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessAvisoEstoqueModa(MessageInboundProcessedEvent event,
+                                                    UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !avisoEstoqueModaHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"moda_infantil".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        contactId.ifPresent(cid ->
+            avisoEstoqueModaHandler.parseAndRegister(event.companyId(), conversationId, cid, reply));
+        String stripped = avisoEstoqueModaHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+
+    /**
+     * Caso o tenant seja perfil 'lingerie' (onda 1) e a resposta da IA contenha a tag
+     * {@code <aviso_estoque_lingerie>}, registra o avise-me da variante esgotada para o contato da
+     * conversa e devolve um AiResponse com a tag removida; senão devolve o original. Best-effort.
+     */
+    private AiResponse maybeProcessAvisoEstoqueLingerie(MessageInboundProcessedEvent event,
+                                                        UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !avisoEstoqueLingerieHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"lingerie".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        contactId.ifPresent(cid ->
+            avisoEstoqueLingerieHandler.parseAndRegister(event.companyId(), conversationId, cid, reply));
+        String stripped = avisoEstoqueLingerieHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'las' (onda 1) e a resposta da IA contenha a tag
+     * {@code <lista_espera_las>}, registra o interesse do contato na variante esgotada (lote exato
+     * ou qualquer lote da cor) e devolve um AiResponse com a tag removida; senão devolve o
+     * original. Best-effort.
+     */
+    private AiResponse maybeProcessListaEsperaLas(MessageInboundProcessedEvent event,
+                                                  UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !listaEsperaLasHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"las".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        contactId.ifPresent(cid ->
+            listaEsperaLasHandler.parseAndRegister(event.companyId(), conversationId, cid, reply));
+        String stripped = listaEsperaLasHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'fotografia' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_foto>}, aplica a decisão da cliente (confirmada/cancelada, com barreira
+     * de contato) e devolve um AiResponse com a tag removida; senão devolve o original. Fecha o
+     * loop do lembrete D-2/D-1. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoFotografia(MessageInboundProcessedEvent event,
+                                                         UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoFotografiaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"fotografia".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoFotografiaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoFotografiaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'estetica' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_estetica>}, aplica a decisão da cliente (confirmado/cancelado — o
+     * cancelamento devolve a sessão ao pacote) com barreira de contato e devolve um AiResponse
+     * com a tag removida; senão devolve o original. Fecha o loop do lembrete SIM/NÃO. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoEstetica(MessageInboundProcessedEvent event,
+                                                       UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoEsteticaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"estetica".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoEsteticaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoEsteticaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'dermatologia' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_derma>}, aplica a decisão do paciente (confirmada/cancelada, barreira
+     * de contato) e devolve um AiResponse com a tag removida; senão devolve o original. Fecha o
+     * loop do lembrete D-1. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoDerma(MessageInboundProcessedEvent event,
+                                                    UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoDermaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"dermatologia".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        if (contactId.isPresent()) {
+            confirmacaoDermaHandler.parseAndApply(event.companyId(), conversationId, contactId.get(), reply);
+        }
+        String stripped = confirmacaoDermaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'atelie' (onda 3) e a resposta da IA contenha a tag
+     * {@code <confirmacao_prova>}, registra a confirmação de presença do cliente na prova
+     * (metadado confirmed_at, com barreira de contato via proposta) e devolve um AiResponse com a
+     * tag removida; senão devolve o original. Fecha o loop do lembrete de véspera. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoProva(MessageInboundProcessedEvent event,
+                                                    UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoProvaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"atelie".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        contactId.ifPresent(cid ->
+            confirmacaoProvaHandler.parseAndConfirm(event.companyId(), conversationId, cid, reply));
+        String stripped = confirmacaoProvaHandler.stripConfirmacaoTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'concessionaria' (onda 2) e a resposta da IA contenha a tag
+     * {@code <troca_carro>}, ABRE a proposta de trade-in (a IA só coleta os dados do usado —
+     * avaliação é humana) e devolve um AiResponse com a tag removida; senão devolve o original.
+     * Best-effort.
+     */
+    private AiResponse maybeProcessTrocaCarro(MessageInboundProcessedEvent event,
+                                              UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !trocaCarroHandler.hasTag(reply)) {
+            return aiResponse;
+        }
+        if (!"concessionaria".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        trocaCarroHandler.parseAndOpen(event.companyId(), conversationId, contactId.orElse(null), reply);
+        String stripped = trocaCarroHandler.stripTag(reply);
+        return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
+            aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
+            aiResponse.schedulingIntent(), aiResponse.insights());
+    }
+
+    /**
+     * Caso o tenant seja perfil 'dental' (onda 1) e a resposta da IA contenha a tag
+     * {@code <confirmacao_consulta>}, CONFIRMA a consulta (só agendada→confirmada — o
+     * cancelamento pela IA segue bloqueado) com barreira via paciente e devolve um AiResponse
+     * com a tag removida; senão devolve o original. Fecha o loop do lembrete D-1. Best-effort.
+     */
+    private AiResponse maybeProcessConfirmacaoConsulta(MessageInboundProcessedEvent event,
+                                                       UUID conversationId, AiResponse aiResponse) {
+        String reply = aiResponse.reply();
+        if (reply == null || !confirmacaoConsultaHandler.hasConfirmacaoTag(reply)) {
+            return aiResponse;
+        }
+        if (!"dental".equals(companyProfileRepository.findProfileId(event.companyId()))) {
+            return aiResponse;
+        }
+        Optional<UUID> contactId = conversationRepository.findContactIdByConversation(conversationId);
+        contactId.ifPresent(cid ->
+            confirmacaoConsultaHandler.parseAndConfirm(event.companyId(), conversationId, cid, reply));
+        String stripped = confirmacaoConsultaHandler.stripConfirmacaoTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
             aiResponse.schedulingIntent(), aiResponse.insights());

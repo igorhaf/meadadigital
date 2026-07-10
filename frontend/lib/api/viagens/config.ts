@@ -4,6 +4,9 @@ import type { Config } from '@/profiles/viagens/viagens-types'
 export type UpdateConfigInput = {
   businessName?: string | null
   notes?: string | null
+  tripReminderEnabled?: boolean
+  quoteFollowupEnabled?: boolean
+  quoteFollowupDays?: number
 }
 
 export function getConfig(): Promise<Config> {

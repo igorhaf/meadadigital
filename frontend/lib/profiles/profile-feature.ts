@@ -10,9 +10,7 @@
  * Default de toda feature = OFF (opt-in explícito do root). A primeira é 'cms' (página pessoal por
  * tenant); o CMS real vem na SM-M, atrás do gate hasFeature('cms').
  */
-export const PROFILE_FEATURES = [
-  { key: 'cms', label: 'Página pessoal (CMS)' },
-] as const
+export const PROFILE_FEATURES = [{ key: 'cms', label: 'Página pessoal (CMS)' }] as const
 
 export type ProfileFeature = (typeof PROFILE_FEATURES)[number]
 export type ProfileFeatureKey = ProfileFeature['key']

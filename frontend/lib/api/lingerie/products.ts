@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { Product, Variant } from '@/profiles/lingerie/lingerie-types'
 import type { LingerieCategoryId } from '@/profiles/lingerie/lingerie-categories'
+import type { Product, Variant } from '@/profiles/lingerie/lingerie-types'
 
 export type CreateProductInput = {
   name: string
@@ -27,11 +27,17 @@ export function getProduct(id: string): Promise<Product> {
 }
 
 export function createProduct(input: CreateProductInput): Promise<Product> {
-  return apiFetch<Product>('/api/lingerie/products', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Product>('/api/lingerie/products', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateProduct(id: string, input: UpdateProductInput): Promise<Product> {
-  return apiFetch<Product>(`/api/lingerie/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Product>(`/api/lingerie/products/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleProduct(id: string, available: boolean): Promise<Product> {
@@ -79,7 +85,11 @@ export function updateVariant(
   })
 }
 
-export function toggleVariant(productId: string, variantId: string, available: boolean): Promise<Variant> {
+export function toggleVariant(
+  productId: string,
+  variantId: string,
+  available: boolean,
+): Promise<Variant> {
   return apiFetch<Variant>(`/api/lingerie/products/${productId}/variants/${variantId}/toggle`, {
     method: 'PATCH',
     body: JSON.stringify({ available }),
@@ -87,5 +97,7 @@ export function toggleVariant(productId: string, variantId: string, available: b
 }
 
 export function deleteVariant(productId: string, variantId: string): Promise<void> {
-  return apiFetch<void>(`/api/lingerie/products/${productId}/variants/${variantId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/lingerie/products/${productId}/variants/${variantId}`, {
+    method: 'DELETE',
+  })
 }

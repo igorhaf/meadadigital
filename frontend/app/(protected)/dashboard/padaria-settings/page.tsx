@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
+import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/padaria/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = { deliveryFee: string; minOrder: string; leadTimeDefault: string } // reais + dias
 
@@ -17,7 +18,6 @@ type FormState = { deliveryFee: string; minOrder: string; leadTimeDefault: strin
  */
 export default function PadariaSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -26,15 +26,11 @@ export default function PadariaSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        deliveryFee: String(data.deliveryFeeCents / 100),
-        minOrder: String(data.minOrderCents / 100),
-        leadTimeDefault: String(data.leadTimeDaysDefault),
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    deliveryFee: String(d.deliveryFeeCents / 100),
+    minOrder: String(d.minOrderCents / 100),
+    leadTimeDefault: String(d.leadTimeDaysDefault),
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -47,7 +43,9 @@ export default function PadariaSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['padaria-config'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'validation_error') {
@@ -60,7 +58,10 @@ export default function PadariaSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Configurações" description="Taxa de entrega, valor mínimo do pedido e prazo padrão das encomendas." />
+      <PageHeader
+        title="Configurações"
+        description="Taxa de entrega, valor mínimo do pedido e prazo padrão das encomendas."
+      />
 
       {isError ? (
         <p className="text-sm text-destructive">Erro ao carregar as configurações.</p>
@@ -68,20 +69,40 @@ export default function PadariaSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Delivery">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Taxa de entrega (R$)</label>
-                  <input type="number" min="0" step="0.01" value={form.deliveryFee}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Taxa de entrega (R$)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.deliveryFee}
                     onChange={(e) => setForm((f) => f && { ...f, deliveryFee: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pedido mínimo (R$)</label>
-                  <input type="number" min="0" step="0.01" value={form.minOrder}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Pedido mínimo (R$)
+                  </label>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={form.minOrder}
                     onChange={(e) => setForm((f) => f && { ...f, minOrder: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
@@ -92,9 +113,14 @@ export default function PadariaSettingsPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Prazo padrão das encomendas (dias)
                   </label>
-                  <input type="number" min="0" step="1" value={form.leadTimeDefault}
+                  <input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={form.leadTimeDefault}
                     onChange={(e) => setForm((f) => f && { ...f, leadTimeDefault: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                   <p className="mt-1 text-xs text-muted-foreground">
                     Usado nas encomendas (bolos, tortas) que não definem um prazo próprio no item.
                   </p>

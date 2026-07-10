@@ -63,11 +63,11 @@ class FloriculturaOrderServiceTest extends AbstractIntegrationTest {
     }
 
     private FloriculturaOrder seedOrder() {
-        FloriculturaCatalogItem item = catalogService.create(COMPANY, USER, "Buquê de Rosas", null, 2500, "buques");
+        FloriculturaCatalogItem item = catalogService.create(COMPANY, USER, "Buquê de Rosas", null, 2500, "buques", false);
         java.time.LocalDate amanha = java.time.LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo")).plusDays(1);
         return service.create(COMPANY, conversationId, contactId, "Rua X 1",
             List.of(new OrderLineInput(item.id(), 2, List.of())), null,
-            amanha, "manha", "Maria", "Com carinho");
+            amanha, "manha", "Maria", "Com carinho", null, false);
     }
 
     @Test

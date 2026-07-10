@@ -31,8 +31,13 @@ public class EventConfigService {
     }
 
     @Transactional
-    public EventConfig update(UUID companyId, UUID userId, String businessName, String notes) {
-        EventConfig saved = repository.upsert(companyId, businessName, notes);
+    public EventConfig update(UUID companyId, UUID userId, String businessName, String notes,
+                              boolean autoCompleteEnabled, boolean postEventEnabled, String reviewLink,
+                              boolean followUpEnabled, int followUpDays) {
+        EventConfig saved = repository.upsert(companyId, businessName, notes, autoCompleteEnabled,
+            postEventEnabled,
+            reviewLink == null || reviewLink.isBlank() ? null : reviewLink.strip(),
+            followUpEnabled, Math.min(60, Math.max(1, followUpDays)));
         auditLogger.log(companyId, userId, "event_config_updated", "event_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

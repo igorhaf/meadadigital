@@ -37,7 +37,10 @@ public class FotografiaConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(5) int slotMinutes) {}
+    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(5) int slotMinutes,
+                                Boolean reminderEnabled, Boolean autoCompleteEnabled,
+                                Boolean autoDeliverEnabled, Boolean postDeliveryUpsellEnabled,
+                                Integer cancellationPolicyHours) {}
 
     @GetMapping("/api/fotografia/config")
     public ResponseEntity<Object> get(
@@ -70,7 +73,13 @@ public class FotografiaConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.slotMinutes()));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
+                req.slotMinutes(),
+                req.reminderEnabled() == null || req.reminderEnabled(),
+                req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+                req.autoDeliverEnabled() == null || req.autoDeliverEnabled(),
+                req.postDeliveryUpsellEnabled() == null || req.postDeliveryUpsellEnabled(),
+                req.cancellationPolicyHours()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         } catch (InvalidSlotException e) {

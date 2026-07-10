@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { Product, Variant } from '@/profiles/las/las-types'
 import type { LasCategoryId } from '@/profiles/las/las-categories'
+import type { Product, Variant } from '@/profiles/las/las-types'
 
 export type CreateProductInput = {
   name: string
@@ -31,7 +31,10 @@ export function createProduct(input: CreateProductInput): Promise<Product> {
 }
 
 export function updateProduct(id: string, input: UpdateProductInput): Promise<Product> {
-  return apiFetch<Product>(`/api/las/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Product>(`/api/las/products/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleProduct(id: string, available: boolean): Promise<Product> {
@@ -79,7 +82,11 @@ export function updateVariant(
   })
 }
 
-export function toggleVariant(productId: string, variantId: string, available: boolean): Promise<Variant> {
+export function toggleVariant(
+  productId: string,
+  variantId: string,
+  available: boolean,
+): Promise<Variant> {
   return apiFetch<Variant>(`/api/las/products/${productId}/variants/${variantId}/toggle`, {
     method: 'PATCH',
     body: JSON.stringify({ available }),
@@ -87,5 +94,7 @@ export function toggleVariant(productId: string, variantId: string, available: b
 }
 
 export function deleteVariant(productId: string, variantId: string): Promise<void> {
-  return apiFetch<void>(`/api/las/products/${productId}/variants/${variantId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/las/products/${productId}/variants/${variantId}`, {
+    method: 'DELETE',
+  })
 }

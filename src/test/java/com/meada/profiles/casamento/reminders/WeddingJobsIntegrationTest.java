@@ -124,7 +124,7 @@ class WeddingJobsIntegrationTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("auto-realizada: fechada com wedding_date passado vira realizada (silencioso)")
+    @DisplayName("auto-realizada: fechada com wedding_date passado vira realizada + dispara pós-casamento")
     void autoTransition_completes() {
         UUID past = seedProposal("fechada", LocalDate.now().minusDays(2), conversationId);
         UUID future = seedProposal("fechada", LocalDate.now().plusDays(10), conversationId);
@@ -134,7 +134,9 @@ class WeddingJobsIntegrationTest extends AbstractIntegrationTest {
             "select status from wedding_proposals where id = ?", String.class, past)).isEqualTo("realizada");
         assertThat(jdbcTemplate.queryForObject(
             "select status from wedding_proposals where id = ?", String.class, future)).isEqualTo("fechada");
-        assertThat(fakeEvolution.sent()).isEmpty();   // realizada é silenciosa
+        // onda 2 (backlog #6): realizada dispara o pós-casamento (toggle default ON).
+        assertThat(fakeEvolution.sent()).hasSize(1);
+        assertThat(fakeEvolution.sent().get(0).text()).contains("honra");
     }
 
     @Test

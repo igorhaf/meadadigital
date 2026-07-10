@@ -31,11 +31,18 @@ public class AestheticConfigService {
     }
 
     @Transactional
-    public AestheticConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt, int slotMinutes) {
+    public AestheticConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
+                                  int slotMinutes, boolean reminderEnabled, boolean autoCompleteEnabled,
+                                  boolean autoExpireEnabled, Integer packageValidityDays,
+                                  boolean renewalEnabled, int renewalDays, int expiryWarningDays) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        AestheticConfig saved = repository.upsert(companyId, opensAt, closesAt, slotMinutes);
+        Integer validity = packageValidityDays == null ? null
+            : Math.min(1095, Math.max(7, packageValidityDays));
+        AestheticConfig saved = repository.upsert(companyId, opensAt, closesAt, slotMinutes,
+            reminderEnabled, autoCompleteEnabled, autoExpireEnabled, validity, renewalEnabled,
+            Math.min(365, Math.max(7, renewalDays)), Math.min(60, Math.max(1, expiryWarningDays)));
         auditLogger.log(companyId, userId, "aesthetic_config_updated", "aesthetic_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

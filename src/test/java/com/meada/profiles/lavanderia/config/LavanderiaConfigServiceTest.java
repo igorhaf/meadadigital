@@ -43,7 +43,7 @@ class LavanderiaConfigServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT upsert grava taxa+mínimo+turnaround default e GET reflete")
     void putUpsert() {
-        LavanderiaConfig saved = service.update(COMPANY, USER, 700, 3000, 3);
+        LavanderiaConfig saved = service.update(COMPANY, USER, 700, 3000, 3, true, 50, 1, true, true, 2, false, 30, null);
         assertThat(saved.deliveryFeeCents()).isEqualTo(700);
         assertThat(saved.minOrderCents()).isEqualTo(3000);
         assertThat(saved.turnaroundDaysDefault()).isEqualTo(3);

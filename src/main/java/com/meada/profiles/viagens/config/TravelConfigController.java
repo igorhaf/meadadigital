@@ -33,7 +33,8 @@ public class TravelConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(String businessName, String notes) {}
+    public record ConfigRequest(String businessName, String notes, Boolean tripReminderEnabled,
+                                Boolean quoteFollowupEnabled, Integer quoteFollowupDays) {}
 
     @GetMapping("/api/viagens/config")
     public ResponseEntity<Object> get(
@@ -59,6 +60,13 @@ public class TravelConfigController {
         }
         String businessName = req.businessName() == null || req.businessName().isBlank() ? null : req.businessName().trim();
         String notes = req.notes() == null || req.notes().isBlank() ? null : req.notes();
-        return ResponseEntity.ok(service.update(companyId, user.userId(), businessName, notes));
+        boolean tripReminder = req.tripReminderEnabled() == null || req.tripReminderEnabled();
+        boolean quoteFollowup = req.quoteFollowupEnabled() == null || req.quoteFollowupEnabled();
+        int followupDays = req.quoteFollowupDays() == null ? 2 : req.quoteFollowupDays();
+        if (followupDays < 1 || followupDays > 30) {
+            return error(400, "Bad Request", "invalid_followup_days");
+        }
+        return ResponseEntity.ok(service.update(companyId, user.userId(), businessName, notes,
+            tripReminder, quoteFollowup, followupDays));
     }
 }

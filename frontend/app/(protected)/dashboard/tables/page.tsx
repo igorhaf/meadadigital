@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
   createTable,
   deleteTable,
@@ -153,7 +153,12 @@ export default function TablesPage() {
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar mesa' : 'Nova mesa'} size="md">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar mesa' : 'Nova mesa'}
+        size="md"
+      >
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -162,25 +167,48 @@ export default function TablesPage() {
           }}
         >
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome / identificador</label>
-            <input value={form.label} onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))} required
-              maxLength={60} placeholder="Mesa 1, Varanda 3…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Nome / identificador
+            </label>
+            <input
+              value={form.label}
+              onChange={(e) => setForm((f) => ({ ...f, label: e.target.value }))}
+              required
+              maxLength={60}
+              placeholder="Mesa 1, Varanda 3…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Capacidade (lugares)</label>
-            <input type="number" min="1" max="50" value={form.capacity} required
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Capacidade (lugares)
+            </label>
+            <input
+              type="number"
+              min="1"
+              max="50"
+              value={form.capacity}
+              required
               onChange={(e) => setForm((f) => ({ ...f, capacity: e.target.value }))}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações (opcional)</label>
-            <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Observações (opcional)
+            </label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>

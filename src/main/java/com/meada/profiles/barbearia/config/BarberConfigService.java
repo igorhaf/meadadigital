@@ -41,7 +41,10 @@ public class BarberConfigService {
     @Transactional
     public BarberConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
                                int slotMinutes, boolean queueEnabled, boolean reminderEnabled,
-                               boolean autoCompleteEnabled, boolean upsellEnabled) {
+                               boolean autoCompleteEnabled, boolean upsellEnabled,
+                               boolean reactivationEnabled, int reactivationDays,
+                               String reactivationCouponCode, boolean postReviewEnabled,
+                               String reviewLink, int reviewCooldownDays) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
@@ -49,7 +52,13 @@ public class BarberConfigService {
             throw new InvalidSlotException();
         }
         BarberConfig saved = repository.upsert(companyId, opensAt, closesAt, slotMinutes, queueEnabled,
-            reminderEnabled, autoCompleteEnabled, upsellEnabled);
+            reminderEnabled, autoCompleteEnabled, upsellEnabled,
+            reactivationEnabled, Math.min(365, Math.max(7, reactivationDays)),
+            reactivationCouponCode == null || reactivationCouponCode.isBlank()
+                ? null : reactivationCouponCode.strip(),
+            postReviewEnabled,
+            reviewLink == null || reviewLink.isBlank() ? null : reviewLink.strip(),
+            Math.min(365, Math.max(7, reviewCooldownDays)));
         auditLogger.log(companyId, userId, "barber_config_updated", "barber_config", companyId,
             Map.of("slot_minutes", slotMinutes, "queue_enabled", queueEnabled));
         contextCache.invalidate(companyId);

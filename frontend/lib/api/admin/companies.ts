@@ -158,11 +158,7 @@ export async function createNote(id: string, content: string): Promise<AdminNote
 }
 
 /** PATCH /admin/companies/{id}/notes/{noteId} — edita nota. */
-export async function updateNote(
-  id: string,
-  noteId: string,
-  content: string,
-): Promise<AdminNote> {
+export async function updateNote(id: string, noteId: string, content: string): Promise<AdminNote> {
   return apiFetch<AdminNote>(`/admin/companies/${id}/notes/${noteId}`, {
     method: 'PATCH',
     body: JSON.stringify({ content }),

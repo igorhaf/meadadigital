@@ -1,8 +1,8 @@
 package com.meada.profiles.atelie.coupons;
 
 import com.meada.AbstractIntegrationTest;
-import com.meada.profiles.atelie.coupons.AtelieCouponService.DuplicateCouponException;
-import com.meada.profiles.atelie.coupons.AtelieCouponService.InvalidCouponException;
+import com.meada.common.coupons.CouponServiceBase.DuplicateCouponException;
+import com.meada.common.coupons.CouponServiceBase.InvalidCouponException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;

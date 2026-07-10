@@ -7,7 +7,6 @@ import { use, useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { AlertDialog } from '@/components/ui/alert-dialog'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
@@ -21,6 +20,7 @@ import {
   suspendUser,
   type AdminUserAction,
 } from '@/lib/api/admin/users'
+import { ApiError } from '@/lib/api/client'
 
 const actionColumns: Column<AdminUserAction & { id: string }>[] = [
   {
@@ -48,7 +48,12 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
   const [dialog, setDialog] = useState<'suspend' | 'reactivate' | 'delete' | null>(null)
   const [resetMsg, setResetMsg] = useState<string | null>(null)
 
-  const { data: user, isPending, isError, error } = useQuery({
+  const {
+    data: user,
+    isPending,
+    isError,
+    error,
+  } = useQuery({
     queryKey: ['admin-user', id],
     queryFn: () => getUser(id),
   })
@@ -60,12 +65,18 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
 
   const suspend = useMutation({
     mutationFn: () => suspendUser(id),
-    onSuccess: () => { invalidate(); setDialog(null) },
+    onSuccess: () => {
+      invalidate()
+      setDialog(null)
+    },
     onError: (e) => console.error('suspendUser failed:', e),
   })
   const reactivate = useMutation({
     mutationFn: () => reactivateUser(id),
-    onSuccess: () => { invalidate(); setDialog(null) },
+    onSuccess: () => {
+      invalidate()
+      setDialog(null)
+    },
     onError: (e) => console.error('reactivateUser failed:', e),
   })
   const remove = useMutation({
@@ -134,7 +145,13 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
                 Suspender
               </Button>
             )}
-            <Button variant="outline" onClick={() => { setResetMsg(null); reset.mutate() }}>
+            <Button
+              variant="outline"
+              onClick={() => {
+                setResetMsg(null)
+                reset.mutate()
+              }}
+            >
               Resetar senha
             </Button>
             <Button variant="destructive" onClick={() => setDialog('delete')}>
@@ -151,10 +168,12 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
           <Field label="Email" value={user.email} />
           <Field label="Papel" value={user.role} />
           <div>
-            <dt className="text-xs uppercase text-muted-foreground">Status</dt>
+            <dt className="text-xs text-muted-foreground uppercase">Status</dt>
             <dd className="mt-0.5">
               {user.suspended ? (
-                <Badge variant="danger">suspenso{user.suspendedReason ? ` — ${user.suspendedReason}` : ''}</Badge>
+                <Badge variant="danger">
+                  suspenso{user.suspendedReason ? ` — ${user.suspendedReason}` : ''}
+                </Badge>
               ) : (
                 <Badge variant="success">ativo</Badge>
               )}
@@ -170,7 +189,10 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
 
       <Section title="Empresa">
         <Card>
-          <Link href={`/dashboard/companies/${user.companyId}`} className="font-medium hover:underline">
+          <Link
+            href={`/dashboard/companies/${user.companyId}`}
+            className="font-medium hover:underline"
+          >
             {user.companyName}
           </Link>
         </Card>
@@ -220,7 +242,7 @@ export default function UserDetailPage({ params }: { params: Promise<{ id: strin
 function Field({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-xs uppercase text-muted-foreground">{label}</dt>
+      <dt className="text-xs text-muted-foreground uppercase">{label}</dt>
       <dd className="mt-0.5 text-sm font-medium">{value}</dd>
     </div>
   )

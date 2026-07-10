@@ -57,11 +57,11 @@ public class LasOrderService {
     @Transactional
     public LasOrder create(UUID companyId, UUID conversationId, UUID contactId,
                            String fulfillment, boolean sameLotGuaranteed, String deliveryAddress,
-                           List<OrderLineInput> lines, String notes) {
+                           List<OrderLineInput> lines, String couponCode, String notes) {
         LasConfig config = configRepository.findByCompany(companyId);
         return orderRepository.createOrder(
             companyId, conversationId, contactId, fulfillment, sameLotGuaranteed, deliveryAddress, lines,
-            config.deliveryFeeCents(), notes);
+            couponCode, config.deliveryFeeCents(), notes);
     }
 
     public List<LasOrder> list(UUID companyId, String status, int limit, int offset) {

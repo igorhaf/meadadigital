@@ -4,12 +4,13 @@ import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tansta
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
+import { checkDate, listPackages } from '@/lib/api/eventos/packages'
 import { listPlanners } from '@/lib/api/eventos/planners'
 import {
   addItem,
@@ -37,20 +38,35 @@ import {
 
 function StatusBadge({ status }: { status: EventProposalStatusId }) {
   const variant =
-    status === 'aprovada' || status === 'fechada' ? 'success'
-    : status === 'realizada' ? 'info'
-    : status === 'orcada' ? 'warning'
-    : status === 'recusada' || status === 'cancelada' ? 'muted'
-    : 'default'
+    status === 'aprovada' || status === 'fechada'
+      ? 'success'
+      : status === 'realizada'
+        ? 'info'
+        : status === 'orcada'
+          ? 'warning'
+          : status === 'recusada' || status === 'cancelada'
+            ? 'muted'
+            : 'default'
   return <Badge variant={variant}>{statusLabel(status)}</Badge>
 }
 
 type OpenForm = {
-  customerName: string; plannerId: string; eventType: string
-  eventDate: string; guestCount: string; briefing: string; notes: string
+  customerName: string
+  plannerId: string
+  eventType: string
+  eventDate: string
+  guestCount: string
+  briefing: string
+  notes: string
 }
 const EMPTY_OPEN: OpenForm = {
-  customerName: '', plannerId: '', eventType: '', eventDate: '', guestCount: '', briefing: '', notes: '',
+  customerName: '',
+  plannerId: '',
+  eventType: '',
+  eventDate: '',
+  guestCount: '',
+  briefing: '',
+  notes: '',
 }
 
 type ItemForm = { description: string; quantity: string; price: string }
@@ -89,7 +105,22 @@ export default function EventosProposalsPage() {
     placeholderData: keepPreviousData,
   })
 
-  const planners = useQuery({ queryKey: ['eventos-planners-all'], queryFn: () => listPlanners({ onlyActive: true }) })
+  const planners = useQuery({
+    queryKey: ['eventos-planners-all'],
+    queryFn: () => listPlanners({ onlyActive: true }),
+  })
+
+  const packages = useQuery({
+    queryKey: ['eventos-packages'],
+    queryFn: () => listPackages(),
+  })
+
+  // Onda 1 (backlog #3): aviso NÃO bloqueante de data ocupada ao escolher a data no modal.
+  const dateCheck = useQuery({
+    queryKey: ['eventos-date-check', openForm.eventDate],
+    queryFn: () => checkDate(openForm.eventDate),
+    enabled: openForm.eventDate !== '',
+  })
 
   const detail = useQuery({
     queryKey: ['eventos-proposal', detailId],
@@ -98,21 +129,27 @@ export default function EventosProposalsPage() {
   })
 
   const openMutation = useMutation({
-    mutationFn: () => openProposal({
-      customerName: openForm.customerName || null,
-      plannerId: openForm.plannerId || null,
-      eventType: openForm.eventType || null,
-      eventDate: openForm.eventDate || null,
-      guestCount: openForm.guestCount ? Math.max(0, Math.round(Number(openForm.guestCount))) : null,
-      briefing: openForm.briefing || null,
-      notes: openForm.notes || null,
-    }),
+    mutationFn: () =>
+      openProposal({
+        customerName: openForm.customerName || null,
+        plannerId: openForm.plannerId || null,
+        eventType: openForm.eventType || null,
+        eventDate: openForm.eventDate || null,
+        guestCount: openForm.guestCount
+          ? Math.max(0, Math.round(Number(openForm.guestCount)))
+          : null,
+        briefing: openForm.briefing || null,
+        notes: openForm.notes || null,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['eventos-proposals'] })
-      setOpenModal(false); setOpenForm(EMPTY_OPEN); setOpenError(null)
+      setOpenModal(false)
+      setOpenForm(EMPTY_OPEN)
+      setOpenError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'inactive_planner') setOpenError('Esse cerimonialista está inativo.')
+      if (e instanceof ApiError && e.reason === 'inactive_planner')
+        setOpenError('Esse cerimonialista está inativo.')
       else setOpenError('Erro ao abrir a proposta.')
     },
   })
@@ -129,10 +166,12 @@ export default function EventosProposalsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['eventos-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['eventos-proposals'] })
-      setItemForm(EMPTY_ITEM); setItemError(null)
+      setItemForm(EMPTY_ITEM)
+      setItemError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setItemError('Esta proposta não aceita mais alteração de itens.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setItemError('Esta proposta não aceita mais alteração de itens.')
       else setItemError('Erro ao adicionar o item.')
     },
   })
@@ -159,11 +198,14 @@ export default function EventosProposalsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['eventos-proposal', detailId] })
-      setMarkForm(EMPTY_MARK); setMarkError(null)
+      setMarkForm(EMPTY_MARK)
+      setMarkError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setMarkError('Esta proposta não aceita mais alteração de cronograma.')
-      else if (e instanceof ApiError && e.reason === 'invalid_time') setMarkError('Horário inválido.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setMarkError('Esta proposta não aceita mais alteração de cronograma.')
+      else if (e instanceof ApiError && e.reason === 'invalid_time')
+        setMarkError('Horário inválido.')
       else setMarkError('Erro ao adicionar o marco.')
     },
   })
@@ -184,12 +226,15 @@ export default function EventosProposalsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['eventos-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['eventos-proposals'] })
-      setStatusTarget(null); setStatusError(null)
+      setStatusTarget(null)
+      setStatusError(null)
     },
     onError: (e) => {
       setStatusTarget(null)
-      if (e instanceof ApiError && e.reason === 'empty_budget') setStatusError('Adicione ao menos um item de orçamento antes de orçar.')
-      else if (e instanceof ApiError && e.reason === 'invalid_status_transition') setStatusError('Transição de status inválida.')
+      if (e instanceof ApiError && e.reason === 'empty_budget')
+        setStatusError('Adicione ao menos um item de orçamento antes de orçar.')
+      else if (e instanceof ApiError && e.reason === 'invalid_status_transition')
+        setStatusError('Transição de status inválida.')
       else setStatusError('Erro ao mudar o status.')
     },
   })
@@ -205,17 +250,38 @@ export default function EventosProposalsPage() {
       <PageHeader
         title="Propostas"
         description="A IA abre a proposta pelo WhatsApp; a equipe orça e monta o cronograma aqui, e o cliente aprova pela conversa."
-        actions={<Button onClick={() => { setOpenForm(EMPTY_OPEN); setOpenError(null); setOpenModal(true) }}>Nova proposta</Button>}
+        actions={
+          <Button
+            onClick={() => {
+              setOpenForm(EMPTY_OPEN)
+              setOpenError(null)
+              setOpenModal(true)
+            }}
+          >
+            Nova proposta
+          </Button>
+        }
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => { setStatus(''); setPage(0) }}
-          className={`rounded-full border px-3 py-1 text-xs ${status === '' ? 'border-primary bg-primary/10' : 'border-border'}`}>
+        <button
+          onClick={() => {
+            setStatus('')
+            setPage(0)
+          }}
+          className={`rounded-full border px-3 py-1 text-xs ${status === '' ? 'border-primary bg-primary/10' : 'border-border'}`}
+        >
           Todas
         </button>
         {EVENT_PROPOSAL_STATUSES.map((s) => (
-          <button key={s.id} onClick={() => { setStatus(s.id); setPage(0) }}
-            className={`rounded-full border px-3 py-1 text-xs ${status === s.id ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={s.id}
+            onClick={() => {
+              setStatus(s.id)
+              setPage(0)
+            }}
+            className={`rounded-full border px-3 py-1 text-xs ${status === s.id ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {s.label}
           </button>
         ))}
@@ -230,12 +296,17 @@ export default function EventosProposalsPage() {
       ) : (
         <div className="divide-y divide-border rounded-lg border border-border">
           {items.map((prop: EventProposal) => (
-            <button key={prop.id} onClick={() => setDetailId(prop.id)}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40">
+            <button
+              key={prop.id}
+              onClick={() => setDetailId(prop.id)}
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+            >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{prop.customerName}</span>
-                  {prop.eventType && <span className="text-xs text-muted-foreground">{prop.eventType}</span>}
+                  {prop.eventType && (
+                    <span className="text-xs text-muted-foreground">{prop.eventType}</span>
+                  )}
                   <StatusBadge status={prop.status} />
                 </div>
                 <p className="truncate text-xs text-muted-foreground">
@@ -255,67 +326,142 @@ export default function EventosProposalsPage() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Página {page + 1} de {totalPages} · {total} propostas</span>
+          <span>
+            Página {page + 1} de {totalPages} · {total} propostas
+          </span>
           <div className="flex gap-1">
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={page === 0}
-              onClick={() => setPage((pg) => Math.max(0, pg - 1))}>←</Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={page + 1 >= totalPages}
-              onClick={() => setPage((pg) => pg + 1)}>→</Button>
+            <Button
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              disabled={page === 0}
+              onClick={() => setPage((pg) => Math.max(0, pg - 1))}
+            >
+              ←
+            </Button>
+            <Button
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              disabled={page + 1 >= totalPages}
+              onClick={() => setPage((pg) => pg + 1)}
+            >
+              →
+            </Button>
           </div>
         </div>
       )}
 
       {/* Modal: nova proposta */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)} title="Nova proposta de evento" size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); openMutation.mutate() }}>
+      <Modal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        title="Nova proposta de evento"
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            openMutation.mutate()
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Cliente</label>
-              <input value={openForm.customerName} onChange={(e) => setOpenForm((f) => ({ ...f, customerName: e.target.value }))} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Cliente
+              </label>
+              <input
+                value={openForm.customerName}
+                onChange={(e) => setOpenForm((f) => ({ ...f, customerName: e.target.value }))}
+                required
                 placeholder="Nome do cliente"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Cerimonialista (opcional)</label>
-              <select value={openForm.plannerId} onChange={(e) => setOpenForm((f) => ({ ...f, plannerId: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Cerimonialista (opcional)
+              </label>
+              <select
+                value={openForm.plannerId}
+                onChange={(e) => setOpenForm((f) => ({ ...f, plannerId: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 <option value="">Sem atribuição</option>
                 {(planners.data?.items ?? []).map((pl) => (
-                  <option key={pl.id} value={pl.id}>{pl.name}</option>
+                  <option key={pl.id} value={pl.id}>
+                    {pl.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipo de evento</label>
-              <input value={openForm.eventType} onChange={(e) => setOpenForm((f) => ({ ...f, eventType: e.target.value }))}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Tipo de evento
+              </label>
+              <input
+                value={openForm.eventType}
+                onChange={(e) => setOpenForm((f) => ({ ...f, eventType: e.target.value }))}
                 placeholder="casamento, aniversário, corporativo…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Data prevista</label>
-              <input type="date" value={openForm.eventDate} onChange={(e) => setOpenForm((f) => ({ ...f, eventDate: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Data prevista
+              </label>
+              <input
+                type="date"
+                value={openForm.eventDate}
+                onChange={(e) => setOpenForm((f) => ({ ...f, eventDate: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+              {dateCheck.data?.occupied && (
+                <p className="mt-1 text-xs font-medium text-amber-600">
+                  ⚠ Já existe{' '}
+                  {dateCheck.data.count > 1 ? `${dateCheck.data.count} eventos` : 'um evento'}{' '}
+                  aprovado/fechado nesta data — confira antes de seguir.
+                </p>
+              )}
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Nº de convidados</label>
-              <input type="number" min="0" value={openForm.guestCount} onChange={(e) => setOpenForm((f) => ({ ...f, guestCount: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Nº de convidados
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={openForm.guestCount}
+                onChange={(e) => setOpenForm((f) => ({ ...f, guestCount: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Briefing</label>
-            <textarea value={openForm.briefing} onChange={(e) => setOpenForm((f) => ({ ...f, briefing: e.target.value }))}
-              rows={2} placeholder="O que o cliente imagina para o evento"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <textarea
+              value={openForm.briefing}
+              onChange={(e) => setOpenForm((f) => ({ ...f, briefing: e.target.value }))}
+              rows={2}
+              placeholder="O que o cliente imagina para o evento"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-            <textarea value={openForm.notes} onChange={(e) => setOpenForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Observações
+            </label>
+            <textarea
+              value={openForm.notes}
+              onChange={(e) => setOpenForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {openError && <p className="text-sm text-destructive">{openError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={openMutation.isPending}>
               {openMutation.isPending ? 'Abrindo…' : 'Abrir proposta'}
             </Button>
@@ -324,8 +470,17 @@ export default function EventosProposalsPage() {
       </Modal>
 
       {/* Modal: detalhe + orçamento + cronograma + status */}
-      <Modal open={detailId !== null} onClose={() => { setDetailId(null); setStatusError(null); setItemError(null); setMarkError(null) }}
-        title="Proposta de evento" size="lg">
+      <Modal
+        open={detailId !== null}
+        onClose={() => {
+          setDetailId(null)
+          setStatusError(null)
+          setItemError(null)
+          setMarkError(null)
+        }}
+        title="Proposta de evento"
+        size="lg"
+      >
         {detail.isPending || !p ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
@@ -337,13 +492,38 @@ export default function EventosProposalsPage() {
             </div>
             <Card>
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div><dt className="text-xs text-muted-foreground">Telefone</dt><dd>{p.customerPhone ?? '—'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Cerimonialista</dt><dd>{p.plannerName ?? '—'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Data</dt><dd>{p.eventDate ? formatDate(p.eventDate) : '—'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Convidados</dt><dd>{p.guestCount ?? '—'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{p.conversationId ? 'WhatsApp' : 'Manual'}</dd></div>
-                {p.briefing && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Briefing</dt><dd>{p.briefing}</dd></div>}
-                {p.notes && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Observações</dt><dd>{p.notes}</dd></div>}
+                <div>
+                  <dt className="text-xs text-muted-foreground">Telefone</dt>
+                  <dd>{p.customerPhone ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Cerimonialista</dt>
+                  <dd>{p.plannerName ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Data</dt>
+                  <dd>{p.eventDate ? formatDate(p.eventDate) : '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Convidados</dt>
+                  <dd>{p.guestCount ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Origem</dt>
+                  <dd>{p.conversationId ? 'WhatsApp' : 'Manual'}</dd>
+                </div>
+                {p.briefing && (
+                  <div className="col-span-2">
+                    <dt className="text-xs text-muted-foreground">Briefing</dt>
+                    <dd>{p.briefing}</dd>
+                  </div>
+                )}
+                {p.notes && (
+                  <div className="col-span-2">
+                    <dt className="text-xs text-muted-foreground">Observações</dt>
+                    <dd>{p.notes}</dd>
+                  </div>
+                )}
               </dl>
             </Card>
 
@@ -358,7 +538,10 @@ export default function EventosProposalsPage() {
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {p.items.map((it) => (
-                    <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={it.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="min-w-0">
                         <span className="font-medium">{it.description}</span>
                         <span className="ml-2 text-xs text-muted-foreground">
@@ -368,8 +551,12 @@ export default function EventosProposalsPage() {
                       <div className="flex shrink-0 items-center gap-2">
                         <span>{formatPrice(it.lineTotalCents)}</span>
                         {!locked && (
-                          <Button variant="outline" className="h-6 px-2 text-xs"
-                            disabled={deleteItemMutation.isPending} onClick={() => deleteItemMutation.mutate(it.id)}>
+                          <Button
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
+                            disabled={deleteItemMutation.isPending}
+                            onClick={() => deleteItemMutation.mutate(it.id)}
+                          >
                             Remover
                           </Button>
                         )}
@@ -380,27 +567,89 @@ export default function EventosProposalsPage() {
               )}
 
               {!locked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addItemMutation.mutate() }}>
-                  <div className="flex-1 min-w-[8rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição</label>
-                    <input value={itemForm.description} onChange={(e) => setItemForm((f) => ({ ...f, description: e.target.value }))} required
-                      maxLength={200} placeholder="Espaço, buffet, decoração…"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addItemMutation.mutate()
+                  }}
+                >
+                  {(packages.data?.items ?? []).filter((pk) => pk.active).length > 0 && (
+                    <div className="w-full">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Do catálogo (preenche descrição e preço)
+                      </label>
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const pk = packages.data?.items.find((x) => x.id === e.target.value)
+                          if (pk) {
+                            setItemForm((f) => ({
+                              ...f,
+                              description: pk.name,
+                              price: String(pk.priceCents / 100),
+                            }))
+                          }
+                        }}
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                      >
+                        <option value="">Item avulso (digitar)…</option>
+                        {(packages.data?.items ?? [])
+                          .filter((pk) => pk.active)
+                          .map((pk) => (
+                            <option key={pk.id} value={pk.id}>
+                              [{pk.kind}] {pk.name} — R$ {(pk.priceCents / 100).toFixed(2)}
+                            </option>
+                          ))}
+                      </select>
+                    </div>
+                  )}
+                  <div className="min-w-[8rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Descrição
+                    </label>
+                    <input
+                      value={itemForm.description}
+                      onChange={(e) => setItemForm((f) => ({ ...f, description: e.target.value }))}
+                      required
+                      maxLength={200}
+                      placeholder="Espaço, buffet, decoração…"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-16">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Qtd</label>
-                    <input type="number" min="1" value={itemForm.quantity}
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Qtd
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={itemForm.quantity}
                       onChange={(e) => setItemForm((f) => ({ ...f, quantity: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-24">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Unit. (R$)</label>
-                    <input type="number" min="0" step="0.01" value={itemForm.price} required
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Unit. (R$)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={itemForm.price}
+                      required
                       onChange={(e) => setItemForm((f) => ({ ...f, price: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addItemMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addItemMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                 </form>
               )}
               {itemError && <p className="text-sm text-destructive">{itemError}</p>}
@@ -417,15 +666,28 @@ export default function EventosProposalsPage() {
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {p.timeline.map((mk) => (
-                    <div key={mk.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={mk.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="min-w-0">
-                        <span className="font-mono text-xs font-medium">{formatTime(mk.startTime)}</span>
+                        <span className="font-mono text-xs font-medium">
+                          {formatTime(mk.startTime)}
+                        </span>
                         <span className="ml-2 font-medium">{mk.title}</span>
-                        {mk.description && <span className="ml-2 text-xs text-muted-foreground">{mk.description}</span>}
+                        {mk.description && (
+                          <span className="ml-2 text-xs text-muted-foreground">
+                            {mk.description}
+                          </span>
+                        )}
                       </div>
                       {!locked && (
-                        <Button variant="outline" className="h-6 px-2 text-xs"
-                          disabled={deleteMarkMutation.isPending} onClick={() => deleteMarkMutation.mutate(mk.id)}>
+                        <Button
+                          variant="outline"
+                          className="h-6 px-2 text-xs"
+                          disabled={deleteMarkMutation.isPending}
+                          onClick={() => deleteMarkMutation.mutate(mk.id)}
+                        >
                           Remover
                         </Button>
                       )}
@@ -435,21 +697,45 @@ export default function EventosProposalsPage() {
               )}
 
               {!locked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addMarkMutation.mutate() }}>
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addMarkMutation.mutate()
+                  }}
+                >
                   <div className="w-24">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Horário</label>
-                    <input type="time" value={markForm.startTime} required
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Horário
+                    </label>
+                    <input
+                      type="time"
+                      value={markForm.startTime}
+                      required
                       onChange={(e) => setMarkForm((f) => ({ ...f, startTime: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <div className="flex-1 min-w-[8rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Marco</label>
-                    <input value={markForm.title} onChange={(e) => setMarkForm((f) => ({ ...f, title: e.target.value }))} required
-                      maxLength={200} placeholder="Recepção, cerimônia, jantar, bolo…"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                  <div className="min-w-[8rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Marco
+                    </label>
+                    <input
+                      value={markForm.title}
+                      onChange={(e) => setMarkForm((f) => ({ ...f, title: e.target.value }))}
+                      required
+                      maxLength={200}
+                      placeholder="Recepção, cerimônia, jantar, bolo…"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addMarkMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addMarkMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                 </form>
               )}
               {markError && <p className="text-sm text-destructive">{markError}</p>}
@@ -458,10 +744,17 @@ export default function EventosProposalsPage() {
             {/* Status */}
             {ALLOWED_NEXT[p.status].length > 0 ? (
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Mudar status para…</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Mudar status para…
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {ALLOWED_NEXT[p.status].map((next) => (
-                    <Button key={next} variant="outline" className="h-8 px-3 text-xs" onClick={() => setStatusTarget(next)}>
+                    <Button
+                      key={next}
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => setStatusTarget(next)}
+                    >
                       {statusLabel(next)}
                     </Button>
                   ))}
@@ -483,7 +776,9 @@ export default function EventosProposalsPage() {
         confirmLabel="Mudar status"
         destructive={false}
         loading={statusMutation.isPending}
-        onConfirm={() => { if (statusTarget) statusMutation.mutate(statusTarget) }}
+        onConfirm={() => {
+          if (statusTarget) statusMutation.mutate(statusTarget)
+        }}
       />
     </div>
   )

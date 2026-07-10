@@ -16,7 +16,11 @@ function monthLabel(yyyyMm: string): string {
   return `${m}/${y}`
 }
 
-function RowsTable({ rows, firstColumn, firstValue }: {
+function RowsTable({
+  rows,
+  firstColumn,
+  firstValue,
+}: {
   rows: AtelieReportRow[]
   firstColumn: string
   firstValue: (r: AtelieReportRow) => string
@@ -69,8 +73,11 @@ export default function AtelieReportsPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         {WINDOWS.map((w) => (
-          <button key={w} onClick={() => setMonths(w)}
-            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={w}
+            onClick={() => setMonths(w)}
+            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {w} meses
           </button>
         ))}
@@ -95,22 +102,33 @@ export default function AtelieReportsPage() {
 
           <Card>
             <Section title="Por mês">
-              <RowsTable rows={data.byMonth} firstColumn="Mês"
-                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')} />
+              <RowsTable
+                rows={data.byMonth}
+                firstColumn="Mês"
+                firstValue={(r) => (r.month ? monthLabel(r.month) : '—')}
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Por tipo de projeto">
-              <RowsTable rows={data.byType} firstColumn="Tipo"
-                firstValue={(r) => (r.projectType ? typeLabel(r.projectType as AtelieProjectTypeId) : '—')} />
+              <RowsTable
+                rows={data.byType}
+                firstColumn="Tipo"
+                firstValue={(r) =>
+                  r.projectType ? typeLabel(r.projectType as AtelieProjectTypeId) : '—'
+                }
+              />
             </Section>
           </Card>
 
           <Card>
             <Section title="Por artesão">
-              <RowsTable rows={data.byArtisan} firstColumn="Artesão"
-                firstValue={(r) => r.artisanName ?? 'Sem atribuição'} />
+              <RowsTable
+                rows={data.byArtisan}
+                firstColumn="Artesão"
+                firstValue={(r) => r.artisanName ?? 'Sem atribuição'}
+              />
             </Section>
           </Card>
         </>

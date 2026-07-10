@@ -6,5 +6,8 @@ export function getLoyalty(): Promise<ComidaLoyaltyConfig> {
 }
 
 export function updateLoyalty(input: ComidaLoyaltyConfig): Promise<ComidaLoyaltyConfig> {
-  return apiFetch<ComidaLoyaltyConfig>('/api/comida/loyalty', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<ComidaLoyaltyConfig>('/api/comida/loyalty', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

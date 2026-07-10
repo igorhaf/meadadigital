@@ -10,20 +10,24 @@ export type CreateWishlistInput = {
   notes?: string | null
 }
 
-export function listWishlists(opts: { onlyActive?: boolean } = {}): Promise<{ items: ConcessionariaWishlist[] }> {
+export function listWishlists(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: ConcessionariaWishlist[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: ConcessionariaWishlist[] }>(`/api/concessionaria/wishlists${qs}`)
 }
 
 export function createWishlist(input: CreateWishlistInput): Promise<ConcessionariaWishlist> {
   return apiFetch<ConcessionariaWishlist>('/api/concessionaria/wishlists', {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
 export function setWishlistActive(id: string, active: boolean): Promise<ConcessionariaWishlist> {
   return apiFetch<ConcessionariaWishlist>(`/api/concessionaria/wishlists/${id}/active`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

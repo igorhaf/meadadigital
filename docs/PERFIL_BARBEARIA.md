@@ -124,3 +124,17 @@ sistema reforça com erro).
   CMS/vitrine (#13) é a flag por nicho; multi-unidade (#16) é fase própria.
 - Sem foto do corte / galeria de referência.
 - Um barbeiro = um atendimento por vez (sem múltiplas cadeiras paralelas).
+
+## Onda 2 do backlog (migration 112)
+
+`docs/FEATURES_SUGERIDAS_BARBEARIA.md` #2/#8/#9: **#2 reativação de cliente sumido** (opt-in OFF
+— lição Baileys; `barber_reactivation_log`, cooldown = janela; cupom de retorno opcional do motor
+da onda 1; agendamento futuro suprime) via `BarberReactivationJob` (cron 11:40). **#8 fila →
+agenda:** `POST /api/barbearia/queue/{id}/convert` converte ticket chamado em atendimento
+IMEDIATO (start=agora, conflito re-verificado; ticket → atendido; o corte entra no funil —
+fidelidade/relatórios contam); botão "Iniciar atendimento" no painel da fila; ticket "qualquer
+barbeiro" exige barberId (400 `barber_required`). **#9 pós-corte:** REALIZADO pede avaliação com
+`review_link` e **cooldown por contato** (`barber_review_log`, `review_cooldown_days` default 90
+— o frequentador semanal não vira spam); toggle OFF. Settings ganhou "Reativação e avaliação".
+Teste: `BarbeariaOnda2IntegrationTest`. Fica: #5 clube (chassi E), #6/#14 gateway, #10/#11
+campanha/indicação, #13 CMS, #16 multi-unidade.

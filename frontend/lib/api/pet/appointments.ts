@@ -14,8 +14,14 @@ export type CreateAppointmentInput = {
 
 export function listAppointments(
   opts: {
-    status?: string; dateFrom?: string; dateTo?: string; professionalId?: string
-    animalId?: string; contactId?: string; page?: number; pageSize?: number
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    professionalId?: string
+    animalId?: string
+    contactId?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<AppointmentPage> {
   const p = new URLSearchParams()
@@ -36,11 +42,18 @@ export function getAppointment(id: string): Promise<PetAppointment> {
 }
 
 export function createAppointment(input: CreateAppointmentInput): Promise<PetAppointment> {
-  return apiFetch<PetAppointment>('/api/pet/appointments', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<PetAppointment>('/api/pet/appointments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateAppointmentStatus(id: string, newStatus: PetAppointmentStatusId): Promise<PetAppointment> {
+export function updateAppointmentStatus(
+  id: string,
+  newStatus: PetAppointmentStatusId,
+): Promise<PetAppointment> {
   return apiFetch<PetAppointment>(`/api/pet/appointments/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

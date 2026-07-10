@@ -27,15 +27,18 @@ public class ModaInfantilProductService {
     private final ModaInfantilVariantRepository variantRepository;
     private final AuditLogger auditLogger;
     private final ModaInfantilMenuCache menuCache;
+    private final com.meada.profiles.modainfantil.alerts.ModaInfantilStockAlertService stockAlertService;
 
     public ModaInfantilProductService(ModaInfantilProductRepository repository,
                                       ModaInfantilVariantRepository variantRepository,
                                       AuditLogger auditLogger,
-                                      ModaInfantilMenuCache menuCache) {
+                                      ModaInfantilMenuCache menuCache,
+                                     com.meada.profiles.modainfantil.alerts.ModaInfantilStockAlertService stockAlertService) {
         this.repository = repository;
         this.variantRepository = variantRepository;
         this.auditLogger = auditLogger;
         this.menuCache = menuCache;
+        this.stockAlertService = stockAlertService;
     }
 
     /** Categoria inválida (→ 400 invalid_category no controller). */
@@ -151,6 +154,9 @@ public class ModaInfantilProductService {
         if (size != null && !size.isBlank()) {
             requireValidSize(size);
         }
+        // Onda 1 (avise-me): captura o estoque ANTES pra detectar reposição 0 → N.
+        Integer previousStock = variantRepository.findById(companyId, productId, variantId)
+            .map(ModaInfantilVariant::stockQty).orElse(null);
         ModaInfantilVariant updated;
         try {
             updated = variantRepository.update(companyId, productId, variantId, size, color, sku,
@@ -158,6 +164,10 @@ public class ModaInfantilProductService {
                 .orElseThrow(VariantNotFoundException::new);
         } catch (DataIntegrityViolationException e) {
             throw new DuplicateVariantException();   // mexer em size/color pode colidir com o UNIQUE.
+        }
+        // Reposição 0 → N dispara a fila do avise-me (best-effort, fora de qualquer promessa).
+        if (previousStock != null && previousStock == 0 && updated.stockQty() > 0) {
+            stockAlertService.notifyBackInStock(companyId, variantId);
         }
         auditLogger.log(companyId, userId, "moda_infantil_variant_updated", "moda_infantil_variant", variantId, Map.of());
         menuCache.invalidate(companyId);

@@ -18,6 +18,7 @@ import {
   type AvailabilitySlot,
 } from '@/lib/api/availability'
 import { getMe } from '@/lib/api/me'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 const WEEKDAYS = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 
@@ -127,7 +128,9 @@ export default function AvailabilityPage() {
                 className="h-7 px-2 text-xs"
                 disabled={removeSlot.isPending && removeSlot.variables === s.id}
                 onClick={() => {
-                  if (confirm(`Remover a janela de ${WEEKDAYS[s.weekday]} ${s.startsAt}–${s.endsAt}?`)) {
+                  if (
+                    confirm(`Remover a janela de ${WEEKDAYS[s.weekday]} ${s.startsAt}–${s.endsAt}?`)
+                  ) {
                     removeSlot.mutate(s.id)
                   }
                 }}
@@ -138,7 +141,11 @@ export default function AvailabilityPage() {
           )}
         />
       )}
-      <NewSlotDialog open={dialogOpen} onClose={() => setDialogOpen(false)} disabled={!me?.companyId} />
+      <NewSlotDialog
+        open={dialogOpen}
+        onClose={() => setDialogOpen(false)}
+        disabled={!me?.companyId}
+      />
     </div>
   )
 }
@@ -165,15 +172,13 @@ function NewSlotDialog({
   const [slotMinutes, setSlotMinutes] = useState(30)
   const [serverError, setServerError] = useState<string | null>(null)
 
-  useEffect(() => {
-    if (open) {
-      setWeekday(1)
-      setStartsAt('09:00')
-      setEndsAt('12:00')
-      setSlotMinutes(30)
-      setServerError(null)
-    }
-  }, [open])
+  useResetWhen(open, () => {
+    setWeekday(1)
+    setStartsAt('09:00')
+    setEndsAt('12:00')
+    setSlotMinutes(30)
+    setServerError(null)
+  })
 
   const mutation = useMutation({
     mutationFn: () =>

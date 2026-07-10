@@ -43,6 +43,8 @@ class LingerieOrderServiceTest extends AbstractIntegrationTest {
     private LingerieProductService productService;
     @Autowired
     private FakeEvolutionSender fakeEvolution;
+    @org.springframework.beans.factory.annotation.Autowired
+    private com.meada.profiles.lingerie.alerts.LingerieStockAlertService alertService;
 
     private static final UUID COMPANY = UUID.fromString("c8210000-0000-0000-0000-000000000093");
     private static final UUID USER = UUID.fromString("d8210000-0000-0000-0000-000000000093");
@@ -74,7 +76,7 @@ class LingerieOrderServiceTest extends AbstractIntegrationTest {
         LingerieProduct p = productService.create(COMPANY, USER, "Conjunto", null, "conjuntos", 5000);
         LingerieVariant v = productService.addVariant(COMPANY, USER, p.id(), "M", "Preto", null, null, 5);
         return service.create(COMPANY, conversationId, contactId, "entrega", "Rua X 1",
-            List.of(new OrderLineInput(v.id(), 2)), null);
+            List.of(new OrderLineInput(v.id(), 2)), null, null);
     }
 
     // ---- Preço + estoque -----------------------------------------------------
@@ -86,7 +88,7 @@ class LingerieOrderServiceTest extends AbstractIntegrationTest {
         LingerieVariant v = productService.addVariant(COMPANY, USER, p.id(), "M", "Preto", null, 8990, 5);
 
         LingerieOrder order = service.create(COMPANY, conversationId, contactId, "entrega", "Rua Y 2",
-            List.of(new OrderLineInput(v.id(), 2)), null);
+            List.of(new OrderLineInput(v.id(), 2)), null, null);
 
         // unit_price = 8990 (variante); subtotal = 8990*2 = 17980; total = 17980 + 700 = 18680.
         assertThat(order.items().get(0).unitPriceCents()).isEqualTo(8990);
@@ -107,7 +109,7 @@ class LingerieOrderServiceTest extends AbstractIntegrationTest {
         LingerieVariant v = productService.addVariant(COMPANY, USER, p.id(), "P", "Nude", null, null, 1);
 
         assertThatThrownBy(() -> service.create(COMPANY, conversationId, contactId, "retirada", null,
-                List.of(new OrderLineInput(v.id(), 2)), null))
+                List.of(new OrderLineInput(v.id(), 2)), null, null))
             .isInstanceOf(OutOfStockException.class);
 
         Long count = jdbcTemplate.queryForObject("select count(*) from lingerie_orders", Long.class);
@@ -183,7 +185,7 @@ class LingerieOrderServiceTest extends AbstractIntegrationTest {
         LingerieProduct p = productService.create(COMPANY, USER, "Pijama", null, "pijamas", 9000);
         LingerieVariant v = productService.addVariant(COMPANY, USER, p.id(), "G", "Azul", null, null, 3);
         LingerieOrder order = service.create(COMPANY, conversationId, contactId, "retirada", null,
-            List.of(new OrderLineInput(v.id(), 1)), null);
+            List.of(new OrderLineInput(v.id(), 1)), null, null);
 
         service.updateStatus(COMPANY, order.id(), "separando", null);   // 1 (aceite).
         service.updateStatus(COMPANY, order.id(), "enviado", null);     // 2.
@@ -201,6 +203,52 @@ class LingerieOrderServiceTest extends AbstractIntegrationTest {
         assertThat(cancelled.status()).isEqualTo("cancelado");
         assertThat(fakeEvolution.sent()).hasSize(1);
         assertThat(fakeEvolution.sent().get(0).text()).contains("cancelado");
+    }
+
+    // -------------------------------------------------------------------------
+    // Onda 1 do backlog (cupom + avise-me quando voltar)
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("cupom válido aplica desconto clampado; inválido NÃO aborta (sai sem desconto)")
+    void couponAppliesAndInvalidIsIgnored() {
+        LingerieProduct p = productService.create(COMPANY, USER, "Kit", null, "conjuntos", 10000);
+        LingerieVariant v = productService.addVariant(COMPANY, USER, p.id(), "M", "Preto", null, null, 10);
+        jdbcTemplate.update(
+            "insert into lingerie_coupons (company_id, code, kind, value, active) values (?, 'DEZ10', 'percent', 10, true)",
+            COMPANY);
+
+        LingerieOrder comCupom = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(v.id(), 2)), "DEZ10", null);
+        assertThat(comCupom.discountCents()).isEqualTo(2000);
+        assertThat(comCupom.totalCents()).isEqualTo(18000);
+        assertThat(comCupom.couponCode()).isEqualTo("DEZ10");
+
+        LingerieOrder semCupom = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(v.id(), 1)), "NAOEXISTE", null);
+        assertThat(semCupom.discountCents()).isZero();
+        assertThat(semCupom.couponCode()).isNull();
+    }
+
+    @Test
+    @DisplayName("avise-me: registra 1x por contato+variante e a reposição 0→N notifica e marca")
+    void stockAlertRegisterAndNotify() {
+        LingerieProduct p = productService.create(COMPANY, USER, "Body", null, "conjuntos", 4000);
+        LingerieVariant v = productService.addVariant(COMPANY, USER, p.id(), "M", "Preto", null, null, 0);
+
+        assertThat(alertService.register(COMPANY, contactId, v.id())).isTrue();
+        assertThat(alertService.register(COMPANY, contactId, v.id())).isFalse();   // duplicata é no-op.
+
+        fakeEvolution.reset();
+        productService.updateVariant(COMPANY, USER, p.id(), v.id(), null, null, null, null, 8, null, false);
+        assertThat(fakeEvolution.sent()).hasSize(1);
+        assertThat(fakeEvolution.sent().get(0).text()).contains("VOLTOU");
+
+        // fila esvaziada: repor de novo não re-notifica.
+        fakeEvolution.reset();
+        productService.updateVariant(COMPANY, USER, p.id(), v.id(), null, null, null, null, 0, null, false);
+        productService.updateVariant(COMPANY, USER, p.id(), v.id(), null, null, null, null, 5, null, false);
+        assertThat(fakeEvolution.sent()).isEmpty();
     }
 
     record SentMessage(String instanceName, String token, String number, String text) {}

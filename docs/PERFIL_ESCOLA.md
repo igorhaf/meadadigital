@@ -131,3 +131,30 @@ Ambas têm namespace próprio, distinto de `<matricula>` (academia) e de TODAS a
 - Guard `/api/escola/**` → 403 `forbidden_wrong_profile`. LGPD: `notes` administrativo, sem dado
   pedagógico/de saúde.
 - Paleta `mostarda`. Tenant de teste: `igorhaf30` (Escola Modelo).
+
+## Onda 1 do backlog (migration 109)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_ESCOLA.md` (#1, #2, #4 e #10):
+
+- **#1 LISTA DE ESPERA POR TURMA** (`escola_waitlist`): quando a tag `<matricula_escola>` bate em
+  `class_full`, o handler **ENFILEIRA** o lead em vez de descartar (snapshot do nome; posição
+  DERIVADA por count — espelho da fila do barbearia). O contexto da IA instrui a oferecer a lista
+  de espera pra turma cheia, deixando claro que é fila SEM promessa de vaga. **Avisar quando abre
+  vaga é AÇÃO HUMANA**: botão "Avisar vaga" no modal "Fila de espera" da tela de Turmas
+  (`POST /api/escola/waitlist/{id}/notify`) + gestão convertida/desistiu.
+- **#2 LEMBRETE DE VISITA D-1 e NO DIA:** `EscolaReminderJob` (cron `${escola.reminder-cron:0 10
+  8 * * *}`) — markers `reminded1/0_visit_date` (remarcar REARMA); a resposta cai na IA (remarcar
+  = cancelar + agendar). Toggle `visit_reminder_enabled` (default ON).
+- **#10 AUTO-TRANSIÇÃO DE VISITA:** agendada com data passada → realizada (silenciosa; falta a
+  secretaria marca cancelada). Toggle `visit_auto_complete_enabled` (default ON).
+- **#4 RÉGUA DE MENSALIDADE EM ABERTO** (versão sem gateway, opt-in `payment_reminder_enabled`
+  **OFF por default** — cobrança em massa é decisão consciente): matrícula ativa sem
+  `escola_payments` do mês corrente após `payment_due_day` (default 10) → 1 lembrete gentil por
+  mês (`payment_reminded_month`), com o valor snapshot da turma, SEM multa/juros.
+
+Settings ganhou a seção "Automações". Teste: `EscolaOnda1IntegrationTest` (fila com posição
+derivada + aviso humano; lembretes com rearm + auto-transição; régua opt-in com mês pago).
+
+**Fica pra onda 2** (registrado, não pedido): #3 cobrança com link Pix (bloqueada pelo gateway
+#50), #5 taxa de matrícula/rematrícula, #6 campanha de rematrícula, #7 indicação, #8 reativação
+de lead frio, #9 CMS da escola (flag cms), #11 dashboard de gestão.

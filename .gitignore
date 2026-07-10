@@ -18,5 +18,10 @@ Thumbs.db
 # Logs
 *.log
 
+# Testes (artefatos regeneráveis dos testes Selenium em scripts/)
+.pytest_cache/
+__pycache__/
+scripts/selenium_tests/screenshots/
+
 # Documento de coordenação entre conversas — vive fora do repo
 CONTEXT.md

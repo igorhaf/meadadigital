@@ -1,4 +1,13 @@
-import { Sparkles, MousePointerClick, MousePointer, Image, Type, Megaphone, Tag, Share2 } from 'lucide-react'
+import {
+  Image,
+  Megaphone,
+  MousePointer,
+  MousePointerClick,
+  Share2,
+  Sparkles,
+  Tag,
+  Type,
+} from 'lucide-react'
 import type { LucideIcon } from 'lucide-react'
 
 import type { CmsBlockTypeId } from '@/lib/cms/cms-block-type'
@@ -25,18 +34,28 @@ import type { CmsBlockTypeId } from '@/lib/cms/cms-block-type'
  */
 
 export type SlotDef = {
-  id: string        // estável por tipo (vira selection.slotId)
-  label: string     // rótulo na árvore e no header do painel
-  icon: LucideIcon  // ícone monocromático na árvore (mesmo vocabulário do BLOCK_ICONS)
-  keys: string[]    // QUAIS props do bloco este slot agrupa (subconjunto dos keys do schema)
+  id: string // estável por tipo (vira selection.slotId)
+  label: string // rótulo na árvore e no header do painel
+  icon: LucideIcon // ícone monocromático na árvore (mesmo vocabulário do BLOCK_ICONS)
+  keys: string[] // QUAIS props do bloco este slot agrupa (subconjunto dos keys do schema)
 }
 
 /** Slots por TIPO de bloco. Só o HERO no piloto; os demais ficam sem entrada (folha, como hoje). */
 export const BLOCK_SLOTS: Partial<Record<CmsBlockTypeId, SlotDef[]>> = {
   hero: [
     { id: 'content', label: 'Conteúdo', icon: Sparkles, keys: ['badge', 'title', 'subtitle'] },
-    { id: 'buttonPrimary', label: 'Botão primário', icon: MousePointerClick, keys: ['buttonLabel', 'buttonHref'] },
-    { id: 'buttonSecondary', label: 'Botão secundário', icon: MousePointer, keys: ['secondaryButtonLabel', 'secondaryButtonHref'] },
+    {
+      id: 'buttonPrimary',
+      label: 'Botão primário',
+      icon: MousePointerClick,
+      keys: ['buttonLabel', 'buttonHref'],
+    },
+    {
+      id: 'buttonSecondary',
+      label: 'Botão secundário',
+      icon: MousePointer,
+      keys: ['secondaryButtonLabel', 'secondaryButtonHref'],
+    },
     { id: 'image', label: 'Imagem lateral', icon: Image, keys: ['imageUrl'] },
   ],
   // Demais macros de PARTES FIXAS — entram só com a entrada aqui (árvore/seleção/painel filtrado de
@@ -56,9 +75,24 @@ export const BLOCK_SLOTS: Partial<Record<CmsBlockTypeId, SlotDef[]>> = {
     { id: 'button', label: 'Botão', icon: MousePointerClick, keys: ['buttonLabel', 'buttonHref'] },
   ],
   meada_cta: [
-    { id: 'content', label: 'Conteúdo', icon: Type, keys: ['titlePrefix', 'gradientText', 'subtitle'] },
-    { id: 'buttonPrimary', label: 'Botão primário', icon: MousePointerClick, keys: ['primaryLabel', 'primaryHref'] },
-    { id: 'buttonSecondary', label: 'Botão secundário', icon: MousePointer, keys: ['secondaryLabel', 'secondaryHref'] },
+    {
+      id: 'content',
+      label: 'Conteúdo',
+      icon: Type,
+      keys: ['titlePrefix', 'gradientText', 'subtitle'],
+    },
+    {
+      id: 'buttonPrimary',
+      label: 'Botão primário',
+      icon: MousePointerClick,
+      keys: ['primaryLabel', 'primaryHref'],
+    },
+    {
+      id: 'buttonSecondary',
+      label: 'Botão secundário',
+      icon: MousePointer,
+      keys: ['secondaryLabel', 'secondaryHref'],
+    },
   ],
   meada_navbar: [
     { id: 'brand', label: 'Marca', icon: Tag, keys: ['brandName', 'brandSuffix'] },

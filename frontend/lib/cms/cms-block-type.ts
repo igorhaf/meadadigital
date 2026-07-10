@@ -29,6 +29,10 @@ export const CMS_BLOCK_TYPES = [
   { id: 'marquee', label: 'Faixa de marcas' },
   { id: 'quote', label: 'Citação' },
   { id: 'cta', label: 'Chamada final (CTA)' },
+  { id: 'reviews_carousel', label: 'Avaliações (carrossel)' },
+  { id: 'video', label: 'Vídeo (YouTube/Vimeo)' },
+  { id: 'rating_badge', label: 'Selo de avaliação' },
+  { id: 'logo_strip', label: 'Faixa de logos' },
   { id: 'meada_hero', label: 'Meada · Hero' },
   { id: 'meada_services', label: 'Meada · Serviços' },
   { id: 'meada_portfolio', label: 'Meada · Portfólio' },
@@ -98,11 +102,38 @@ export type PackageItem = {
   buttonLabel: string
   buttonHref: string
 }
-export type PackagesProps = { eyebrow: string; title: string; subtitle: string; items: PackageItem[] }
+export type PackagesProps = {
+  eyebrow: string
+  title: string
+  subtitle: string
+  items: PackageItem[]
+}
 export type MarqueeItem = { name: string }
 export type MarqueeProps = { label: string; items: MarqueeItem[] }
 export type QuoteProps = { text: string; author: string; role: string }
 export type CtaProps = { title: string; subtitle: string; buttonLabel: string; buttonHref: string }
+
+// ---- Onda 1 de blocos genéricos de site (prova social e mídia) ----
+// rating é STRING '1'..'5' (select no editor); avatarUrl vazio → inicial colorida.
+export type ReviewItem = {
+  name: string
+  text: string
+  rating: string
+  date: string
+  avatarUrl: string
+}
+/** source 'google' desenha o selo "via Google" nos cards; 'manual' não. */
+export type ReviewsCarouselProps = {
+  title: string
+  source: 'google' | 'manual'
+  autoplay: boolean
+  items: ReviewItem[]
+}
+/** url aceita link de YouTube (watch/shorts/youtu.be/embed) ou Vimeo — convertido em embed seguro. */
+export type VideoProps = { title: string; url: string; caption: string }
+export type RatingBadgeProps = { score: string; caption: string; href: string }
+export type LogoItem = { name: string; imageUrl: string; href: string }
+export type LogoStripProps = { label: string; items: LogoItem[] }
 
 // ---- Blocos da marca Meada (preset meada-dark) ----
 export type MeadaStat = { value: string; label: string }
@@ -130,12 +161,33 @@ export type MeadaHeroProps = {
 
 /** Serviço do bloco meada_services. icon = nome lucide (Code, Cloud, Heart, Smartphone, Layers,
  * BarChart3…); color = cor de destaque do card. */
-export type MeadaServiceItem = { icon: string; color: string; title: string; description: string; linkLabel: string; linkHref: string }
+export type MeadaServiceItem = {
+  icon: string
+  color: string
+  title: string
+  description: string
+  linkLabel: string
+  linkHref: string
+}
 export type MeadaServicesProps = { eyebrow: string; title: string; items: MeadaServiceItem[] }
 
 /** Item do portfólio (curado — imagens por URL). category = badge; accentColor = cor; tags csv. */
-export type MeadaPortfolioItem = { name: string; category: string; description: string; imageUrl: string; accentColor: string; tags: string; href: string }
-export type MeadaPortfolioProps = { eyebrow: string; title: string; linkLabel: string; linkHref: string; items: MeadaPortfolioItem[] }
+export type MeadaPortfolioItem = {
+  name: string
+  category: string
+  description: string
+  imageUrl: string
+  accentColor: string
+  tags: string
+  href: string
+}
+export type MeadaPortfolioProps = {
+  eyebrow: string
+  title: string
+  linkLabel: string
+  linkHref: string
+  items: MeadaPortfolioItem[]
+}
 
 export type MeadaCtaProps = {
   titlePrefix: string
@@ -196,6 +248,10 @@ export type CmsBlock =
   | { id: string; type: 'marquee'; props: MarqueeProps }
   | { id: string; type: 'quote'; props: QuoteProps }
   | { id: string; type: 'cta'; props: CtaProps }
+  | { id: string; type: 'reviews_carousel'; props: ReviewsCarouselProps }
+  | { id: string; type: 'video'; props: VideoProps }
+  | { id: string; type: 'rating_badge'; props: RatingBadgeProps }
+  | { id: string; type: 'logo_strip'; props: LogoStripProps }
   | { id: string; type: 'meada_hero'; props: MeadaHeroProps }
   | { id: string; type: 'meada_services'; props: MeadaServicesProps }
   | { id: string; type: 'meada_portfolio'; props: MeadaPortfolioProps }
@@ -208,7 +264,16 @@ export type CmsBlock =
 export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
   switch (type) {
     case 'hero':
-      return { title: '', subtitle: '', buttonLabel: '', buttonHref: '', badge: '', imageUrl: '', secondaryButtonLabel: '', secondaryButtonHref: '' }
+      return {
+        title: '',
+        subtitle: '',
+        buttonLabel: '',
+        buttonHref: '',
+        badge: '',
+        imageUrl: '',
+        secondaryButtonLabel: '',
+        secondaryButtonHref: '',
+      }
     case 'text':
       return { body: '' }
     case 'services':
@@ -230,7 +295,15 @@ export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
     case 'feature_grid':
       return { eyebrow: '', title: 'Por que nos escolher', items: [] }
     case 'image_text_split':
-      return { eyebrow: '', title: '', body: '', imageUrl: '', reverse: false, buttonLabel: '', buttonHref: '' }
+      return {
+        eyebrow: '',
+        title: '',
+        body: '',
+        imageUrl: '',
+        reverse: false,
+        buttonLabel: '',
+        buttonHref: '',
+      }
     case 'steps':
       return { eyebrow: '', title: 'Como funciona', items: [] }
     case 'columns':
@@ -243,12 +316,21 @@ export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
       return { text: '', author: '', role: '' }
     case 'cta':
       return { title: 'Pronto para começar?', subtitle: '', buttonLabel: '', buttonHref: '' }
+    case 'reviews_carousel':
+      return { title: 'O que dizem nossos clientes', source: 'google', autoplay: true, items: [] }
+    case 'video':
+      return { title: '', url: '', caption: '' }
+    case 'rating_badge':
+      return { score: '', caption: '', href: '' }
+    case 'logo_strip':
+      return { label: '', items: [] }
     case 'meada_hero':
       return {
         titlePrefix: 'Sites e Sistemas',
         gradientText: 'Sob Medida',
         titleSuffix: 'pra Crescer',
-        subtitle: 'Desenvolvimento personalizado do site institucional ao sistema completo. Código limpo, prazo claro e foco no que importa pro seu negócio.',
+        subtitle:
+          'Desenvolvimento personalizado do site institucional ao sistema completo. Código limpo, prazo claro e foco no que importa pro seu negócio.',
         primaryLabel: 'Comece Agora →',
         primaryHref: '/contato',
         secondaryLabel: 'Ver Produtos',
@@ -281,12 +363,57 @@ export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
         eyebrow: 'Capacidades',
         title: 'Tudo o Que Você Precisa para Crescer',
         items: [
-          { icon: 'Code', color: '#60a5fa', title: 'Desenvolvimento Personalizado', description: 'Sites e sistemas feitos sob medida, do institucional ao mais complexo.', linkLabel: 'Saiba mais →', linkHref: '/servicos/desenvolvimento' },
-          { icon: 'Cloud', color: '#a855f7', title: 'Infraestrutura em Nuvem', description: 'Deploy, CI/CD, monitoramento e escalabilidade sem dores de cabeça.', linkLabel: 'Saiba mais →', linkHref: '/servicos/nuvem' },
-          { icon: 'Heart', color: '#ec4899', title: 'Manutenção & Suporte', description: 'Acompanhamento contínuo, evolução de funcionalidades e correções com prazo previsível.', linkLabel: 'Saiba mais →', linkHref: '/contato' },
-          { icon: 'Smartphone', color: '#22d3ee', title: 'Design Mobile First', description: 'Experiências nativas e fluidas em qualquer dispositivo e tamanho de tela.', linkLabel: 'Saiba mais →', linkHref: '/servicos/mobile' },
-          { icon: 'Layers', color: '#34d399', title: 'Design & UX', description: 'Interfaces bonitas e funcionais. Do wireframe ao Design System completo.', linkLabel: 'Saiba mais →', linkHref: '/servicos/design-ux' },
-          { icon: 'BarChart3', color: '#f97316', title: 'APIs & Integrações', description: 'Pagamentos, CRMs, ERPs e qualquer sistema conectado em uma arquitetura coesa.', linkLabel: 'Saiba mais →', linkHref: '/servicos/apis-integracoes' },
+          {
+            icon: 'Code',
+            color: '#60a5fa',
+            title: 'Desenvolvimento Personalizado',
+            description: 'Sites e sistemas feitos sob medida, do institucional ao mais complexo.',
+            linkLabel: 'Saiba mais →',
+            linkHref: '/servicos/desenvolvimento',
+          },
+          {
+            icon: 'Cloud',
+            color: '#a855f7',
+            title: 'Infraestrutura em Nuvem',
+            description: 'Deploy, CI/CD, monitoramento e escalabilidade sem dores de cabeça.',
+            linkLabel: 'Saiba mais →',
+            linkHref: '/servicos/nuvem',
+          },
+          {
+            icon: 'Heart',
+            color: '#ec4899',
+            title: 'Manutenção & Suporte',
+            description:
+              'Acompanhamento contínuo, evolução de funcionalidades e correções com prazo previsível.',
+            linkLabel: 'Saiba mais →',
+            linkHref: '/contato',
+          },
+          {
+            icon: 'Smartphone',
+            color: '#22d3ee',
+            title: 'Design Mobile First',
+            description:
+              'Experiências nativas e fluidas em qualquer dispositivo e tamanho de tela.',
+            linkLabel: 'Saiba mais →',
+            linkHref: '/servicos/mobile',
+          },
+          {
+            icon: 'Layers',
+            color: '#34d399',
+            title: 'Design & UX',
+            description: 'Interfaces bonitas e funcionais. Do wireframe ao Design System completo.',
+            linkLabel: 'Saiba mais →',
+            linkHref: '/servicos/design-ux',
+          },
+          {
+            icon: 'BarChart3',
+            color: '#f97316',
+            title: 'APIs & Integrações',
+            description:
+              'Pagamentos, CRMs, ERPs e qualquer sistema conectado em uma arquitetura coesa.',
+            linkLabel: 'Saiba mais →',
+            linkHref: '/servicos/apis-integracoes',
+          },
         ],
       }
     case 'meada_portfolio':
@@ -301,7 +428,8 @@ export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
       return {
         titlePrefix: 'Pronto para',
         gradientText: 'Transformar seu Negócio?',
-        subtitle: 'Do site institucional ao sistema completo. Sem enrolação, com prazo claro e resultado.',
+        subtitle:
+          'Do site institucional ao sistema completo. Sem enrolação, com prazo claro e resultado.',
         primaryLabel: 'Agendar Consultoria',
         primaryHref: '/contato',
         secondaryLabel: 'Ver Produtos',
@@ -324,25 +452,35 @@ export function defaultProps(type: CmsBlockTypeId): CmsBlock['props'] {
       return {
         brandName: 'Meada',
         brandSuffix: 'Digital',
-        tagline: 'Agência digital especializada em sites e sistemas sob medida para pequenos e médios negócios.',
+        tagline:
+          'Agência digital especializada em sites e sistemas sob medida para pequenos e médios negócios.',
         instagramUrl: 'https://instagram.com/meadadigital',
         whatsappUrl: 'https://wa.me/5581992612292',
         columns: [
-          { heading: 'Serviços', links: [
-            { label: 'Sites Profissionais', href: '/servicos' },
-            { label: 'Sistemas sob Medida', href: '/servicos' },
-            { label: 'Manutenção & Suporte', href: '/contato' },
-          ] },
-          { heading: 'Empresa', links: [
-            { label: 'Sobre Nós', href: '/sobre' },
-            { label: 'Produtos', href: '/produtos' },
-            { label: 'Serviços', href: '/servicos' },
-          ] },
-          { heading: 'Contato', links: [
-            { label: 'oi@meadadigital.com', href: 'mailto:oi@meadadigital.com' },
-            { label: '(81) 99261-2292', href: 'https://wa.me/5581992612292' },
-            { label: '@meadadigital', href: 'https://instagram.com/meadadigital' },
-          ] },
+          {
+            heading: 'Serviços',
+            links: [
+              { label: 'Sites Profissionais', href: '/servicos' },
+              { label: 'Sistemas sob Medida', href: '/servicos' },
+              { label: 'Manutenção & Suporte', href: '/contato' },
+            ],
+          },
+          {
+            heading: 'Empresa',
+            links: [
+              { label: 'Sobre Nós', href: '/sobre' },
+              { label: 'Produtos', href: '/produtos' },
+              { label: 'Serviços', href: '/servicos' },
+            ],
+          },
+          {
+            heading: 'Contato',
+            links: [
+              { label: 'oi@meadadigital.com', href: 'mailto:oi@meadadigital.com' },
+              { label: '(81) 99261-2292', href: 'https://wa.me/5581992612292' },
+              { label: '@meadadigital', href: 'https://instagram.com/meadadigital' },
+            ],
+          },
         ],
         copyright: '© Meada Agência Digital. Todos os direitos reservados.',
       }
@@ -380,11 +518,23 @@ export type CmsTree = CmsRow[]
 let _seq = 0
 function rand(prefix: string): string {
   _seq = (_seq + 1) % 1_000_000
-  return prefix + Date.now().toString(36) + '-' + _seq.toString(36) + Math.random().toString(36).slice(2, 6)
+  return (
+    prefix +
+    Date.now().toString(36) +
+    '-' +
+    _seq.toString(36) +
+    Math.random().toString(36).slice(2, 6)
+  )
 }
-export function newRowId(): string { return rand('r-') }
-export function newColId(): string { return rand('c-') }
-export function newBlockId(): string { return rand('b-') }
+export function newRowId(): string {
+  return rand('r-')
+}
+export function newColId(): string {
+  return rand('c-')
+}
+export function newBlockId(): string {
+  return rand('b-')
+}
 
 export function defaultRowProps(): CmsRowProps {
   return { bg: 'none', paddingY: 'md', gap: 'md', align: 'stretch', maxWidth: 'wide' }
@@ -397,5 +547,9 @@ export function emptyRow(): CmsRow {
 }
 /** Cria uma coluna já com um bloco do tipo dado (fluxo "arrastar componente → vira coluna"). */
 export function columnWithBlock(type: CmsBlockTypeId, width: CmsColumnWidth = 12): CmsColumn {
-  return { id: newColId(), width, blocks: [{ id: newBlockId(), type, props: defaultProps(type) } as CmsBlock] }
+  return {
+    id: newColId(),
+    width,
+    blocks: [{ id: newBlockId(), type, props: defaultProps(type) } as CmsBlock],
+  }
 }

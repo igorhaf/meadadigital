@@ -60,7 +60,7 @@ public class TravelProposalRepository {
         "select p.id, p.contact_id, p.consultant_id, p.conversation_id, p.customer_name, p.customer_phone, "
             + "c.name as consultant_name, p.destination, p.start_date, p.end_date, p.num_travelers, "
             + "p.travel_style, p.briefing, p.total_cents, p.status, p.notes, p.opened_at, p.closed_at, "
-            + "p.status_updated_at "
+            + "p.status_updated_at, p.deposit_cents, p.deposit_paid, p.deposit_paid_at "
             + "from travel_proposals p left join travel_consultants c on c.id = p.consultant_id ";
 
     private TravelProposal mapProposal(java.sql.ResultSet rs, List<TravelProposalItem> items,
@@ -68,6 +68,8 @@ public class TravelProposalRepository {
         Date sd = rs.getDate("start_date");
         Date ed = rs.getDate("end_date");
         java.sql.Timestamp closed = rs.getTimestamp("closed_at");
+        Integer depositCents = rs.getObject("deposit_cents") == null ? null : rs.getInt("deposit_cents");
+        java.sql.Timestamp depositPaidAt = rs.getTimestamp("deposit_paid_at");
         return new TravelProposal(
             (UUID) rs.getObject("id"),
             (UUID) rs.getObject("contact_id"),
@@ -88,8 +90,24 @@ public class TravelProposalRepository {
             rs.getTimestamp("opened_at").toInstant(),
             closed == null ? null : closed.toInstant(),
             rs.getTimestamp("status_updated_at").toInstant(),
+            depositCents,
+            rs.getBoolean("deposit_paid"),
+            depositPaidAt == null ? null : depositPaidAt.toInstant(),
             items,
             itinerary);
+    }
+
+    /** Registra/atualiza o sinal (onda #1 — clone atelie). deposit_paid_at preservado enquanto pago. */
+    public Optional<TravelProposal> updateDeposit(UUID companyId, UUID id, Integer depositCents, boolean depositPaid) {
+        int n = jdbcTemplate.update(
+            "update travel_proposals set deposit_cents = ?, deposit_paid = ?, "
+                + "deposit_paid_at = case when ? then coalesce(deposit_paid_at, now()) end, "
+                + "updated_at = now() where company_id = ? and id = ?",
+            depositCents, depositPaid, depositPaid, companyId, id);
+        if (n == 0) {
+            return Optional.empty();
+        }
+        return findById(companyId, id);
     }
 
     // -------------------------------------------------------------------------
@@ -166,6 +184,7 @@ public class TravelProposalRepository {
             p.customerName(), p.customerPhone(), p.consultantName(), p.destination(), p.startDate(),
             p.endDate(), p.numTravelers(), p.travelStyle(), p.briefing(), p.totalCents(), p.status(),
             p.notes(), p.openedAt(), p.closedAt(), p.statusUpdatedAt(),
+            p.depositCents(), p.depositPaid(), p.depositPaidAt(),
             listItems(p.id()), listItinerary(p.id()));
     }
 

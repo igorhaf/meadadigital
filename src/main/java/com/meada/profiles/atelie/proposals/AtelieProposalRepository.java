@@ -52,7 +52,9 @@ public class AtelieProposalRepository {
             due == null ? null : due.toLocalDate(),
             rs.getString("status"),
             rs.getInt("position"),
-            completed == null ? null : completed.toInstant());
+            completed == null ? null : completed.toInstant(),
+            rs.getTimestamp("confirmed_at") == null ? null : rs.getTimestamp("confirmed_at").toInstant(),
+            rs.getDate("confirmed_due_date") == null ? null : rs.getDate("confirmed_due_date").toLocalDate());
     };
 
     private static final String PROPOSAL_SELECT =
@@ -367,21 +369,21 @@ public class AtelieProposalRepository {
 
     public List<AtelieFitting> listFittings(UUID proposalId) {
         return jdbcTemplate.query(
-            "select id, proposal_id, title, description, due_date, status, position, completed_at "
+            "select id, proposal_id, title, description, due_date, status, position, completed_at, confirmed_at, confirmed_due_date "
                 + "from atelie_fittings where proposal_id = ? order by position asc, created_at asc",
             FITTING_MAPPER, proposalId);
     }
 
     public Optional<AtelieFitting> findFitting(UUID companyId, UUID fittingId) {
         return jdbcTemplate.query(
-            "select id, proposal_id, title, description, due_date, status, position, completed_at "
+            "select id, proposal_id, title, description, due_date, status, position, completed_at, confirmed_at, confirmed_due_date "
                 + "from atelie_fittings where company_id = ? and id = ?",
             FITTING_MAPPER, companyId, fittingId).stream().findFirst();
     }
 
     public Optional<AtelieFitting> findFitting(UUID companyId, UUID proposalId, UUID fittingId) {
         return jdbcTemplate.query(
-            "select id, proposal_id, title, description, due_date, status, position, completed_at "
+            "select id, proposal_id, title, description, due_date, status, position, completed_at, confirmed_at, confirmed_due_date "
                 + "from atelie_fittings where company_id = ? and proposal_id = ? and id = ?",
             FITTING_MAPPER, companyId, proposalId, fittingId).stream().findFirst();
     }

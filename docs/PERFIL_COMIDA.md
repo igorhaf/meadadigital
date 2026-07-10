@@ -156,3 +156,17 @@ Formato JSON em texto livre (NÃO é tool calling do Gemini — texto livre + re
 - Guard de perfil: `/api/comida/**` → 403 `forbidden_wrong_profile` para tenant de outro perfil.
 - Paleta `terracota`.
 - Tenant de teste: `igorhaf16` (Comida Modelo).
+
+## Onda 2 do backlog (migration 114)
+
+`docs/FEATURES_SUGERIDAS_COMIDA.md` #3/#5/#9/#12: **#3 retirada no balcão** — `fulfillment`
+entrega|retirada na tag (retirada SEM taxa — nem zona nem flat — e endereço dispensado;
+`delivery_address` deixou de ser NOT NULL); badge "Retirada no balcão" no Kanban; IA pergunta
+"entrega ou retirada?" no fechamento. **#9 horário do delivery** — `opens_at`/`closes_at`
+próprios (null = sempre aberto); a IA avisa fora do horário e NÃO fecha pedido; backend valida
+defensivo (422 `outside_hours`). **#12** — auto-entrega opt-in (`auto_deliver_hours`; NULL
+desliga): saiu_entrega há N horas → entregue silencioso; pedido parado em aguardando/em_preparo
+é badge DERIVADA no painel (aceite/cancelamento seguem humanos). **#5 reativação** (opt-in OFF,
+`comida_reactivation_log`, cupom de retorno opcional) via `ComidaReminderJob` (cron 11:50).
+Settings ganhou "Horário e automações". Teste: `ComidaOnda2IntegrationTest`. Fica: #6 NPS,
+#7 pagamento (gateway), #11 combos, #13 agendamento, #14 cardápio digital, #16 aniversário.

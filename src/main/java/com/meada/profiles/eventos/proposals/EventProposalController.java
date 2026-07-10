@@ -89,6 +89,32 @@ public class EventProposalController {
 
     public record StatusRequest(String newStatus) {}
 
+    /**
+     * Onda 1 (backlog #3): checagem LEVE de data ocupada — existe proposta aprovada/fechada/
+     * realizada na mesma data? Aviso NÃO bloqueante (a casa pode ter 2 salões; quem decide é a
+     * equipe). {@code excludeId} exclui a própria proposta na edição.
+     */
+    @GetMapping("/api/eventos/proposals/date-check")
+    public ResponseEntity<Object> dateCheck(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @RequestParam String date,
+            @RequestParam(required = false) UUID excludeId) {
+        UUID companyId;
+        try {
+            companyId = profileGuard.requireEventos(user);
+        } catch (WrongProfileException e) {
+            return error(403, "Forbidden", "forbidden_wrong_profile");
+        }
+        java.time.LocalDate d;
+        try {
+            d = java.time.LocalDate.parse(date);
+        } catch (java.time.DateTimeException e) {
+            return error(400, "Bad Request", "invalid_date");
+        }
+        long count = service.countOccupied(companyId, d, excludeId);
+        return ResponseEntity.ok(Map.of("occupied", count > 0, "count", count));
+    }
+
     @GetMapping("/api/eventos/proposals")
     public ResponseEntity<Object> list(
             @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,

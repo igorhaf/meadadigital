@@ -1,6 +1,6 @@
-import type { VehicleStatusId } from './concessionaria-vehicle-status'
-import type { TestDriveStatusId } from './concessionaria-test-drive-status'
 import type { LeadStatusId } from './concessionaria-lead-status'
+import type { TestDriveStatusId } from './concessionaria-test-drive-status'
+import type { VehicleStatusId } from './concessionaria-vehicle-status'
 
 /**
  * Tipos do perfil concessionaria (camada 8.17) — TRIPLE-HYBRID: ESTOQUE (veículos com ciclo de
@@ -179,7 +179,10 @@ export function formatDate(iso: string): string {
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 

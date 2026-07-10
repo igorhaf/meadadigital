@@ -58,7 +58,7 @@ public class SupOrderService {
         SuplementosConfig config = configRepository.findByCompany(companyId);
         return orderRepository.createOrder(
             companyId, conversationId, contactId, deliveryAddress, lines,
-            config.deliveryFeeCents(), notes);
+            config.deliveryFeeCents(), config.freeShippingThresholdCents(), notes);
     }
 
     public List<SupOrder> list(UUID companyId, String status, int limit, int offset) {

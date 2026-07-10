@@ -1,25 +1,26 @@
-'use client';
+'use client'
 
-import { useState } from 'react';
-import { Button } from './button';
-import { Skeleton } from './skeleton';
+import { useState } from 'react'
 
-export interface Column<T> {
-  key: string;
-  header: string;
-  render?: (row: T) => React.ReactNode;
-  className?: string;
+import { Button } from './button'
+import { Skeleton } from './skeleton'
+
+export type Column<T> = {
+  key: string
+  header: string
+  render?: (row: T) => React.ReactNode
+  className?: string
 }
 
-interface DataTableProps<T extends { id: string }> {
-  data: T[];
-  columns: Column<T>[];
-  loading?: boolean;
-  emptyMessage?: string;
-  searchPlaceholder?: string;
-  searchFn?: (row: T, query: string) => boolean;
-  pageSize?: number;
-  actions?: (row: T) => React.ReactNode;
+type DataTableProps<T extends { id: string }> = {
+  data: T[]
+  columns: Column<T>[]
+  loading?: boolean
+  emptyMessage?: string
+  searchPlaceholder?: string
+  searchFn?: (row: T, query: string) => boolean
+  pageSize?: number
+  actions?: (row: T) => React.ReactNode
 }
 
 export function DataTable<T extends { id: string }>({
@@ -32,17 +33,16 @@ export function DataTable<T extends { id: string }>({
   pageSize = 15,
   actions,
 }: DataTableProps<T>) {
-  const [query, setQuery] = useState('');
-  const [page, setPage] = useState(1);
+  const [query, setQuery] = useState('')
+  const [page, setPage] = useState(1)
 
-  const filtered = searchFn && query
-    ? data.filter((row) => searchFn(row, query.toLowerCase()))
-    : data;
+  const filtered =
+    searchFn && query ? data.filter((row) => searchFn(row, query.toLowerCase())) : data
 
-  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize));
-  const currentPage = Math.min(page, totalPages);
-  const start = (currentPage - 1) * pageSize;
-  const rows = filtered.slice(start, start + pageSize);
+  const totalPages = Math.max(1, Math.ceil(filtered.length / pageSize))
+  const currentPage = Math.min(page, totalPages)
+  const start = (currentPage - 1) * pageSize
+  const rows = filtered.slice(start, start + pageSize)
 
   return (
     <div className="space-y-3">
@@ -50,13 +50,19 @@ export function DataTable<T extends { id: string }>({
         <div className="flex items-center gap-2">
           <input
             value={query}
-            onChange={(e) => { setQuery(e.target.value); setPage(1); }}
+            onChange={(e) => {
+              setQuery(e.target.value)
+              setPage(1)
+            }}
             placeholder={searchPlaceholder}
             className="w-64 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
           />
           {query && (
             <button
-              onClick={() => { setQuery(''); setPage(1); }}
+              onClick={() => {
+                setQuery('')
+                setPage(1)
+              }}
               className="text-xs text-muted-foreground hover:text-foreground"
             >
               Limpar
@@ -68,7 +74,7 @@ export function DataTable<T extends { id: string }>({
         </div>
       )}
 
-      <div className="bg-card rounded-lg border border-border overflow-hidden">
+      <div className="overflow-hidden rounded-lg border border-border bg-card">
         {loading ? (
           <div className="space-y-3 p-6">
             <Skeleton className="h-5 w-full" />
@@ -83,22 +89,29 @@ export function DataTable<T extends { id: string }>({
                   {columns.map((col) => (
                     <th
                       key={col.key}
-                      className={`text-left px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground ${col.className ?? ''}`}
+                      className={`px-4 py-3 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase ${col.className ?? ''}`}
                     >
                       {col.header}
                     </th>
                   ))}
                   {actions && (
-                    <th className="text-left px-4 py-3 text-xs font-medium uppercase tracking-wide text-muted-foreground">Ações</th>
+                    <th className="px-4 py-3 text-left text-xs font-medium tracking-wide text-muted-foreground uppercase">
+                      Ações
+                    </th>
                   )}
                 </tr>
               </thead>
               <tbody>
                 {rows.map((row) => (
-                  <tr key={row.id} className="border-t border-border first:border-t-0 hover:bg-muted/40">
+                  <tr
+                    key={row.id}
+                    className="border-t border-border first:border-t-0 hover:bg-muted/40"
+                  >
                     {columns.map((col) => (
                       <td key={col.key} className={`px-4 py-3.5 ${col.className ?? ''}`}>
-                        {col.render ? col.render(row) : String((row as Record<string, unknown>)[col.key] ?? '—')}
+                        {col.render
+                          ? col.render(row)
+                          : String((row as Record<string, unknown>)[col.key] ?? '—')}
                       </td>
                     ))}
                     {actions && (
@@ -139,8 +152,8 @@ export function DataTable<T extends { id: string }>({
               ←
             </Button>
             {Array.from({ length: Math.min(5, totalPages) }, (_, i) => {
-              const p = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i;
-              if (p < 1 || p > totalPages) return null;
+              const p = Math.max(1, Math.min(currentPage - 2, totalPages - 4)) + i
+              if (p < 1 || p > totalPages) return null
               return (
                 <Button
                   key={p}
@@ -150,7 +163,7 @@ export function DataTable<T extends { id: string }>({
                 >
                   {p}
                 </Button>
-              );
+              )
             })}
             <Button
               variant="outline"
@@ -164,5 +177,5 @@ export function DataTable<T extends { id: string }>({
         </div>
       )}
     </div>
-  );
+  )
 }

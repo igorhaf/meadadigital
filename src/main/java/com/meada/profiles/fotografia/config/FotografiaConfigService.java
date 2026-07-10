@@ -34,14 +34,20 @@ public class FotografiaConfigService {
     }
 
     @Transactional
-    public FotografiaConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt, int slotMinutes) {
+    public FotografiaConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
+                                   int slotMinutes, boolean reminderEnabled, boolean autoCompleteEnabled,
+                                   boolean autoDeliverEnabled, boolean postDeliveryUpsellEnabled,
+                                   Integer cancellationPolicyHours) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
         if (slotMinutes < MIN_SLOT || slotMinutes > MAX_SLOT) {
             throw new InvalidSlotException();
         }
-        FotografiaConfig saved = repository.upsert(companyId, opensAt, closesAt, slotMinutes);
+        Integer policy = cancellationPolicyHours == null ? null
+            : Math.min(720, Math.max(1, cancellationPolicyHours));
+        FotografiaConfig saved = repository.upsert(companyId, opensAt, closesAt, slotMinutes,
+            reminderEnabled, autoCompleteEnabled, autoDeliverEnabled, postDeliveryUpsellEnabled, policy);
         auditLogger.log(companyId, userId, "fotografia_config_updated", "fotografia_config", companyId, Map.of("slot_minutes", slotMinutes));
         contextCache.invalidate(companyId);
         return saved;

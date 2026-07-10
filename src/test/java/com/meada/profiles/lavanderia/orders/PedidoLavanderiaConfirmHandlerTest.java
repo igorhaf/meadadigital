@@ -57,7 +57,7 @@ class PedidoLavanderiaConfirmHandlerTest extends AbstractIntegrationTest {
             contactId, COMPANY, "+5511999990172", "Cliente");
         jdbcTemplate.update("insert into conversations (id, company_id, contact_id, whatsapp_instance_id, status, handled_by) "
             + "values (?, ?, ?, ?, 'open', 'ai')", conversationId, COMPANY, contactId, instance);
-        configService.update(COMPANY, USER, 700, 0, 1);   // taxa 700.
+        configService.update(COMPANY, USER, 700, 0, 1, true, 50, 1, true, true, 2, false, 30, null);   // taxa 700.
     }
 
     private LavanderiaService svc(String name, int price, int turnaround) {

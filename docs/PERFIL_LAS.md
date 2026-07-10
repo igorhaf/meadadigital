@@ -57,3 +57,33 @@ color e dye_lot são **texto livre** (não há enum de tamanho — o eixo do Lin
   tem os 29).
 - Base de conhecimento (RAG): disponível como em todo perfil.
 - Guard `/api/las/**` → 403 `forbidden_wrong_profile`. Paleta `ferrugem`. Tenant: `igorhaf34`.
+
+## Onda 1 do backlog (migration 104)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_LAS.md` (#1, #2, #5 e #7):
+
+- **#1 LISTA DE ESPERA DE DYE LOT** (`las_waitlist`): a IA oferece "aviso quando chegar" pra
+  variante esgotada e emite `<lista_espera_las>{"variant_id":...,"any_lot":bool,"qty":N}` —
+  `any_lot:true` = QUALQUER lote da cor serve (dye_lot null, a escapada do nicho); `qty` é
+  informativo e entra na mensagem. Hook no `updateVariant` (0→N) notifica a fila da variante
+  exata E a fila any_lot da mesma cor; idempotente por `notified_at` (marca mesmo sem canal).
+  A IA NUNCA promete data de reposição. Unique parcial pendente por
+  (contact, product, color, coalesce(dye_lot,'')).
+- **#2 CALCULADORA DE NOVELOS** (`las_yield_reference`): peça × fio → novelos ESTIMADOS,
+  editada pelo tenant (tela "Rendimento", CRUD `/api/las/yield`). O bloco no `LasMenuCache`
+  instrui a IA a usar SEMPRE como estimativa ("em média X novelos"), a dizer que NÃO tem a
+  estimativa quando a peça não está cadastrada, e a fechar a quantidade completa no MESMO lote.
+- **#5 CUPOM** (`las_coupons`, motor comum — clone lingerie): campo `cupom` na tag
+  `<pedido_las>`; valida+recalcula no backend (total = subtotal − desconto + taxa); inválido
+  NÃO aborta; caso de uso típico: queima de lote antigo ("LOTE-XYZ -20%"). Tela "Cupons".
+- **#7 REATIVAÇÃO de inativo** (`las_reactivation_log` + config): opt-in **OFF por default**
+  (lição Baileys), janela `reactivation_days` (default 45 — tricô é sazonal) = cooldown, texto
+  "chegaram lotes novos" com cupom de retorno opcional. `LasReactivationJob` (cron 10:40).
+
+Teste: `LasOnda1IntegrationTest` (waitlist lote-exato × any_lot + 0→N + idempotência; cupom;
+reativação opt-in). Kanban ganhou badge de cupom e desconto no total.
+
+**Fica pra onda 2** (registrado, não pedido): #3 kit de projeto (produto composto multi-débito),
+#4 sinal/reserva paga (bloqueado por #50), #6 fidelidade por pontos, #8 alerta de estoque baixo
+pro tenant, #9 biblioteca de receitas (chassi F), #12 clube do novelo (chassi E), #16 aniversário
+(exige data no contato).

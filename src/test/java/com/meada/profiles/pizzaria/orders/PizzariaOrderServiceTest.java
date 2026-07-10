@@ -65,7 +65,7 @@ class PizzariaOrderServiceTest extends AbstractIntegrationTest {
     private PizzariaOrder seedOrder() {
         PizzariaMenuItem item = menuService.create(COMPANY, USER, "Calabresa", null, 4900, "pizzas_salgadas");
         return service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item.id(), 2, List.of(), List.of())), null);
+            List.of(new OrderLineInput(item.id(), 2, List.of(), List.of())), null, null);
     }
 
     @Test

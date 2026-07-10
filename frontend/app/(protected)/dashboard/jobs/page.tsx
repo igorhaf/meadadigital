@@ -15,9 +15,17 @@ function StatusBadge({ status }: { status: JobRun['status'] }) {
 }
 
 const columns: Column<JobRun>[] = [
-  { key: 'jobName', header: 'Job', render: (r) => <span className="font-medium">{r.jobName}</span> },
+  {
+    key: 'jobName',
+    header: 'Job',
+    render: (r) => <span className="font-medium">{r.jobName}</span>,
+  },
   { key: 'status', header: 'Status', render: (r) => <StatusBadge status={r.status} /> },
-  { key: 'startedAt', header: 'Início', render: (r) => new Date(r.startedAt).toLocaleString('pt-BR') },
+  {
+    key: 'startedAt',
+    header: 'Início',
+    render: (r) => new Date(r.startedAt).toLocaleString('pt-BR'),
+  },
   {
     key: 'finishedAt',
     header: 'Fim',
@@ -44,7 +52,10 @@ export default function JobsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Jobs agendados" description="Execuções recentes dos jobs cron (lembretes, reativação)." />
+      <PageHeader
+        title="Jobs agendados"
+        description="Execuções recentes dos jobs cron (lembretes, reativação)."
+      />
       {isError ? (
         <p className="text-sm text-destructive">Erro ao carregar os jobs.</p>
       ) : (

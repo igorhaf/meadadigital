@@ -9,14 +9,14 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
-import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import { listOrders, updateOrderStatus } from '@/lib/api/las/orders'
+import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import {
+  formatBrl,
   FULFILLMENT_LABEL,
   KANBAN_COLUMNS,
   NEXT_STATUS,
   STATUS_LABEL,
-  formatBrl,
   type Order,
   type OrderItem,
   type OrderStatus,
@@ -63,49 +63,80 @@ function OrderCard({
       {...dragProps}
       className="data-[dragging=true]:opacity-50 [&[draggable=true]]:cursor-grab active:[&[draggable=true]]:cursor-grabbing"
     >
-    <Card className="space-y-2 p-3">
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
-        <span className="text-xs text-muted-foreground">
-          {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
-      <div className="flex flex-wrap items-center gap-2">
-        <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
-        <Badge variant="muted">{FULFILLMENT_LABEL[order.fulfillment]}</Badge>
-        {order.sameLotGuaranteed && <Badge variant="info">mesmo lote garantido</Badge>}
-      </div>
-      <ul className="space-y-0.5 text-xs text-muted-foreground">
-        {order.items.map((it) => (
-          <li key={it.id} className="line-clamp-1">{itemLine(it)}</li>
-        ))}
-      </ul>
-      <p className="text-xs text-muted-foreground">{locationLine(order)}</p>
-      <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
-      <div className="flex gap-1 pt-1">
-        {awaiting ? (
-          <>
-            <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAccept(order)}>
-              Aceitar
-            </Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onReject(order)}>
-              Recusar
-            </Button>
-          </>
-        ) : (
-          <>
-            {next && (
-              <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAdvance(order)}>
-                Avançar → {STATUS_LABEL[next]}
+      <Card className="space-y-2 p-3">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
+          <span className="text-xs text-muted-foreground">
+            {new Date(order.createdAt).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+        <div className="flex flex-wrap items-center gap-2">
+          <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
+          <Badge variant="muted">{FULFILLMENT_LABEL[order.fulfillment]}</Badge>
+          {order.sameLotGuaranteed && <Badge variant="info">mesmo lote garantido</Badge>}
+          {order.couponCode && <Badge variant="success">cupom {order.couponCode}</Badge>}
+        </div>
+        <ul className="space-y-0.5 text-xs text-muted-foreground">
+          {order.items.map((it) => (
+            <li key={it.id} className="line-clamp-1">
+              {itemLine(it)}
+            </li>
+          ))}
+        </ul>
+        <p className="text-xs text-muted-foreground">{locationLine(order)}</p>
+        <p className="text-sm font-semibold tabular-nums">
+          {formatBrl(order.totalCents)}
+          {order.discountCents > 0 && (
+            <span className="ml-1 text-xs font-normal text-muted-foreground">
+              (−{formatBrl(order.discountCents)})
+            </span>
+          )}
+        </p>
+        <div className="flex gap-1 pt-1">
+          {awaiting ? (
+            <>
+              <Button
+                className="h-7 flex-1 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onAccept(order)}
+              >
+                Aceitar
               </Button>
-            )}
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onCancel(order)}>
-              Cancelar
-            </Button>
-          </>
-        )}
-      </div>
-    </Card>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onReject(order)}
+              >
+                Recusar
+              </Button>
+            </>
+          ) : (
+            <>
+              {next && (
+                <Button
+                  className="h-7 flex-1 px-2 text-xs"
+                  disabled={busy}
+                  onClick={() => onAdvance(order)}
+                >
+                  Avançar → {STATUS_LABEL[next]}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onCancel(order)}
+              >
+                Cancelar
+              </Button>
+            </>
+          )}
+        </div>
+      </Card>
     </div>
   )
 }
@@ -186,13 +217,22 @@ export default function LasOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pedidos" description="Aceite ou recuse novos pedidos e acompanhe a separação e o envio." />
+      <PageHeader
+        title="Pedidos"
+        description="Aceite ou recuse novos pedidos e acompanhe a separação e o envio."
+      />
 
       <div className="flex gap-2">
-        <Button variant={tab === 'andamento' ? 'default' : 'outline'} onClick={() => setTab('andamento')}>
+        <Button
+          variant={tab === 'andamento' ? 'default' : 'outline'}
+          onClick={() => setTab('andamento')}
+        >
           Em andamento
         </Button>
-        <Button variant={tab === 'historico' ? 'default' : 'outline'} onClick={() => setTab('historico')}>
+        <Button
+          variant={tab === 'historico' ? 'default' : 'outline'}
+          onClick={() => setTab('historico')}
+        >
           Histórico
         </Button>
       </div>
@@ -225,7 +265,10 @@ export default function LasOrdersPage() {
                           busy={statusMutation.isPending}
                           dragProps={dnd.cardProps(o.id)}
                           onAccept={accept}
-                          onReject={(ord) => { setRejectReason(''); setRejectTarget(ord) }}
+                          onReject={(ord) => {
+                            setRejectReason('')
+                            setRejectTarget(ord)
+                          }}
                           onAdvance={advance}
                           onCancel={setCancelTarget}
                         />
@@ -246,8 +289,12 @@ export default function LasOrdersPage() {
               {historyItems.map((o) => (
                 <div key={o.id} className="flex flex-col gap-1 px-4 py-3 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
-                    <span className="min-w-0 flex-1 truncate">{o.contactName ?? 'Cliente'} · {itemsSummary(o)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      #{o.id.slice(0, 8)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {o.contactName ?? 'Cliente'} · {itemsSummary(o)}
+                    </span>
                     {o.sameLotGuaranteed && <Badge variant="info">mesmo lote</Badge>}
                     <Badge variant="muted">{FULFILLMENT_LABEL[o.fulfillment]}</Badge>
                     <span className="tabular-nums">{formatBrl(o.totalCents)}</span>
@@ -284,16 +331,22 @@ export default function LasOrdersPage() {
       {/* Recusar (gate de aceite): Modal com motivo OPCIONAL (AlertDialog não tem campo de texto livre). */}
       <Modal
         open={rejectTarget !== null}
-        onClose={() => { setRejectTarget(null); setRejectReason('') }}
+        onClose={() => {
+          setRejectTarget(null)
+          setRejectReason('')
+        }}
         title="Recusar pedido?"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao cliente.
+            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao
+            cliente.
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Motivo (opcional)</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Motivo (opcional)
+            </label>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
@@ -304,10 +357,21 @@ export default function LasOrdersPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => { setRejectTarget(null); setRejectReason('') }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRejectTarget(null)
+                setRejectReason('')
+              }}
+            >
               Voltar
             </Button>
-            <Button variant="destructive" disabled={statusMutation.isPending} onClick={confirmReject}>
+            <Button
+              variant="destructive"
+              disabled={statusMutation.isPending}
+              onClick={confirmReject}
+            >
               {statusMutation.isPending ? 'Recusando…' : 'Recusar pedido'}
             </Button>
           </div>

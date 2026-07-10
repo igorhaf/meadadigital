@@ -26,15 +26,18 @@ public class LegalCaseService {
     private final LegalClientRepository clientRepository;
     private final AuditLogger auditLogger;
     private final LegalCaseNotifier notifier;
+    private final com.meada.profiles.legal.config.LegalConfigRepository legalConfigRepository;
     private final LegalCaseContextCache contextCache;
 
     public LegalCaseService(LegalCaseRepository repository, LegalClientRepository clientRepository,
                             AuditLogger auditLogger, LegalCaseNotifier notifier,
-                            LegalCaseContextCache contextCache) {
+                            LegalCaseContextCache contextCache,
+                            com.meada.profiles.legal.config.LegalConfigRepository legalConfigRepository) {
         this.repository = repository;
         this.clientRepository = clientRepository;
         this.auditLogger = auditLogger;
         this.notifier = notifier;
+        this.legalConfigRepository = legalConfigRepository;
         this.contextCache = contextCache;
     }
 
@@ -89,6 +92,23 @@ public class LegalCaseService {
 
         // Notificação outbound (best-effort; 'ativo' não notifica).
         notifier.notifyStatus(companyId, current.legalClientId(), newStatus.notificationText());
+
+        // Onda 1 (backlog #3): o ENCERRAMENTO encadeia agradecimento + avaliação + indicação
+        // (comunicação de relacionamento — trava jurídica intacta).
+        if (newStatus == LegalCaseStatus.ENCERRADO) {
+            var config = legalConfigRepository.findByCompany(companyId);
+            if (config.postClosureEnabled()) {
+                StringBuilder pos = new StringBuilder("Foi uma honra cuidar do seu caso até aqui. "
+                    + "Obrigado pela confiança! ");
+                if (config.reviewLink() != null) {
+                    pos.append("Se puder, deixe sua avaliação — ajuda muito o escritório: ")
+                        .append(config.reviewLink()).append(" ");
+                }
+                pos.append("E se conhecer alguém precisando de orientação jurídica, "
+                    + "ficaremos felizes com a indicação. 🙏");
+                notifier.notifyStatus(companyId, current.legalClientId(), pos.toString());
+            }
+        }
         invalidateClientContext(companyId, current.legalClientId());
         return repository.findById(companyId, id).orElseThrow(LegalCaseNotFoundException::new);
     }

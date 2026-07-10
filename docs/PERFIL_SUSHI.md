@@ -51,3 +51,17 @@ são fixos nesta versão; personalização por restaurante vem em fase futura.)
 - **Sem foto no cardápio** (bloqueador técnico de Storage). Só texto por enquanto.
 - **Carrinho não tem tela** — vive na conversa; o cliente confirma por mensagem.
 - **Endereço é texto livre** (sem mapa/CEP).
+
+## Onda 2 do backlog (2026-07 — FEATURES_SUGERIDAS_SUSHI #2/#3, migration 88)
+
+- **Upsell/cross-sell proativo (#2):** com `upsell_enabled` (default LIGADO) o bloco do
+  `SushiMenuCache` instrui a IA a oferecer NO MÁXIMO 1 item complementar do próprio cardápio
+  disponível (categoria ausente no carrinho — bebida/sobremesa/combo maior) antes de emitir a
+  tag `<pedido>`; uma oferta só, sem insistir, nunca item fora do cardápio. Toggle em Configurações.
+- **Reativação de cliente inativo (#3, `SushiReactivationJob`):** cron diário (10h20) varre os
+  contatos cujo último pedido ENTREGUE (terminal não-cancelado) é anterior a `reactivation_days`
+  (default 21) e envia UMA mensagem fixa de reengajamento pela conversa mais recente —
+  mencionando o cupom de retorno (`reactivation_coupon_code`) só quando ele existe/está
+  ativo/válido em `sushi_coupons`. Idempotência por contato+janela via `sushi_reactivation_log`
+  (cooldown = a própria janela). **Opt-in: default DESLIGADO** (lição do incidente Baileys —
+  disparo em massa é decisão consciente; EVOLUTION_DRY_RUN honrado). Config em Configurações.

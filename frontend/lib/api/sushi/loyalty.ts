@@ -6,5 +6,8 @@ export function getLoyalty(): Promise<LoyaltyConfig> {
 }
 
 export function updateLoyalty(input: LoyaltyConfig): Promise<LoyaltyConfig> {
-  return apiFetch<LoyaltyConfig>('/api/sushi/loyalty', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<LoyaltyConfig>('/api/sushi/loyalty', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

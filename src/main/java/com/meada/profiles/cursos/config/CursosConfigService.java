@@ -36,11 +36,15 @@ public class CursosConfigService {
     }
 
     @Transactional
-    public CursosConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt, String notes) {
+    public CursosConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
+                               String notes, boolean nudgeEnabled, int nudgeDays,
+                               String certificateBaseUrl) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        CursosConfig saved = repository.upsert(companyId, opensAt, closesAt, notes);
+        CursosConfig saved = repository.upsert(companyId, opensAt, closesAt, notes,
+            nudgeEnabled, Math.min(90, Math.max(1, nudgeDays)),
+            certificateBaseUrl == null || certificateBaseUrl.isBlank() ? null : certificateBaseUrl.strip());
         auditLogger.log(companyId, userId, "cursos_config_updated", "cursos_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

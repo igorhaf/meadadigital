@@ -14,11 +14,13 @@ public record RestaurantReservationConfig(
     int durationMinutes,
     int bufferMinutes,
     LocalTime opensAt,
-    LocalTime closesAt) {
+    LocalTime closesAt,
+    boolean reminderEnabled,
+    boolean autoCompleteEnabled) {
 
     /** Defaults cravados (decisão 4): 2h de duração, sem buffer, 11:00–23:00. */
     public static RestaurantReservationConfig defaultFor(UUID companyId) {
         return new RestaurantReservationConfig(
-            companyId, 120, 0, LocalTime.of(11, 0), LocalTime.of(23, 0));
+            companyId, 120, 0, LocalTime.of(11, 0), LocalTime.of(23, 0), true, true);
     }
 }

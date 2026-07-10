@@ -1,4 +1,5 @@
 import { apiFetch } from '@/lib/api/client'
+
 import { createClient } from './client'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL

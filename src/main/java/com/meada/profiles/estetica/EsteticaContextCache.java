@@ -174,7 +174,13 @@ public class EsteticaContextCache {
                 + "depois), termine com:\n")
             .append("<compra_pacote>{\"procedure_id\":\"UUID\",\"total_sessions\":N,\"notes\":\"...\"}"
                 + "</compra_pacote>\n")
-            .append("Use ids EXATOS. O pacote nasce aguardando confirmação de pagamento pela clínica.\n\n");
+            .append("Use ids EXATOS. O pacote nasce aguardando confirmação de pagamento pela clínica.\n")
+            .append("Quando a cliente RESPONDER a um lembrete de sessão (SIM confirma / NÃO desmarca), "
+                + "termine com a tag (linha própria, sem markdown):\n")
+            .append("<confirmacao_estetica>{\"appointment_id\":\"UUID_DA_SESSAO\","
+                + "\"decisao\":\"confirmado\"}</confirmacao_estetica>\n")
+            .append("\"decisao\" é \"confirmado\" ou \"cancelado\" (cancelar DEVOLVE a sessão ao pacote "
+                + "automaticamente). Use o appointment_id EXATO das sessões da cliente acima.\n\n");
 
         return sb.toString();
     }

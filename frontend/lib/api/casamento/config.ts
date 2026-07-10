@@ -8,6 +8,10 @@ export type UpdateConfigInput = {
   paymentReminderEnabled?: boolean
   autoCompleteEnabled?: boolean
   anniversaryEnabled?: boolean
+  postEventEnabled: boolean
+  reviewLink?: string | null
+  followUpEnabled: boolean
+  followUpDays: number
 }
 
 export function getConfig(): Promise<WeddingConfig> {
@@ -15,5 +19,8 @@ export function getConfig(): Promise<WeddingConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<WeddingConfig> {
-  return apiFetch<WeddingConfig>('/api/casamento/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<WeddingConfig>('/api/casamento/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

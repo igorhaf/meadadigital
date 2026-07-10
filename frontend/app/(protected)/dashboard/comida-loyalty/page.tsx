@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
+import { ApiError } from '@/lib/api/client'
 import { getLoyalty, updateLoyalty } from '@/lib/api/comida/loyalty'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   enabled: boolean
@@ -22,7 +23,6 @@ type FormState = {
  */
 export default function ComidaLoyaltyPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -31,16 +31,12 @@ export default function ComidaLoyaltyPage() {
     queryFn: () => getLoyalty(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        enabled: data.enabled,
-        thresholdOrders: String(data.thresholdOrders),
-        rewardKind: data.rewardKind,
-        rewardValue: data.rewardKind === 'percent' ? String(data.rewardValue) : String(data.rewardValue / 100),
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    enabled: d.enabled,
+    thresholdOrders: String(d.thresholdOrders),
+    rewardKind: d.rewardKind,
+    rewardValue: d.rewardKind === 'percent' ? String(d.rewardValue) : String(d.rewardValue / 100),
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -58,7 +54,9 @@ export default function ComidaLoyaltyPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['comida-loyalty'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'validation_error') {
@@ -82,26 +80,50 @@ export default function ComidaLoyaltyPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Programa de fidelidade">
               <label className="flex items-center gap-2 text-sm text-muted-foreground">
-                <input type="checkbox" checked={form.enabled}
-                  onChange={(e) => setForm((f) => f && { ...f, enabled: e.target.checked })} />
+                <input
+                  type="checkbox"
+                  checked={form.enabled}
+                  onChange={(e) => setForm((f) => f && { ...f, enabled: e.target.checked })}
+                />
                 Ativar fidelidade
               </label>
 
               <div className="mt-4 grid grid-cols-1 gap-4 sm:grid-cols-3">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Pedidos para recompensa</label>
-                  <input type="number" min="1" step="1" value={form.thresholdOrders}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Pedidos para recompensa
+                  </label>
+                  <input
+                    type="number"
+                    min="1"
+                    step="1"
+                    value={form.thresholdOrders}
                     onChange={(e) => setForm((f) => f && { ...f, thresholdOrders: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipo de recompensa</label>
-                  <select value={form.rewardKind}
-                    onChange={(e) => setForm((f) => f && { ...f, rewardKind: e.target.value as 'percent' | 'fixed' })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Tipo de recompensa
+                  </label>
+                  <select
+                    value={form.rewardKind}
+                    onChange={(e) =>
+                      setForm(
+                        (f) => f && { ...f, rewardKind: e.target.value as 'percent' | 'fixed' },
+                      )
+                    }
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  >
                     <option value="percent">Percentual (%)</option>
                     <option value="fixed">Valor fixo (R$)</option>
                   </select>
@@ -110,9 +132,14 @@ export default function ComidaLoyaltyPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     {form.rewardKind === 'percent' ? 'Desconto (%)' : 'Desconto (R$)'}
                   </label>
-                  <input type="number" min="0" step={form.rewardKind === 'percent' ? '1' : '0.01'} value={form.rewardValue}
+                  <input
+                    type="number"
+                    min="0"
+                    step={form.rewardKind === 'percent' ? '1' : '0.01'}
+                    value={form.rewardValue}
                     onChange={(e) => setForm((f) => f && { ...f, rewardValue: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
 
@@ -120,7 +147,8 @@ export default function ComidaLoyaltyPage() {
                 Ex.: a cada {form.thresholdOrders || 'N'} pedidos entregues, o próximo ganha{' '}
                 {form.rewardKind === 'percent'
                   ? `${form.rewardValue || '0'}% de desconto`
-                  : `R$ ${form.rewardValue || '0'} de desconto`}.
+                  : `R$ ${form.rewardValue || '0'} de desconto`}
+                .
               </p>
             </Section>
 

@@ -22,19 +22,27 @@ public class OficinaConfigRepository {
 
     public OficinaConfig findByCompany(UUID companyId) {
         return jdbcTemplate.query(
-                "select opens_at, closes_at from os_config where company_id = ?",
+                "select opens_at, closes_at, return_reminder_enabled, return_reminder_days "
+                    + "from os_config where company_id = ?",
                 (rs, rn) -> new OficinaConfig(companyId, rs.getObject("opens_at", LocalTime.class),
-                    rs.getObject("closes_at", LocalTime.class)),
+                    rs.getObject("closes_at", LocalTime.class),
+                    rs.getBoolean("return_reminder_enabled"),
+                    rs.getInt("return_reminder_days")),
                 companyId)
             .stream().findFirst().orElse(OficinaConfig.defaultFor(companyId));
     }
 
-    public OficinaConfig upsert(UUID companyId, LocalTime opensAt, LocalTime closesAt) {
+    public OficinaConfig upsert(UUID companyId, LocalTime opensAt, LocalTime closesAt,
+                                boolean returnReminderEnabled, int returnReminderDays) {
         jdbcTemplate.update(
-            "insert into os_config (company_id, opens_at, closes_at) values (?, ?, ?) "
+            "insert into os_config (company_id, opens_at, closes_at, return_reminder_enabled, "
+                + "return_reminder_days) values (?, ?, ?, ?, ?) "
                 + "on conflict (company_id) do update set opens_at = excluded.opens_at, "
-                + "closes_at = excluded.closes_at, updated_at = now()",
-            companyId, Time.valueOf(opensAt), Time.valueOf(closesAt));
+                + "closes_at = excluded.closes_at, "
+                + "return_reminder_enabled = excluded.return_reminder_enabled, "
+                + "return_reminder_days = excluded.return_reminder_days, updated_at = now()",
+            companyId, Time.valueOf(opensAt), Time.valueOf(closesAt),
+            returnReminderEnabled, returnReminderDays);
         return findByCompany(companyId);
     }
 }

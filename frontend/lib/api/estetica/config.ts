@@ -5,6 +5,13 @@ export type UpdateConfigInput = {
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
   slotMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  autoExpireEnabled: boolean
+  packageValidityDays: number | null
+  renewalEnabled: boolean
+  renewalDays: number
+  expiryWarningDays: number
 }
 
 export function getConfig(): Promise<AestheticConfig> {
@@ -12,5 +19,8 @@ export function getConfig(): Promise<AestheticConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<AestheticConfig> {
-  return apiFetch<AestheticConfig>('/api/estetica/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<AestheticConfig>('/api/estetica/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

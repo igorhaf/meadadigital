@@ -41,12 +41,29 @@ export function NichesGrid({ props }: { props: NichesGridProps }) {
     <section style={{ padding: '100px 0', position: 'relative' }}>
       <div style={{ maxWidth: '1360px', margin: '0 auto', padding: '0 2rem' }}>
         {props.eyebrow && (
-          <div style={{ fontSize: '14px', fontWeight: 600, letterSpacing: '0.08em', textTransform: 'uppercase', color: '#60a5fa', marginBottom: '0.75rem' }}>
+          <div
+            style={{
+              fontSize: '14px',
+              fontWeight: 600,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: '#60a5fa',
+              marginBottom: '0.75rem',
+            }}
+          >
             {props.eyebrow}
           </div>
         )}
         {props.title && (
-          <h2 style={{ fontSize: 'clamp(1.9rem, 3.5vw, 2.8rem)', fontWeight: 800, letterSpacing: '-0.02em', marginBottom: '3rem', color: '#fff' }}>
+          <h2
+            style={{
+              fontSize: 'clamp(1.9rem, 3.5vw, 2.8rem)',
+              fontWeight: 800,
+              letterSpacing: '-0.02em',
+              marginBottom: '3rem',
+              color: '#fff',
+            }}
+          >
             {props.title}
           </h2>
         )}
@@ -54,7 +71,13 @@ export function NichesGrid({ props }: { props: NichesGridProps }) {
         {loaded && cards.length === 0 ? (
           <p style={{ color: 'rgba(255,255,255,0.5)' }}>Nenhum nicho em destaque ainda.</p>
         ) : (
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: '1.5rem' }}>
+          <div
+            style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))',
+              gap: '1.5rem',
+            }}
+          >
             {cards.map((c) => {
               const color = colorFor(c.paletteId)
               return (
@@ -62,20 +85,61 @@ export function NichesGrid({ props }: { props: NichesGridProps }) {
                   key={c.profileId}
                   href={`/${c.profileId}`}
                   style={{
-                    display: 'block', textDecoration: 'none', position: 'relative', overflow: 'hidden',
-                    borderRadius: '18px', padding: '2rem', minHeight: '180px',
-                    background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)',
+                    display: 'block',
+                    textDecoration: 'none',
+                    position: 'relative',
+                    overflow: 'hidden',
+                    borderRadius: '18px',
+                    padding: '2rem',
+                    minHeight: '180px',
+                    background: 'rgba(255,255,255,0.03)',
+                    border: '1px solid rgba(255,255,255,0.08)',
                     transition: 'transform 0.25s, border-color 0.25s',
                   }}
                 >
                   {/* barra de cor da marca do nicho */}
-                  <div style={{ position: 'absolute', top: 0, left: 0, right: 0, height: '4px', background: color }} />
-                  <div style={{ width: '44px', height: '44px', borderRadius: '12px', background: color, opacity: 0.9, marginBottom: '1.25rem' }} />
-                  <h3 style={{ fontSize: '1.35rem', fontWeight: 700, color: '#fff', marginBottom: '0.5rem' }}>{c.productName}</h3>
+                  <div
+                    style={{
+                      position: 'absolute',
+                      top: 0,
+                      left: 0,
+                      right: 0,
+                      height: '4px',
+                      background: color,
+                    }}
+                  />
+                  <div
+                    style={{
+                      width: '44px',
+                      height: '44px',
+                      borderRadius: '12px',
+                      background: color,
+                      opacity: 0.9,
+                      marginBottom: '1.25rem',
+                    }}
+                  />
+                  <h3
+                    style={{
+                      fontSize: '1.35rem',
+                      fontWeight: 700,
+                      color: '#fff',
+                      marginBottom: '0.5rem',
+                    }}
+                  >
+                    {c.productName}
+                  </h3>
                   <p style={{ fontSize: '14px', color: 'rgba(255,255,255,0.55)' }}>
                     Atendimento com IA por WhatsApp para {c.productName.toLowerCase()}.
                   </p>
-                  <span style={{ display: 'inline-block', marginTop: '1.25rem', fontSize: '14px', fontWeight: 600, color }}>
+                  <span
+                    style={{
+                      display: 'inline-block',
+                      marginTop: '1.25rem',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      color,
+                    }}
+                  >
                     Conhecer →
                   </span>
                 </a>

@@ -39,7 +39,9 @@ export default function AcademiaReportsPage() {
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
           <Card>
             <p className="text-sm text-muted-foreground">MRR</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{formatPrice(summary.data.mrr_cents)}</p>
+            <p className="mt-1 text-3xl font-semibold tabular-nums">
+              {formatPrice(summary.data.mrr_cents)}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">Receita mensal recorrente</p>
           </Card>
           <Card>
@@ -49,12 +51,16 @@ export default function AcademiaReportsPage() {
           </Card>
           <Card>
             <p className="text-sm text-muted-foreground">Suspensas</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{summary.data.suspended_count}</p>
+            <p className="mt-1 text-3xl font-semibold tabular-nums">
+              {summary.data.suspended_count}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">pausadas, mantêm a vaga</p>
           </Card>
           <Card>
             <p className="text-sm text-muted-foreground">Canceladas</p>
-            <p className="mt-1 text-3xl font-semibold tabular-nums">{summary.data.canceled_count}</p>
+            <p className="mt-1 text-3xl font-semibold tabular-nums">
+              {summary.data.canceled_count}
+            </p>
             <p className="mt-1 text-xs text-muted-foreground">encerradas</p>
           </Card>
         </div>
@@ -87,7 +93,9 @@ export default function AcademiaReportsPage() {
                     <tr key={r.class_id} className="border-b border-border last:border-b-0">
                       <td className="px-3 py-2 font-medium">{r.class_name}</td>
                       <td className="px-3 py-2">{dayOfWeekLabel(r.day_of_week)}</td>
-                      <td className="px-3 py-2 tabular-nums">{r.active_count}/{r.capacity}</td>
+                      <td className="px-3 py-2 tabular-nums">
+                        {r.active_count}/{r.capacity}
+                      </td>
                       <td className="px-3 py-2">
                         <div className="flex items-center gap-2">
                           <div className="h-2 flex-1 overflow-hidden rounded-full bg-muted">
@@ -96,7 +104,9 @@ export default function AcademiaReportsPage() {
                               style={{ width: `${Math.min(pct, 100)}%` }}
                             />
                           </div>
-                          <span className={`w-10 text-right text-xs tabular-nums ${full ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}>
+                          <span
+                            className={`w-10 text-right text-xs tabular-nums ${full ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}
+                          >
                             {pct}%
                           </span>
                         </div>

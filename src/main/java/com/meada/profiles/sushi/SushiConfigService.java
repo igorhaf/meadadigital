@@ -33,9 +33,15 @@ public class SushiConfigService {
 
     @Transactional
     public SushiRestaurantConfig update(UUID companyId, UUID userId, int deliveryFeeCents,
-                                        int minOrderCents, boolean schedulingEnabled) {
+                                        int minOrderCents, boolean schedulingEnabled,
+                                        boolean upsellEnabled, boolean reactivationEnabled,
+                                        int reactivationDays, String reactivationCouponCode) {
+        int days = Math.max(7, Math.min(180, reactivationDays));
+        String couponCode = reactivationCouponCode == null || reactivationCouponCode.isBlank()
+            ? null : reactivationCouponCode.trim();
         SushiRestaurantConfig saved = repository.upsert(companyId, Math.max(0, deliveryFeeCents),
-            Math.max(0, minOrderCents), schedulingEnabled);
+            Math.max(0, minOrderCents), schedulingEnabled, upsellEnabled, reactivationEnabled,
+            days, couponCode);
         auditLogger.log(companyId, userId, "sushi_config_updated", "sushi_restaurant_config",
             companyId, Map.of());
         menuCache.invalidate(companyId);

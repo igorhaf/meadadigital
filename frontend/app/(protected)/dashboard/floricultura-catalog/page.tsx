@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
   createCatalogItem,
   createOption,
@@ -19,17 +19,31 @@ import {
   updateCatalogItem,
   updateOption,
 } from '@/lib/api/floricultura/catalog'
-import { FLORICULTURA_CATEGORIES, type FloriculturaCategoryId } from '@/profiles/floricultura/floricultura-categories'
-import { formatBrl, type CatalogItem, type CatalogOption } from '@/profiles/floricultura/floricultura-types'
+import {
+  FLORICULTURA_CATEGORIES,
+  type FloriculturaCategoryId,
+} from '@/profiles/floricultura/floricultura-categories'
+import {
+  formatBrl,
+  type CatalogItem,
+  type CatalogOption,
+} from '@/profiles/floricultura/floricultura-types'
 
 type FormState = {
   name: string
   description: string
   price: string // reais
   category: FloriculturaCategoryId
+  suggestible: boolean
 }
 
-const EMPTY_FORM: FormState = { name: '', description: '', price: '', category: 'buques' }
+const EMPTY_FORM: FormState = {
+  name: '',
+  description: '',
+  price: '',
+  category: 'buques',
+  suggestible: false,
+}
 
 type OptionForm = { groupLabel: string; optionLabel: string; delta: string } // delta em reais
 const EMPTY_OPTION: OptionForm = { groupLabel: '', optionLabel: '', delta: '0' }
@@ -63,6 +77,7 @@ export default function FloriculturaCatalogPage() {
         description: form.description || null,
         priceCents: Math.round(Number(form.price) * 100),
         category: form.category,
+        suggestible: form.suggestible,
       }
       if (editing) return updateCatalogItem(editing.id, payload)
       return createCatalogItem(payload)
@@ -112,6 +127,7 @@ export default function FloriculturaCatalogPage() {
       description: it.description ?? '',
       price: String(it.priceCents / 100),
       category: it.category,
+      suggestible: it.suggestible,
     })
     setFormError(null)
     setModalOpen(true)
@@ -122,8 +138,7 @@ export default function FloriculturaCatalogPage() {
   )
 
   // O modal de opções precisa do item SEMPRE fresco da query (após mutações de opção).
-  const liveOptionsItem =
-    optionsItem && (data?.items ?? []).find((it) => it.id === optionsItem.id)
+  const liveOptionsItem = optionsItem && (data?.items ?? []).find((it) => it.id === optionsItem.id)
 
   return (
     <div className="space-y-6">
@@ -152,21 +167,29 @@ export default function FloriculturaCatalogPage() {
               <section key={cat.id} className="space-y-2">
                 <h2 className="text-sm font-semibold text-muted-foreground">{cat.label}</h2>
                 {catItems.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nenhum item nesta categoria ainda.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nenhum item nesta categoria ainda.
+                  </p>
                 ) : (
                   <div className="divide-y divide-border rounded-lg border border-border">
                     {catItems.map((it) => (
-                      <div key={it.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div
+                        key={it.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3"
+                      >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{it.name}</span>
+                            {it.suggestible && <Badge variant="warning">sugerível pela IA</Badge>}
                             {!it.available && <Badge variant="muted">indisponível</Badge>}
                             {it.options.length > 0 && (
                               <Badge variant="info">{it.options.length} opç.</Badge>
                             )}
                           </div>
                           {it.description && (
-                            <p className="truncate text-xs text-muted-foreground">{it.description}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {it.description}
+                            </p>
                           )}
                         </div>
                         <div className="flex shrink-0 items-center gap-3">
@@ -180,10 +203,18 @@ export default function FloriculturaCatalogPage() {
                             />
                             disponível
                           </label>
-                          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => setOptionsItem(it)}>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => setOptionsItem(it)}
+                          >
                             Opções
                           </Button>
-                          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(it)}>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => openEdit(it)}
+                          >
                             Editar
                           </Button>
                           <Button
@@ -206,7 +237,12 @@ export default function FloriculturaCatalogPage() {
       )}
 
       {/* Modal: criar/editar item */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar item' : 'Novo item'} size="md">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar item' : 'Novo item'}
+        size="md"
+      >
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -216,35 +252,79 @@ export default function FloriculturaCatalogPage() {
         >
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-              maxLength={120} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+              maxLength={120}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição (opcional)</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Descrição (opcional)
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Preço (R$)</label>
-              <input type="number" min="0" step="0.01" value={form.price} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Preço (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Categoria</label>
-              <select value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as FloriculturaCategoryId }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Categoria
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value as FloriculturaCategoryId }))
+                }
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 {FLORICULTURA_CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
+          <label className="flex items-start gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={form.suggestible}
+              className="mt-0.5"
+              onChange={(e) => setForm((f) => ({ ...f, suggestible: e.target.checked }))}
+            />
+            <span>
+              Sugerível pela IA (upsell)
+              <span className="block text-xs text-muted-foreground">
+                A IA pode oferecer este item como adicional no fechamento do pedido (cartão
+                especial, chocolate, vaso) — sempre com o preço do catálogo.
+              </span>
+            </span>
+          </label>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>
@@ -312,7 +392,11 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
 
   function startEdit(op: CatalogOption) {
     setEditingId(op.id)
-    setForm({ groupLabel: op.groupLabel, optionLabel: op.optionLabel, delta: String(op.priceDeltaCents / 100) })
+    setForm({
+      groupLabel: op.groupLabel,
+      optionLabel: op.optionLabel,
+      delta: String(op.priceDeltaCents / 100),
+    })
     setError(null)
   }
 
@@ -341,14 +425,22 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
               <h3 className="text-sm font-semibold text-muted-foreground">{group}</h3>
               <div className="divide-y divide-border rounded-lg border border-border">
                 {ops.map((op) => (
-                  <div key={op.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <div
+                    key={op.id}
+                    className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                  >
                     <div className="min-w-0">
                       <span className="font-medium">{op.optionLabel}</span>
-                      {!op.available && <Badge variant="muted" className="ml-2">indisponível</Badge>}
+                      {!op.available && (
+                        <Badge variant="muted" className="ml-2">
+                          indisponível
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="tabular-nums text-xs text-muted-foreground">
-                        {op.priceDeltaCents >= 0 ? '+' : ''}{formatBrl(op.priceDeltaCents)}
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {op.priceDeltaCents >= 0 ? '+' : ''}
+                        {formatBrl(op.priceDeltaCents)}
                       </span>
                       <label className="flex items-center gap-1 text-xs text-muted-foreground">
                         <input
@@ -359,7 +451,11 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
                         />
                         disp.
                       </label>
-                      <Button variant="outline" className="h-6 px-2 text-xs" onClick={() => startEdit(op)}>
+                      <Button
+                        variant="outline"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => startEdit(op)}
+                      >
                         Editar
                       </Button>
                       <Button
@@ -386,23 +482,39 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
           saveMutation.mutate()
         }}
       >
-        <div className="flex-1 min-w-[8rem]">
+        <div className="min-w-[8rem] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Grupo</label>
-          <input value={form.groupLabel} onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))} required
-            maxLength={80} placeholder="Tamanho, Adicionais…"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <input
+            value={form.groupLabel}
+            onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))}
+            required
+            maxLength={80}
+            placeholder="Tamanho, Adicionais…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
-        <div className="flex-1 min-w-[8rem]">
+        <div className="min-w-[8rem] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Opção</label>
-          <input value={form.optionLabel} onChange={(e) => setForm((f) => ({ ...f, optionLabel: e.target.value }))} required
-            maxLength={80} placeholder="Grande, Bacon…"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <input
+            value={form.optionLabel}
+            onChange={(e) => setForm((f) => ({ ...f, optionLabel: e.target.value }))}
+            required
+            maxLength={80}
+            placeholder="Grande, Bacon…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <div className="w-28">
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">+ R$ (delta)</label>
-          <input type="number" step="0.01" value={form.delta}
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            + R$ (delta)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            value={form.delta}
             onChange={(e) => setForm((f) => ({ ...f, delta: e.target.value }))}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <Button type="submit" className="h-8 px-3 text-xs" disabled={saveMutation.isPending}>
           {saveMutation.isPending ? 'Salvando…' : editingId ? 'Salvar' : 'Adicionar'}

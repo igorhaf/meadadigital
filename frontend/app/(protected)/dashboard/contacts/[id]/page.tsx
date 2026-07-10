@@ -19,6 +19,7 @@ import {
   updateContactBirthDate,
   updateContactName,
 } from '@/lib/supabase/contacts'
+import { useOnSync } from '@/lib/use-synced-form'
 
 /**
  * Detalhe de um contato (SDK + RLS). Mostra nome (editável inline), telefone (read-only),
@@ -63,12 +64,10 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
   })
 
   // Sincroniza os rascunhos (nome + nascimento) quando o contato carrega.
-  useEffect(() => {
-    if (contact) {
-      setNameDraft(contact.name ?? '')
-      setBirthDraft(contact.birthDate ?? '')
-    }
-  }, [contact])
+  useOnSync(contact, (c) => {
+    setNameDraft(c.name ?? '')
+    setBirthDraft(c.birthDate ?? '')
+  })
 
   const nameMutation = useMutation({
     mutationFn: (name: string) => updateContactName(id, name),
@@ -162,10 +161,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
     <div className="space-y-6">
       <PageHeader
         title={contactLabel}
-        breadcrumb={[
-          { label: 'Contatos', href: '/dashboard/contacts' },
-          { label: contactLabel },
-        ]}
+        breadcrumb={[{ label: 'Contatos', href: '/dashboard/contacts' }, { label: contactLabel }]}
       />
 
       {contact && (
@@ -197,7 +193,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
           </div>
 
           <div>
-            <dt className="text-xs uppercase text-muted-foreground">Telefone</dt>
+            <dt className="text-xs text-muted-foreground uppercase">Telefone</dt>
             <dd className="text-sm font-medium">{contact.phoneNumber}</dd>
           </div>
 
@@ -232,7 +228,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               (whatsapp/web/email) com o identificador de cada. Some quando ainda não há nenhum. */}
           {contact.channels && Object.keys(contact.channels).length > 0 && (
             <div>
-              <dt className="text-xs uppercase text-muted-foreground">Canais</dt>
+              <dt className="text-xs text-muted-foreground uppercase">Canais</dt>
               <dd className="mt-1 flex flex-wrap items-center gap-1.5">
                 {Object.entries(contact.channels).map(([channel, identifier]) => (
                   <span key={channel} title={String(identifier)}>
@@ -245,7 +241,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
           <div className="flex items-center gap-3">
             <div>
-              <dt className="text-xs uppercase text-muted-foreground">Status</dt>
+              <dt className="text-xs text-muted-foreground uppercase">Status</dt>
               <dd className="mt-1">
                 <Badge variant={contact.blocked ? 'danger' : 'success'}>
                   {contact.blocked ? 'bloqueado' : 'ativo'}
@@ -274,8 +270,8 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
           <div>
             <h2 className="text-base font-semibold">Privacidade (LGPD)</h2>
             <p className="mt-1 text-xs text-muted-foreground">
-              Exporte todos os dados deste contato ou exclua-os definitivamente. A exclusão
-              remove o contato, suas conversas, mensagens e agendamentos — é irreversível.
+              Exporte todos os dados deste contato ou exclua-os definitivamente. A exclusão remove o
+              contato, suas conversas, mensagens e agendamentos — é irreversível.
             </p>
           </div>
           <div className="flex flex-wrap items-center gap-2">
@@ -298,29 +294,29 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
       )}
 
       <Section title="Conversas">
-      <div className="space-y-2 rounded-lg border border-border bg-card p-4">
-        {conversations == null && <p className="text-sm text-muted-foreground">Carregando…</p>}
-        {conversations?.length === 0 && (
-          <p className="text-sm text-muted-foreground">Nenhuma conversa com este contato.</p>
-        )}
-        {conversations?.map((c) => (
-          <Link
-            key={c.id}
-            href={`/dashboard/conversations/${c.id}`}
-            className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-muted/40"
-          >
-            <span className="flex items-center gap-2">
-              <Badge variant={c.status === 'open' ? 'success' : 'danger'}>{c.status}</Badge>
-              <Badge variant={c.handledBy === 'ai' ? 'default' : 'warning'}>{c.handledBy}</Badge>
-              {/* Canal de origem da conversa (#74): só destaca quando não é o whatsapp default. */}
-              {c.channel !== 'whatsapp' && <Badge variant="default">{c.channel}</Badge>}
-            </span>
-            <span className="text-muted-foreground">
-              {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString('pt-BR') : '—'}
-            </span>
-          </Link>
-        ))}
-      </div>
+        <div className="space-y-2 rounded-lg border border-border bg-card p-4">
+          {conversations == null && <p className="text-sm text-muted-foreground">Carregando…</p>}
+          {conversations?.length === 0 && (
+            <p className="text-sm text-muted-foreground">Nenhuma conversa com este contato.</p>
+          )}
+          {conversations?.map((c) => (
+            <Link
+              key={c.id}
+              href={`/dashboard/conversations/${c.id}`}
+              className="flex items-center justify-between rounded-md border border-border px-3 py-2 text-sm hover:bg-muted/40"
+            >
+              <span className="flex items-center gap-2">
+                <Badge variant={c.status === 'open' ? 'success' : 'danger'}>{c.status}</Badge>
+                <Badge variant={c.handledBy === 'ai' ? 'default' : 'warning'}>{c.handledBy}</Badge>
+                {/* Canal de origem da conversa (#74): só destaca quando não é o whatsapp default. */}
+                {c.channel !== 'whatsapp' && <Badge variant="default">{c.channel}</Badge>}
+              </span>
+              <span className="text-muted-foreground">
+                {c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString('pt-BR') : '—'}
+              </span>
+            </Link>
+          ))}
+        </div>
       </Section>
 
       <Modal

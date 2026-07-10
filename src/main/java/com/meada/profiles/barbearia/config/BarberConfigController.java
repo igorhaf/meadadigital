@@ -47,7 +47,13 @@ public class BarberConfigController {
         boolean queueEnabled,
         Boolean reminderEnabled,
         Boolean autoCompleteEnabled,
-        Boolean upsellEnabled) {}
+        Boolean upsellEnabled,
+        Boolean reactivationEnabled,
+        Integer reactivationDays,
+        String reactivationCouponCode,
+        Boolean postReviewEnabled,
+        String reviewLink,
+        Integer reviewCooldownDays) {}
 
     @GetMapping("/api/barbearia/config")
     public ResponseEntity<Object> get(
@@ -85,7 +91,13 @@ public class BarberConfigController {
                 req.slotMinutes(), req.queueEnabled(),
                 req.reminderEnabled() == null || req.reminderEnabled(),
                 req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
-                Boolean.TRUE.equals(req.upsellEnabled())));
+                Boolean.TRUE.equals(req.upsellEnabled()),
+                Boolean.TRUE.equals(req.reactivationEnabled()),
+                req.reactivationDays() == null ? 45 : req.reactivationDays(),
+                req.reactivationCouponCode(),
+                Boolean.TRUE.equals(req.postReviewEnabled()),
+                req.reviewLink(),
+                req.reviewCooldownDays() == null ? 90 : req.reviewCooldownDays()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         } catch (InvalidSlotException e) {

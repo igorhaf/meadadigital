@@ -111,9 +111,13 @@ public class ComidaMenuCache {
                 + "\"tá certo\", \"fechou\") E já tiver informado o endereço de entrega, sua ÚLTIMA "
                 + "mensagem deve TERMINAR com a tag (em uma linha própria, sem markdown):\n")
             .append("<pedido_comida>{\"items\":[{\"item_id\":\"UUID_EXATO_DO_CARDÁPIO\",\"qtd\":N,"
-                + "\"options\":[\"UUID_DA_OPCAO\"]}],\"endereco\":\"...\",\"cupom\":\"CODIGO ou omitir\","
+                + "\"options\":[\"UUID_DA_OPCAO\"]}],\"fulfillment\":\"entrega\",\"endereco\":\"...\","
+                + "\"cupom\":\"CODIGO ou omitir\","
                 + "\"zona_id\":\"UUID da zona ou omitir\",\"total_cents\":NNN}"
                 + "</pedido_comida>\n")
+            .append("RETIRADA NO BALCÃO: pergunte \"entrega ou retirada?\" no fechamento. "
+                + "\"fulfillment\" é \"entrega\" (exige endereço; soma a taxa) ou \"retirada\" "
+                + "(SEM taxa; endereço dispensado — o cliente busca no balcão).\n")
             .append("CUPOM: se o cliente informar um código de cupom, inclua-o no campo cupom — quem "
                 + "valida e calcula o desconto é o SISTEMA; você NUNCA promete nem calcula desconto por "
                 + "conta própria (se o cupom for inválido, o pedido sai sem desconto).\n")
@@ -131,6 +135,13 @@ public class ComidaMenuCache {
         if (config.minOrderCents() > 0) {
             sb.append("Pedido mínimo: R$ ").append(formatBrl(config.minOrderCents()))
                 .append(" (avise o cliente se o pedido ficar abaixo, mas não recuse — apenas oriente).\n");
+        }
+        // Onda 2 (backlog #9): janela do delivery — a IA avisa fora do horário e NÃO fecha pedido.
+        if (config.opensAt() != null && config.closesAt() != null) {
+            sb.append("HORÁRIO DO DELIVERY: ").append(config.opensAt().toString().substring(0, 5))
+                .append(" às ").append(config.closesAt().toString().substring(0, 5))
+                .append(". FORA desse horário, avise que a cozinha está fechada, informe quando abre "
+                    + "e NÃO emita a tag de pedido (anote o interesse e convide a voltar no horário).\n");
         }
         sb.append("CONFIG: delivery_fee_cents=").append(config.deliveryFeeCents())
             .append(", min_order_cents=").append(config.minOrderCents()).append("\n");

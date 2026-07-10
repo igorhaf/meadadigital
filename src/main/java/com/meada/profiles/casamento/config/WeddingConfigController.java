@@ -32,7 +32,8 @@ public class WeddingConfigController {
 
     public record ConfigRequest(String businessName, String notes, Boolean checklistReminderEnabled,
                                 Boolean paymentReminderEnabled, Boolean autoCompleteEnabled,
-                                Boolean anniversaryEnabled) {}
+                                Boolean anniversaryEnabled, Boolean postEventEnabled, String reviewLink,
+                                Boolean followUpEnabled, Integer followUpDays) {}
 
     @GetMapping("/api/casamento/config")
     public ResponseEntity<Object> get(
@@ -63,6 +64,10 @@ public class WeddingConfigController {
             req.checklistReminderEnabled() == null || req.checklistReminderEnabled(),
             req.paymentReminderEnabled() == null || req.paymentReminderEnabled(),
             req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
-            req.anniversaryEnabled() == null || req.anniversaryEnabled()));
+            req.anniversaryEnabled() == null || req.anniversaryEnabled(),
+            req.postEventEnabled() == null || req.postEventEnabled(),
+            req.reviewLink(),
+            req.followUpEnabled() == null || req.followUpEnabled(),
+            req.followUpDays() == null ? 5 : req.followUpDays()));
     }
 }

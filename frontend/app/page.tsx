@@ -3,9 +3,9 @@ import Link from 'next/link'
 import { redirect } from 'next/navigation'
 
 import { CmsRender } from '@/components/cms/cms-render'
-import { fetchHomeBySlug } from '@/lib/cms/public-fetch'
 import { MEADA_INSTITUTIONAL_SLUG } from '@/lib/cms/meada-institutional'
-import { SUBDOMAIN_HEADER, isUniversalSubdomain } from '@/lib/profiles/subdomain'
+import { fetchHomeBySlug } from '@/lib/cms/public-fetch'
+import { isUniversalSubdomain, SUBDOMAIN_HEADER } from '@/lib/profiles/subdomain'
 
 /**
  * Raiz do host.
@@ -42,8 +42,8 @@ export default async function Home() {
       <div className="space-y-4">
         <h1 className="text-4xl font-semibold tracking-tight sm:text-5xl">Meada</h1>
         <p className="mx-auto max-w-xl text-lg text-muted-foreground">
-          Plataforma de atendimento com IA por WhatsApp para o seu negócio — um produto
-          sob medida para cada nicho.
+          Plataforma de atendimento com IA por WhatsApp para o seu negócio — um produto sob medida
+          para cada nicho.
         </p>
       </div>
       <div className="flex flex-wrap items-center justify-center gap-3">

@@ -1,16 +1,16 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
-import {
-  subdomainFromHost,
-  isMeadaHost,
-  rawSubdomain,
-  isNicheSubdomain,
-  baseUrl,
-  nicheLoginUrl,
-  SUBDOMAIN_HEADER,
-} from '@/lib/profiles/subdomain'
 import { resolveCompany } from '@/lib/profiles/resolve-company'
+import {
+  baseUrl,
+  isMeadaHost,
+  isNicheSubdomain,
+  nicheLoginUrl,
+  rawSubdomain,
+  SUBDOMAIN_HEADER,
+  subdomainFromHost,
+} from '@/lib/profiles/subdomain'
 
 /**
  * Middleware de sessão Supabase. ÚNICA responsabilidade: refrescar o token a cada
@@ -89,7 +89,9 @@ export async function middleware(request: NextRequest) {
       return NextResponse.rewrite(url)
     }
     // empresa sem CMS → login do nicho dela
-    return NextResponse.redirect(nicheLoginUrl(request.nextUrl, host, r.profileSubdomain ?? 'meada'))
+    return NextResponse.redirect(
+      nicheLoginUrl(request.nextUrl, host, r.profileSubdomain ?? 'meada'),
+    )
   }
 
   // Subdomain detection (camada 7.0): resolve o perfil pelo host e injeta como header de
@@ -115,11 +117,11 @@ export async function middleware(request: NextRequest) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
-            response.cookies.set(name, value, options)
+            response.cookies.set(name, value, options),
           )
         },
       },
-    }
+    },
   )
 
   // dispara o refresh do token (efeito colateral). Resultado ignorado para rota.
@@ -135,7 +137,5 @@ export async function middleware(request: NextRequest) {
  * beneficiam do cookie de sessão atualizado.
  */
 export const config = {
-  matcher: [
-    '/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)',
-  ],
+  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:svg|png|jpg|jpeg|gif|webp)$).*)'],
 }

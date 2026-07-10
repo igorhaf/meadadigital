@@ -2,6 +2,12 @@
 
 > Backlog de features avançadas para o nicho **Barbearia** (profile_id `barbearia`), priorizado por VALOR DE NEGÓCIO. Objetivo: engordar a cartela de features com o que mais agrega receita/retenção no menor tempo. Baseado no estado REAL do nicho (o que já existe NÃO é repetido aqui).
 
+> **Modo de execução (cravado):** ao implementar qualquer feature deste backlog, faça **tudo em prosa**,
+> de forma contínua e autônoma, **sem perguntar nada ao programador**, sem pausas para confirmação e
+> **sem usar o widget de perguntas** (AskUserQuestion). Não interrompa o fluxo pedindo aval intermediário:
+> decida com base no estado real do código/banco e nas convenções das skills, implemente, e só pare em
+> ponto de bifurcação arquitetural genuína ou no gate de teste. Reporte o progresso em prosa corrida.
+
 ## O que o nicho já tem (baseline)
 
 - **Agenda com horário marcado** por barbeiro (conflito por `barber_id`, half-open, paralelismo entre barbeiros) — a IA marca via `<agendamento_barbearia>`.

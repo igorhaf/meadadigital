@@ -25,27 +25,26 @@ export const FOTOGRAFIA_APPOINTMENT_STATUSES = [
  * com os ids do enum Java (lowercase, feminino). Os 6 ids precisam aparecer aqui literalmente.
  */
 export type FotografiaAppointmentStatusId =
-  | 'agendada'
-  | 'confirmada'
-  | 'realizada'
-  | 'entregue'
-  | 'cancelada'
-  | 'falta'
+  'agendada' | 'confirmada' | 'realizada' | 'entregue' | 'cancelada' | 'falta'
 
 export type FotografiaAppointmentStatus = (typeof FOTOGRAFIA_APPOINTMENT_STATUSES)[number]
 
 /** Transições permitidas a partir de cada status (espelha FotografiaAppointmentStatus.allowedNext). */
-export const ALLOWED_NEXT: Record<FotografiaAppointmentStatusId, FotografiaAppointmentStatusId[]> = {
-  agendada: ['confirmada', 'cancelada'],
-  confirmada: ['realizada', 'cancelada', 'falta'],
-  realizada: ['entregue'],
-  entregue: [],
-  cancelada: [],
-  falta: [],
-}
+export const ALLOWED_NEXT: Record<FotografiaAppointmentStatusId, FotografiaAppointmentStatusId[]> =
+  {
+    agendada: ['confirmada', 'cancelada'],
+    confirmada: ['realizada', 'cancelada', 'falta'],
+    realizada: ['entregue'],
+    entregue: [],
+    cancelada: [],
+    falta: [],
+  }
 
 /** Próximo status "natural" do fluxo feliz (agendada→confirmada→realizada→entregue). */
-export const NEXT_STATUS: Record<FotografiaAppointmentStatusId, FotografiaAppointmentStatusId | null> = {
+export const NEXT_STATUS: Record<
+  FotografiaAppointmentStatusId,
+  FotografiaAppointmentStatusId | null
+> = {
   agendada: 'confirmada',
   confirmada: 'realizada',
   realizada: 'entregue',

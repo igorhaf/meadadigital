@@ -82,3 +82,35 @@ Conflito de agenda/data (a data é um campo livre — a casa faz ~1 evento por d
 pacotes pré-cadastrados (o orçamento é ad-hoc, a equipe digita os itens), contrato com assinatura
 digital/PDF, pagamento/sinal/parcelas, fornecedores externos com agenda própria, fotos/mood board,
 lista de convidados/RSVP. Tudo fase futura.
+
+## Onda 1 do backlog (migration 107)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_EVENTOS.md` (#2, #3, #6, #7, #8 e #9; o #11 —
+qualificação com nº de convidados — já existia no baseline via `guest_count` na tag):
+
+- **#2 CATÁLOGO DE PACOTES/ADICIONAIS** (`event_packages`): Prata/Ouro/Diamante + hora extra/open
+  bar. Tela "Pacotes" (CRUD, kind pacote|adicional) + **autofill** no editor de orçamento da
+  proposta (select preenche descrição+preço; o item continua snapshot). O contexto da IA lista o
+  catálogo — ela DESCREVE pacotes e valores, mas quem monta/fecha o orçamento segue sendo a
+  equipe (trava intacta).
+- **#9 UPSELL CONSULTIVO:** `suggestible` no pacote — a IA pode mencionar UM adicional marcado
+  quando combinar com o briefing (sem insistir, sem desconto).
+- **#3 AVISO DE DATA OCUPADA:** `GET /api/eventos/proposals/date-check?date=&excludeId=` (conta
+  aprovada/fechada/realizada na data) → aviso NÃO bloqueante no modal de abertura (⚠ âmbar). O
+  contexto da IA lista as DATAS RESERVADAS dos próximos 180 dias com a instrução: avisar quando a
+  data pedida está ocupada e NUNCA afirmar que uma data está livre (disponibilidade é da equipe).
+- **#6 AUTO-REALIZADA:** `EventosReminderJob` (cron 10:30) move `fechada` com `event_date`
+  passada → `realizada`. Toggle `auto_complete_enabled` (default ON).
+- **#7 PÓS-VENDA:** ao entrar em `realizada` (manual no funil OU pela auto-transição),
+  agradecimento + `review_link` (se houver) + convite de indicação. Toggle `post_event_enabled`.
+- **#8 FOLLOW-UP DE ORÇAMENTO PARADO:** proposta `orcada` há `follow_up_days` (default 3) sem
+  resposta → 1 toque por episódio (`follow_up_sent_at` vs `status_updated_at`; re-orçar REARMA).
+  Funil ativo (não é disparo em massa) → default ON.
+
+Settings ganhou a seção "Automações" (2 toggles + review link + follow-up). Teste:
+`EventosOnda1IntegrationTest` (date-check; auto-realizada + pós-venda + toggles; follow-up por
+episódio).
+
+**Fica pra onda 2** (registrado, não pedido): #1 sinal/depósito e #4/#5 parcelamento+lembrete de
+pagamento (bloqueados pelo gateway #50), #10 contrato PDF, #12 campanha em massa, #13 RSVP,
+#14 fornecedores/comissão, #15 CMS do espaço (flag cms), #16 mood board (bloqueado por upload).

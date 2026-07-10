@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { MenuItem, MenuOption } from '@/profiles/pizzaria/pizzaria-types'
 import type { PizzariaCategoryId } from '@/profiles/pizzaria/pizzaria-categories'
+import type { MenuItem, MenuOption } from '@/profiles/pizzaria/pizzaria-types'
 
 export type CreateMenuItemInput = {
   name: string
@@ -12,7 +12,9 @@ export type CreateMenuItemInput = {
 
 export type UpdateMenuItemInput = Partial<CreateMenuItemInput> & { available?: boolean }
 
-export function listMenu(opts: { category?: string; available?: boolean } = {}): Promise<{ items: MenuItem[] }> {
+export function listMenu(
+  opts: { category?: string; available?: boolean } = {},
+): Promise<{ items: MenuItem[] }> {
   const p = new URLSearchParams()
   if (opts.category) p.set('category', opts.category)
   if (opts.available) p.set('available', 'true')
@@ -29,7 +31,10 @@ export function createMenuItem(input: CreateMenuItemInput): Promise<MenuItem> {
 }
 
 export function updateMenuItem(id: string, input: UpdateMenuItemInput): Promise<MenuItem> {
-  return apiFetch<MenuItem>(`/api/pizzaria/menu/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<MenuItem>(`/api/pizzaria/menu/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleMenuItem(id: string, available: boolean): Promise<MenuItem> {
@@ -65,14 +70,22 @@ export function createOption(itemId: string, input: CreateOptionInput): Promise<
   })
 }
 
-export function updateOption(itemId: string, optionId: string, input: UpdateOptionInput): Promise<MenuOption> {
+export function updateOption(
+  itemId: string,
+  optionId: string,
+  input: UpdateOptionInput,
+): Promise<MenuOption> {
   return apiFetch<MenuOption>(`/api/pizzaria/menu/${itemId}/options/${optionId}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
   })
 }
 
-export function toggleOption(itemId: string, optionId: string, available: boolean): Promise<MenuOption> {
+export function toggleOption(
+  itemId: string,
+  optionId: string,
+  available: boolean,
+): Promise<MenuOption> {
   return apiFetch<MenuOption>(`/api/pizzaria/menu/${itemId}/options/${optionId}/toggle`, {
     method: 'PATCH',
     body: JSON.stringify({ available }),

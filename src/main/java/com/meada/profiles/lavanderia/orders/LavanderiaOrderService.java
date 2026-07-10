@@ -81,7 +81,8 @@ public class LavanderiaOrderService {
     @Transactional
     public LavanderiaOrder create(UUID companyId, UUID conversationId, UUID contactId,
                                   String deliveryAddress, List<OrderLineInput> lines, String notes,
-                                  LocalDate collectDate, LocalDate requestedDeliveryDate, String period) {
+                                  LocalDate collectDate, LocalDate requestedDeliveryDate, String period,
+                                  String couponCode, boolean express) {
         if (deliveryAddress == null || deliveryAddress.isBlank()) {
             throw new AddressRequiredException();
         }
@@ -92,10 +93,13 @@ public class LavanderiaOrderService {
             throw new CollectDateInPastException();
         }
         LavanderiaConfig config = configRepository.findByCompany(companyId);
+        // express só quando habilitado na config (tag com express:true e toggle off → pedido normal).
+        boolean effectiveExpress = express && config.expressEnabled();
         try {
             return orderRepository.createOrder(companyId, conversationId, contactId, deliveryAddress.strip(),
                 lines, config.deliveryFeeCents(), config.minOrderCents(), notes,
-                collectDate, requestedDeliveryDate, period);
+                collectDate, requestedDeliveryDate, period, couponCode, effectiveExpress,
+                config.expressSurchargePct(), config.expressTurnaroundDays());
         } catch (BelowMinimumException e) {
             throw new BelowMinimumOrderException(e.minOrderCents());
         } catch (TurnaroundViolationException e) {

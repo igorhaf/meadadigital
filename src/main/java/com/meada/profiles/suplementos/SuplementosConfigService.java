@@ -31,9 +31,11 @@ public class SuplementosConfigService {
     }
 
     @Transactional
-    public SuplementosConfig update(UUID companyId, UUID userId, int deliveryFeeCents, int minOrderCents) {
+    public SuplementosConfig update(UUID companyId, UUID userId, int deliveryFeeCents,
+                                    int minOrderCents, Integer freeShippingThresholdCents) {
         SuplementosConfig saved = repository.upsert(companyId, Math.max(0, deliveryFeeCents),
-            Math.max(0, minOrderCents));
+            Math.max(0, minOrderCents),
+            freeShippingThresholdCents == null ? null : Math.max(0, freeShippingThresholdCents));
         auditLogger.log(companyId, userId, "suplementos_config_updated", "sup_config", companyId, Map.of());
         menuCache.invalidate(companyId);
         return saved;

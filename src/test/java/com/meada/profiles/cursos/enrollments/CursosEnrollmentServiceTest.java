@@ -66,7 +66,7 @@ class CursosEnrollmentServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("create válida → ativa + snapshots do curso")
     void create_ok() {
-        CursosEnrollment e = service.create(COMPANY, courseA, null, null, "Pedro", null, null);
+        CursosEnrollment e = service.create(COMPANY, courseA, null, null, "Pedro", null, null, null);
         assertThat(e.status()).isEqualTo("ativa");
         assertThat(e.courseTitle()).isEqualTo("Inglês Básico");
         assertThat(e.courseMonthlyCents()).isEqualTo(15000);
@@ -76,23 +76,23 @@ class CursosEnrollmentServiceTest extends AbstractIntegrationTest {
     @DisplayName("create com curso inativo → CourseInactiveException")
     void create_courseInactive() {
         jdbcTemplate.update("update cursos_courses set active = false where id = ?", courseA);
-        assertThatThrownBy(() -> service.create(COMPANY, courseA, null, null, "X", null, null))
+        assertThatThrownBy(() -> service.create(COMPANY, courseA, null, null, "X", null, null, null))
             .isInstanceOf(CourseInactiveException.class);
     }
 
     @Test
     @DisplayName("anti-dupla: 2ª matrícula ATIVA no MESMO curso/contato → AlreadyEnrolledException")
     void create_alreadyEnrolledSameCourse() {
-        service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null);
-        assertThatThrownBy(() -> service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null))
+        service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null, null);
+        assertThatThrownBy(() -> service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null, null))
             .isInstanceOf(AlreadyEnrolledException.class);
     }
 
     @Test
     @DisplayName("anti-dupla: matrícula em OUTRO curso do mesmo contato → OK (não conflita)")
     void create_otherCourseOk() {
-        service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null);
-        CursosEnrollment second = service.create(COMPANY, courseB, contactId, conversationId, "Aluno", null, null);
+        service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null, null);
+        CursosEnrollment second = service.create(COMPANY, courseB, contactId, conversationId, "Aluno", null, null, null);
         assertThat(second.status()).isEqualTo("ativa");
         assertThat(second.courseTitle()).isEqualTo("Violão");
     }
@@ -100,7 +100,7 @@ class CursosEnrollmentServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("updateStatus ativa→cancelada → end_date materializado + notifica despedida")
     void cancel_endDateAndNotify() {
-        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null);
+        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null, null);
         fakeEvolution.reset();   // descarta a notificação de boas-vindas.
         CursosEnrollment cancelled = service.updateStatus(COMPANY, e.id(), "cancelada");
         assertThat(cancelled.status()).isEqualTo("cancelada");
@@ -110,21 +110,22 @@ class CursosEnrollmentServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
-    @DisplayName("updateStatus ativa→concluida → end_date materializado + notifica parabéns")
+    @DisplayName("updateStatus ativa→concluida → end_date materializado + parabéns + certificado (onda 1)")
     void complete_endDateAndNotify() {
-        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null);
+        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null, null);
         fakeEvolution.reset();
         CursosEnrollment done = service.updateStatus(COMPANY, e.id(), "concluida");
         assertThat(done.status()).isEqualTo("concluida");
         assertThat(done.endDate()).isNotNull();
-        assertThat(fakeEvolution.sent()).hasSize(1);
+        assertThat(fakeEvolution.sent()).hasSize(2);
         assertThat(fakeEvolution.sent().get(0).text()).contains("Parabéns");
+        assertThat(fakeEvolution.sent().get(1).text()).contains("CERTIFICADO");
     }
 
     @Test
     @DisplayName("updateStatus ativa→trancada → silenciosa (nada enviado); end_date NULL")
     void lock_silent() {
-        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null);
+        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null, null);
         fakeEvolution.reset();
         CursosEnrollment locked = service.updateStatus(COMPANY, e.id(), "trancada");
         assertThat(locked.status()).isEqualTo("trancada");
@@ -135,7 +136,7 @@ class CursosEnrollmentServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("updateStatus concluida→ativa (terminal) → InvalidStatusTransitionException")
     void invalidTransitionFromTerminal() {
-        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null);
+        CursosEnrollment e = service.create(COMPANY, courseA, contactId, conversationId, "Aluno", null, null, null);
         service.updateStatus(COMPANY, e.id(), "concluida");
         assertThatThrownBy(() -> service.updateStatus(COMPANY, e.id(), "ativa"))
             .isInstanceOf(InvalidStatusTransitionException.class);

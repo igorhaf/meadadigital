@@ -36,11 +36,15 @@ public class EscolaConfigService {
 
     @Transactional
     public EscolaConfig update(UUID companyId, UUID userId, String businessName, LocalTime opensAt,
-                               LocalTime closesAt, String notes) {
+                               LocalTime closesAt, String notes, boolean visitReminderEnabled,
+                               boolean visitAutoCompleteEnabled, boolean paymentReminderEnabled,
+                               int paymentDueDay) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        EscolaConfig saved = repository.upsert(companyId, businessName, opensAt, closesAt, notes);
+        EscolaConfig saved = repository.upsert(companyId, businessName, opensAt, closesAt, notes,
+            visitReminderEnabled, visitAutoCompleteEnabled, paymentReminderEnabled,
+            Math.min(28, Math.max(1, paymentDueDay)));
         auditLogger.log(companyId, userId, "escola_config_updated", "escola_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

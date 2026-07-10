@@ -42,6 +42,7 @@ public class WeddingProposalService {
     private final WeddingCouponRepository couponRepository;
     private final WeddingPaymentRepository paymentRepository;
     private final WeddingProposalNotifier notifier;
+    private final com.meada.profiles.casamento.config.WeddingConfigRepository configRepository;
     private final CasamentoContextCache contextCache;
 
     public WeddingProposalService(WeddingProposalRepository repository,
@@ -49,12 +50,14 @@ public class WeddingProposalService {
                                   WeddingCouponRepository couponRepository,
                                   WeddingPaymentRepository paymentRepository,
                                   WeddingProposalNotifier notifier,
-                                  CasamentoContextCache contextCache) {
+                                  CasamentoContextCache contextCache,
+                                  com.meada.profiles.casamento.config.WeddingConfigRepository configRepository) {
         this.repository = repository;
         this.plannerRepository = plannerRepository;
         this.couponRepository = couponRepository;
         this.paymentRepository = paymentRepository;
         this.notifier = notifier;
+        this.configRepository = configRepository;
         this.contextCache = contextCache;
     }
 
@@ -318,6 +321,22 @@ public class WeddingProposalService {
         String text = newStatus.notificationText(styleLabel(current),
             brl(current.totalCents() - current.discountCents()));
         notifier.notifyStatus(companyId, current.conversationId(), text);
+
+        // Onda 2 (backlog #6): o grande dia aconteceu — pós-casamento no auge da emoção
+        // (agradecimento + avaliação + indicação; toggle + review_link na config).
+        if (newStatus == WeddingProposalStatus.REALIZADA) {
+            var config = configRepository.findByCompany(companyId);
+            if (config.postEventEnabled()) {
+                StringBuilder pos = new StringBuilder("Que dia inesquecível! Foi uma honra fazer "
+                    + "parte do casamento de vocês. 💍 Obrigado pela confiança! ");
+                if (config.reviewLink() != null) {
+                    pos.append("Se puderem, deixem um depoimento — ajuda muito os próximos casais: ")
+                        .append(config.reviewLink()).append(" ");
+                }
+                pos.append("E se conhecerem alguém noivando, ficaremos felizes com a indicação!");
+                notifier.notifyStatus(companyId, current.conversationId(), pos.toString());
+            }
+        }
 
         contextCache.invalidate(companyId);
         return repository.findById(companyId, id).orElseThrow(ProposalNotFoundException::new);

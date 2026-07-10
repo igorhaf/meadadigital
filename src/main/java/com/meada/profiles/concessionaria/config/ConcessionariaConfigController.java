@@ -53,7 +53,11 @@ public class ConcessionariaConfigController {
         Boolean followupEnabled,
         Integer followupDays,
         Boolean testdriveReminderEnabled,
-        Boolean autoCompleteEnabled) {}
+        Boolean autoCompleteEnabled,
+        Boolean postSaleEnabled,
+        String reviewLink,
+        Boolean serviceReminderEnabled,
+        Integer serviceReminderMonths) {}
 
     @GetMapping("/api/concessionaria/config")
     public ResponseEntity<Object> get(
@@ -93,7 +97,11 @@ public class ConcessionariaConfigController {
                 req.followupEnabled() == null || req.followupEnabled(),
                 req.followupDays() == null ? 3 : req.followupDays(),
                 req.testdriveReminderEnabled() == null || req.testdriveReminderEnabled(),
-                req.autoCompleteEnabled() == null || req.autoCompleteEnabled()));
+                req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+                req.postSaleEnabled() == null || req.postSaleEnabled(),
+                req.reviewLink(),
+                Boolean.TRUE.equals(req.serviceReminderEnabled()),
+                req.serviceReminderMonths() == null ? 12 : req.serviceReminderMonths()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

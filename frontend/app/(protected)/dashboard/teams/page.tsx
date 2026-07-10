@@ -13,6 +13,7 @@ import { EmptyState } from '@/components/ui/empty-state'
 import { Modal } from '@/components/ui/modal'
 import { getMe } from '@/lib/api/me'
 import { createTeam, deleteTeam, getMyTeams, updateTeam, type Team } from '@/lib/api/teams'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 const columns: Column<Team>[] = [
   { key: 'name', header: 'Nome' },
@@ -133,7 +134,9 @@ export default function TeamsPage() {
                 className="h-7 px-2 text-xs"
                 disabled={remove.isPending && remove.variables === t.id}
                 onClick={() => {
-                  if (confirm(`Remover o time "${t.name}"? As conversas atribuídas ficam sem time.`)) {
+                  if (
+                    confirm(`Remover o time "${t.name}"? As conversas atribuídas ficam sem time.`)
+                  ) {
                     remove.mutate(t.id)
                   }
                 }}
@@ -162,26 +165,16 @@ export default function TeamsPage() {
  * (1..60 chars — espelha o CHECK do banco). Invalida ['my-teams'] no sucesso. Mantido inline
  * (sem componente separado) — é simples, só um input.
  */
-function TeamDialog({
-  open,
-  onClose,
-  team,
-}: {
-  open: boolean
-  onClose: () => void
-  team?: Team
-}) {
+function TeamDialog({ open, onClose, team }: { open: boolean; onClose: () => void; team?: Team }) {
   const queryClient = useQueryClient()
   const [name, setName] = useState('')
   const [serverError, setServerError] = useState<string | null>(null)
   const isEdit = team != null
 
-  useEffect(() => {
-    if (open) {
-      setName(team?.name ?? '')
-      setServerError(null)
-    }
-  }, [open, team])
+  useResetWhen(open ? (team?.id ?? 'create') : null, () => {
+    setName(team?.name ?? '')
+    setServerError(null)
+  })
 
   const mutation = useMutation({
     mutationFn: (value: string) => (isEdit ? updateTeam(team!.id, value) : createTeam(value)),

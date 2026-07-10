@@ -103,7 +103,123 @@ services:
       - ./caddy/Caddyfile:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
     networks: [meada]
-    depends_on: [frontend, backend]
+    depends_on: [frontend, backend, muda-nginx, conexao-municipio-frontend]
+
+  # ---------------------------------------------------------------------------
+  # Projeto EXTERNO muda (Laravel/PHP) — external_projects/muda. Integrado ao mesmo
+  # compose e à mesma rede; acessível SÓ via Caddy em http://muda.meadadigital.local
+  # (sem portas expostas no host). Postgres dedicado (desacoplado do Supabase do meada).
+  # ---------------------------------------------------------------------------
+  muda-postgres:
+    image: postgres:16-alpine
+    container_name: muda-postgres
+    environment:
+      POSTGRES_DB: ${MUDA_DB_DATABASE:-muda}
+      POSTGRES_USER: ${MUDA_DB_USERNAME:-muda}
+      POSTGRES_PASSWORD: ${MUDA_DB_PASSWORD:-muda_secret}
+    volumes:
+      - muda-postgres-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${MUDA_DB_USERNAME:-muda} -d ${MUDA_DB_DATABASE:-muda}"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [meada]
+
+  muda-app:
+    build:
+      context: ./external_projects/muda
+      dockerfile: docker/php/Dockerfile
+      args:
+        UID: ${UID:-1000}
+        GID: ${GID:-1000}
+    container_name: muda-app
+    working_dir: /var/www/html
+    volumes:
+      - ./external_projects/muda:/var/www/html
+    depends_on:
+      muda-postgres:
+        condition: service_healthy
+    networks: [meada]
+
+  muda-nginx:
+    image: nginx:1.27-alpine
+    container_name: muda-nginx
+    volumes:
+      - ./external_projects/muda:/var/www/html
+      - ./external_projects/muda/docker/nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    depends_on: [muda-app]
+    networks: [meada]
+
+  # ---------------------------------------------------------------------------
+  # Projeto EXTERNO conexao-municipio (Laravel API + Next) — external_projects/.
+  # Acessível SÓ via Caddy em http://conexao-municipio.meadadigital.local
+  # (path /api/* -> backend; resto -> frontend; mesma origem, sem CORS).
+  # ---------------------------------------------------------------------------
+  conexao-municipio-db:
+    image: postgres:16-alpine
+    container_name: conexao-municipio-db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: conexao_municipio
+      POSTGRES_USER: conexao
+      POSTGRES_PASSWORD: conexao_secret
+    volumes:
+      - conexao-municipio-db-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U conexao -d conexao_municipio"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+    networks: [meada]
+
+  conexao-municipio-backend:
+    build:
+      context: ./external_projects/conexao-municipio/backend
+      dockerfile: Dockerfile
+    container_name: conexao-municipio-backend
+    restart: unless-stopped
+    depends_on:
+      conexao-municipio-db:
+        condition: service_healthy
+    environment:
+      APP_ENV: local
+      APP_DEBUG: "true"
+      APP_URL: http://conexao-municipio.meadadigital.local
+      DB_CONNECTION: pgsql
+      DB_HOST: conexao-municipio-db
+      DB_PORT: 5432
+      DB_DATABASE: conexao_municipio
+      DB_USERNAME: conexao
+      DB_PASSWORD: conexao_secret
+      LOG_CHANNEL: stderr
+      CACHE_STORE: file
+      SESSION_DRIVER: file
+      QUEUE_CONNECTION: sync
+    volumes:
+      - ./external_projects/conexao-municipio/backend:/var/www/html
+      - conexao-municipio-backend-vendor:/var/www/html/vendor
+    command: sh -c "composer install --no-interaction && ([ -f .env ] || cp .env.example .env) && (grep -q '^APP_KEY=.' .env || php artisan key:generate --force) && php artisan migrate --force && php artisan db:seed --force && php artisan serve --host=0.0.0.0 --port=8000"
+    networks: [meada]
+
+  conexao-municipio-frontend:
+    build:
+      context: ./external_projects/conexao-municipio/frontend
+      dockerfile: Dockerfile
+    container_name: conexao-municipio-frontend
+    restart: unless-stopped
+    depends_on:
+      - conexao-municipio-backend
+    environment:
+      # SSR (server-side) fala com o backend pela rede interna do compose.
+      API_URL: http://conexao-municipio-backend:8000
+      # var de BROWSER: mesma origem via Caddy (path /api roteia pro backend).
+      NEXT_PUBLIC_API_URL: http://conexao-municipio.meadadigital.local
+    volumes:
+      - ./external_projects/conexao-municipio/frontend:/app
+      - conexao-municipio-frontend-node_modules:/app/node_modules
+    command: sh -c "npm install && npm run dev"
+    networks: [meada]
 
 networks:
   meada:
@@ -113,3 +229,7 @@ volumes:
   maven-cache:
   caddy-data:
   embedding-models:
+  muda-postgres-data:
+  conexao-municipio-db-data:
+  conexao-municipio-backend-vendor:
+  conexao-municipio-frontend-node_modules:

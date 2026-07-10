@@ -5,6 +5,9 @@ export type UpdateConfigInput = {
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
   notes?: string | null
+  nudgeEnabled: boolean
+  nudgeDays: number
+  certificateBaseUrl: string | null
 }
 
 export function getConfig(): Promise<Config> {

@@ -10,9 +10,14 @@ import java.util.UUID;
 public record EventConfig(
     UUID companyId,
     String businessName,
-    String notes) {
+    String notes,
+    boolean autoCompleteEnabled,
+    boolean postEventEnabled,
+    String reviewLink,
+    boolean followUpEnabled,
+    int followUpDays) {
 
     public static EventConfig defaultFor(UUID companyId) {
-        return new EventConfig(companyId, null, null);
+        return new EventConfig(companyId, null, null, true, true, null, true, 3);
     }
 }

@@ -36,17 +36,23 @@ public class ServiceOrderService {
     private final OsMechanicRepository mechanicRepository;
     private final ServiceOrderNotifier notifier;
     private final OficinaContextCache contextCache;
+    private final com.meada.profiles.oficina.catalog.OficinaCatalogRepository catalogRepository;
+    private final com.meada.profiles.oficina.config.OficinaConfigRepository configRepository;
 
     public ServiceOrderService(ServiceOrderRepository orderRepository,
                                OsVehicleRepository vehicleRepository,
                                OsMechanicRepository mechanicRepository,
                                ServiceOrderNotifier notifier,
-                               OficinaContextCache contextCache) {
+                               OficinaContextCache contextCache,
+                               com.meada.profiles.oficina.catalog.OficinaCatalogRepository catalogRepository,
+                               com.meada.profiles.oficina.config.OficinaConfigRepository configRepository) {
         this.orderRepository = orderRepository;
         this.vehicleRepository = vehicleRepository;
         this.mechanicRepository = mechanicRepository;
         this.notifier = notifier;
         this.contextCache = contextCache;
+        this.catalogRepository = catalogRepository;
+        this.configRepository = configRepository;
     }
 
     public static class OrderNotFoundException extends RuntimeException {}
@@ -84,6 +90,36 @@ public class ServiceOrderService {
         contextCache.invalidate(companyId);
         return created;
     }
+
+    /**
+     * Onda 1 (backlog #1): abre a OS já PRÉ-PREENCHIDA com serviços TABELADOS do catálogo do
+     * tenant (a IA passa só os ids no campo `servicos` da tag — o preço vem do catálogo, a trava
+     * "IA não inventa preço" segue intacta). Item inexistente/inativo é IGNORADO (best-effort);
+     * a OS continua nascendo 'aberta' (o mecânico revisa e move pra orcada).
+     */
+    @Transactional
+    public ServiceOrder openWithCatalogItems(UUID companyId, UUID vehicleId, UUID mechanicId,
+                                             UUID conversationId, String complaint, String diagnosis,
+                                             LocalDate expectedDelivery, String notes,
+                                             List<CatalogLine> catalogLines) {
+        ServiceOrder created = open(companyId, vehicleId, mechanicId, conversationId, complaint,
+            diagnosis, expectedDelivery, notes);
+        if (catalogLines != null) {
+            for (CatalogLine line : catalogLines) {
+                var item = catalogRepository.findById(companyId, line.catalogItemId()).orElse(null);
+                if (item == null || !item.active() || line.qtd() < 1) {
+                    continue;   // best-effort: tabelado inexistente/inativo não aborta a abertura.
+                }
+                orderRepository.addItem(companyId, created.id(), "mao_de_obra", item.name(),
+                    line.qtd(), item.unitPriceCents());
+            }
+        }
+        contextCache.invalidate(companyId);
+        return orderRepository.findById(companyId, created.id()).orElse(created);
+    }
+
+    /** Linha de serviço tabelado vinda da tag (onda 1, backlog #1). */
+    public record CatalogLine(UUID catalogItemId, int qtd) {}
 
     public List<ServiceOrder> list(UUID companyId, String status, UUID mechanicId, UUID vehicleId,
                                    UUID contactId, Instant dateFrom, Instant dateTo, int limit, int offset) {
@@ -185,6 +221,14 @@ public class ServiceOrderService {
         }
 
         orderRepository.updateStatus(companyId, id, newStatus.id(), newStatus.isTerminal());
+
+        // Onda #2: a ENTREGA materializa o retorno sugerido (hoje + return_reminder_days da config).
+        if (newStatus == OsStatus.ENTREGUE) {
+            var config = configRepository.findByCompany(companyId);
+            orderRepository.setNextReturnDate(companyId, id,
+                LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo"))
+                    .plusDays(config.returnReminderDays()));
+        }
 
         String text = newStatus.notificationText(vehicleLabel(current), brl(current.totalCents()));
         notifier.notifyStatus(companyId, current.conversationId(), text);

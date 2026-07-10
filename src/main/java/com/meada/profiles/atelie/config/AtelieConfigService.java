@@ -33,8 +33,12 @@ public class AtelieConfigService {
 
     @Transactional
     public AtelieConfig update(UUID companyId, UUID userId, String businessName, String notes,
-                               boolean fittingReminderEnabled) {
-        AtelieConfig saved = repository.upsert(companyId, businessName, notes, fittingReminderEnabled);
+                               boolean fittingReminderEnabled, boolean postDeliveryEnabled,
+                               String reviewLink, boolean reactivationEnabled, int reactivationDays) {
+        AtelieConfig saved = repository.upsert(companyId, businessName, notes, fittingReminderEnabled,
+            postDeliveryEnabled,
+            reviewLink == null || reviewLink.isBlank() ? null : reviewLink.strip(),
+            reactivationEnabled, Math.min(730, Math.max(7, reactivationDays)));
         auditLogger.log(companyId, userId, "atelie_config_updated", "atelie_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

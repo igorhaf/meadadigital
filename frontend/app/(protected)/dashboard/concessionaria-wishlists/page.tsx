@@ -61,12 +61,16 @@ export default function ConcessionariaWishlistsPage() {
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => setOnlyActive(true)}
-          className={`rounded-full border px-3 py-1 text-xs ${onlyActive ? 'border-primary bg-primary/10' : 'border-border'}`}>
+        <button
+          onClick={() => setOnlyActive(true)}
+          className={`rounded-full border px-3 py-1 text-xs ${onlyActive ? 'border-primary bg-primary/10' : 'border-border'}`}
+        >
           Ativos
         </button>
-        <button onClick={() => setOnlyActive(false)}
-          className={`rounded-full border px-3 py-1 text-xs ${!onlyActive ? 'border-primary bg-primary/10' : 'border-border'}`}>
+        <button
+          onClick={() => setOnlyActive(false)}
+          className={`rounded-full border px-3 py-1 text-xs ${!onlyActive ? 'border-primary bg-primary/10' : 'border-border'}`}
+        >
           Todos
         </button>
       </div>
@@ -77,7 +81,8 @@ export default function ConcessionariaWishlistsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : items.length === 0 ? (
         <p className="text-sm text-muted-foreground">
-          Nenhum desejo registrado ainda — a IA registra quando o cliente não encontra o carro na vitrine.
+          Nenhum desejo registrado ainda — a IA registra quando o cliente não encontra o carro na
+          vitrine.
         </p>
       ) : (
         <div className="divide-y divide-border rounded-lg border border-border">
@@ -95,17 +100,26 @@ export default function ConcessionariaWishlistsPage() {
                   )}
                 </div>
                 <p className="truncate text-xs text-muted-foreground">
-                  {criteria(w)}{w.notes ? ` — ${w.notes}` : ''}
+                  {criteria(w)}
+                  {w.notes ? ` — ${w.notes}` : ''}
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-2">
                 <span className="text-xs text-muted-foreground">{formatDate(w.createdAt)}</span>
-                <Button variant="outline" className="h-7 px-2 text-xs"
-                  disabled={toggleMutation.isPending} onClick={() => toggleMutation.mutate(w)}>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={toggleMutation.isPending}
+                  onClick={() => toggleMutation.mutate(w)}
+                >
                   {w.active ? 'Desativar' : 'Reativar'}
                 </Button>
-                <Button variant="outline" className="h-7 px-2 text-xs"
-                  disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(w.id)}>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(w.id)}
+                >
                   Excluir
                 </Button>
               </div>

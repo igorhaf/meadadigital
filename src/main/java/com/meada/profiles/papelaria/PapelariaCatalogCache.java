@@ -37,15 +37,18 @@ public class PapelariaCatalogCache {
     private final PapelariaCatalogItemRepository catalogRepository;
     private final PapelariaConfigRepository configRepository;
     private final Cache<UUID, String> cache;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
 
     public PapelariaCatalogCache(PapelariaCatalogItemRepository catalogRepository,
-                                 PapelariaConfigRepository configRepository) {
+                                 PapelariaConfigRepository configRepository,
+                                  org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.catalogRepository = catalogRepository;
         this.configRepository = configRepository;
         this.cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(60))
             .maximumSize(500)
             .build();
+        this.jdbcTemplate = jdbcTemplate;
     }
 
     /** Bloco de catálogo+config+instruções para o prompt, cacheado por company (TTL 60s). */
@@ -77,6 +80,20 @@ public class PapelariaCatalogCache {
                 }
                 sb.append("- ").append(it.id()).append(" · ").append(it.name())
                     .append(" · R$ ").append(formatBrl(it.priceCents())).append("/un");
+                // Onda #2: faixas de tiragem — a IA apresenta o preço/un por quantidade.
+                java.util.List<com.meada.profiles.papelaria.catalog.PapelariaItemTier> tiers =
+                    jdbcTemplate.query(
+                        "select min_qty, unit_price_cents from papelaria_item_tiers where item_id = ? order by min_qty",
+                        (trs, trn) -> new com.meada.profiles.papelaria.catalog.PapelariaItemTier(
+                            trs.getInt("min_qty"), trs.getInt("unit_price_cents")), it.id());
+                if (!tiers.isEmpty()) {
+                    sb.append(" · POR TIRAGEM:");
+                    for (var t : tiers) {
+                        sb.append(" ").append(t.minQty()).append("+ un = R$ ")
+                            .append(formatBrl(t.unitPriceCents())).append("/un;");
+                    }
+                    sb.append(" (informe as faixas — tiragem maior sai mais barato por unidade)");
+                }
                 if (it.description() != null && !it.description().isBlank()) {
                     sb.append(" · ").append(it.description().strip());
                 }
@@ -114,7 +131,12 @@ public class PapelariaCatalogCache {
                 + "'retirada', delivery_address é null. Em pedido só de pronta-entrega, "
                 + "pickup_or_delivery_date e delivery_period podem ser null. ANTES da tag, escreva a "
                 + "confirmação humana normal (\"Confirmado: 100 convites (papel perolado), entrega dia "
-                + "20/12 de manhã. Total R$ X.\"). NÃO emita a tag sem TODOS os dados. A data NÃO pode ser "
+                + "20/12 de manhã. Total R$ X.\"). ANTES de fechar, você PODE oferecer UMA ÚNICA "
+                + "sugestão de item complementar de OUTRA categoria do catálogo acima (convite → save "
+                + "the date/tags/menu; bolo de festa → adesivos/embalagens) — sem insistir se o "
+                + "cliente recusar. Se o pedido tiver SINAL registrado pela equipe, informe o valor e "
+                + "que a produção começa após a confirmação do sinal — você NUNCA confirma pagamento. "
+                + "NÃO emita a tag sem TODOS os dados. A data NÃO pode ser "
                 + "no passado nem antes da antecedência mínima.\n")
             .append("PROVA DE ARTE: depois que a papelaria ACEITA o pedido, a equipe sobe a ARTE do layout "
                 + "e o pedido entra em APROVAÇÃO DA ARTE. Quando o cliente APROVAR a arte na conversa, sua "

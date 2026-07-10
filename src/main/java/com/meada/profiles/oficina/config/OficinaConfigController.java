@@ -35,7 +35,9 @@ public class OficinaConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt) {}
+    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt,
+        Boolean returnReminderEnabled,
+        Integer returnReminderDays) {}
 
     @GetMapping("/api/oficina/config")
     public ResponseEntity<Object> get(
@@ -68,7 +70,9 @@ public class OficinaConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
+                req.returnReminderEnabled() == null || req.returnReminderEnabled(),
+                req.returnReminderDays() == null ? 180 : req.returnReminderDays()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

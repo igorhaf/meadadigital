@@ -70,3 +70,17 @@ atendimento.
 - Os textos de notificação são fixos nesta versão.
 - **Risco aceito no MVP:** se a IA prometer um horário e o backend detectar conflito ao gravar, a
   consulta não é criada (não aparece na agenda) — contorne manualmente. É raro.
+
+## Onda 1 do backlog (migration 116)
+
+`docs/FEATURES_SUGERIDAS_DENTAL.md` #1/#3/#5: **#1 lembrete D-1 + confirmação** — o
+`DentalReminderJob` (cron 12:10) pede SIM na véspera; `ConfirmacaoConsultaHandler`
+(`<confirmacao_consulta>{appointment_id}`) SÓ CONFIRMA (agendada→confirmada) com barreira via
+paciente↔contato — o **cancelamento pela IA segue BLOQUEADO** (trava original; remarcar = a IA
+oferece slots, desmarcar é com o consultório). Remarcar REARMA o lembrete. **#5 auto-realizada:**
+confirmada vencida → realizada (silenciosa; a variante "→falta" ficou de fora — falta segue
+humana). **#3 recall de manutenção** (opt-in OFF): sem consulta REALIZADA há `recall_months`
+(default 6) e sem futura → 1 convite por episódio (`recall_reminded_at` re-armado por consulta
+realizada nova). Settings ganhou "Automações". Teste: `DentalOnda1IntegrationTest`. Fica:
+#2 sinal Pix (gateway), #4 multi-dentista (onda estrutural própria — muda o motor de conflito),
+#6 dashboard, #7 catálogo de procedimentos, #8 orçamento 2 fases, #16 proservação.

@@ -26,15 +26,18 @@ public class AestheticPackageService {
     private final AestheticPackageRepository repository;
     private final AestheticProcedureRepository procedureRepository;
     private final AestheticPackageNotifier notifier;
+    private final com.meada.profiles.estetica.config.AestheticConfigRepository configRepository;
     private final EsteticaContextCache contextCache;
 
     public AestheticPackageService(AestheticPackageRepository repository,
                                    AestheticProcedureRepository procedureRepository,
                                    AestheticPackageNotifier notifier,
-                                   EsteticaContextCache contextCache) {
+                                   EsteticaContextCache contextCache,
+                                   com.meada.profiles.estetica.config.AestheticConfigRepository configRepository) {
         this.repository = repository;
         this.procedureRepository = procedureRepository;
         this.notifier = notifier;
+        this.configRepository = configRepository;
         this.contextCache = contextCache;
     }
 
@@ -87,6 +90,17 @@ public class AestheticPackageService {
         }
 
         repository.updateStatus(companyId, id, newStatus.id());
+
+        // Onda 1 (backlog #4): a ATIVAÇÃO materializa a validade quando configurada (em Java —
+        // date + interval não é IMMUTABLE). Painel pode editar depois.
+        if (newStatus == AestheticPackageStatus.ATIVO) {
+            var config = configRepository.findByCompany(companyId);
+            if (config.packageValidityDays() != null) {
+                repository.setValidUntil(companyId, id,
+                    java.time.LocalDate.now(java.time.ZoneId.of("America/Sao_Paulo"))
+                        .plusDays(config.packageValidityDays()));
+            }
+        }
 
         String text = newStatus.notificationText(current.procedureName(), current.totalSessions());
         notifier.notifyStatus(companyId, current.conversationId(), text);

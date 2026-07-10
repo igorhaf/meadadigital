@@ -26,7 +26,13 @@ export function isFlatBlocks(data: unknown): data is CmsBlock[] {
 export function flatToTree(blocks: CmsBlock[]): CmsRow[] {
   return blocks.map((b) => ({
     id: `r-${b.id}`,
-    props: { bg: 'none' as const, paddingY: 'none' as const, gap: 'md' as const, align: 'stretch' as const, maxWidth: 'full' as const },
+    props: {
+      bg: 'none' as const,
+      paddingY: 'none' as const,
+      gap: 'md' as const,
+      align: 'stretch' as const,
+      maxWidth: 'full' as const,
+    },
     columns: [{ id: `c-${b.id}`, width: 12 as const, blocks: [b] }],
   }))
 }

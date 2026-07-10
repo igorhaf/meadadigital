@@ -102,8 +102,7 @@ function LoginInner() {
         const reason = err instanceof ApiError ? err.reason : 'unknown'
         console.error('acceptInvitation failed:', reason)
         setAuthError(
-          ACCEPT_ERROR_MESSAGES[reason] ??
-            'Não foi possível aceitar o convite. Tente novamente.',
+          ACCEPT_ERROR_MESSAGES[reason] ?? 'Não foi possível aceitar o convite. Tente novamente.',
         )
         return
       }
@@ -143,6 +142,7 @@ function LoginInner() {
   // DEPOIS da montagem, no cliente.
   const [profile, setProfile] = useState(GENERIC_PROFILE)
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratação pós-mount é o padrão SSR-safe (ver comentário acima)
     setProfile(currentProfile())
   }, [])
   const title = isInvite ? 'Aceitar convite' : `Bem-vindo ao ${profile.productName}`
@@ -171,9 +171,7 @@ function LoginInner() {
               className="w-full rounded-lg border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-2 focus-visible:ring-ring aria-invalid:border-destructive"
               {...register('email')}
             />
-            {errors.email && (
-              <p className="text-xs text-destructive">{errors.email.message}</p>
-            )}
+            {errors.email && <p className="text-xs text-destructive">{errors.email.message}</p>}
           </div>
 
           <div className="space-y-1.5">
@@ -214,9 +212,7 @@ function LoginInner() {
                 setMode((m) => (m === 'signin' ? 'signup' : 'signin'))
               }}
             >
-              {mode === 'signin'
-                ? 'Ainda não tem conta? Criar conta'
-                : 'Já tem conta? Entrar'}
+              {mode === 'signin' ? 'Ainda não tem conta? Criar conta' : 'Já tem conta? Entrar'}
             </button>
           )}
         </form>

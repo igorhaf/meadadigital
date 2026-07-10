@@ -29,12 +29,15 @@ public class EventosContextCache {
 
     private final EventPlannerRepository plannerRepository;
     private final EventProposalRepository proposalRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final Cache<String, String> cache;
 
     public EventosContextCache(EventPlannerRepository plannerRepository,
-                               EventProposalRepository proposalRepository) {
+                               EventProposalRepository proposalRepository,
+                               org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.plannerRepository = plannerRepository;
         this.proposalRepository = proposalRepository;
+        this.jdbcTemplate = jdbcTemplate;
         this.cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(20))
             .maximumSize(1000)
@@ -102,6 +105,54 @@ public class EventosContextCache {
         } else {
             sb.append("CLIENTE NÃO IDENTIFICADO pelo telefone. Peça os dados do evento (tipo, data, "
                 + "número de convidados) para abrir a proposta.\n\n");
+        }
+
+        // Onda 1 (backlog #2/#9): catálogo de pacotes/adicionais — a IA DESCREVE o que existe.
+        record Pkg(String name, String kind, String description, int price, boolean suggestible) {}
+        List<Pkg> pkgs = jdbcTemplate.query(
+            "select name, kind, description, price_cents, suggestible from event_packages "
+                + "where company_id = ? and active = true order by kind, name",
+            (rs, rn) -> new Pkg(rs.getString("name"), rs.getString("kind"), rs.getString("description"),
+                rs.getInt("price_cents"), rs.getBoolean("suggestible")),
+            companyId);
+        if (!pkgs.isEmpty()) {
+            sb.append("CATÁLOGO DE PACOTES E ADICIONAIS (você pode DESCREVER estes itens e valores — "
+                + "mas quem monta e fecha o orçamento é a equipe):\n");
+            for (Pkg pk : pkgs) {
+                sb.append("- ").append("adicional".equals(pk.kind()) ? "[adicional] " : "[pacote] ")
+                    .append(pk.name()).append(" · ").append(brl(pk.price()));
+                if (pk.description() != null && !pk.description().isBlank()) {
+                    sb.append(" · ").append(pk.description().strip());
+                }
+                sb.append("\n");
+            }
+            List<Pkg> sug = pkgs.stream().filter(Pkg::suggestible).toList();
+            if (!sug.isEmpty()) {
+                sb.append("UPSELL CONSULTIVO: quando fizer sentido pro briefing, você PODE mencionar "
+                    + "UM destes adicionais (sem insistir, sem desconto):\n");
+                for (Pkg pk : sug) {
+                    sb.append("- ").append(pk.name()).append(" (").append(brl(pk.price())).append(")\n");
+                }
+            }
+            sb.append("\n");
+        }
+
+        // Onda 1 (backlog #3): datas ocupadas (aprovada/fechada/realizada) nos próximos 180 dias.
+        List<java.time.LocalDate> occupied = jdbcTemplate.query(
+            "select distinct event_date from event_proposals "
+                + "where company_id = ? and event_date is not null "
+                + "and status in ('aprovada','fechada','realizada') "
+                + "and event_date between current_date and current_date + 180 "
+                + "order by event_date",
+            (rs, rn) -> rs.getDate("event_date").toLocalDate(),
+            companyId);
+        if (!occupied.isEmpty()) {
+            java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+            sb.append("DATAS JÁ RESERVADAS (evento aprovado/fechado): ");
+            sb.append(String.join(", ", occupied.stream().map(d -> d.format(fmt)).toList()));
+            sb.append(". Se o cliente pedir uma dessas datas, avise que ela já está reservada e "
+                + "pergunte se outra data serve. NUNCA afirme que uma data está LIVRE — a "
+                + "disponibilidade final é sempre confirmada pela equipe.\n\n");
         }
 
         // --- INSTRUÇÕES + TAGS ---

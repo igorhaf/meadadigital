@@ -5,6 +5,11 @@ export type UpdateConfigInput = {
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
   slotMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  autoDeliverEnabled: boolean
+  postDeliveryUpsellEnabled: boolean
+  cancellationPolicyHours: number | null
 }
 
 export function getConfig(): Promise<FotografiaConfig> {
@@ -12,5 +17,8 @@ export function getConfig(): Promise<FotografiaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<FotografiaConfig> {
-  return apiFetch<FotografiaConfig>('/api/fotografia/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<FotografiaConfig>('/api/fotografia/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

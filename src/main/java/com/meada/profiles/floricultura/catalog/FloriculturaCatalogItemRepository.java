@@ -19,7 +19,7 @@ import java.util.UUID;
 public class FloriculturaCatalogItemRepository {
 
     private static final String COLS =
-        "id, name, description, price_cents, category, available, created_at, updated_at";
+        "id, name, description, price_cents, category, available, suggestible, created_at, updated_at";
 
     private final JdbcTemplate jdbcTemplate;
     private final FloriculturaCatalogOptionRepository optionRepository;
@@ -38,6 +38,7 @@ public class FloriculturaCatalogItemRepository {
         rs.getInt("price_cents"),
         rs.getString("category"),
         rs.getBoolean("available"),
+        rs.getBoolean("suggestible"),
         rs.getTimestamp("created_at").toInstant(),
         rs.getTimestamp("updated_at").toInstant(),
         List.of());
@@ -75,15 +76,15 @@ public class FloriculturaCatalogItemRepository {
     private FloriculturaCatalogItem withOptions(UUID companyId, FloriculturaCatalogItem it) {
         List<FloriculturaCatalogOption> options = optionRepository.listByItem(companyId, it.id());
         return new FloriculturaCatalogItem(it.id(), it.name(), it.description(), it.priceCents(),
-            it.category(), it.available(), it.createdAt(), it.updatedAt(), options);
+            it.category(), it.available(), it.suggestible(), it.createdAt(), it.updatedAt(), options);
     }
 
     public FloriculturaCatalogItem insert(UUID companyId, String name, String description,
-                                 int priceCents, String category) {
+                                 int priceCents, String category, boolean suggestible) {
         UUID id = jdbcTemplate.queryForObject(
-            "insert into floricultura_catalog_items (company_id, name, description, price_cents, category) "
-                + "values (?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, name.trim(), description, priceCents, category);
+            "insert into floricultura_catalog_items (company_id, name, description, price_cents, category, suggestible) "
+                + "values (?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, name.trim(), description, priceCents, category, suggestible);
         return findById(companyId, id).orElseThrow();
     }
 
@@ -92,7 +93,8 @@ public class FloriculturaCatalogItemRepository {
      * atualizado, ou empty se não existir/pertencer ao tenant.
      */
     public Optional<FloriculturaCatalogItem> update(UUID companyId, UUID id, String name, String description,
-                                           Integer priceCents, String category, Boolean available) {
+                                           Integer priceCents, String category, Boolean available,
+                                           Boolean suggestible) {
         List<String> sets = new ArrayList<>();
         List<Object> args = new ArrayList<>();
         if (name != null && !name.isBlank()) { sets.add("name = ?"); args.add(name.trim()); }
@@ -101,6 +103,7 @@ public class FloriculturaCatalogItemRepository {
         if (priceCents != null) { sets.add("price_cents = ?"); args.add(priceCents); }
         if (category != null && !category.isBlank()) { sets.add("category = ?"); args.add(category); }
         if (available != null) { sets.add("available = ?"); args.add(available); }
+        if (suggestible != null) { sets.add("suggestible = ?"); args.add(suggestible); }
 
         if (!sets.isEmpty()) {
             sets.add("updated_at = now()");

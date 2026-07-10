@@ -2,13 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { createInvitation, type Invitation } from '@/lib/api/invitations'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 const inviteSchema = z.object({
   email: z.string().email('Email inválido'),
@@ -25,13 +26,7 @@ type InviteForm = z.infer<typeof inviteSchema>
  * O sucesso NÃO fecha o modal automaticamente — o admin precisa copiar o link primeiro.
  * Fechar (ou "Novo convite") reseta para o estado de form. Invalida a lista no sucesso.
  */
-export function CreateInvitationDialog({
-  open,
-  onClose,
-}: {
-  open: boolean
-  onClose: () => void
-}) {
+export function CreateInvitationDialog({ open, onClose }: { open: boolean; onClose: () => void }) {
   const queryClient = useQueryClient()
   const [created, setCreated] = useState<Invitation | null>(null)
   const [serverError, setServerError] = useState<string | null>(null)
@@ -44,14 +39,12 @@ export function CreateInvitationDialog({
     formState: { errors, isSubmitting },
   } = useForm<InviteForm>({ resolver: zodResolver(inviteSchema) })
 
-  useEffect(() => {
-    if (open) {
-      reset({ email: '' })
-      setCreated(null)
-      setServerError(null)
-      setCopied(false)
-    }
-  }, [open, reset])
+  useResetWhen(open, () => {
+    reset({ email: '' })
+    setCreated(null)
+    setServerError(null)
+    setCopied(false)
+  })
 
   const mutation = useMutation({
     mutationFn: (values: InviteForm) => createInvitation(values.email),
@@ -85,11 +78,11 @@ export function CreateInvitationDialog({
       {created ? (
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Convite gerado para <span className="font-medium text-foreground">{created.email}</span>.
-            Envie este link pra pessoa. Ele expira em 7 dias.
+            Convite gerado para <span className="font-medium text-foreground">{created.email}</span>
+            . Envie este link pra pessoa. Ele expira em 7 dias.
           </p>
           <div className="flex items-center gap-2">
-            <code className="flex-1 overflow-x-auto whitespace-nowrap rounded-md border border-border bg-muted px-3 py-2 text-xs">
+            <code className="flex-1 overflow-x-auto rounded-md border border-border bg-muted px-3 py-2 text-xs whitespace-nowrap">
               {created.inviteUrl}
             </code>
             <Button type="button" variant="outline" onClick={copyLink}>

@@ -11,9 +11,14 @@ public record DermatologiaConfig(
     UUID companyId,
     LocalTime opensAt,
     LocalTime closesAt,
-    int bufferMinutes) {
+    int bufferMinutes,
+    boolean reminderEnabled,
+    boolean autoCompleteEnabled,
+    boolean recallEnabled,
+    int recallMonths) {
 
     public static DermatologiaConfig defaultFor(UUID companyId) {
-        return new DermatologiaConfig(companyId, LocalTime.of(8, 0), LocalTime.of(18, 0), 0);
+        return new DermatologiaConfig(companyId, LocalTime.of(8, 0), LocalTime.of(18, 0), 0,
+            true, true, false, 6);
     }
 }

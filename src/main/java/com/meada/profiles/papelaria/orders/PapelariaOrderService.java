@@ -59,6 +59,8 @@ public class PapelariaOrderService {
      * (PATCH /art ou tag {@code <aprovacao_arte>}).
      */
     public static class ArtNotApprovedException extends RuntimeException {}
+    public static class DepositRequiredException extends RuntimeException {}
+    public static class InvalidDepositException extends RuntimeException {}
 
     /**
      * Cria um pedido a partir das linhas confirmadas pela IA. A taxa de entrega + o lead default vêm
@@ -125,6 +127,11 @@ public class PapelariaOrderService {
                 && !current.artApproved()) {
             throw new ArtNotApprovedException();
         }
+        // Onda #1: com sinal REGISTRADO e não pago, a produção não começa (409 deposit_required).
+        if (from == PapelariaOrderStatus.ARTE_APROVACAO && newStatus == PapelariaOrderStatus.EM_PRODUCAO
+                && current.depositCents() != null && current.depositCents() > 0 && !current.depositPaid()) {
+            throw new DepositRequiredException();
+        }
 
         // rejection_reason só faz sentido na recusa; nas demais transições passa null.
         String reasonToPersist = newStatus == PapelariaOrderStatus.RECUSADO ? rejectionReason : null;
@@ -185,6 +192,16 @@ public class PapelariaOrderService {
             throw new InvalidStatusTransitionException();
         }
         orderRepository.setArtApproved(companyId, id, true);
+
+        // Onda #1: sinal registrado e NÃO pago → a arte fica aprovada mas o pedido AGUARDA o sinal
+        // em arte_aprovacao (marcar o sinal como pago move automaticamente — ver setDeposit).
+        if (current.depositCents() != null && current.depositCents() > 0 && !current.depositPaid()) {
+            notifier.notifyStatus(companyId, current.conversationId(),
+                "Arte aprovada! 🎉 Para iniciarmos a produção, falta a confirmação do sinal de R$ "
+                    + brl(current.depositCents()) + ". Assim que recebermos, sua encomenda entra na fila.");
+            return orderRepository.findById(companyId, id).orElseThrow(OrderNotFoundException::new);
+        }
+
         orderRepository.updateStatus(companyId, id, PapelariaOrderStatus.EM_PRODUCAO.id(), null);
 
         String text = PapelariaOrderStatus.EM_PRODUCAO.notificationText();
@@ -192,5 +209,36 @@ public class PapelariaOrderService {
             notifier.notifyStatus(companyId, current.conversationId(), text);
         }
         return orderRepository.findById(companyId, id).orElseThrow(OrderNotFoundException::new);
+    }
+
+    /**
+     * Registra o sinal e/ou marca como recebido (onda #1 — manual até o gateway #50). Marcar pago
+     * exige valor &gt; 0 (400 invalid_deposit). Se a ARTE JÁ estava aprovada e o pedido aguardava o
+     * sinal em arte_aprovacao, o pagamento MOVE automaticamente pra em_producao (fecha o loop).
+     */
+    @Transactional
+    public PapelariaOrder setDeposit(UUID companyId, UUID id, Integer depositCents, boolean depositPaid) {
+        if (depositCents != null && depositCents < 0) {
+            throw new InvalidDepositException();
+        }
+        if (depositPaid && (depositCents == null || depositCents <= 0)) {
+            throw new InvalidDepositException();
+        }
+        PapelariaOrder updated = orderRepository.updateDeposit(companyId, id, depositCents, depositPaid)
+            .orElseThrow(OrderNotFoundException::new);
+        if (depositPaid && updated.artApproved()
+                && PapelariaOrderStatus.ARTE_APROVACAO.id().equals(updated.status())) {
+            orderRepository.updateStatus(companyId, id, PapelariaOrderStatus.EM_PRODUCAO.id(), null);
+            String text = PapelariaOrderStatus.EM_PRODUCAO.notificationText();
+            if (text != null) {
+                notifier.notifyStatus(companyId, updated.conversationId(), text);
+            }
+            return orderRepository.findById(companyId, id).orElseThrow(OrderNotFoundException::new);
+        }
+        return updated;
+    }
+
+    private static String brl(int cents) {
+        return String.format("%d,%02d", cents / 100, cents % 100);
     }
 }

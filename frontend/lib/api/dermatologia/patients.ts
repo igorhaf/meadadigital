@@ -24,7 +24,9 @@ export function listPatients(
   if (opts.active !== undefined) p.set('active', String(opts.active))
   if (opts.search) p.set('search', opts.search)
   const qs = p.toString()
-  return apiFetch<{ items: DermatologiaPatient[] }>(`/api/dermatologia/patients${qs ? `?${qs}` : ''}`)
+  return apiFetch<{ items: DermatologiaPatient[] }>(
+    `/api/dermatologia/patients${qs ? `?${qs}` : ''}`,
+  )
 }
 
 export function getPatient(id: string): Promise<DermatologiaPatient> {
@@ -32,15 +34,23 @@ export function getPatient(id: string): Promise<DermatologiaPatient> {
 }
 
 export function createPatient(input: CreatePatientInput): Promise<DermatologiaPatient> {
-  return apiFetch<DermatologiaPatient>('/api/dermatologia/patients', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<DermatologiaPatient>('/api/dermatologia/patients', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updatePatient(id: string, input: UpdatePatientInput): Promise<DermatologiaPatient> {
-  return apiFetch<DermatologiaPatient>(`/api/dermatologia/patients/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<DermatologiaPatient>(`/api/dermatologia/patients/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function archivePatient(id: string): Promise<DermatologiaPatient> {
-  return apiFetch<DermatologiaPatient>(`/api/dermatologia/patients/${id}/archive`, { method: 'PATCH' })
+  return apiFetch<DermatologiaPatient>(`/api/dermatologia/patients/${id}/archive`, {
+    method: 'PATCH',
+  })
 }
 
 export function deletePatient(id: string): Promise<void> {

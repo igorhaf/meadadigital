@@ -99,8 +99,22 @@ public class AberturaOsConfirmHandler {
         }
 
         try {
-            ServiceOrder created = orderService.open(companyId, vehicleId, mechanicId, conversationId,
-                complaint, null, null, notes);
+            // Onda 1 (backlog #1): serviços TABELADOS opcionais — só ids do catálogo do tenant
+            // viajam na tag; o preço vem do catálogo (a IA segue sem inventar preço).
+            java.util.List<ServiceOrderService.CatalogLine> catalogLines = new java.util.ArrayList<>();
+            JsonNode servicos = root.path("servicos");
+            if (servicos.isArray()) {
+                for (JsonNode sv : servicos) {
+                    UUID catalogItemId = parseUuid(sv.path("id").asText(null));
+                    int qtd = sv.path("qtd").asInt(1);
+                    if (catalogItemId != null) {
+                        catalogLines.add(new ServiceOrderService.CatalogLine(catalogItemId, qtd));
+                    }
+                }
+            }
+
+            ServiceOrder created = orderService.openWithCatalogItems(companyId, vehicleId, mechanicId,
+                conversationId, complaint, null, null, notes, catalogLines);
             log.info("oficina: OS {} aberta p/ conversa {} (veículo {})", created.id(), conversationId, vehicleId);
             return Optional.of(created);
         } catch (ServiceOrderService.VehicleNotFoundException | ServiceOrderService.InactiveVehicleException

@@ -42,7 +42,10 @@ export function createAnimal(input: CreateAnimalInput): Promise<PetAnimal> {
 }
 
 export function updateAnimal(id: string, input: UpdateAnimalInput): Promise<PetAnimal> {
-  return apiFetch<PetAnimal>(`/api/pet/animals/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<PetAnimal>(`/api/pet/animals/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function archiveAnimal(id: string): Promise<PetAnimal> {

@@ -85,9 +85,7 @@ export default function ConversationsPage() {
     {
       key: 'status',
       header: 'Status',
-      render: (c) => (
-        <Badge variant={c.status === 'open' ? 'success' : 'danger'}>{c.status}</Badge>
-      ),
+      render: (c) => <Badge variant={c.status === 'open' ? 'success' : 'danger'}>{c.status}</Badge>,
     },
     {
       key: 'handledBy',
@@ -101,12 +99,7 @@ export default function ConversationsPage() {
       header: 'Tags',
       render: (c) => {
         const tags: Tag[] = tagsByConv?.[c.id] ?? []
-        if (
-          tags.length === 0 &&
-          !c.markedUnread &&
-          !c.schedulingIntent &&
-          !c.complaintIntent
-        ) {
+        if (tags.length === 0 && !c.markedUnread && !c.schedulingIntent && !c.complaintIntent) {
           return <span className="text-muted-foreground">—</span>
         }
         return (
@@ -138,8 +131,7 @@ export default function ConversationsPage() {
     {
       key: 'lastMessageAt',
       header: 'Última atualização',
-      render: (c) =>
-        c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString('pt-BR') : '—',
+      render: (c) => (c.lastMessageAt ? new Date(c.lastMessageAt).toLocaleString('pt-BR') : '—'),
     },
   ]
 
@@ -176,9 +168,7 @@ export default function ConversationsPage() {
           loading={isPending}
           emptyMessage="Nenhuma conversa ainda. Mensagens aparecerão aqui quando seus clientes interagirem pelo WhatsApp."
           searchPlaceholder="Buscar por contato ou telefone…"
-          searchFn={(c, q) =>
-            `${c.contactName ?? ''} ${c.contactPhone}`.toLowerCase().includes(q)
-          }
+          searchFn={(c, q) => `${c.contactName ?? ''} ${c.contactPhone}`.toLowerCase().includes(q)}
           actions={(c) => (
             <div className="flex items-center gap-1.5">
               <Link href={`/dashboard/conversations/${c.id}`}>
@@ -190,9 +180,7 @@ export default function ConversationsPage() {
                 variant="outline"
                 className="h-7 px-2 text-xs"
                 disabled={toggleUnread.isPending && toggleUnread.variables?.id === c.id}
-                onClick={() =>
-                  toggleUnread.mutate({ id: c.id, markedUnread: !c.markedUnread })
-                }
+                onClick={() => toggleUnread.mutate({ id: c.id, markedUnread: !c.markedUnread })}
               >
                 {c.markedUnread ? 'Desmarcar' : 'Marcar como não lida'}
               </Button>

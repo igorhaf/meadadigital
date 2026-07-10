@@ -6,6 +6,10 @@ export type UpdateConfigInput = {
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
   notes?: string | null
+  visitReminderEnabled: boolean
+  visitAutoCompleteEnabled: boolean
+  paymentReminderEnabled: boolean
+  paymentDueDay: number
 }
 
 export function getConfig(): Promise<EscolaConfig> {
@@ -13,5 +17,8 @@ export function getConfig(): Promise<EscolaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<EscolaConfig> {
-  return apiFetch<EscolaConfig>('/api/escola/config', { method: 'PUT', body: JSON.stringify(input) })
+  return apiFetch<EscolaConfig>('/api/escola/config', {
+    method: 'PUT',
+    body: JSON.stringify(input),
+  })
 }

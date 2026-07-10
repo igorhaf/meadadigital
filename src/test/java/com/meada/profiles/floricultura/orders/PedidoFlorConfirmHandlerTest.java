@@ -62,7 +62,7 @@ class PedidoFlorConfirmHandlerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("tag com itens válidos COM opções + entrega agendada → cria pedido, unit_price = base + Σ deltas, total descarta o da IA")
     void parseAndCreate_withOptions() {
-        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê de Rosas", null, 2500, "buques");
+        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê de Rosas", null, 2500, "buques", false);
         FloriculturaCatalogOption grande = catalogService.addOption(COMPANY, USER, buque.id(), "Tamanho", "Grande", 300, 0);
         FloriculturaCatalogOption vermelho = catalogService.addOption(COMPANY, USER, buque.id(), "Cor", "Vermelho", 200, 1);
 
@@ -92,7 +92,7 @@ class PedidoFlorConfirmHandlerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("item sem opções + sem cartão → cria com unit_price = base, cardMessage null")
     void parseAndCreate_noOptions() {
-        FloriculturaCatalogItem planta = catalogService.create(COMPANY, USER, "Suculenta", null, 600, "plantas");
+        FloriculturaCatalogItem planta = catalogService.create(COMPANY, USER, "Suculenta", null, 600, "plantas", false);
         String aiText = "Beleza!\n<pedido_flor>{\"items\":[{\"item_id\":\"" + planta.id() + "\",\"qtd\":3}],"
             + "\"endereco\":\"Rua Y 20\",\"data_entrega\":\"" + amanha() + "\",\"periodo\":\"tarde\","
             + "\"destinatario\":\"João\",\"total_cents\":0}</pedido_flor>";
@@ -111,7 +111,7 @@ class PedidoFlorConfirmHandlerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("data_entrega no PASSADO → Optional.empty + 0 pedidos (ESCAPADA: entrega agendada)")
     void parseAndCreate_pastDate_aborts() {
-        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê", null, 2000, "buques");
+        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê", null, 2000, "buques", false);
         String ontem = LocalDate.now(ZoneId.of("America/Sao_Paulo")).minusDays(1).toString();
         String aiText = "Confirmado!\n<pedido_flor>{\"items\":[{\"item_id\":\"" + buque.id() + "\",\"qtd\":1}],"
             + "\"endereco\":\"Rua X\",\"data_entrega\":\"" + ontem + "\",\"periodo\":\"manha\","
@@ -124,7 +124,7 @@ class PedidoFlorConfirmHandlerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("tag sem destinatário → Optional.empty (ESCAPADA: flor é pra alguém)")
     void parseAndCreate_noRecipient_aborts() {
-        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê", null, 2000, "buques");
+        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê", null, 2000, "buques", false);
         String aiText = "Confirmado!\n<pedido_flor>{\"items\":[{\"item_id\":\"" + buque.id() + "\",\"qtd\":1}],"
             + "\"endereco\":\"Rua X\",\"data_entrega\":\"" + amanha() + "\",\"periodo\":\"manha\","
             + "\"total_cents\":2000}</pedido_flor>";
@@ -147,8 +147,8 @@ class PedidoFlorConfirmHandlerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("option_id fantasma (não pertence ao item) → Optional.empty + 0 pedidos")
     void parseAndCreate_invalidOption_aborts() {
-        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê Misto", null, 3000, "buques");
-        FloriculturaCatalogItem outro = catalogService.create(COMPANY, USER, "Cesta", null, 4000, "cestas");
+        FloriculturaCatalogItem buque = catalogService.create(COMPANY, USER, "Buquê Misto", null, 3000, "buques", false);
+        FloriculturaCatalogItem outro = catalogService.create(COMPANY, USER, "Cesta", null, 4000, "cestas", false);
         FloriculturaCatalogOption optDeOutroItem = catalogService.addOption(COMPANY, USER, outro.id(), "Conteúdo", "Chocolates", 500, 0);
 
         String aiText = "Confirmado!\n<pedido_flor>{\"items\":[{\"item_id\":\"" + buque.id() + "\",\"qtd\":1,"
@@ -171,7 +171,7 @@ class PedidoFlorConfirmHandlerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("tag sem endereço → Optional.empty (pedido não criado)")
     void parseAndCreate_noAddress() {
-        FloriculturaCatalogItem item = catalogService.create(COMPANY, USER, "Arranjo", null, 1500, "arranjos");
+        FloriculturaCatalogItem item = catalogService.create(COMPANY, USER, "Arranjo", null, 1500, "arranjos", false);
         String aiText = "Confirmado!\n<pedido_flor>{\"items\":[{\"item_id\":\"" + item.id()
             + "\",\"qtd\":1}],\"data_entrega\":\"" + amanha() + "\",\"periodo\":\"manha\","
             + "\"destinatario\":\"Ana\",\"total_cents\":1500}</pedido_flor>";

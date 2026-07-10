@@ -12,7 +12,14 @@ export type CreateAppointmentInput = {
 }
 
 export function listAppointments(
-  opts: { status?: string; dateFrom?: string; dateTo?: string; patientId?: string; page?: number; pageSize?: number } = {},
+  opts: {
+    status?: string
+    dateFrom?: string
+    dateTo?: string
+    patientId?: string
+    page?: number
+    pageSize?: number
+  } = {},
 ): Promise<AppointmentPage> {
   const p = new URLSearchParams()
   if (opts.status) p.set('status', opts.status)
@@ -36,7 +43,10 @@ export function createAppointment(input: CreateAppointmentInput): Promise<Appoin
   })
 }
 
-export function updateAppointmentStatus(id: string, newStatus: AppointmentStatusId): Promise<Appointment> {
+export function updateAppointmentStatus(
+  id: string,
+  newStatus: AppointmentStatusId,
+): Promise<Appointment> {
   return apiFetch<Appointment>(`/api/dental/appointments/${id}/status`, {
     method: 'PATCH',
     body: JSON.stringify({ newStatus }),

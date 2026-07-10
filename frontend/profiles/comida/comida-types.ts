@@ -29,12 +29,7 @@ export type MenuItem = {
 
 /** Status de um pedido (espelha ComidaOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'em_preparo'
-  | 'saiu_entrega'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'em_preparo' | 'saiu_entrega' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Opção escolhida num item de pedido (snapshot de label+delta no momento do pedido). */
 export type OrderItemOption = {
@@ -68,7 +63,8 @@ export type Order = {
   couponCodeSnapshot: string | null
   loyaltyApplied: boolean
   zoneNameSnapshot: string | null
-  deliveryAddress: string
+  fulfillment: 'entrega' | 'retirada'
+  deliveryAddress: string | null
   notes: string | null
   rejectionReason: string | null
   createdAt: string

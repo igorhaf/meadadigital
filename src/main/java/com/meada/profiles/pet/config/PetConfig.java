@@ -11,9 +11,10 @@ public record PetConfig(
     UUID companyId,
     LocalTime opensAt,
     LocalTime closesAt,
-    int bufferMinutes) {
+    int bufferMinutes,
+    boolean reminderEnabled) {
 
     public static PetConfig defaultFor(UUID companyId) {
-        return new PetConfig(companyId, LocalTime.of(9, 0), LocalTime.of(19, 0), 0);
+        return new PetConfig(companyId, LocalTime.of(9, 0), LocalTime.of(19, 0), 0, true);
     }
 }

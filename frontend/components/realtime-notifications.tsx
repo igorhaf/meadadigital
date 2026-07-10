@@ -70,11 +70,11 @@ export function RealtimeNotifications() {
   if (toasts.length === 0) return null
 
   return (
-    <div className="fixed bottom-4 right-4 z-50 flex flex-col gap-2">
+    <div className="fixed right-4 bottom-4 z-50 flex flex-col gap-2">
       {toasts.map((t) => (
         <div
           key={t.id}
-          className="rounded-lg border border-border bg-popover text-popover-foreground px-4 py-3 text-sm shadow-lg"
+          className="rounded-lg border border-border bg-popover px-4 py-3 text-sm text-popover-foreground shadow-lg"
         >
           {t.text}
         </div>

@@ -6,10 +6,10 @@ import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
+import { TagColorPicker } from '@/components/tag-color-picker'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
-import { TagColorPicker } from '@/components/tag-color-picker'
-import { createTag, updateTag, TAG_COLORS, type Tag, type TagColor } from '@/lib/supabase/tags'
+import { createTag, TAG_COLORS, updateTag, type Tag, type TagColor } from '@/lib/supabase/tags'
 
 // name 1..30 chars (espelha o CHECK do banco); color restrita à paleta de 8.
 const tagSchema = z.object({
@@ -107,17 +107,13 @@ export function CreateTagDialog({
             className="w-full rounded-md border border-border px-3 py-2 text-sm"
             {...register('name')}
           />
-          {errors.name && (
-            <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>
-          )}
+          {errors.name && <p className="mt-1 text-sm text-destructive">{errors.name.message}</p>}
         </div>
 
         <div>
           <span className="mb-1 block text-sm font-medium">Cor</span>
           <TagColorPicker value={color} onChange={(c) => setValue('color', c)} />
-          {errors.color && (
-            <p className="mt-1 text-sm text-destructive">{errors.color.message}</p>
-          )}
+          {errors.color && <p className="mt-1 text-sm text-destructive">{errors.color.message}</p>}
         </div>
 
         {serverError && <p className="text-sm text-destructive">{serverError}</p>}

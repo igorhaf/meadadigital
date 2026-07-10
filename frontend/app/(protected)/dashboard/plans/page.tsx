@@ -4,18 +4,12 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { Modal } from '@/components/ui/modal'
-import {
-  createPlan,
-  deletePlan,
-  listPlans,
-  updatePlan,
-  type Plan,
-} from '@/lib/api/admin/plans'
+import { createPlan, deletePlan, listPlans, updatePlan, type Plan } from '@/lib/api/admin/plans'
+import { ApiError } from '@/lib/api/client'
 
 /** Formata centavos em R$ pt-BR; 0 vira "Sob consulta". */
 function formatPrice(cents: number): string {
@@ -40,7 +34,14 @@ type FormState = {
 }
 
 const EMPTY_FORM: FormState = {
-  name: '', slug: '', price: '', maxAdmins: '', maxFaqs: '', maxConversationsMonth: '', maxUsers: '', features: '',
+  name: '',
+  slug: '',
+  price: '',
+  maxAdmins: '',
+  maxFaqs: '',
+  maxConversationsMonth: '',
+  maxUsers: '',
+  features: '',
 }
 
 /** "" → null (ilimitado); número válido → int. */
@@ -130,7 +131,8 @@ export default function PlansPage() {
       maxFaqs: p.maxFaqs?.toString() ?? '',
       maxConversationsMonth: p.maxConversationsMonth?.toString() ?? '',
       maxUsers: p.maxUsers?.toString() ?? '',
-      features: p.features && Object.keys(p.features).length > 0 ? JSON.stringify(p.features, null, 2) : '',
+      features:
+        p.features && Object.keys(p.features).length > 0 ? JSON.stringify(p.features, null, 2) : '',
     })
     setFormError(null)
     setModalOpen(true)
@@ -138,8 +140,16 @@ export default function PlansPage() {
 
   const columns: Column<Plan>[] = [
     { key: 'name', header: 'Nome', render: (p) => <span className="font-medium">{p.name}</span> },
-    { key: 'slug', header: 'Slug', render: (p) => <span className="font-mono text-xs text-muted-foreground">{p.slug}</span> },
-    { key: 'price', header: 'Preço/mês', render: (p) => <span className="tabular-nums">{formatPrice(p.monthlyPriceCents)}</span> },
+    {
+      key: 'slug',
+      header: 'Slug',
+      render: (p) => <span className="font-mono text-xs text-muted-foreground">{p.slug}</span>,
+    },
+    {
+      key: 'price',
+      header: 'Preço/mês',
+      render: (p) => <span className="tabular-nums">{formatPrice(p.monthlyPriceCents)}</span>,
+    },
     {
       key: 'limits',
       header: 'Limites (adm/faqs/conv)',
@@ -152,21 +162,32 @@ export default function PlansPage() {
     {
       key: 'active',
       header: 'Estado',
-      render: (p) => (p.active ? <Badge variant="success">Ativo</Badge> : <Badge variant="muted">Inativo</Badge>),
+      render: (p) =>
+        p.active ? <Badge variant="success">Ativo</Badge> : <Badge variant="muted">Inativo</Badge>,
     },
     {
       key: 'actions',
       header: '',
       render: (p) => (
         <div className="flex justify-end gap-1">
-          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(p)}>Editar</Button>
-          <Button variant="outline" className="h-7 px-2 text-xs" disabled={toggleMutation.isPending}
-            onClick={() => toggleMutation.mutate(p)}>
+          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(p)}>
+            Editar
+          </Button>
+          <Button
+            variant="outline"
+            className="h-7 px-2 text-xs"
+            disabled={toggleMutation.isPending}
+            onClick={() => toggleMutation.mutate(p)}
+          >
             {p.active ? 'Desativar' : 'Ativar'}
           </Button>
           {p.active && (
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={deleteMutation.isPending}
-              onClick={() => deleteMutation.mutate(p.id)}>
+            <Button
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              disabled={deleteMutation.isPending}
+              onClick={() => deleteMutation.mutate(p.id)}
+            >
               Excluir
             </Button>
           )}
@@ -194,7 +215,12 @@ export default function PlansPage() {
         />
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar plano' : 'Novo plano'} size="lg">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar plano' : 'Novo plano'}
+        size="lg"
+      >
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -205,56 +231,103 @@ export default function PlansPage() {
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                required
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Slug</label>
-              <input value={form.slug} onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))} required
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono" />
+              <input
+                value={form.slug}
+                onChange={(e) => setForm((f) => ({ ...f, slug: e.target.value }))}
+                required
+                className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm"
+              />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Preço mensal (R$, 0 = sob consulta)</label>
-            <input type="number" min="0" step="0.01" value={form.price}
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Preço mensal (R$, 0 = sob consulta)
+            </label>
+            <input
+              type="number"
+              min="0"
+              step="0.01"
+              value={form.price}
               onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Máx. admins (vazio = ∞)</label>
-              <input type="number" min="0" value={form.maxAdmins}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Máx. admins (vazio = ∞)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.maxAdmins}
                 onChange={(e) => setForm((f) => ({ ...f, maxAdmins: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Máx. FAQs (vazio = ∞)</label>
-              <input type="number" min="0" value={form.maxFaqs}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Máx. FAQs (vazio = ∞)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.maxFaqs}
                 onChange={(e) => setForm((f) => ({ ...f, maxFaqs: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Máx. conversas/mês (vazio = ∞)</label>
-              <input type="number" min="0" value={form.maxConversationsMonth}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Máx. conversas/mês (vazio = ∞)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.maxConversationsMonth}
                 onChange={(e) => setForm((f) => ({ ...f, maxConversationsMonth: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Máx. usuários (vazio = ∞)</label>
-              <input type="number" min="0" value={form.maxUsers}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Máx. usuários (vazio = ∞)
+              </label>
+              <input
+                type="number"
+                min="0"
+                value={form.maxUsers}
                 onChange={(e) => setForm((f) => ({ ...f, maxUsers: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Features (JSON, opcional)</label>
-            <textarea value={form.features} onChange={(e) => setForm((f) => ({ ...f, features: e.target.value }))}
-              rows={3} placeholder='{"webhooks": true}'
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm font-mono" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Features (JSON, opcional)
+            </label>
+            <textarea
+              value={form.features}
+              onChange={(e) => setForm((f) => ({ ...f, features: e.target.value }))}
+              rows={3}
+              placeholder='{"webhooks": true}'
+              className="w-full rounded-md border border-border bg-background px-3 py-2 font-mono text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>

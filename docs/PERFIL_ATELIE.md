@@ -215,3 +215,24 @@ outras. O `OutboundService` remove a tag antes de enviar ao cliente.
   artesãos + propostas do contato em aberto; **NÃO injeta as provas**), invalidado em toda mutação.
 - Guard `/api/atelie/**` → 403 `forbidden_wrong_profile`. Paleta `orquidea`.
 - Tenant de teste: `igorhaf25` (Ateliê Modelo).
+
+## Onda 3 do backlog (migration 111)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_ATELIE.md` (#3, #6 e #7):
+
+- **#6 CONFIRMAÇÃO DE PROVA:** fecha o loop do lembrete de véspera (onda 1). O contexto da IA
+  lista as provas PENDENTES futuras do contato (fitting_id + data) e instrui a tag
+  `<confirmacao_prova>{fitting_id}` quando o cliente confirma presença; o handler grava
+  `confirmed_at`+`confirmed_due_date` (metadado — o status segue binário; **remarcar invalida**
+  a confirmação, marker <> due_date) com barreira de contato via proposta. Badge "presença
+  confirmada" na lista de provas do painel. Pedido de remarcação segue pra equipe.
+- **#7 PÓS-ENTREGA:** ao entrar em `realizada`, agradecimento + `review_link` + convite de
+  indicação (toggle `post_delivery_enabled`, default ON).
+- **#3 REATIVAÇÃO DE INATIVO** (`atelie_reactivation_log`, opt-in **OFF** — lição Baileys):
+  última proposta REALIZADA há `reactivation_days` (default 90) sem proposta viva → 1 convite
+  por ciclo via `AtelieReactivationJob` (cron 11:20); proposta viva suprime.
+
+Settings ganhou a seção "Pós-entrega e reativação". Teste: `AtelieOnda3IntegrationTest`.
+
+**Fica pra onda 4** (registrado): #4 pagamento online (gateway #50), #5 foto de referência
+(upload), #8 CMS, #11 indicação, #16 aniversário (exige data no contato).

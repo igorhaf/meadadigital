@@ -264,4 +264,11 @@ public class ServiceOrderRepository {
                 + "updated_at = now() where company_id = ? and id = ?",
             serviceOrderId, companyId, serviceOrderId);
     }
+
+    /** Materializa o retorno sugerido na ENTREGA (onda 1, backlog #2). */
+    public void setNextReturnDate(UUID companyId, UUID id, java.time.LocalDate nextReturnDate) {
+        jdbcTemplate.update(
+            "update service_orders set next_return_date = ? where company_id = ? and id = ?",
+            java.sql.Date.valueOf(nextReturnDate), companyId, id);
+    }
 }

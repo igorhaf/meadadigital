@@ -28,11 +28,18 @@ export function getEnrollment(id: string): Promise<Enrollment> {
 }
 
 export function createEnrollment(input: CreateEnrollmentInput): Promise<Enrollment> {
-  return apiFetch<Enrollment>('/api/cursos/enrollments', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Enrollment>('/api/cursos/enrollments', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateEnrollmentStatus(id: string, newStatus: CursoEnrollmentStatusId): Promise<Enrollment> {
+export function updateEnrollmentStatus(
+  id: string,
+  newStatus: CursoEnrollmentStatusId,
+): Promise<Enrollment> {
   return apiFetch<Enrollment>(`/api/cursos/enrollments/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

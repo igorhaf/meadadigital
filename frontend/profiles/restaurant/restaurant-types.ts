@@ -18,6 +18,8 @@ export type ReservationConfig = {
   bufferMinutes: number
   opensAt: string
   closesAt: string
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
 }
 
 /** Reserva (espelha Reservation). startAt/endAt em ISO-8601 instant. */

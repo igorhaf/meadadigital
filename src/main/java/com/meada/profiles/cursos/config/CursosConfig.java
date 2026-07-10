@@ -12,9 +12,12 @@ public record CursosConfig(
     UUID companyId,
     LocalTime opensAt,
     LocalTime closesAt,
-    String notes) {
+    String notes,
+    boolean nudgeEnabled,
+    int nudgeDays,
+    String certificateBaseUrl) {
 
     public static CursosConfig defaultFor(UUID companyId) {
-        return new CursosConfig(companyId, LocalTime.of(8, 0), LocalTime.of(22, 0), null);
+        return new CursosConfig(companyId, LocalTime.of(8, 0), LocalTime.of(22, 0), null, true, 7, null);
     }
 }

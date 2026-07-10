@@ -17,16 +17,23 @@ export function listCoupons(): Promise<{ items: AtelieCoupon[] }> {
 }
 
 export function createCoupon(input: CreateCouponInput): Promise<AtelieCoupon> {
-  return apiFetch<AtelieCoupon>('/api/atelie/coupons', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<AtelieCoupon>('/api/atelie/coupons', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateCoupon(id: string, input: UpdateCouponInput): Promise<AtelieCoupon> {
-  return apiFetch<AtelieCoupon>(`/api/atelie/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<AtelieCoupon>(`/api/atelie/coupons/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCoupon(id: string, active: boolean): Promise<AtelieCoupon> {
   return apiFetch<AtelieCoupon>(`/api/atelie/coupons/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

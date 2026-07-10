@@ -1,4 +1,4 @@
-import type { NextConfig } from "next";
+import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
   output: 'standalone',
@@ -8,10 +8,7 @@ const nextConfig: NextConfig = {
   // o "front do Meada root". Cobre o domínio-base + TODOS os subdomínios (nichos E tenants, ex.:
   // comida-modelo.meadadigital.local no "Acessar admin") via wildcard — assim tenant novo não
   // exige editar esta lista.
-  allowedDevOrigins: [
-    'meadadigital.local',
-    '*.meadadigital.local',
-  ],
+  allowedDevOrigins: ['meadadigital.local', '*.meadadigital.local'],
   // Compat: o sushi foi alinhado ao padrão {nicho}-* (sushi-menu/sushi-orders). Redireciona as
   // rotas genéricas antigas (bookmark/histórico) pras novas. 308 permanente.
   async redirects() {
@@ -35,6 +32,6 @@ const nextConfig: NextConfig = {
       },
     ]
   },
-};
+}
 
-export default nextConfig;
+export default nextConfig

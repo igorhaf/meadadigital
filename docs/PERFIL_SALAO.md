@@ -64,3 +64,16 @@ agenda e marca o horário. Você acompanha tudo pela agenda e muda o status conf
 - **Fuso fixo** America/Sao_Paulo.
 - **Risco aceito no MVP:** se a IA prometer um horário e o backend detectar conflito ao gravar, o
   agendamento não é criado — contorne manualmente. É raro.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_SALON #1/#7, migration 90)
+
+- **Lembrete de véspera (#1, `SalonReminderJob`, cron 9h30):** agendamentos `agendado`/`confirmado`
+  com start_at AMANHÃ (America/Sao_Paulo) recebem mensagem FIXA pela conversa ("seu horário com
+  {profissional} é amanhã às {hora} — confirma?"); a resposta cai no fluxo inbound normal (a IA
+  confirma/remarca pela tag `<agendamento>`). Idempotência por (agendamento, start_at) via
+  `reminded_start_at` — REMARCAR rearma. Sem canal (POST manual) → marca sem envio. Toggle
+  `reminder_enabled` (default LIGADO) em Configurações.
+- **Auto-transição opt-in (#7):** com `auto_complete_enabled` (default DESLIGADO), confirmado com
+  `end_at` no passado vira `realizado` automaticamente (transição válida da máquina; realizado é
+  SILENCIOSO). `agendado` passado NÃO vira falta (falta só existe a partir de confirmado e é
+  julgamento humano). Toggle em Configurações.

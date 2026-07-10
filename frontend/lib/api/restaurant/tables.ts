@@ -23,7 +23,10 @@ export function createTable(input: CreateTableInput): Promise<Table> {
 }
 
 export function updateTable(id: string, input: UpdateTableInput): Promise<Table> {
-  return apiFetch<Table>(`/api/restaurant/tables/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Table>(`/api/restaurant/tables/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleTable(id: string, available: boolean): Promise<Table> {

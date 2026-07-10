@@ -72,3 +72,22 @@ multi-consultor com agenda/conflito.
 - Contexto via `ViagensContextCache` (TTL 20s, per (companyId, contactId)) — NÃO injeta o itinerário.
   Base de conhecimento (RAG): disponível como em todo perfil.
 - Guard `/api/viagens/**` → 403 `forbidden_wrong_profile`. Paleta `floresta`. Tenant: `igorhaf29`.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_VIAGENS #1/#2/#8, migration 87)
+
+- **Sinal/entrada com gate no fechamento (#1, ponte até o gateway #50):** a proposta ganha
+  `deposit_cents`/`deposit_paid`/`deposit_paid_at` (PATCH `/api/viagens/proposals/{id}/deposit`).
+  Com sinal REGISTRADO (> 0) e NÃO pago, aprovada→fechada → **409 `deposit_required`**; sem sinal,
+  fechamento livre. Marcar pago exige valor > 0 (400 `invalid_deposit`); a partir de 'fechada' o
+  sinal congela (409 `proposal_locked`). Painel: seção "Sinal / entrada" no detalhe + selo
+  "Sinal pendente" na lista. A IA NÃO toca em valor/pagamento (trava preservada).
+- **Lembretes de viagem + pós-venda/NPS (#2, `TravelReminderJob`):** cron diário (9h10) varre as
+  propostas FECHADAS com datas e dispara mensagens FIXAS pela conversa (não passam pela IA):
+  **D-7** checklist de documentos/bagagem, **D0** boa viagem, **D+2 da volta** pós-viagem com
+  pedido de avaliação/indicação (vale também para 'realizada'). Idempotência por (proposta, data)
+  — remarcar a viagem REARMA. Sem canal → marca sem envio. Toggle `trip_reminder_enabled`
+  (default ligado) em Configurações.
+- **Follow-up de orçada parada (#8):** o mesmo job cutuca 1x a proposta 'orcada' há
+  `quote_followup_days` (default 2) sem mudança de status, transmitindo o total JÁ orçado pela
+  equipe. Re-orçar (status_updated_at avança) rearma. Toggles `quote_followup_enabled` +
+  janela em Configurações.

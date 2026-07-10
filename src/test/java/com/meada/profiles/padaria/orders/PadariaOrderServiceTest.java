@@ -311,6 +311,41 @@ class PadariaOrderServiceTest extends AbstractIntegrationTest {
         assertThat(fakeEvolution.sent()).isEmpty();
     }
 
+    // -------------------------------------------------------------------------
+    // Onda 1 do backlog (#1 sinal trava o aceite da encomenda)
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("sinal registrado e não pago → aceite bloqueado (deposit_required); pago libera")
+    void depositGateOnAccept() {
+        PadariaMenuItem pao = readyItem();
+        PadariaOrder order = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(pao.id(), 2, List.of(), null)), null, null, null);
+
+        service.setDeposit(COMPANY, order.id(), 3000, false);
+        assertThatThrownBy(() -> service.updateStatus(COMPANY, order.id(), "em_preparo", null))
+            .isInstanceOf(PadariaOrderService.DepositRequiredException.class);
+
+        PadariaOrder paid = service.setDeposit(COMPANY, order.id(), 3000, true);
+        assertThat(paid.depositPaidAt()).isNotNull();
+        assertThat(service.updateStatus(COMPANY, order.id(), "em_preparo", null).status())
+            .isEqualTo("em_preparo");
+    }
+
+    @Test
+    @DisplayName("sem sinal registrado o aceite é livre; pagar sem valor → invalid_deposit")
+    void depositOptionalAndValidation() {
+        PadariaMenuItem pao = readyItem();
+        PadariaOrder order = service.create(COMPANY, conversationId, contactId, "retirada", null,
+            List.of(new OrderLineInput(pao.id(), 1, List.of(), null)), null, null, null);
+
+        assertThatThrownBy(() -> service.setDeposit(COMPANY, order.id(), null, true))
+            .isInstanceOf(PadariaOrderService.InvalidDepositException.class);
+
+        assertThat(service.updateStatus(COMPANY, order.id(), "em_preparo", null).status())
+            .isEqualTo("em_preparo");
+    }
+
     record SentMessage(String instanceName, String token, String number, String text) {}
 
     static class FakeEvolutionSender implements EvolutionSender {

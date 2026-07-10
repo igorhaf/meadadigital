@@ -54,3 +54,17 @@ pessoas e cria a reserva. Você acompanha tudo pela agenda e muda o status confo
 - Os textos de notificação são fixos nesta versão (personalização por restaurante: fase futura).
 - **Risco aceito no MVP:** se a IA prometer um horário e, no instante de gravar, alguém tiver acabado
   de ocupar o slot, a reserva não é criada (você não a vê na agenda) — contorne manualmente. É raro.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_RESTAURANT #1/#3, migration 91)
+
+- **Lembrete D-1 + confirmação SIM/NÃO (#1):** `RestaurantReminderJob` (cron 9h40) pergunta
+  "confirma sua mesa amanhã às {hora}? Responda SIM ou NÃO" pras reservas pendente/confirmada
+  de amanhã (idempotência `reminded_24h`; sem canal marca sem envio). A resposta cai no fluxo
+  da IA, que emite `<confirmacao_reserva>{reservation_id, decisao}` (confirmada|cancelada) —
+  clone do `<confirmacao_barbearia>` com BARREIRA DE CONTATO e máquina de status validando;
+  cancelar LIBERA o slot e dispara a notificação padrão. O contexto ganhou um bloco FRESCO
+  (não cacheado) com as próximas reservas DO CONTATO + a instrução da tag. Toggle
+  `reminder_enabled` (default ligado).
+- **Auto-transição (#3):** o mesmo job move confirmada com `end_at` passado (folga 2h) →
+  `realizada` via service (silenciosa). `no_show` NÃO é automático (sem check-in no modelo,
+  falta é julgamento humano). Toggle `auto_complete_enabled` (default ligado, espelho barbearia).

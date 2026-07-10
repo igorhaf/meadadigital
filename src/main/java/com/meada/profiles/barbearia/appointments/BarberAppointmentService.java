@@ -50,6 +50,7 @@ public class BarberAppointmentService {
     private final BarberBarberRepository barberRepository;
     private final BarberServiceRepository serviceRepository;
     private final BarberConfigRepository configRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final BarberCouponRepository couponRepository;
     private final BarberLoyaltyConfigRepository loyaltyRepository;
     private final BarberAppointmentNotifier notifier;
@@ -62,11 +63,13 @@ public class BarberAppointmentService {
                                     BarberCouponRepository couponRepository,
                                     BarberLoyaltyConfigRepository loyaltyRepository,
                                     BarberAppointmentNotifier notifier,
-                                    BarberContextCache contextCache) {
+                                    BarberContextCache contextCache,
+                                    org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.appointmentRepository = appointmentRepository;
         this.barberRepository = barberRepository;
         this.serviceRepository = serviceRepository;
         this.configRepository = configRepository;
+        this.jdbcTemplate = jdbcTemplate;
         this.couponRepository = couponRepository;
         this.loyaltyRepository = loyaltyRepository;
         this.notifier = notifier;
@@ -210,6 +213,32 @@ public class BarberAppointmentService {
         String text = newStatus.notificationText(
             DATE_FMT.format(z), TIME_FMT.format(z), current.barberName());
         notifier.notifyStatus(companyId, current.conversationId(), text);
+
+        // Onda 2 (backlog #9): corte REALIZADO pede avaliação — com COOLDOWN por contato
+        // (barber_review_log) pra não spammar o cliente semanal. Toggle OFF por default.
+        if (newStatus == BarberAppointmentStatus.REALIZADO && current.contactId() != null) {
+            var config = configRepository.findByCompany(companyId);
+            if (config.postReviewEnabled()) {
+                Long recent = jdbcTemplate.queryForObject(
+                    "select count(*) from barber_review_log where company_id = ? and contact_id = ? "
+                        + "and sent_at > now() - make_interval(days => ?)",
+                    Long.class, companyId, current.contactId(), config.reviewCooldownDays());
+                if (recent != null && recent == 0) {
+                    StringBuilder pos = new StringBuilder("Valeu pela visita! 💈 ");
+                    if (config.reviewLink() != null) {
+                        pos.append("Se curtiu o corte, deixa sua avaliação — ajuda demais: ")
+                            .append(config.reviewLink());
+                    } else {
+                        pos.append("Se curtiu o corte, conta pra gente por aqui — e se algo não "
+                            + "ficou bom, queremos saber também.");
+                    }
+                    notifier.notifyStatus(companyId, current.conversationId(), pos.toString());
+                    jdbcTemplate.update(
+                        "insert into barber_review_log (company_id, contact_id) values (?, ?)",
+                        companyId, current.contactId());
+                }
+            }
+        }
 
         contextCache.invalidate(companyId);
         return appointmentRepository.findById(companyId, id).orElseThrow(AppointmentNotFoundException::new);

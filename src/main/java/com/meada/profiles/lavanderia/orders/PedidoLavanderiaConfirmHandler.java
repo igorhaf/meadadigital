@@ -139,6 +139,10 @@ public class PedidoLavanderiaConfirmHandler {
 
         String notes = root.path("notes").asText(null);
 
+        // Onda 1: cupom (#6) e express (#2) — validação/recálculo é do backend.
+        String cupom = root.path("cupom").asText(null);
+        boolean express = root.path("express").asBoolean(false);
+
         JsonNode itemsNode = root.path("items");
         if (!itemsNode.isArray() || itemsNode.isEmpty()) {
             log.warn("lavanderia: tag <pedido_lavanderia> sem items p/ conversa {} — pedido não criado", conversationId);
@@ -191,7 +195,8 @@ public class PedidoLavanderiaConfirmHandler {
         try {
             LavanderiaOrder order = orderService.create(companyId, conversationId, contactId,
                 endereco, lines, notes == null || notes.isBlank() ? null : notes.strip(),
-                collectDate, requestedDeliveryDate, periodo);
+                collectDate, requestedDeliveryDate, periodo,
+                cupom == null || cupom.isBlank() ? null : cupom.strip(), express);
             log.info("lavanderia: pedido {} criado p/ conversa {} ({} itens, coleta {}, entrega {}, total {} cents)",
                 order.id(), conversationId, lines.size(), order.collectDate(), order.deliveryDate(),
                 order.totalCents());

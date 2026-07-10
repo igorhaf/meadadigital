@@ -125,8 +125,13 @@ public class EscolaContextCache {
 
         // --- INSTRUÇÕES + TRAVA ---
         sb.append("INSTRUÇÕES (TRAVA — siga à risca):\n")
+            .append("LISTA DE ESPERA: se a família quiser uma turma SEM vaga, ofereça a lista de "
+                + "espera — emita a tag <matricula_escola> normalmente com o class_id da turma cheia "
+                + "(o sistema registra o interesse na fila e a secretaria avisa quando abrir vaga). "
+                + "Deixe claro que é lista de espera, SEM promessa de vaga nem de prazo.\n")
             .append("Você é o atendente da escola. NUNCA prometa uma vaga que não esteja confirmada na lista "
-                + "(só ofereça turma com vaga > 0). NUNCA defina, invente ou negocie mensalidade, desconto ou "
+                + "(só ofereça turma com vaga > 0 — exceto pra registrar LISTA DE ESPERA, acima). "
+                + "NUNCA defina, invente ou negocie mensalidade, desconto ou "
                 + "bolsa — informe APENAS o valor que consta na turma; questões de valor/desconto são com a "
                 + "secretaria. NUNCA dê parecer pedagógico, opinião sobre desenvolvimento da criança ou "
                 + "recomendação educacional. NUNCA invente turma, série, turno ou nome de professor. Confirme a "

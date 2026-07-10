@@ -2,13 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { createService, updateService, type Service } from '@/lib/supabase/services'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 // name obrigatório; description opcional; preço em REAIS (campo amigável), convertido para
 // price_cents na submissão. Preço vazio → null (serviço sem preço). Preço presente deve
@@ -45,7 +46,7 @@ function centsToReais(cents: number | null): string {
  *  - service presente → modo EDIÇÃO (pré-popula, updateService pelo id; companyId não é
  *    necessário no UPDATE — o RLS garante que o serviço é da empresa do tenant).
  *
- * O reset() num useEffect sincroniza o form ao abrir/trocar de registro (evita valores
+ * O reset() via useResetWhen sincroniza o form ao abrir/trocar de registro (evita valores
  * stale entre aberturas).
  */
 export function CreateServiceDialog({
@@ -70,16 +71,14 @@ export function CreateServiceDialog({
     formState: { errors, isSubmitting },
   } = useForm<ServiceForm>({ resolver: zodResolver(serviceSchema) })
 
-  useEffect(() => {
-    if (open) {
-      reset({
-        name: service?.name ?? '',
-        description: service?.description ?? '',
-        priceReais: centsToReais(service?.priceCents ?? null),
-      })
-      setServerError(null)
-    }
-  }, [open, service, reset])
+  useResetWhen(open ? (service?.id ?? 'create') : null, () => {
+    reset({
+      name: service?.name ?? '',
+      description: service?.description ?? '',
+      priceReais: centsToReais(service?.priceCents ?? null),
+    })
+    setServerError(null)
+  })
 
   const mutation = useMutation({
     mutationFn: (values: ServiceForm) => {
@@ -88,9 +87,7 @@ export function CreateServiceDialog({
         description: values.description?.trim() ? values.description.trim() : null,
         priceCents: reaisToCents(values.priceReais),
       }
-      return isEdit
-        ? updateService(service!.id, payload)
-        : createService({ companyId, ...payload })
+      return isEdit ? updateService(service!.id, payload) : createService({ companyId, ...payload })
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-services'] })

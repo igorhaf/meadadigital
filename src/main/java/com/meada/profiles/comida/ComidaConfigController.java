@@ -32,7 +32,10 @@ public class ComidaConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(int deliveryFeeCents, int minOrderCents) {}
+    public record ConfigRequest(int deliveryFeeCents, int minOrderCents, String opensAt,
+                                String closesAt, Integer autoDeliverHours,
+                                Boolean reactivationEnabled, Integer reactivationDays,
+                                String reactivationCouponCode) {}
 
     @GetMapping("/api/comida/config")
     public ResponseEntity<Object> get(
@@ -56,7 +59,23 @@ public class ComidaConfigController {
         } catch (WrongProfileException e) {
             return error(403, "Forbidden", "forbidden_wrong_profile");
         }
-        return ResponseEntity.ok(service.update(companyId, user.userId(),
-            req.deliveryFeeCents(), req.minOrderCents()));
+        java.time.LocalTime opens = null;
+        java.time.LocalTime closes = null;
+        try {
+            if (req.opensAt() != null && !req.opensAt().isBlank()) opens = java.time.LocalTime.parse(req.opensAt());
+            if (req.closesAt() != null && !req.closesAt().isBlank()) closes = java.time.LocalTime.parse(req.closesAt());
+        } catch (java.time.DateTimeException e) {
+            return error(400, "Bad Request", "invalid_time");
+        }
+        try {
+            return ResponseEntity.ok(service.update(companyId, user.userId(),
+                req.deliveryFeeCents(), req.minOrderCents(), opens, closes,
+                req.autoDeliverHours(),
+                req.reactivationEnabled() != null && req.reactivationEnabled(),
+                req.reactivationDays() == null ? 30 : req.reactivationDays(),
+                req.reactivationCouponCode()));
+        } catch (IllegalArgumentException e) {
+            return error(400, "Bad Request", "invalid_hours");
+        }
     }
 }

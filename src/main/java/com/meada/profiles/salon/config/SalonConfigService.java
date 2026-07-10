@@ -36,11 +36,12 @@ public class SalonConfigService {
 
     @Transactional
     public SalonConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
-                              int bufferMinutes) {
+                              int bufferMinutes, boolean reminderEnabled, boolean autoCompleteEnabled) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        SalonConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes);
+        SalonConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes,
+            reminderEnabled, autoCompleteEnabled);
         auditLogger.log(companyId, userId, "salon_config_updated", "salon_config", companyId,
             Map.of("buffer_minutes", bufferMinutes));
         contextCache.invalidate(companyId);

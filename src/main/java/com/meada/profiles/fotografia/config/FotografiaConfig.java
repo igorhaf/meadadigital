@@ -12,9 +12,15 @@ public record FotografiaConfig(
     UUID companyId,
     LocalTime opensAt,
     LocalTime closesAt,
-    int slotMinutes) {
+    int slotMinutes,
+    boolean reminderEnabled,
+    boolean autoCompleteEnabled,
+    boolean autoDeliverEnabled,
+    boolean postDeliveryUpsellEnabled,
+    Integer cancellationPolicyHours) {
 
     public static FotografiaConfig defaultFor(UUID companyId) {
-        return new FotografiaConfig(companyId, LocalTime.of(8, 0), LocalTime.of(20, 0), 30);
+        return new FotografiaConfig(companyId, LocalTime.of(8, 0), LocalTime.of(20, 0), 30,
+            true, true, true, true, null);
     }
 }

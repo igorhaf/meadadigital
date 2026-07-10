@@ -15,16 +15,9 @@ import {
   saveMyBusinessHours,
   type BusinessHour,
 } from '@/lib/supabase/business_hours'
+import { useOnSync } from '@/lib/use-synced-form'
 
-const WEEKDAYS = [
-  'Domingo',
-  'Segunda',
-  'Terça',
-  'Quarta',
-  'Quinta',
-  'Sexta',
-  'Sábado',
-]
+const WEEKDAYS = ['Domingo', 'Segunda', 'Terça', 'Quarta', 'Quinta', 'Sexta', 'Sábado']
 
 /** Constrói as 7 linhas fixas a partir do que veio do banco (linhas faltantes = fechado). */
 function buildSevenRows(existing: BusinessHour[]): BusinessHour[] {
@@ -63,11 +56,7 @@ export default function BusinessHoursPage() {
   })
 
   // Sincroniza o estado editável local quando os dados chegam.
-  useEffect(() => {
-    if (data) {
-      setRows(buildSevenRows(data))
-    }
-  }, [data])
+  useOnSync(data, (d) => setRows(buildSevenRows(d)))
 
   const mutation = useMutation({
     mutationFn: (toSave: BusinessHour[]) => saveMyBusinessHours(me!.companyId!, toSave),
@@ -133,36 +122,36 @@ export default function BusinessHoursPage() {
 
       <Card className="space-y-2 p-4">
         {rows.map((r) => (
-            <div
-              key={r.weekday}
-              className="flex flex-wrap items-center gap-3 border-b border-border pb-2 last:border-0"
-            >
-              <span className="w-24 text-sm font-medium">{WEEKDAYS[r.weekday]}</span>
-              <label className="flex items-center gap-1 text-sm text-muted-foreground">
-                <input
-                  type="checkbox"
-                  checked={r.closed}
-                  onChange={(e) => updateRow(r.weekday, { closed: e.target.checked })}
-                />
-                Fechado
-              </label>
+          <div
+            key={r.weekday}
+            className="flex flex-wrap items-center gap-3 border-b border-border pb-2 last:border-0"
+          >
+            <span className="w-24 text-sm font-medium">{WEEKDAYS[r.weekday]}</span>
+            <label className="flex items-center gap-1 text-sm text-muted-foreground">
               <input
-                type="time"
-                value={r.opensAt ?? ''}
-                disabled={r.closed}
-                onChange={(e) => updateRow(r.weekday, { opensAt: e.target.value || null })}
-                className="rounded-md border border-border px-2 py-1 text-sm disabled:opacity-40"
+                type="checkbox"
+                checked={r.closed}
+                onChange={(e) => updateRow(r.weekday, { closed: e.target.checked })}
               />
-              <span className="text-sm text-muted-foreground">até</span>
-              <input
-                type="time"
-                value={r.closesAt ?? ''}
-                disabled={r.closed}
-                onChange={(e) => updateRow(r.weekday, { closesAt: e.target.value || null })}
-                className="rounded-md border border-border px-2 py-1 text-sm disabled:opacity-40"
-              />
-            </div>
-          ))}
+              Fechado
+            </label>
+            <input
+              type="time"
+              value={r.opensAt ?? ''}
+              disabled={r.closed}
+              onChange={(e) => updateRow(r.weekday, { opensAt: e.target.value || null })}
+              className="rounded-md border border-border px-2 py-1 text-sm disabled:opacity-40"
+            />
+            <span className="text-sm text-muted-foreground">até</span>
+            <input
+              type="time"
+              value={r.closesAt ?? ''}
+              disabled={r.closed}
+              onChange={(e) => updateRow(r.weekday, { closesAt: e.target.value || null })}
+              className="rounded-md border border-border px-2 py-1 text-sm disabled:opacity-40"
+            />
+          </div>
+        ))}
       </Card>
 
       {validationError && <p className="text-sm text-destructive">{validationError}</p>}

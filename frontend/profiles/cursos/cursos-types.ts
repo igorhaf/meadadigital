@@ -29,6 +29,9 @@ export type Config = {
   opensAt: string
   closesAt: string
   notes: string | null
+  nudgeEnabled: boolean
+  nudgeDays: number
+  certificateBaseUrl: string | null
 }
 
 /** Progresso de uma matrícula: módulos concluídos sobre o total do curso. */

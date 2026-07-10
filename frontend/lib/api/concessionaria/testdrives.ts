@@ -28,11 +28,18 @@ export function getTestDrive(id: string): Promise<TestDrive> {
 }
 
 export function createTestDrive(input: CreateTestDriveInput): Promise<TestDrive> {
-  return apiFetch<TestDrive>('/api/concessionaria/test-drives', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<TestDrive>('/api/concessionaria/test-drives', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
-export function updateTestDriveStatus(id: string, newStatus: TestDriveStatusId): Promise<TestDrive> {
+export function updateTestDriveStatus(
+  id: string,
+  newStatus: TestDriveStatusId,
+): Promise<TestDrive> {
   return apiFetch<TestDrive>(`/api/concessionaria/test-drives/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

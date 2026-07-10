@@ -21,10 +21,13 @@ public record OticaConfig(
     LocalTime closesAt,
     int examDurationMinutes,
     int minOrderCents,
-    int leadTimeDaysDefault) {
+    int leadTimeDaysDefault,
+    boolean examReminderEnabled,
+    boolean pickupFollowupEnabled,
+    int pickupFollowupDays) {
 
     /** Defaults cravados (espelha a migration 56): 09:00–18:00, exame 30min, mínimo 0, lead 7 dias. */
     public static OticaConfig defaultFor(UUID companyId) {
-        return new OticaConfig(companyId, LocalTime.of(9, 0), LocalTime.of(18, 0), 30, 0, 7);
+        return new OticaConfig(companyId, LocalTime.of(9, 0), LocalTime.of(18, 0), 30, 0, 7, true, true, 3);
     }
 }

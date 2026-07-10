@@ -1,5 +1,5 @@
-import type { AtelieProposalStatusId } from './atelie-proposal-status'
 import type { AtelieProjectTypeId } from './atelie-project-type'
+import type { AtelieProposalStatusId } from './atelie-proposal-status'
 
 /** Artesão/responsável do tenant atelie (espelha AtelieArtisan). */
 export type AtelieArtisan = {
@@ -18,6 +18,10 @@ export type AtelieConfig = {
   businessName: string | null
   notes: string | null
   fittingReminderEnabled: boolean
+  postDeliveryEnabled: boolean
+  reviewLink: string | null
+  reactivationEnabled: boolean
+  reactivationDays: number
 }
 
 /** Item de ORÇAMENTO de uma proposta (espelha AtelieProposalItem). lineTotalCents materializado. */
@@ -48,6 +52,8 @@ export type AtelieFitting = {
   status: FittingStatusId
   position: number
   completedAt: string | null
+  confirmedAt: string | null
+  confirmedDueDate: string | null
 }
 
 /** Proposta de ateliê (espelha AtelieProposal). totalCents materializado. items + fittings no detalhe. */

@@ -15,9 +15,13 @@ public record WeddingConfig(
     boolean checklistReminderEnabled,
     boolean paymentReminderEnabled,
     boolean autoCompleteEnabled,
-    boolean anniversaryEnabled) {
+    boolean anniversaryEnabled,
+    boolean postEventEnabled,
+    String reviewLink,
+    boolean followUpEnabled,
+    int followUpDays) {
 
     public static WeddingConfig defaultFor(UUID companyId) {
-        return new WeddingConfig(companyId, null, null, true, true, true, true);
+        return new WeddingConfig(companyId, null, null, true, true, true, true, true, null, true, 5);
     }
 }

@@ -22,5 +22,8 @@ export function getConfig(): Promise<PapelariaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<PapelariaConfig> {
-  return apiFetch<PapelariaConfig>('/api/papelaria/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<PapelariaConfig>('/api/papelaria/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

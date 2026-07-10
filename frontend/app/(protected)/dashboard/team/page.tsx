@@ -10,12 +10,15 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Section } from '@/components/ui/card'
 import { DataTable, type Column } from '@/components/ui/data-table'
-import { getMe } from '@/lib/api/me'
 import { cancelInvitation, getMyInvitations, type Invitation } from '@/lib/api/invitations'
+import { getMe } from '@/lib/api/me'
 import { getMyTeamMembers, type TeamMember } from '@/lib/supabase/team'
 
 /** Deriva o status de exibição de um convite a partir de usedAt/expiresAt. */
-function invitationStatus(inv: Invitation): { label: string; variant: 'success' | 'muted' | 'danger' } {
+function invitationStatus(inv: Invitation): {
+  label: string
+  variant: 'success' | 'muted' | 'danger'
+} {
   if (inv.usedAt) {
     return { label: 'usado', variant: 'muted' }
   }
@@ -64,7 +67,11 @@ export default function TeamPage() {
     enabled: isTenant,
   })
 
-  const { data: invitations, isPending: invitationsPending, isError } = useQuery({
+  const {
+    data: invitations,
+    isPending: invitationsPending,
+    isError,
+  } = useQuery({
     queryKey: ['my-invitations'],
     queryFn: getMyInvitations,
     enabled: isTenant,

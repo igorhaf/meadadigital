@@ -33,12 +33,15 @@ public class LasMenuCache {
 
     private final LasProductRepository productRepository;
     private final LasConfigRepository configRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final Cache<UUID, String> cache;
 
     public LasMenuCache(LasProductRepository productRepository,
-                        LasConfigRepository configRepository) {
+                        LasConfigRepository configRepository,
+                        org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.productRepository = productRepository;
         this.configRepository = configRepository;
+        this.jdbcTemplate = jdbcTemplate;
         this.cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(60))
             .maximumSize(500)
@@ -91,7 +94,7 @@ public class LasMenuCache {
                 + "própria, sem markdown):\n")
             .append("<pedido_las>{\"items\":[{\"variant_id\":\"UUID_EXATO_DA_VARIANTE\",\"qtd\":N}],"
                 + "\"fulfillment\":\"entrega\",\"same_lot_guaranteed\":false,\"endereco\":\"...\","
-                + "\"total_cents\":NNN}</pedido_las>\n")
+                + "\"cupom\":\"CODIGO_SE_HOUVER\",\"total_cents\":NNN}</pedido_las>\n")
             .append("Cada item referencia o variant_id EXATO de uma VARIANTE (combinação cor × dye_lot, "
                 + "o LOTE DE TINGIMENTO) do catálogo acima — NUNCA o product_id. Só ofereça variantes "
                 + "COM estoque (as marcadas \"esgotado\" NÃO podem ser pedidas). \"fulfillment\" é "
@@ -115,9 +118,57 @@ public class LasMenuCache {
         }
         sb.append("CONFIG: delivery_fee_cents=").append(config.deliveryFeeCents())
             .append(", min_order_cents=").append(config.minOrderCents()).append("\n");
-        sb.append("Avise a cliente que o pedido ficará AGUARDANDO confirmação da loja.\n\n");
+        sb.append("Avise a cliente que o pedido ficará AGUARDANDO confirmação da loja.\n");
+        // Onda 1 (backlog #5): cupom — validação/recálculo é do sistema.
+        sb.append("Se a cliente informar um CUPOM de desconto, registre o código no campo \"cupom\" "
+            + "da tag (omita se não houver) — quem valida e recalcula é o sistema; NUNCA invente "
+            + "desconto (cupom inválido: o pedido sai sem o desconto).\n");
+        // Onda 1 (backlog #1): lista de espera de dye lot.
+        sb.append("LISTA DE ESPERA: se a cliente quer uma variante ESGOTADA (ou mais novelos de um "
+            + "lote do que há em estoque), ofereça avisá-la quando chegar. Se ela aceitar, emita "
+            + "(linha própria, sem markdown): <lista_espera_las>{\"variant_id\":\"UUID_DA_VARIANTE\","
+            + "\"any_lot\":false,\"qty\":N}</lista_espera_las> — \"any_lot\":true quando QUALQUER lote "
+            + "da cor servir; \"qty\" é a quantidade desejada (omita se não souber). NUNCA prometa "
+            + "data de reposição — o aviso sai quando o estoque chegar de fato.\n");
+
+        // Onda 1 (backlog #2): calculadora de rendimento — só do que o tenant cadastrou.
+        appendYieldReference(sb, companyId);
+        sb.append("\n");
 
         return sb.toString();
+    }
+
+    /** Bloco da calculadora de novelos (onda 1, backlog #2) — SEMPRE estimativa, nunca invenção. */
+    private void appendYieldReference(StringBuilder sb, UUID companyId) {
+        record Yield(String pieceType, String yarnSpec, int skeins, String notes) {}
+        List<Yield> refs = jdbcTemplate.query(
+            "select piece_type, yarn_spec, skeins, notes from las_yield_reference "
+                + "where company_id = ? and active = true order by piece_type",
+            (rs, rn) -> new Yield(rs.getString("piece_type"), rs.getString("yarn_spec"),
+                rs.getInt("skeins"), rs.getString("notes")),
+            companyId);
+        if (refs.isEmpty()) {
+            sb.append("CALCULADORA DE NOVELOS: a loja NÃO cadastrou referências de rendimento — se a "
+                + "cliente perguntar quantos novelos precisa, diga que não tem a estimativa e sugira "
+                + "confirmar com a loja. NUNCA invente dimensionamento.\n");
+            return;
+        }
+        sb.append("CALCULADORA DE NOVELOS (referências da loja — use SEMPRE como ESTIMATIVA, ex.: "
+            + "\"em média X novelos\"):\n");
+        for (Yield y : refs) {
+            sb.append("- ").append(y.pieceType());
+            if (y.yarnSpec() != null && !y.yarnSpec().isBlank()) {
+                sb.append(" · fio ").append(y.yarnSpec());
+            }
+            sb.append(" · ~").append(y.skeins()).append(" novelos");
+            if (y.notes() != null && !y.notes().isBlank()) {
+                sb.append(" (").append(y.notes()).append(")");
+            }
+            sb.append("\n");
+        }
+        sb.append("Peça que NÃO está na lista: diga que não tem a estimativa e sugira confirmar com a "
+            + "loja. Ao fechar com estimativa, monte a quantidade COMPLETA no MESMO lote (amarra com "
+            + "same_lot_guaranteed quando a cliente exigir).\n");
     }
 
     /**

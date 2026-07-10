@@ -18,6 +18,10 @@ export type NutriConfig = {
   opensAt: string
   closesAt: string
   bufferMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  reengagementEnabled: boolean
+  reengagementDays: number
 }
 
 /** Paciente — sub-entidade do contato (nível 1). Espelha NutriPatient. */
@@ -97,7 +101,10 @@ export function typeLabel(t: string | null | undefined): string {
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 

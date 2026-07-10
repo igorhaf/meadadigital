@@ -20,10 +20,18 @@ public record BarberConfig(
     boolean queueEnabled,
     boolean reminderEnabled,
     boolean autoCompleteEnabled,
-    boolean upsellEnabled) {
+    boolean upsellEnabled,
+    boolean reactivationEnabled,
+    int reactivationDays,
+    String reactivationCouponCode,
+    boolean postReviewEnabled,
+    String reviewLink,
+    int reviewCooldownDays) {
 
-    /** Defaults cravados: 09:00–20:00, slot 15min, fila ligada, lembrete/auto-transição ligados, upsell OFF. */
+    /** Defaults cravados: 09:00–20:00, slot 15min, fila ligada, lembrete/auto-transição ligados,
+     * upsell OFF, reativação OFF (45d), pós-corte OFF (cooldown 90d). */
     public static BarberConfig defaultFor(UUID companyId) {
-        return new BarberConfig(companyId, LocalTime.of(9, 0), LocalTime.of(20, 0), 15, true, true, true, false);
+        return new BarberConfig(companyId, LocalTime.of(9, 0), LocalTime.of(20, 0), 15, true, true, true, false,
+            false, 45, null, false, null, 90);
     }
 }

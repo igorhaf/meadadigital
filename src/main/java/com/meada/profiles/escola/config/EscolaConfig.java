@@ -12,9 +12,14 @@ public record EscolaConfig(
     String businessName,
     LocalTime opensAt,
     LocalTime closesAt,
-    String notes) {
+    String notes,
+    boolean visitReminderEnabled,
+    boolean visitAutoCompleteEnabled,
+    boolean paymentReminderEnabled,
+    int paymentDueDay) {
 
     public static EscolaConfig defaultFor(UUID companyId) {
-        return new EscolaConfig(companyId, null, LocalTime.of(7, 0), LocalTime.of(18, 0), null);
+        return new EscolaConfig(companyId, null, LocalTime.of(7, 0), LocalTime.of(18, 0), null,
+            true, true, false, 10);
     }
 }

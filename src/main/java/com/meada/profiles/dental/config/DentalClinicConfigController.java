@@ -45,7 +45,11 @@ public class DentalClinicConfigController {
         @Min(15) @Max(240) int durationMinutes,
         @Min(0) int bufferMinutes,
         @NotBlank String opensAt,
-        @NotBlank String closesAt) {}
+        @NotBlank String closesAt,
+        Boolean reminderEnabled,
+        Boolean autoCompleteEnabled,
+        Boolean recallEnabled,
+        Integer recallMonths) {}
 
     @GetMapping("/api/dental/config")
     public ResponseEntity<Object> get(
@@ -79,7 +83,11 @@ public class DentalClinicConfigController {
         }
         try {
             return ResponseEntity.ok(service.update(
-                companyId, user.userId(), req.durationMinutes(), req.bufferMinutes(), opensAt, closesAt));
+                companyId, user.userId(), req.durationMinutes(), req.bufferMinutes(), opensAt, closesAt,
+                req.reminderEnabled() == null || req.reminderEnabled(),
+                req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+                Boolean.TRUE.equals(req.recallEnabled()),
+                req.recallMonths() == null ? 6 : req.recallMonths()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

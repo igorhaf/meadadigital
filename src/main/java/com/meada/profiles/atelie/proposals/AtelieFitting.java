@@ -24,5 +24,7 @@ public record AtelieFitting(
     LocalDate dueDate,
     String status,
     int position,
-    Instant completedAt) {
+    Instant completedAt,
+    Instant confirmedAt,
+    LocalDate confirmedDueDate) {
 }

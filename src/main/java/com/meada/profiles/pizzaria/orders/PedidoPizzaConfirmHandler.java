@@ -195,9 +195,16 @@ public class PedidoPizzaConfirmHandler {
             lines.add(new OrderLineInput(itemId, qtd, optionIds, List.of()));
         }
 
+        // Cupom (backlog #1, opcional): só o CÓDIGO viaja na tag — quem valida e calcula é o backend
+        // (cupom inválido não aborta; o pedido sai sem o desconto).
+        String couponCode = root.path("cupom").asText(null);
+        if (couponCode != null && couponCode.isBlank()) {
+            couponCode = null;
+        }
+
         try {
             PizzariaOrder order = orderService.create(companyId, conversationId, contactId,
-                endereco.strip(), lines, null);
+                endereco.strip(), lines, couponCode, null);
             log.info("pizzaria: pedido {} criado p/ conversa {} ({} itens, total {} cents)",
                 order.id(), conversationId, lines.size(), order.totalCents());
             return Optional.of(order);

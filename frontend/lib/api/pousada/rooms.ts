@@ -25,12 +25,16 @@ export function createRoom(input: CreateRoomInput): Promise<Room> {
 }
 
 export function updateRoom(id: string, input: UpdateRoomInput): Promise<Room> {
-  return apiFetch<Room>(`/api/pousada/rooms/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Room>(`/api/pousada/rooms/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleRoom(id: string, active: boolean): Promise<Room> {
   return apiFetch<Room>(`/api/pousada/rooms/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

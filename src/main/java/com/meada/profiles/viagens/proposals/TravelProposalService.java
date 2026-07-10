@@ -57,6 +57,8 @@ public class TravelProposalService {
     public static class EmptyBudgetException extends RuntimeException {}
     public static class InvalidStatusException extends RuntimeException {}
     public static class InvalidStatusTransitionException extends RuntimeException {}
+    public static class InvalidDepositException extends RuntimeException {}
+    public static class DepositRequiredException extends RuntimeException {}
 
     /** Abre uma proposta (status rascunho, total 0). Snapshot de cliente (do contact). */
     @Transactional
@@ -204,6 +206,30 @@ public class TravelProposalService {
     }
 
     // -------------------------------------------------------------------------
+    // SINAL (onda #1 — registro manual até o gateway #50; clone atelie mig 81)
+    // -------------------------------------------------------------------------
+
+    /**
+     * Registra o sinal combinado e/ou marca como recebido. null/0 = sem sinal (fechamento livre).
+     * Marcar como pago EXIGE valor registrado (&gt; 0) — senão 400 invalid_deposit. Trava de estado
+     * dos sub-itens vale aqui também (a partir de 'fechada' o sinal congela → 409 proposal_locked).
+     */
+    @Transactional
+    public TravelProposal setDeposit(UUID companyId, UUID id, Integer depositCents, boolean depositPaid) {
+        requireMutableProposal(companyId, id);
+        if (depositCents != null && depositCents < 0) {
+            throw new InvalidDepositException();
+        }
+        if (depositPaid && (depositCents == null || depositCents <= 0)) {
+            throw new InvalidDepositException();
+        }
+        TravelProposal updated = repository.updateDeposit(companyId, id, depositCents, depositPaid)
+            .orElseThrow(ProposalNotFoundException::new);
+        contextCache.invalidate(companyId);
+        return updated;
+    }
+
+    // -------------------------------------------------------------------------
     // STATUS
     // -------------------------------------------------------------------------
 
@@ -219,6 +245,11 @@ public class TravelProposalService {
         // não dá pra orçar uma proposta sem item de cotação (total derivado > 0).
         if (newStatus == TravelProposalStatus.ORCADA && current.totalCents() <= 0) {
             throw new EmptyBudgetException();
+        }
+        // sinal registrado e NÃO pago trava o fechamento (onda #1 — 409 deposit_required).
+        if (newStatus == TravelProposalStatus.FECHADA && current.depositCents() != null
+            && current.depositCents() > 0 && !current.depositPaid()) {
+            throw new DepositRequiredException();
         }
 
         repository.updateStatus(companyId, id, newStatus.id(), newStatus.isTerminal());

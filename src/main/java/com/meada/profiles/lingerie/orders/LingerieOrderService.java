@@ -55,11 +55,11 @@ public class LingerieOrderService {
     @Transactional
     public LingerieOrder create(UUID companyId, UUID conversationId, UUID contactId,
                                 String fulfillment, String deliveryAddress, List<OrderLineInput> lines,
-                                String notes) {
+                                String couponCode, String notes) {
         LingerieConfig config = configRepository.findByCompany(companyId);
         return orderRepository.createOrder(
             companyId, conversationId, contactId, fulfillment, deliveryAddress, lines,
-            config.deliveryFeeCents(), notes);
+            couponCode, config.deliveryFeeCents(), notes);
     }
 
     public List<LingerieOrder> list(UUID companyId, String status, int limit, int offset) {

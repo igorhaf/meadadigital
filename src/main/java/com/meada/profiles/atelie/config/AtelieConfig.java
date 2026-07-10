@@ -11,9 +11,13 @@ public record AtelieConfig(
     UUID companyId,
     String businessName,
     String notes,
-    boolean fittingReminderEnabled) {
+    boolean fittingReminderEnabled,
+    boolean postDeliveryEnabled,
+    String reviewLink,
+    boolean reactivationEnabled,
+    int reactivationDays) {
 
     public static AtelieConfig defaultFor(UUID companyId) {
-        return new AtelieConfig(companyId, null, null, true);
+        return new AtelieConfig(companyId, null, null, true, true, null, false, 90);
     }
 }

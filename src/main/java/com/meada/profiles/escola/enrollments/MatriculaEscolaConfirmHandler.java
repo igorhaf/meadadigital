@@ -39,12 +39,15 @@ public class MatriculaEscolaConfirmHandler {
     private final ObjectMapper objectMapper;
     private final EscolaStudentService studentService;
     private final EscolaEnrollmentService enrollmentService;
+    private final com.meada.profiles.escola.waitlist.EscolaWaitlistService waitlistService;
 
     public MatriculaEscolaConfirmHandler(ObjectMapper objectMapper, EscolaStudentService studentService,
-                                         EscolaEnrollmentService enrollmentService) {
+                                         EscolaEnrollmentService enrollmentService,
+                                        com.meada.profiles.escola.waitlist.EscolaWaitlistService waitlistService) {
         this.objectMapper = objectMapper;
         this.studentService = studentService;
         this.enrollmentService = enrollmentService;
+        this.waitlistService = waitlistService;
     }
 
     public boolean hasOrderTag(String text) {
@@ -117,8 +120,11 @@ public class MatriculaEscolaConfirmHandler {
                 created.id(), conversationId, classId, studentId);
             return Optional.of(created);
         } catch (EscolaEnrollmentService.ClassFullException e) {
-            log.warn("escola: <matricula_escola> com turma lotada ({}) p/ conversa {} — não criada",
-                e.className(), conversationId);
+            // Onda 1 (backlog #1): turma cheia ENFILEIRA na lista de espera em vez de descartar o
+            // lead (aviso de vaga é ação HUMANA no painel — a IA nunca promete vaga).
+            boolean queued = waitlistService.enqueue(companyId, e.classId(), contactId, studentId);
+            log.warn("escola: <matricula_escola> com turma lotada ({}) p/ conversa {} — {}",
+                e.className(), conversationId, queued ? "lead na lista de espera" : "não criada");
             return Optional.empty();
         } catch (EscolaEnrollmentService.AlreadyActiveException e) {
             log.warn("escola: <matricula_escola> p/ aluno já matriculado nessa turma (conversa {}) — não criada",

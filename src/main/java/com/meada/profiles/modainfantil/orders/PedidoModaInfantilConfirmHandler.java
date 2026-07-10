@@ -124,8 +124,13 @@ public class PedidoModaInfantilConfirmHandler {
 
         String address = "entrega".equals(fulfillment) && endereco != null ? endereco.strip() : null;
         try {
+            // Cupom (onda 1, opcional): só o CÓDIGO viaja na tag — quem valida/calcula é o backend.
+            String couponCode = root.path("cupom").asText(null);
+            if (couponCode != null && couponCode.isBlank()) {
+                couponCode = null;
+            }
             ModaInfantilOrder order = orderService.create(companyId, conversationId, contactId,
-                fulfillment, address, lines, null);
+                fulfillment, address, lines, couponCode, null);
             log.info("moda_infantil: pedido {} criado p/ conversa {} ({} linhas, total {} cents)",
                 order.id(), conversationId, lines.size(), order.totalCents());
             return Optional.of(order);

@@ -113,6 +113,16 @@ public class SushiMenuCache {
         sb.append("CONFIG: delivery_fee_cents=").append(config.deliveryFeeCents())
             .append(", min_order_cents=").append(config.minOrderCents()).append("\n\n");
 
+        if (config.upsellEnabled()) {
+            sb.append("SUGESTÃO COMPLEMENTAR (upsell): antes de emitir a tag <pedido>, quando o "
+                + "carrinho estiver definido, ofereça NO MÁXIMO 1 item complementar do cardápio "
+                + "acima que esteja em categoria ausente no carrinho (ex.: sem bebida → sugira uma "
+                + "bebida; sem sobremesa → sugira uma sobremesa; ou o combo maior por poucos reais "
+                + "a mais). UMA oferta só, em tom leve; se o cliente recusar ou ignorar, siga "
+                + "direto para a confirmação SEM insistir. NUNCA sugira item que não esteja no "
+                + "cardápio acima ou indisponível.\n\n");
+        }
+
         return sb.toString();
     }
 

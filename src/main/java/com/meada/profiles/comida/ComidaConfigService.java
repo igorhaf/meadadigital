@@ -31,9 +31,19 @@ public class ComidaConfigService {
     }
 
     @Transactional
-    public ComidaConfig update(UUID companyId, UUID userId, int deliveryFeeCents, int minOrderCents) {
+    public ComidaConfig update(UUID companyId, UUID userId, int deliveryFeeCents, int minOrderCents,
+                               java.time.LocalTime opensAt, java.time.LocalTime closesAt,
+                               Integer autoDeliverHours, boolean reactivationEnabled,
+                               int reactivationDays, String reactivationCouponCode) {
+        if (opensAt != null && closesAt != null && !opensAt.isBefore(closesAt)) {
+            throw new IllegalArgumentException("invalid_hours");
+        }
         ComidaConfig saved = repository.upsert(companyId, Math.max(0, deliveryFeeCents),
-            Math.max(0, minOrderCents));
+            Math.max(0, minOrderCents), opensAt, closesAt,
+            autoDeliverHours == null ? null : Math.min(24, Math.max(1, autoDeliverHours)),
+            reactivationEnabled, Math.min(365, Math.max(7, reactivationDays)),
+            reactivationCouponCode == null || reactivationCouponCode.isBlank()
+                ? null : reactivationCouponCode.strip());
         auditLogger.log(companyId, userId, "comida_config_updated", "comida_config", companyId, Map.of());
         menuCache.invalidate(companyId);
         return saved;

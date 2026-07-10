@@ -41,6 +41,8 @@ class SupOrderServiceTest extends AbstractIntegrationTest {
     @Autowired
     private SupProductService productService;
     @Autowired
+    private SupOrderRepository orderRepository;
+    @Autowired
     private FakeEvolutionSender fakeEvolution;
 
     private static final UUID COMPANY = UUID.fromString("c8240000-0000-0000-0000-000000000093");
@@ -251,6 +253,64 @@ class SupOrderServiceTest extends AbstractIntegrationTest {
         SupOrder cancelled = service.updateStatus(COMPANY, order.id(), "cancelado", null);
         assertThat(cancelled.status()).isEqualTo("cancelado");
         assertThat(fakeEvolution.sent()).isEmpty();   // cancelado é silencioso.
+    }
+
+    // -------------------------------------------------------------------------
+    // Onda 1 do backlog (#3b frete grátis · #9 restock)
+    // -------------------------------------------------------------------------
+
+    @Test
+    @DisplayName("frete grátis: subtotal >= piso → taxa zerada; abaixo do piso → taxa normal")
+    void freeShippingThreshold() {
+        jdbcTemplate.update("update sup_config set free_shipping_threshold_cents = 20000 where company_id = ?",
+            COMPANY);
+        SupProduct p = productService.create(COMPANY, USER, "Whey", null, "proteinas", null);
+        SupVariant v = productService.addVariant(COMPANY, USER, p.id(), "Baunilha", "900g", null, 14990, 10, null);
+
+        // 2 × 149,90 = 299,80 >= 200,00 → frete grátis.
+        SupOrder free = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(v.id(), 2)), null);
+        assertThat(free.deliveryFeeCents()).isZero();
+        assertThat(free.totalCents()).isEqualTo(29980);
+
+        // 1 × 149,90 < 200,00 → taxa da config (700).
+        SupOrder paid = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(v.id(), 1)), null);
+        assertThat(paid.deliveryFeeCents()).isEqualTo(700);
+        assertThat(paid.totalCents()).isEqualTo(14990 + 700);
+    }
+
+    @Test
+    @DisplayName("restock ao cancelar: estoque devolvido, stock_returned=true, idempotente")
+    void restockOnCancel_idempotent() {
+        SupProduct p = productService.create(COMPANY, USER, "Creatina", null, "aminoacidos", null);
+        SupVariant v = productService.addVariant(COMPANY, USER, p.id(), null, "300g", null, 9990, 5, null);
+        SupOrder order = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(v.id(), 2)), null);
+        assertThat(stock(v.id())).isEqualTo(3);   // decrementado na criação.
+
+        service.updateStatus(COMPANY, order.id(), "cancelado", null);
+        assertThat(stock(v.id())).isEqualTo(5);   // devolvido.
+        Boolean returned = jdbcTemplate.queryForObject(
+            "select stock_returned from sup_orders where id = ?", Boolean.class, order.id());
+        assertThat(returned).isTrue();
+
+        // idempotência no nível do repositório (duplo-cancelamento não devolve 2x).
+        orderRepository.updateStatus(COMPANY, order.id(), "cancelado", null);
+        assertThat(stock(v.id())).isEqualTo(5);
+    }
+
+    @Test
+    @DisplayName("restock ao recusar (aguardando → recusado) também devolve")
+    void restockOnReject() {
+        SupProduct p = productService.create(COMPANY, USER, "Pré", null, "pre_treino", null);
+        SupVariant v = productService.addVariant(COMPANY, USER, p.id(), "Frutas", "300g", null, 8990, 4, null);
+        SupOrder order = service.create(COMPANY, conversationId, contactId, "Rua X 1",
+            List.of(new OrderLineInput(v.id(), 1)), null);
+        assertThat(stock(v.id())).isEqualTo(3);
+
+        service.updateStatus(COMPANY, order.id(), "recusado", "sem entregador");
+        assertThat(stock(v.id())).isEqualTo(4);
     }
 
     private int stock(UUID variantId) {

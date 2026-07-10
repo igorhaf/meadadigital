@@ -36,7 +36,9 @@ public class DermatologiaConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(0) int bufferMinutes) {}
+    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(0) int bufferMinutes,
+                                Boolean reminderEnabled, Boolean autoCompleteEnabled,
+                                Boolean recallEnabled, Integer recallMonths) {}
 
     @GetMapping("/api/dermatologia/config")
     public ResponseEntity<Object> get(
@@ -69,7 +71,12 @@ public class DermatologiaConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.bufferMinutes()));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
+                req.bufferMinutes(),
+                req.reminderEnabled() == null || req.reminderEnabled(),
+                req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+                req.recallEnabled() != null && req.recallEnabled(),
+                req.recallMonths() == null ? 6 : req.recallMonths()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

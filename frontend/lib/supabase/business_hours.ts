@@ -62,10 +62,7 @@ export async function getMyBusinessHours(): Promise<BusinessHour[]> {
  * <p>closed=true ⇒ opens/closes null no payload; closed=false ⇒ ambos presentes (a UI
  * já validou via zod antes de chamar).
  */
-export async function saveMyBusinessHours(
-  companyId: string,
-  rows: BusinessHour[],
-): Promise<void> {
+export async function saveMyBusinessHours(companyId: string, rows: BusinessHour[]): Promise<void> {
   const supabase = createClient()
 
   const { error: delError } = await supabase

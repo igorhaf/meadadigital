@@ -61,3 +61,14 @@ vezes. O varejo de roupa infantil tem troca/cancelamento frequente; o estoque vo
   `ProfileTypeParityTest` (`[a-z0-9-]+`) não casava underscore → ampliado para `[a-z0-9_-]+`.
 - Base de conhecimento (RAG): disponível como em todo perfil.
 - Guard `/api/moda-infantil/**` → 403 `forbidden_wrong_profile`. Paleta `por-do-sol`. Tenant: `igorhaf33`.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_MODA_INFANTIL #1/#3, migration 100)
+
+- **Cupom (#1, motor unificado):** `moda_infantil_coupons` (subclasses finas de
+  `com.meada.common.coupons`) + desconto materializado no pedido; a IA passa o código no campo
+  `cupom` da tag `<pedido_moda_infantil>`; inválido NÃO aborta; `uses` na transação. Tela
+  Cupons + nav.
+- **Avise-me quando voltar (#3, `moda_infantil_stock_alerts`):** variante ESGOTADA → a IA
+  oferece o aviso e emite `<aviso_estoque_moda>{variant_id}` (1 alerta pendente por
+  contato+variante); a REPOSIÇÃO no painel (0→N) dispara "voltou!" pra fila e marca
+  `notified_at`. Restock por cancelamento NÃO notifica nesta onda (refinamento futuro).

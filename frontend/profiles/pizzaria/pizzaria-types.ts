@@ -29,12 +29,7 @@ export type MenuItem = {
 
 /** Status de um pedido (espelha PizzariaOrderStatus). Ordem fixa. */
 export type OrderStatus =
-  | 'aguardando'
-  | 'em_preparo'
-  | 'saiu_entrega'
-  | 'entregue'
-  | 'recusado'
-  | 'cancelado'
+  'aguardando' | 'em_preparo' | 'saiu_entrega' | 'entregue' | 'recusado' | 'cancelado'
 
 /** Opção escolhida num item de pedido (snapshot de label+delta no momento do pedido). */
 export type OrderItemOption = {
@@ -85,6 +80,9 @@ export type Order = {
   contactName: string | null
   contactPhone: string | null
   items: OrderItem[]
+  discountCents?: number
+  couponCode?: string | null
+  loyaltyApplied?: boolean
 }
 
 /** Colunas do Kanban (status em andamento) na ordem do fluxo. */
@@ -120,4 +118,25 @@ export const STATUS_LABEL: Record<OrderStatus, string> = {
 /** Formata centavos em R$ pt-BR. */
 export function formatBrl(cents: number): string {
   return (cents / 100).toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
+}
+
+/** Cupom de desconto gerido pelo tenant (espelha PizzariaCoupon do backend). */
+export type Coupon = {
+  id: string
+  code: string
+  kind: 'percent' | 'fixed'
+  value: number
+  minOrderCents: number
+  maxUses: number | null
+  uses: number
+  validUntil: string | null
+  active: boolean
+}
+
+/** Configuração de fidelidade (a cada N pedidos entregues, o próximo ganha um desconto). */
+export type LoyaltyConfig = {
+  enabled: boolean
+  thresholdOrders: number
+  rewardKind: 'percent' | 'fixed'
+  rewardValue: number
 }

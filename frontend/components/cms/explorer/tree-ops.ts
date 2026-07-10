@@ -20,8 +20,16 @@ import {
 function mapRow(tree: CmsRow[], rowId: string, fn: (r: CmsRow) => CmsRow): CmsRow[] {
   return tree.map((r) => (r.id === rowId ? fn(r) : r))
 }
-function mapColumn(tree: CmsRow[], rowId: string, colId: string, fn: (c: CmsColumn) => CmsColumn): CmsRow[] {
-  return mapRow(tree, rowId, (r) => ({ ...r, columns: r.columns.map((c) => (c.id === colId ? fn(c) : c)) }))
+function mapColumn(
+  tree: CmsRow[],
+  rowId: string,
+  colId: string,
+  fn: (c: CmsColumn) => CmsColumn,
+): CmsRow[] {
+  return mapRow(tree, rowId, (r) => ({
+    ...r,
+    columns: r.columns.map((c) => (c.id === colId ? fn(c) : c)),
+  }))
 }
 function moveInArray<T>(arr: T[], index: number, dir: -1 | 1): T[] {
   const target = index + dir
@@ -65,7 +73,12 @@ export function updateRowProps(tree: CmsRow[], rowId: string, props: CmsRowProps
 
 // ---- colunas ----
 /** Cria uma coluna nova (com um bloco do tipo dado) dentro da linha. width default = divide igual. */
-export function addColumn(tree: CmsRow[], rowId: string, type: CmsBlockTypeId, width?: CmsColumnWidth): CmsRow[] {
+export function addColumn(
+  tree: CmsRow[],
+  rowId: string,
+  type: CmsBlockTypeId,
+  width?: CmsColumnWidth,
+): CmsRow[] {
   return mapRow(tree, rowId, (r) => {
     const count = r.columns.length + 1
     const w = width ?? (Math.max(1, Math.floor(12 / count)) as CmsColumnWidth)
@@ -81,29 +94,67 @@ export function moveColumn(tree: CmsRow[], rowId: string, colId: string, dir: -1
     return { ...r, columns: moveInArray(r.columns, i, dir) }
   })
 }
-export function setColumnWidth(tree: CmsRow[], rowId: string, colId: string, width: CmsColumnWidth): CmsRow[] {
+export function setColumnWidth(
+  tree: CmsRow[],
+  rowId: string,
+  colId: string,
+  width: CmsColumnWidth,
+): CmsRow[] {
   return mapColumn(tree, rowId, colId, (c) => ({ ...c, width }))
 }
 /** Drag-drop: move a coluna `dragColId` pra antes de `targetColId` (mesma linha). */
-export function reorderColumn(tree: CmsRow[], rowId: string, dragColId: string, targetColId: string): CmsRow[] {
-  return mapRow(tree, rowId, (r) => ({ ...r, columns: reorderInArray(r.columns, dragColId, targetColId) }))
+export function reorderColumn(
+  tree: CmsRow[],
+  rowId: string,
+  dragColId: string,
+  targetColId: string,
+): CmsRow[] {
+  return mapRow(tree, rowId, (r) => ({
+    ...r,
+    columns: reorderInArray(r.columns, dragColId, targetColId),
+  }))
 }
 
 // ---- blocos (folhas) ----
-export function addBlockToColumn(tree: CmsRow[], rowId: string, colId: string, type: CmsBlockTypeId): CmsRow[] {
+export function addBlockToColumn(
+  tree: CmsRow[],
+  rowId: string,
+  colId: string,
+  type: CmsBlockTypeId,
+): CmsRow[] {
   const block = { id: newBlockId(), type, props: defaultProps(type) } as CmsBlock
   return mapColumn(tree, rowId, colId, (c) => ({ ...c, blocks: [...c.blocks, block] }))
 }
-export function removeBlock(tree: CmsRow[], rowId: string, colId: string, blockId: string): CmsRow[] {
-  return mapColumn(tree, rowId, colId, (c) => ({ ...c, blocks: c.blocks.filter((b) => b.id !== blockId) }))
+export function removeBlock(
+  tree: CmsRow[],
+  rowId: string,
+  colId: string,
+  blockId: string,
+): CmsRow[] {
+  return mapColumn(tree, rowId, colId, (c) => ({
+    ...c,
+    blocks: c.blocks.filter((b) => b.id !== blockId),
+  }))
 }
-export function moveBlockWithin(tree: CmsRow[], rowId: string, colId: string, blockId: string, dir: -1 | 1): CmsRow[] {
+export function moveBlockWithin(
+  tree: CmsRow[],
+  rowId: string,
+  colId: string,
+  blockId: string,
+  dir: -1 | 1,
+): CmsRow[] {
   return mapColumn(tree, rowId, colId, (c) => {
     const i = c.blocks.findIndex((b) => b.id === blockId)
     return { ...c, blocks: moveInArray(c.blocks, i, dir) }
   })
 }
-export function updateBlockProps(tree: CmsRow[], rowId: string, colId: string, blockId: string, props: CmsBlock['props']): CmsRow[] {
+export function updateBlockProps(
+  tree: CmsRow[],
+  rowId: string,
+  colId: string,
+  blockId: string,
+  props: CmsBlock['props'],
+): CmsRow[] {
   return mapColumn(tree, rowId, colId, (c) => ({
     ...c,
     blocks: c.blocks.map((b) => (b.id === blockId ? ({ ...b, props } as CmsBlock) : b)),
@@ -122,5 +173,8 @@ export function moveBlockAcross(
     return { ...c, blocks: c.blocks.filter((b) => b.id !== from.blockId) }
   })
   if (!moved) return tree
-  return mapColumn(removed, to.rowId, to.colId, (c) => ({ ...c, blocks: [...c.blocks, moved as CmsBlock] }))
+  return mapColumn(removed, to.rowId, to.colId, (c) => ({
+    ...c,
+    blocks: [...c.blocks, moved as CmsBlock],
+  }))
 }

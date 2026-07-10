@@ -5,6 +5,10 @@ export type UpdateConfigInput = {
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
   bufferMinutes: number
+  reminderEnabled?: boolean
+  autoCompleteEnabled?: boolean
+  reengagementEnabled?: boolean
+  reengagementDays?: number
 }
 
 export function getConfig(): Promise<NutriConfig> {

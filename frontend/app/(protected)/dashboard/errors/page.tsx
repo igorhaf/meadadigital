@@ -21,9 +21,17 @@ export default function ErrorsPage() {
   })
 
   const columns: Column<ErrorEntry>[] = [
-    { key: 'createdAt', header: 'Quando', render: (r) => new Date(r.createdAt).toLocaleString('pt-BR') },
+    {
+      key: 'createdAt',
+      header: 'Quando',
+      render: (r) => new Date(r.createdAt).toLocaleString('pt-BR'),
+    },
     { key: 'source', header: 'Origem', render: (r) => <Badge variant="muted">{r.source}</Badge> },
-    { key: 'message', header: 'Mensagem', render: (r) => <span className="line-clamp-2">{r.message}</span> },
+    {
+      key: 'message',
+      header: 'Mensagem',
+      render: (r) => <span className="line-clamp-2">{r.message}</span>,
+    },
     {
       key: 'context',
       header: 'Contexto',
@@ -37,7 +45,10 @@ export default function ErrorsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Log de erros" description="Erros capturados em pontos críticos da plataforma." />
+      <PageHeader
+        title="Log de erros"
+        description="Erros capturados em pontos críticos da plataforma."
+      />
 
       <div className="flex items-end gap-3">
         <div>

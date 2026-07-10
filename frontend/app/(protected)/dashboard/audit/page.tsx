@@ -175,22 +175,30 @@ export default function AuditPage() {
 function GlobalAudit() {
   const [action, setAction] = useState('')
   const [entity, setEntity] = useState('')
-  const [applied, setApplied] = useState<{ action: string; entity: string }>({ action: '', entity: '' })
+  const [applied, setApplied] = useState<{ action: string; entity: string }>({
+    action: '',
+    entity: '',
+  })
   const [page, setPage] = useState(0)
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['admin-audit-all', applied, page],
-    queryFn: () => getGlobalAuditLogs({
-      action: applied.action || undefined,
-      entity: applied.entity || undefined,
-      page,
-      pageSize: 20,
-    }),
+    queryFn: () =>
+      getGlobalAuditLogs({
+        action: applied.action || undefined,
+        entity: applied.entity || undefined,
+        page,
+        pageSize: 20,
+      }),
     placeholderData: keepPreviousData,
   })
 
   const columns: Column<GlobalAuditLog>[] = [
-    { key: 'createdAt', header: 'Quando', render: (r) => new Date(r.createdAt).toLocaleString('pt-BR') },
+    {
+      key: 'createdAt',
+      header: 'Quando',
+      render: (r) => new Date(r.createdAt).toLocaleString('pt-BR'),
+    },
     { key: 'companyName', header: 'Empresa', render: (r) => r.companyName ?? '—' },
     { key: 'action', header: 'Ação' },
     { key: 'entity', header: 'Entidade' },
@@ -213,34 +221,66 @@ function GlobalAudit() {
       <PageHeader title="Auditoria" description="Auditoria global de todas as empresas." />
       <form
         className="flex flex-wrap items-end gap-3"
-        onSubmit={(e) => { e.preventDefault(); setApplied({ action, entity }); setPage(0) }}
+        onSubmit={(e) => {
+          e.preventDefault()
+          setApplied({ action, entity })
+          setPage(0)
+        }}
       >
         <div>
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Ação</label>
-          <input value={action} onChange={(e) => setAction(e.target.value)} placeholder="insert, update…"
-            className="w-48 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" />
+          <input
+            value={action}
+            onChange={(e) => setAction(e.target.value)}
+            placeholder="insert, update…"
+            className="w-48 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
         </div>
         <div>
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Entidade</label>
-          <input value={entity} onChange={(e) => setEntity(e.target.value)} placeholder="services, faqs…"
-            className="w-48 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50" />
+          <input
+            value={entity}
+            onChange={(e) => setEntity(e.target.value)}
+            placeholder="services, faqs…"
+            className="w-48 rounded-md border border-border bg-background px-3 py-2 text-sm outline-none focus-visible:ring-3 focus-visible:ring-ring/50"
+          />
         </div>
-        <Button type="submit" variant="outline">Filtrar</Button>
+        <Button type="submit" variant="outline">
+          Filtrar
+        </Button>
       </form>
       {isError ? (
         <p className="text-sm text-destructive">Erro ao carregar auditoria.</p>
       ) : (
         <>
-          <DataTable<GlobalAuditLog> data={data?.items ?? []} columns={columns} loading={isPending}
-            emptyMessage="Nenhum registro de auditoria." />
+          <DataTable<GlobalAuditLog>
+            data={data?.items ?? []}
+            columns={columns}
+            loading={isPending}
+            emptyMessage="Nenhum registro de auditoria."
+          />
           {totalPages > 1 && (
             <div className="flex items-center justify-between text-xs text-muted-foreground">
-              <span>Página {page + 1} de {totalPages} · {total} registro(s)</span>
+              <span>
+                Página {page + 1} de {totalPages} · {total} registro(s)
+              </span>
               <div className="flex gap-1">
-                <Button variant="outline" className="h-7 px-2 text-xs" disabled={page === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}>←</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs" disabled={page + 1 >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}>→</Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  ←
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={page + 1 >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  →
+                </Button>
               </div>
             </div>
           )}

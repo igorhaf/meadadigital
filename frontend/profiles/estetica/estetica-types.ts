@@ -31,6 +31,13 @@ export type AestheticConfig = {
   opensAt: string
   closesAt: string
   slotMinutes: number
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  autoExpireEnabled: boolean
+  packageValidityDays: number | null
+  renewalEnabled: boolean
+  renewalDays: number
+  expiryWarningDays: number
 }
 
 /** Pacote multi-sessão (espelha AestheticPackage) — a escapada. saldo materializado. */
@@ -49,6 +56,7 @@ export type AestheticPackage = {
   totalCents: number
   status: AestheticPackageStatusId
   notes: string | null
+  validUntil: string | null
   purchasedAt: string
   activatedAt: string | null
   statusUpdatedAt: string
@@ -95,7 +103,10 @@ export function formatPrice(cents: number | null | undefined): string {
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 

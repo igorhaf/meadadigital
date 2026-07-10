@@ -3,8 +3,8 @@
 import { Moon, Sun } from 'lucide-react'
 import { useEffect, useState } from 'react'
 
-import { Button } from '@/components/ui/button'
 import { useThemeMode } from '@/components/theme-mode-provider'
+import { Button } from '@/components/ui/button'
 
 /**
  * Botão de alternância do modo de tema. Alterna SOMENTE claro ↔ escuro (o modo 'system' foi
@@ -19,6 +19,7 @@ export function ThemeToggle() {
   const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- guard de montagem (SSR começa 'light'; evita flash na hidratação)
     setMounted(true)
   }, [])
 

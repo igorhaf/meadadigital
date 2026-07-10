@@ -14,12 +14,18 @@ export function listPayments(enrollmentId: string): Promise<PaymentsResponse> {
   return apiFetch<PaymentsResponse>(`/api/escola/enrollments/${enrollmentId}/payments`)
 }
 
-export function registerPayment(enrollmentId: string, input: RegisterPaymentInput): Promise<EscolaPayment> {
+export function registerPayment(
+  enrollmentId: string,
+  input: RegisterPaymentInput,
+): Promise<EscolaPayment> {
   return apiFetch<EscolaPayment>(`/api/escola/enrollments/${enrollmentId}/payments`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
 export function deletePayment(enrollmentId: string, paymentId: string): Promise<void> {
-  return apiFetch<void>(`/api/escola/enrollments/${enrollmentId}/payments/${paymentId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/escola/enrollments/${enrollmentId}/payments/${paymentId}`, {
+    method: 'DELETE',
+  })
 }

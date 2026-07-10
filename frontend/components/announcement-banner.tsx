@@ -13,8 +13,10 @@ import {
 /** Classes de cor por severidade (banner do topo). */
 const SEVERITY_STYLES: Record<MyAnnouncementSeverity, string> = {
   info: 'bg-muted text-foreground border-border',
-  warning: 'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900',
-  critical: 'bg-red-50 text-red-900 border-red-200 dark:bg-red-950/40 dark:text-red-200 dark:border-red-900',
+  warning:
+    'bg-amber-50 text-amber-900 border-amber-200 dark:bg-amber-950/40 dark:text-amber-200 dark:border-amber-900',
+  critical:
+    'bg-red-50 text-red-900 border-red-200 dark:bg-red-950/40 dark:text-red-200 dark:border-red-900',
 }
 
 /**

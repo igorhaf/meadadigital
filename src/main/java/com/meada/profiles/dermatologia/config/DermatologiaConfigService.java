@@ -30,11 +30,14 @@ public class DermatologiaConfigService {
     }
 
     @Transactional
-    public DermatologiaConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt, int bufferMinutes) {
+    public DermatologiaConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
+                                     int bufferMinutes, boolean reminderEnabled, boolean autoCompleteEnabled,
+                                     boolean recallEnabled, int recallMonths) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        DermatologiaConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes);
+        DermatologiaConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes,
+            reminderEnabled, autoCompleteEnabled, recallEnabled, Math.min(36, Math.max(1, recallMonths)));
         auditLogger.log(companyId, userId, "dermatologia_config_updated", "dermatologia_config", companyId, Map.of("buffer_minutes", bufferMinutes));
         contextCache.invalidate(companyId);
         return saved;

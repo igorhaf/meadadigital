@@ -22,6 +22,7 @@ import {
   updateSavedReply,
   type SavedReply,
 } from '@/lib/api/saved-replies'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 // title 1..80, body 1..2000 — espelha os CHECKs do banco (saved_replies).
 const replySchema = z.object({
@@ -36,9 +37,7 @@ const columns: Column<SavedReply>[] = [
   {
     key: 'body',
     header: 'Prévia',
-    render: (r) => (
-      <span className="line-clamp-1 text-muted-foreground">{r.body}</span>
-    ),
+    render: (r) => <span className="line-clamp-1 text-muted-foreground">{r.body}</span>,
   },
   {
     key: 'createdAt',
@@ -81,12 +80,10 @@ export default function SavedRepliesPage() {
     formState: { errors, isSubmitting },
   } = useForm<ReplyForm>({ resolver: zodResolver(replySchema) })
 
-  useEffect(() => {
-    if (dialogOpen) {
-      reset({ title: editing?.title ?? '', body: editing?.body ?? '' })
-      setServerError(null)
-    }
-  }, [dialogOpen, editing, reset])
+  useResetWhen(dialogOpen ? (editing?.id ?? 'create') : null, () => {
+    reset({ title: editing?.title ?? '', body: editing?.body ?? '' })
+    setServerError(null)
+  })
 
   const isEdit = editing != null
 
@@ -175,16 +172,10 @@ export default function SavedRepliesPage() {
           loading={isPending}
           emptyMessage="Nenhuma resposta pronta cadastrada."
           searchPlaceholder="Buscar resposta…"
-          searchFn={(r, q) =>
-            r.title.toLowerCase().includes(q) || r.body.toLowerCase().includes(q)
-          }
+          searchFn={(r, q) => r.title.toLowerCase().includes(q) || r.body.toLowerCase().includes(q)}
           actions={(r) => (
             <div className="flex items-center gap-1.5">
-              <Button
-                variant="outline"
-                className="h-7 px-2 text-xs"
-                onClick={() => openEdit(r)}
-              >
+              <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(r)}>
                 <Pencil className="size-3" />
                 Editar
               </Button>
@@ -218,7 +209,7 @@ export default function SavedRepliesPage() {
             <input
               id="reply-title"
               {...register('title')}
-              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
               placeholder="Ex.: Saudação"
             />
             {errors.title && (
@@ -234,12 +225,10 @@ export default function SavedRepliesPage() {
               id="reply-body"
               {...register('body')}
               rows={5}
-              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+              className="w-full rounded-md border border-border px-3 py-2 text-sm focus:ring-2 focus:ring-ring focus:outline-none"
               placeholder="Texto da resposta…"
             />
-            {errors.body && (
-              <p className="mt-1 text-xs text-destructive">{errors.body.message}</p>
-            )}
+            {errors.body && <p className="mt-1 text-xs text-destructive">{errors.body.message}</p>}
           </div>
 
           {serverError && <p className="text-sm text-destructive">{serverError}</p>}

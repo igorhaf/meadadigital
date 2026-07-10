@@ -87,8 +87,10 @@ public class PedidoComidaConfirmHandler {
             return Optional.empty();
         }
 
+        // Onda 2 (backlog #3): retirada no balcão dispensa endereço (e taxa).
+        String fulfillment = "retirada".equals(root.path("fulfillment").asText(null)) ? "retirada" : "entrega";
         String endereco = root.path("endereco").asText(null);
-        if (endereco == null || endereco.isBlank()) {
+        if ("entrega".equals(fulfillment) && (endereco == null || endereco.isBlank())) {
             log.warn("comida: tag <pedido_comida> sem endereço p/ conversa {} — pedido não criado", conversationId);
             return Optional.empty();
         }
@@ -165,7 +167,7 @@ public class PedidoComidaConfirmHandler {
 
         try {
             ComidaOrder order = orderService.create(companyId, conversationId, contactId,
-                endereco.strip(), lines, couponCode, zoneId, null);
+                endereco == null ? null : endereco.strip(), lines, couponCode, zoneId, fulfillment, null);
             log.info("comida: pedido {} criado p/ conversa {} ({} itens, total {} cents)",
                 order.id(), conversationId, lines.size(), order.totalCents());
             return Optional.of(order);

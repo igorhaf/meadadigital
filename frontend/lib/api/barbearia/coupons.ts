@@ -17,16 +17,23 @@ export function listCoupons(): Promise<{ items: BarberCoupon[] }> {
 }
 
 export function createCoupon(input: CreateCouponInput): Promise<BarberCoupon> {
-  return apiFetch<BarberCoupon>('/api/barbearia/coupons', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<BarberCoupon>('/api/barbearia/coupons', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateCoupon(id: string, input: UpdateCouponInput): Promise<BarberCoupon> {
-  return apiFetch<BarberCoupon>(`/api/barbearia/coupons/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<BarberCoupon>(`/api/barbearia/coupons/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCoupon(id: string, active: boolean): Promise<BarberCoupon> {
   return apiFetch<BarberCoupon>(`/api/barbearia/coupons/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

@@ -123,6 +123,10 @@ public class PedidoFlorConfirmHandler {
         }
         String cartao = root.path("cartao").asText(null);   // opcional (pode ser entrega sem cartão)
 
+        // Onda 1: cupom (#7) — validação/recálculo é do backend — e presente surpresa (#13).
+        String cupom = root.path("cupom").asText(null);
+        boolean anonimo = root.path("anonimo").asBoolean(false);
+
         JsonNode itemsNode = root.path("items");
         if (!itemsNode.isArray() || itemsNode.isEmpty()) {
             log.warn("floricultura: tag <pedido_flor> sem items p/ conversa {} — pedido não criado", conversationId);
@@ -180,7 +184,8 @@ public class PedidoFlorConfirmHandler {
             FloriculturaOrder order = orderService.create(companyId, conversationId, contactId,
                 endereco.strip(), lines, null,
                 deliveryDate, periodo, destinatario.strip(),
-                cartao == null || cartao.isBlank() ? null : cartao.strip());
+                cartao == null || cartao.isBlank() ? null : cartao.strip(),
+                cupom == null || cupom.isBlank() ? null : cupom.strip(), anonimo);
             log.info("floricultura: pedido {} criado p/ conversa {} ({} itens, total {} cents)",
                 order.id(), conversationId, lines.size(), order.totalCents());
             return Optional.of(order);

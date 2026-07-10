@@ -34,15 +34,18 @@ public class EventProposalService {
     private final EventProposalRepository repository;
     private final EventPlannerRepository plannerRepository;
     private final EventProposalNotifier notifier;
+    private final com.meada.profiles.eventos.config.EventConfigRepository configRepository;
     private final EventosContextCache contextCache;
 
     public EventProposalService(EventProposalRepository repository,
                                 EventPlannerRepository plannerRepository,
                                 EventProposalNotifier notifier,
-                                EventosContextCache contextCache) {
+                                EventosContextCache contextCache,
+                                com.meada.profiles.eventos.config.EventConfigRepository configRepository) {
         this.repository = repository;
         this.plannerRepository = plannerRepository;
         this.notifier = notifier;
+        this.configRepository = configRepository;
         this.contextCache = contextCache;
     }
 
@@ -185,6 +188,11 @@ public class EventProposalService {
     // STATUS
     // -------------------------------------------------------------------------
 
+    /** Onda 1 (backlog #3): quantas propostas aprovada/fechada/realizada existem nesta data. */
+    public long countOccupied(UUID companyId, java.time.LocalDate date, UUID excludeId) {
+        return repository.countByEventDate(companyId, date, excludeId);
+    }
+
     @Transactional
     public EventProposal updateStatus(UUID companyId, UUID id, String newStatusId) {
         EventProposalStatus newStatus = EventProposalStatus.fromId(newStatusId).orElseThrow(InvalidStatusException::new);
@@ -203,6 +211,22 @@ public class EventProposalService {
 
         String text = newStatus.notificationText(eventLabel(current), brl(current.totalCents()));
         notifier.notifyStatus(companyId, current.conversationId(), text);
+
+        // Onda 1 (backlog #7): REALIZADA encadeia o pós-venda (agradecimento + avaliação +
+        // indicação — relacionamento, sem promessa; toggle + review_link na config).
+        if (newStatus == EventProposalStatus.REALIZADA) {
+            var config = configRepository.findByCompany(companyId);
+            if (config.postEventEnabled()) {
+                StringBuilder pos = new StringBuilder("Esperamos que a festa tenha sido inesquecível! "
+                    + "Obrigado por celebrar com a gente. 🎉 ");
+                if (config.reviewLink() != null) {
+                    pos.append("Se puder, deixe sua avaliação — ajuda muito: ")
+                        .append(config.reviewLink()).append(" ");
+                }
+                pos.append("E se conhecer alguém planejando um evento, ficaremos felizes com a indicação!");
+                notifier.notifyStatus(companyId, current.conversationId(), pos.toString());
+            }
+        }
 
         contextCache.invalidate(companyId);
         return repository.findById(companyId, id).orElseThrow(ProposalNotFoundException::new);

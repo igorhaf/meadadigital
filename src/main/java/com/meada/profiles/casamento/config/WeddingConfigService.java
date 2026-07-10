@@ -34,9 +34,13 @@ public class WeddingConfigService {
     @Transactional
     public WeddingConfig update(UUID companyId, UUID userId, String businessName, String notes,
                                 boolean checklistReminderEnabled, boolean paymentReminderEnabled,
-                                boolean autoCompleteEnabled, boolean anniversaryEnabled) {
+                                boolean autoCompleteEnabled, boolean anniversaryEnabled,
+                                boolean postEventEnabled, String reviewLink,
+                                boolean followUpEnabled, int followUpDays) {
         WeddingConfig saved = repository.upsert(companyId, businessName, notes, checklistReminderEnabled,
-            paymentReminderEnabled, autoCompleteEnabled, anniversaryEnabled);
+            paymentReminderEnabled, autoCompleteEnabled, anniversaryEnabled, postEventEnabled,
+            reviewLink == null || reviewLink.isBlank() ? null : reviewLink.strip(),
+            followUpEnabled, Math.min(60, Math.max(1, followUpDays)));
         auditLogger.log(companyId, userId, "wedding_config_updated", "wedding_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

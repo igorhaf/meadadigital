@@ -2,6 +2,8 @@ package com.meada.profiles.las.orders;
 
 import com.meada.profiles.las.catalog.LasVariant;
 import com.meada.profiles.las.catalog.LasVariantRepository;
+import com.meada.profiles.las.coupons.LasCoupon;
+import com.meada.profiles.las.coupons.LasCouponRepository;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.jdbc.core.RowMapper;
 import org.springframework.stereotype.Repository;
@@ -50,11 +52,14 @@ public class LasOrderRepository {
 
     private final JdbcTemplate jdbcTemplate;
     private final LasVariantRepository variantRepository;
+    private final LasCouponRepository couponRepository;
 
     public LasOrderRepository(JdbcTemplate jdbcTemplate,
-                              LasVariantRepository variantRepository) {
+                              LasVariantRepository variantRepository,
+                              LasCouponRepository couponRepository) {
         this.jdbcTemplate = jdbcTemplate;
         this.variantRepository = variantRepository;
+        this.couponRepository = couponRepository;
     }
 
     /** Mapeia a row de order_item. */
@@ -76,8 +81,10 @@ public class LasOrderRepository {
             rs.getString("fulfillment"),
             rs.getBoolean("same_lot_guaranteed"),
             rs.getInt("subtotal_cents"),
+            rs.getInt("discount_cents"),
             rs.getInt("delivery_fee_cents"),
             rs.getInt("total_cents"),
+            rs.getString("coupon_code_snapshot"),
             rs.getString("delivery_address"),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
@@ -90,7 +97,8 @@ public class LasOrderRepository {
 
     private static final String ORDER_SELECT =
         "select o.id, o.conversation_id, o.status, o.fulfillment, o.same_lot_guaranteed, o.subtotal_cents, "
-            + "o.delivery_fee_cents, o.total_cents, o.delivery_address, o.notes, o.rejection_reason, "
+            + "o.discount_cents, o.delivery_fee_cents, o.total_cents, o.coupon_code_snapshot, "
+            + "o.delivery_address, o.notes, o.rejection_reason, "
             + "o.created_at, o.status_updated_at, ct.name as contact_name, ct.phone_number as contact_phone "
             + "from las_orders o join contacts ct on ct.id = o.contact_id ";
 
@@ -140,7 +148,8 @@ public class LasOrderRepository {
             "select id, variant_id, product_name_snapshot, color_snapshot, dye_lot_snapshot, qtd, unit_price_cents "
                 + "from las_order_items where order_id = ? order by id", ITEM_MAPPER, o.id());
         return new LasOrder(o.id(), o.conversationId(), o.status(), o.fulfillment(), o.sameLotGuaranteed(),
-            o.subtotalCents(), o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.notes(),
+            o.subtotalCents(), o.discountCents(), o.deliveryFeeCents(), o.totalCents(),
+            o.couponCode(), o.deliveryAddress(), o.notes(),
             o.rejectionReason(), o.createdAt(), o.statusUpdatedAt(), o.contactName(), o.contactPhone(), items);
     }
 
@@ -163,7 +172,8 @@ public class LasOrderRepository {
     @Transactional
     public LasOrder createOrder(UUID companyId, UUID conversationId, UUID contactId,
                                 String fulfillment, boolean sameLotGuaranteed, String deliveryAddress,
-                                List<OrderLineInput> lines, int deliveryFeeCents, String notes) {
+                                List<OrderLineInput> lines, String couponCode,
+                                int deliveryFeeCents, String notes) {
         record Snap(UUID variantId, String productName, String color, String dyeLot, int unitPrice, int qtd) {}
 
         // Resolve as variantes do tenant uma vez (uma query) e indexa por id.
@@ -227,17 +237,40 @@ public class LasOrderRepository {
             }
         }
 
+        // Onda 1 (backlog #5): cupom na MESMA transação — validado aqui; inválido NÃO aborta.
+        UUID couponId = null;
+        String couponSnapshot = null;
+        int discount = 0;
+        if (couponCode != null && !couponCode.isBlank()) {
+            java.util.Optional<LasCoupon> maybe = couponRepository.findByCode(companyId, couponCode);
+            if (maybe.isPresent()) {
+                LasCoupon c = maybe.get();
+                boolean valid = c.active()
+                    && (c.validUntil() == null || !c.validUntil().isBefore(java.time.LocalDate.now()))
+                    && (c.maxUses() == null || c.uses() < c.maxUses())
+                    && subtotal >= c.minOrderCents();
+                if (valid) {
+                    int raw = "percent".equals(c.kind()) ? subtotal * c.value() / 100 : c.value();
+                    discount = Math.min(subtotal, raw);
+                    couponId = c.id();
+                    couponSnapshot = c.code();
+                    couponRepository.incrementUses(companyId, c.id());
+                }
+            }
+        }
+
         boolean isEntrega = "entrega".equals(fulfillment);
         int fee = isEntrega ? deliveryFeeCents : 0;
-        int total = subtotal + fee;
+        int total = subtotal - discount + fee;
         String address = isEntrega ? deliveryAddress : null;   // retirada não tem endereço.
 
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into las_orders (company_id, conversation_id, contact_id, fulfillment, same_lot_guaranteed, "
-                + "subtotal_cents, delivery_fee_cents, total_cents, delivery_address, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+                + "subtotal_cents, discount_cents, delivery_fee_cents, total_cents, coupon_id, "
+                + "coupon_code_snapshot, delivery_address, notes) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
             UUID.class, companyId, conversationId, contactId, fulfillment, sameLotGuaranteed,
-            subtotal, fee, total, address, notes);
+            subtotal, discount, fee, total, couponId, couponSnapshot, address, notes);
 
         for (Snap s : snaps) {
             jdbcTemplate.update(

@@ -116,6 +116,21 @@ export type EscolaConfig = {
   opensAt: string
   closesAt: string
   notes: string | null
+  visitReminderEnabled: boolean
+  visitAutoCompleteEnabled: boolean
+  paymentReminderEnabled: boolean
+  paymentDueDay: number
+}
+
+/** Entrada da lista de espera de uma turma (onda 1, backlog #1). Posição derivada. */
+export type WaitlistEntry = {
+  id: string
+  studentName: string
+  status: 'aguardando' | 'avisada'
+  contactName: string
+  contactPhone: string
+  position: number
+  createdAt: string
 }
 
 /** Detalhe do conflito no 409 class_full. */

@@ -92,6 +92,9 @@ public class PedidoLasConfirmHandler {
         // ⭐ same_lot_guaranteed: ausente/qualquer-coisa → false (conservador; só true quando explícito).
         boolean sameLotGuaranteed = root.path("same_lot_guaranteed").asBoolean(false);
 
+        // Onda 1 (backlog #5): cupom — validação/recálculo é do backend.
+        String couponCode = root.path("cupom").asText(null);
+
         String endereco = root.path("endereco").asText(null);
         if ("entrega".equals(fulfillment) && (endereco == null || endereco.isBlank())) {
             log.warn("las: tag <pedido_las> em ENTREGA sem endereço p/ conversa {} — pedido não criado",
@@ -128,7 +131,8 @@ public class PedidoLasConfirmHandler {
         String address = "entrega".equals(fulfillment) && endereco != null ? endereco.strip() : null;
         try {
             LasOrder order = orderService.create(companyId, conversationId, contactId,
-                fulfillment, sameLotGuaranteed, address, lines, null);
+                fulfillment, sameLotGuaranteed, address, lines,
+                couponCode == null || couponCode.isBlank() ? null : couponCode.strip(), null);
             log.info("las: pedido {} criado p/ conversa {} ({} linhas, total {} cents, same_lot={})",
                 order.id(), conversationId, lines.size(), order.totalCents(), sameLotGuaranteed);
             return Optional.of(order);

@@ -154,4 +154,13 @@ public class NutriAppointmentRepository {
             return conflict;
         }
     }
+
+    /** Próximas consultas ATIVAS do CONTATO — bloco do contexto (onda 1, tag de confirmação). */
+    public List<NutriAppointment> listUpcomingByContact(UUID companyId, UUID contactId, int limit) {
+        return jdbcTemplate.query(
+            "select " + COLS + " from nutri_appointments where company_id = ? and contact_id = ? "
+                + "and status in ('agendado','confirmado') and start_at >= now() "
+                + "order by start_at asc limit " + Math.max(1, limit),
+            MAPPER, companyId, contactId);
+    }
 }

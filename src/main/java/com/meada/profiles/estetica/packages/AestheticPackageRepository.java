@@ -37,6 +37,7 @@ public class AestheticPackageRepository {
         rs.getInt("total_cents"),
         rs.getString("status"),
         rs.getString("notes"),
+        rs.getDate("valid_until") == null ? null : rs.getDate("valid_until").toLocalDate(),
         rs.getTimestamp("purchased_at").toInstant(),
         rs.getTimestamp("activated_at") == null ? null : rs.getTimestamp("activated_at").toInstant(),
         rs.getTimestamp("status_updated_at").toInstant());
@@ -44,7 +45,7 @@ public class AestheticPackageRepository {
     private static final String COLS =
         "id, contact_id, procedure_id, conversation_id, customer_name, customer_phone, procedure_name, "
             + "unit_price_cents, total_sessions, sessions_used, sessions_remaining, total_cents, status, "
-            + "notes, purchased_at, activated_at, status_updated_at";
+            + "notes, valid_until, purchased_at, activated_at, status_updated_at";
 
     private final JdbcTemplate jdbcTemplate;
 
@@ -110,6 +111,13 @@ public class AestheticPackageRepository {
     }
 
     /** Persiste a transição de status do pacote (PATCH manual). Preenche activated_at ao ir pra 'ativo'. */
+    /** Materializa a validade do pacote (ativação com package_validity_days ou edição no painel). */
+    public void setValidUntil(UUID companyId, UUID id, java.time.LocalDate validUntil) {
+        jdbcTemplate.update(
+            "update aesthetic_packages set valid_until = ?, updated_at = now() where company_id = ? and id = ?",
+            validUntil == null ? null : java.sql.Date.valueOf(validUntil), companyId, id);
+    }
+
     public void updateStatus(UUID companyId, UUID id, String newStatus) {
         if (AestheticPackageStatus.ATIVO.id().equals(newStatus)) {
             jdbcTemplate.update("update aesthetic_packages set status = ?, activated_at = coalesce(activated_at, now()), "

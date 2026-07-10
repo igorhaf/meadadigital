@@ -6,6 +6,10 @@ export type UpdateConfigInput = {
   bufferMinutes: number
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  recallEnabled: boolean
+  recallMonths: number
 }
 
 export function getConfig(): Promise<ClinicConfig> {

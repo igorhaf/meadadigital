@@ -24,6 +24,7 @@ public record AestheticPackage(
     int totalCents,
     String status,
     String notes,
+    java.time.LocalDate validUntil,
     Instant purchasedAt,
     Instant activatedAt,
     Instant statusUpdatedAt) {

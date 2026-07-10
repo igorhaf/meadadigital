@@ -30,9 +30,14 @@ public class LingerieOrderRepository {
     private final JdbcTemplate jdbcTemplate;
     private final LingerieVariantRepository variantRepository;
 
+    private final com.meada.profiles.lingerie.coupons.LingerieCouponRepository couponRepository;
+    private static final java.time.ZoneId BR = java.time.ZoneId.of("America/Sao_Paulo");
+
     public LingerieOrderRepository(JdbcTemplate jdbcTemplate,
+                                   com.meada.profiles.lingerie.coupons.LingerieCouponRepository couponRepository,
                                    LingerieVariantRepository variantRepository) {
         this.jdbcTemplate = jdbcTemplate;
+        this.couponRepository = couponRepository;
         this.variantRepository = variantRepository;
     }
 
@@ -54,8 +59,10 @@ public class LingerieOrderRepository {
             rs.getString("status"),
             rs.getString("fulfillment"),
             rs.getInt("subtotal_cents"),
+            rs.getInt("discount_cents"),
             rs.getInt("delivery_fee_cents"),
             rs.getInt("total_cents"),
+            rs.getString("coupon_code_snapshot"),
             rs.getString("delivery_address"),
             rs.getString("notes"),
             rs.getString("rejection_reason"),
@@ -67,8 +74,9 @@ public class LingerieOrderRepository {
     }
 
     private static final String ORDER_SELECT =
-        "select o.id, o.conversation_id, o.status, o.fulfillment, o.subtotal_cents, o.delivery_fee_cents, "
-            + "o.total_cents, o.delivery_address, o.notes, o.rejection_reason, "
+        "select o.id, o.conversation_id, o.status, o.fulfillment, o.subtotal_cents, o.discount_cents, "
+            + "o.delivery_fee_cents, o.total_cents, o.coupon_code_snapshot, "
+            + "o.delivery_address, o.notes, o.rejection_reason, "
             + "o.created_at, o.status_updated_at, ct.name as contact_name, ct.phone_number as contact_phone "
             + "from lingerie_orders o join contacts ct on ct.id = o.contact_id ";
 
@@ -118,7 +126,8 @@ public class LingerieOrderRepository {
             "select id, variant_id, product_name_snapshot, size_snapshot, color_snapshot, qtd, unit_price_cents "
                 + "from lingerie_order_items where order_id = ? order by id", ITEM_MAPPER, o.id());
         return new LingerieOrder(o.id(), o.conversationId(), o.status(), o.fulfillment(),
-            o.subtotalCents(), o.deliveryFeeCents(), o.totalCents(), o.deliveryAddress(), o.notes(),
+            o.subtotalCents(), o.discountCents(), o.deliveryFeeCents(), o.totalCents(),
+            o.couponCode(), o.deliveryAddress(), o.notes(),
             o.rejectionReason(), o.createdAt(), o.statusUpdatedAt(), o.contactName(), o.contactPhone(), items);
     }
 
@@ -136,7 +145,7 @@ public class LingerieOrderRepository {
     @Transactional
     public LingerieOrder createOrder(UUID companyId, UUID conversationId, UUID contactId,
                                      String fulfillment, String deliveryAddress, List<OrderLineInput> lines,
-                                     int deliveryFeeCents, String notes) {
+                                     String couponCode, int deliveryFeeCents, String notes) {
         record Snap(UUID variantId, String productName, String size, String color, int unitPrice, int qtd) {}
 
         // Resolve as variantes do tenant uma vez (uma query) e indexa por id.
@@ -182,17 +191,46 @@ public class LingerieOrderRepository {
             throw new IllegalArgumentException("nenhum item válido no pedido");
         }
 
+        // Cupom (onda 1, best-effort — inválido NÃO aborta, o pedido sai sem o desconto).
+        UUID couponId = null;
+        String couponSnapshot = null;
+        int discount = 0;
+        if (couponCode != null && !couponCode.isBlank()) {
+            java.util.Optional<com.meada.profiles.lingerie.coupons.LingerieCoupon> maybe =
+                couponRepository.findByCode(companyId, couponCode);
+            if (maybe.isPresent()) {
+                com.meada.profiles.lingerie.coupons.LingerieCoupon c = maybe.get();
+                java.time.LocalDate today = java.time.LocalDate.now(BR);
+                boolean valid = c.active()
+                    && (c.validUntil() == null || !c.validUntil().isBefore(today))
+                    && subtotal >= c.minOrderCents()
+                    && (c.maxUses() == null || c.uses() < c.maxUses());
+                if (valid) {
+                    int raw = "percent".equals(c.kind()) ? subtotal * c.value() / 100 : c.value();
+                    discount = Math.min(subtotal, raw);
+                    couponId = c.id();
+                    couponSnapshot = c.code();
+                }
+            }
+        }
+
         boolean isEntrega = "entrega".equals(fulfillment);
         int fee = isEntrega ? deliveryFeeCents : 0;
-        int total = subtotal + fee;
+        int total = subtotal - discount + fee;
         String address = isEntrega ? deliveryAddress : null;   // retirada não tem endereço.
 
         UUID orderId = jdbcTemplate.queryForObject(
             "insert into lingerie_orders (company_id, conversation_id, contact_id, fulfillment, "
-                + "subtotal_cents, delivery_fee_cents, total_cents, delivery_address, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
-            UUID.class, companyId, conversationId, contactId, fulfillment, subtotal, fee, total,
-            address, notes);
+                + "subtotal_cents, discount_cents, delivery_fee_cents, total_cents, coupon_id, "
+                + "coupon_code_snapshot, delivery_address, notes) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+            UUID.class, companyId, conversationId, contactId, fulfillment, subtotal, discount, fee,
+            total, couponId, couponSnapshot, address, notes);
+
+        // Incrementa uses do cupom aplicado (mesma transação).
+        if (couponId != null) {
+            couponRepository.incrementUses(companyId, couponId);
+        }
 
         for (Snap s : snaps) {
             jdbcTemplate.update(

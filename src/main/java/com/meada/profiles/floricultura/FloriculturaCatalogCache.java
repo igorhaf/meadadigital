@@ -30,29 +30,35 @@ public class FloriculturaCatalogCache {
 
     private final FloriculturaCatalogItemRepository catalogRepository;
     private final FloriculturaConfigRepository configRepository;
-    private final Cache<UUID, String> cache;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
+    private final Cache<String, String> cache;
 
     public FloriculturaCatalogCache(FloriculturaCatalogItemRepository catalogRepository,
-                           FloriculturaConfigRepository configRepository) {
+                           FloriculturaConfigRepository configRepository,
+                           org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.catalogRepository = catalogRepository;
         this.configRepository = configRepository;
+        this.jdbcTemplate = jdbcTemplate;
         this.cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(60))
             .maximumSize(500)
             .build();
     }
 
-    /** Bloco de cardápio+config+instruções para o prompt, cacheado por company (TTL 60s). */
-    public String catalogSegment(UUID companyId) {
-        return cache.get(companyId, this::buildSegment);
+    /**
+     * Bloco de cardápio+config+instruções para o prompt, cacheado por company:contact (TTL 60s).
+     * O contato entra pra injetar o HISTÓRICO de destinatários (onda 1, backlog #3 — recompra).
+     */
+    public String catalogSegment(UUID companyId, UUID contactId) {
+        return cache.get(companyId + ":" + contactId, k -> buildSegment(companyId, contactId));
     }
 
     /** Invalida o cache de uma empresa (chamado pelo FloriculturaCatalogService ao mutar). */
     public void invalidate(UUID companyId) {
-        cache.invalidate(companyId);
+        cache.asMap().keySet().removeIf(k -> k.startsWith(companyId + ":"));
     }
 
-    private String buildSegment(UUID companyId) {
+    private String buildSegment(UUID companyId, UUID contactId) {
         List<FloriculturaCatalogItem> items = catalogRepository.listByCompany(companyId, null, true);
         FloriculturaConfig config = configRepository.findByCompany(companyId);
 
@@ -89,6 +95,7 @@ public class FloriculturaCatalogCache {
             .append("<pedido_flor>{\"items\":[{\"item_id\":\"UUID_EXATO_DO_CATÁLOGO\",\"qtd\":N,"
                 + "\"options\":[\"UUID_DA_OPCAO\"]}],\"endereco\":\"...\",\"data_entrega\":\"YYYY-MM-DD\","
                 + "\"periodo\":\"manha\",\"destinatario\":\"Nome de quem recebe\",\"cartao\":\"mensagem ou vazio\","
+                + "\"cupom\":\"CODIGO_SE_HOUVER\",\"anonimo\":false,"
                 + "\"total_cents\":NNN}</pedido_flor>\n")
             .append("Cada item pode ter \"options\" (UUIDs das opções de cor/tamanho escolhidas); item "
                 + "sem opção → omita \"options\". Use os item_id e option_id EXATOS do catálogo acima. "
@@ -107,9 +114,66 @@ public class FloriculturaCatalogCache {
         }
         sb.append("CONFIG: delivery_fee_cents=").append(config.deliveryFeeCents())
             .append(", min_order_cents=").append(config.minOrderCents()).append("\n");
-        sb.append("Avise o cliente que o pedido será enviado para confirmação do restaurante.\n\n");
+        sb.append("Avise o cliente que o pedido será enviado para confirmação da loja.\n");
+        // Onda 1 (backlog #7): cupom — validação/recálculo é do sistema.
+        sb.append("Se o cliente informar um CUPOM de desconto, registre o código no campo \"cupom\" "
+            + "da tag (omita se não houver) — quem valida e recalcula é o sistema; NUNCA invente "
+            + "desconto (cupom inválido: o pedido sai sem o desconto).\n");
+        // Onda 1 (backlog #13): presente surpresa.
+        sb.append("PRESENTE SURPRESA: se o cliente quiser que a entrega NÃO revele quem enviou, "
+            + "ponha \"anonimo\":true na tag (e o cartão sem assinatura). Confirme com o cliente "
+            + "que o presente será entregue sem identificar o remetente.\n");
+        // Onda 1 (backlog #4): upsell controlado — só itens que o tenant marcou.
+        List<FloriculturaCatalogItem> suggestibles = items.stream()
+            .filter(FloriculturaCatalogItem::suggestible).toList();
+        if (!suggestibles.isEmpty()) {
+            sb.append("UPSELL: ao fechar o carrinho, você PODE sugerir UM destes adicionais quando "
+                + "combinar com a ocasião (sem insistir; preço SEMPRE do catálogo):\n");
+            for (FloriculturaCatalogItem it : suggestibles) {
+                sb.append("- ").append(it.name()).append(" (R$ ").append(formatBrl(it.priceCents()))
+                    .append(")\n");
+            }
+        }
+        sb.append("\n");
+
+        // Onda 1 (backlog #3): recompra de 1 clique — histórico de destinatários do contato.
+        appendRecentOrders(sb, companyId, contactId);
 
         return sb.toString();
+    }
+
+    /**
+     * Histórico de pedidos do contato (onda 1, backlog #3): flor vai pras MESMAS pessoas — a IA
+     * oferece "repetir o buquê da Ana" remontando a tag a partir do pedido anterior.
+     */
+    private void appendRecentOrders(StringBuilder sb, UUID companyId, UUID contactId) {
+        if (contactId == null) {
+            return;
+        }
+        record Past(String recipient, String address, String items, java.sql.Date date) {}
+        List<Past> past = jdbcTemplate.query(
+            "select o.recipient_name, o.delivery_address, o.delivery_date, "
+                + "(select string_agg(i.qtd || 'x ' || i.item_name_snapshot, ', ') "
+                + "  from floricultura_order_items i where i.order_id = o.id) as items "
+                + "from floricultura_orders o "
+                + "where o.company_id = ? and o.contact_id = ? and o.status = 'entregue' "
+                + "order by o.created_at desc limit 3",
+            (rs, rn) -> new Past(rs.getString("recipient_name"), rs.getString("delivery_address"),
+                rs.getString("items"), rs.getDate("delivery_date")),
+            companyId, contactId);
+        if (past.isEmpty()) {
+            return;
+        }
+        sb.append("PEDIDOS ANTERIORES DESTE CLIENTE (ofereça REPETIR quando fizer sentido — mesmo "
+            + "destinatário/endereço, nova data; monte a tag normalmente):\n");
+        java.time.format.DateTimeFormatter fmt = java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+        for (Past pOrder : past) {
+            sb.append("- para ").append(pOrder.recipient()).append(" em ")
+                .append(pOrder.date().toLocalDate().format(fmt))
+                .append(": ").append(pOrder.items() == null ? "(itens)" : pOrder.items())
+                .append(" · endereço: ").append(pOrder.address()).append("\n");
+        }
+        sb.append("\n");
     }
 
     /**

@@ -6,15 +6,22 @@ import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { AlertDialog } from '@/components/ui/alert-dialog'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
-import { getAllInvitations, revokeInvitation, type AdminInvitation } from '@/lib/api/admin/invitations'
+import {
+  getAllInvitations,
+  revokeInvitation,
+  type AdminInvitation,
+} from '@/lib/api/admin/invitations'
+import { ApiError } from '@/lib/api/client'
 
 const PAGE_SIZE = 20
 
-const STATUS_VARIANT: Record<AdminInvitation['status'], 'success' | 'muted' | 'danger' | 'warning'> = {
+const STATUS_VARIANT: Record<
+  AdminInvitation['status'],
+  'success' | 'muted' | 'danger' | 'warning'
+> = {
   pending: 'success',
   accepted: 'muted',
   expired: 'warning',
@@ -133,10 +140,22 @@ export default function InvitationsPage() {
                 Página {page + 1} de {totalPages} · {total} convite(s)
               </span>
               <div className="flex gap-1">
-                <Button variant="outline" className="h-7 px-2 text-xs" disabled={page === 0}
-                  onClick={() => setPage((p) => Math.max(0, p - 1))}>←</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs" disabled={page + 1 >= totalPages}
-                  onClick={() => setPage((p) => p + 1)}>→</Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={page === 0}
+                  onClick={() => setPage((p) => Math.max(0, p - 1))}
+                >
+                  ←
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={page + 1 >= totalPages}
+                  onClick={() => setPage((p) => p + 1)}
+                >
+                  →
+                </Button>
               </div>
             </div>
           )}

@@ -52,9 +52,9 @@ public class FloriculturaCatalogService {
 
     @Transactional
     public FloriculturaCatalogItem create(UUID companyId, UUID userId, String name, String description,
-                                 int priceCents, String category) {
+                                 int priceCents, String category, boolean suggestible) {
         requireValidCategory(category);
-        FloriculturaCatalogItem created = repository.insert(companyId, name, description, priceCents, category);
+        FloriculturaCatalogItem created = repository.insert(companyId, name, description, priceCents, category, suggestible);
         auditLogger.log(companyId, userId, "floricultura_catalog_item_created", "floricultura_catalog_item",
             created.id(), Map.of("name", created.name(), "category", created.category()));
         catalogCache.invalidate(companyId);
@@ -63,11 +63,13 @@ public class FloriculturaCatalogService {
 
     @Transactional
     public FloriculturaCatalogItem update(UUID companyId, UUID userId, UUID id, String name, String description,
-                                 Integer priceCents, String category, Boolean available) {
+                                 Integer priceCents, String category, Boolean available,
+                                 Boolean suggestible) {
         if (category != null && !category.isBlank()) {
             requireValidCategory(category);
         }
-        FloriculturaCatalogItem updated = repository.update(companyId, id, name, description, priceCents, category, available)
+        FloriculturaCatalogItem updated = repository.update(companyId, id, name, description, priceCents,
+                category, available, suggestible)
             .orElseThrow(CatalogItemNotFoundException::new);
         auditLogger.log(companyId, userId, "floricultura_catalog_item_updated", "floricultura_catalog_item", id, Map.of());
         catalogCache.invalidate(companyId);

@@ -104,6 +104,8 @@ public class TravelProposalController {
 
     public record StatusRequest(String newStatus) {}
 
+    public record DepositRequest(Integer depositCents, Boolean depositPaid) {}
+
     @GetMapping("/api/viagens/proposals")
     public ResponseEntity<Object> list(
             @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
@@ -423,6 +425,31 @@ public class TravelProposalController {
             return error(404, "Not Found", "proposal_not_found");
         } catch (InvalidStatusTransitionException e) {
             return error(409, "Conflict", "invalid_status_transition");
+        } catch (TravelProposalService.DepositRequiredException e) {
+            return error(409, "Conflict", "deposit_required");
+        }
+    }
+
+    /** Registra o sinal/entrada e/ou marca como recebido (onda #1 — manual até o gateway #50). */
+    @PatchMapping("/api/viagens/proposals/{id}/deposit")
+    public ResponseEntity<Object> setDeposit(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id, @RequestBody DepositRequest req) {
+        UUID companyId;
+        try {
+            companyId = profileGuard.requireViagens(user);
+        } catch (WrongProfileException e) {
+            return error(403, "Forbidden", "forbidden_wrong_profile");
+        }
+        try {
+            return ResponseEntity.ok(service.setDeposit(companyId, id, req.depositCents(),
+                Boolean.TRUE.equals(req.depositPaid())));
+        } catch (ProposalNotFoundException e) {
+            return error(404, "Not Found", "proposal_not_found");
+        } catch (ProposalLockedException e) {
+            return error(409, "Conflict", "proposal_locked");
+        } catch (TravelProposalService.InvalidDepositException e) {
+            return error(400, "Bad Request", "invalid_deposit");
         }
     }
 }

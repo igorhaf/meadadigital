@@ -19,7 +19,8 @@ export type Appointment = {
  * mês corrente (fuso do tenant). Datas em ISO-8601 (ex.: "2026-06-01T00:00:00Z").
  */
 export async function getAppointments(fromIso?: string, toIso?: string): Promise<Appointment[]> {
-  const qs = fromIso && toIso ? `?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}` : ''
+  const qs =
+    fromIso && toIso ? `?from=${encodeURIComponent(fromIso)}&to=${encodeURIComponent(toIso)}` : ''
   return apiFetch<Appointment[]>(`/admin/appointments${qs}`)
 }
 

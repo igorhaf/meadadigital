@@ -59,11 +59,12 @@ public class FloriculturaOrderService {
     public FloriculturaOrder create(UUID companyId, UUID conversationId, UUID contactId,
                               String deliveryAddress, List<OrderLineInput> lines, String notes,
                               java.time.LocalDate deliveryDate, String deliveryPeriod,
-                              String recipientName, String cardMessage) {
+                              String recipientName, String cardMessage,
+                              String couponCode, boolean anonymous) {
         FloriculturaConfig config = configRepository.findByCompany(companyId);
         return orderRepository.createOrder(
             companyId, conversationId, contactId, deliveryAddress, lines, config.deliveryFeeCents(), notes,
-            deliveryDate, deliveryPeriod, recipientName, cardMessage);
+            deliveryDate, deliveryPeriod, recipientName, cardMessage, couponCode, anonymous);
     }
 
     public List<FloriculturaOrder> list(UUID companyId, String status, int limit, int offset) {

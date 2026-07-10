@@ -13,11 +13,15 @@ public record DentalClinicConfig(
     int durationMinutes,
     int bufferMinutes,
     LocalTime opensAt,
-    LocalTime closesAt) {
+    LocalTime closesAt,
+    boolean reminderEnabled,
+    boolean autoCompleteEnabled,
+    boolean recallEnabled,
+    int recallMonths) {
 
-    /** Defaults cravados (decisão 3): 30min de consulta, sem buffer, 08:00–18:00. */
+    /** Defaults cravados (decisão 3): 30min, sem buffer, 08:00–18:00; onda 1: lembrete/auto ON, recall OFF/6m. */
     public static DentalClinicConfig defaultFor(UUID companyId) {
         return new DentalClinicConfig(
-            companyId, 30, 0, LocalTime.of(8, 0), LocalTime.of(18, 0));
+            companyId, 30, 0, LocalTime.of(8, 0), LocalTime.of(18, 0), true, true, false, 6);
     }
 }

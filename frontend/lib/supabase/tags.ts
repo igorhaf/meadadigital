@@ -5,15 +5,7 @@ import { createClient } from './client'
  * o tenant escolhe da paleta visual. Cada cor mapeia para classes Tailwind no
  * componente de chip (TagChip / tag-color-picker).
  */
-export type TagColor =
-  | 'slate'
-  | 'red'
-  | 'orange'
-  | 'amber'
-  | 'green'
-  | 'blue'
-  | 'violet'
-  | 'pink'
+export type TagColor = 'slate' | 'red' | 'orange' | 'amber' | 'green' | 'blue' | 'violet' | 'pink'
 
 export const TAG_COLORS: TagColor[] = [
   'slate',

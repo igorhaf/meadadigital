@@ -69,3 +69,17 @@ Plano estruturado em refeições/porções, cálculo de calorias/macros/TMB, tab
 gráfico de evolução, prescrição de suplemento, anamnese clínica estruturada, foto, pagamento online e
 bioimpedância. Esses são temas de fases futuras — e o cálculo nutricional personalizado permanece, por
 segurança, conduta exclusiva do nutricionista.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_NUTRI #1/#2/#5, migration 99)
+
+- **Lembrete + confirmação de consulta (#1, `NutriReminderJob`, cron 10h40):** véspera das
+  consultas agendado/confirmado; a resposta cai na IA, que emite
+  `<confirmacao_nutri>{appointment_id, decisao}` (confirmado|cancelado) com BARREIRA DE CONTATO
+  — o contexto ganhou o bloco "CONSULTAS FUTURAS DESTE CONTATO" + a tag (mantendo a instrução
+  de NÃO falar de dieta/plano). Idempotência por (consulta, start_at). Toggle (ON).
+- **Régua de retomada (#2, OPT-IN default OFF — lição Baileys):** paciente ATIVO sem consulta
+  futura e com a última REALIZADA além de `reengagement_days` (default 30) recebe UM convite
+  gentil por ciclo (`reengagement_sent_at` no paciente, re-armado por nova realizada).
+- **Auto-transição (#5, default ON):** confirmado com end_at vencido (folga 2h) → `realizado`,
+  silencioso — destrava régua/relatórios. `agendado` passado não vira falta (julgamento humano).
+- Trava clínica intacta em tudo: os disparos são logística de agenda, sem conteúdo nutricional.

@@ -35,6 +35,9 @@ public record TravelProposal(
     Instant openedAt,
     Instant closedAt,
     Instant statusUpdatedAt,
+    Integer depositCents,
+    boolean depositPaid,
+    Instant depositPaidAt,
     List<TravelProposalItem> items,
     List<TravelItineraryDay> itinerary) {
 }

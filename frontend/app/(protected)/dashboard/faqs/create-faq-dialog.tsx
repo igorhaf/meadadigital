@@ -2,13 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useMutation, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
 import { createFaq, updateFaq, type Faq } from '@/lib/supabase/faqs'
+import { useResetWhen } from '@/lib/use-synced-form'
 
 // question e answer obrigatórios (text NOT NULL no banco). Sem campos opcionais — mais
 // simples que o form de service.
@@ -29,7 +30,7 @@ type FaqForm = z.infer<typeof faqSchema>
  * campo Pergunta com o texto de uma sugestão da IA. Ignorado na edição (o faq manda).
  * Callers antigos não passam — backward compatible.
  *
- * O reset() num useEffect sincroniza o form quando o dialog abre OU o registro muda —
+ * O reset() via useResetWhen sincroniza o form quando o dialog abre OU o registro muda —
  * sem isso, o RHF manteria valores stale entre aberturas (ex.: abrir editar B logo após
  * fechar editar A mostraria os campos de A).
  */
@@ -59,17 +60,15 @@ export function CreateFaqDialog({
 
   // Sincroniza os campos quando abre (ou troca de registro): edição pré-popula, criação
   // limpa. Depende de open também para repreencher ao reabrir o mesmo registro.
-  useEffect(() => {
-    if (open) {
-      // Edição: faq manda. Criação: usa initialQuestion (sugestão da IA) se houver, senão
-      // limpa. answer começa vazio na criação (faq?.answer ?? '').
-      reset({
-        question: faq?.question ?? initialQuestion ?? '',
-        answer: faq?.answer ?? '',
-      })
-      setServerError(null)
-    }
-  }, [open, faq, initialQuestion, reset])
+  useResetWhen(open ? `${faq?.id ?? 'create'}:${initialQuestion ?? ''}` : null, () => {
+    // Edição: faq manda. Criação: usa initialQuestion (sugestão da IA) se houver, senão
+    // limpa. answer começa vazio na criação (faq?.answer ?? '').
+    reset({
+      question: faq?.question ?? initialQuestion ?? '',
+      answer: faq?.answer ?? '',
+    })
+    setServerError(null)
+  })
 
   const mutation = useMutation({
     mutationFn: (values: FaqForm) =>

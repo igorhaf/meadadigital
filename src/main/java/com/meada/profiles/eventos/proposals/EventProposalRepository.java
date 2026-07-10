@@ -211,6 +211,22 @@ public class EventProposalRepository {
      * Persiste a transição de status + status_updated_at. Preenche closed_at em terminais
      * (realizada/recusada/cancelada). Service já validou a transição.
      */
+    /** Propostas aprovada/fechada/realizada na data (onda 1, backlog #3 — aviso de ocupação). */
+    public long countByEventDate(UUID companyId, java.time.LocalDate date, UUID excludeId) {
+        StringBuilder sql = new StringBuilder(
+            "select count(*) from event_proposals where company_id = ? and event_date = ? "
+                + "and status in ('aprovada','fechada','realizada')");
+        java.util.List<Object> args = new java.util.ArrayList<>();
+        args.add(companyId);
+        args.add(java.sql.Date.valueOf(date));
+        if (excludeId != null) {
+            sql.append(" and id <> ?");
+            args.add(excludeId);
+        }
+        Long n = jdbcTemplate.queryForObject(sql.toString(), Long.class, args.toArray());
+        return n == null ? 0L : n;
+    }
+
     public void updateStatus(UUID companyId, UUID id, String newStatus, boolean terminal) {
         if (terminal) {
             jdbcTemplate.update("update event_proposals set status = ?, status_updated_at = now(), "

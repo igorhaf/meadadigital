@@ -4,9 +4,10 @@ import { MessagesSquare } from 'lucide-react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 
+import { cn } from '@/lib/utils'
+
 import { getNavForProfile } from './nav-config'
 import { useSidebar } from './sidebar-context'
-import { cn } from '@/lib/utils'
 
 /**
  * Marca o item ativo: match exato para /dashboard (senão a Início ficaria sempre ativa),
@@ -49,7 +50,7 @@ export function SidebarNav({
     <nav className="flex flex-col gap-6 px-3 py-4">
       {groups.map((group) => (
         <div key={group.heading} className="space-y-1">
-          <p className="px-3 pb-1 text-xs font-medium uppercase tracking-wide text-muted-foreground">
+          <p className="px-3 pb-1 text-xs font-medium tracking-wide text-muted-foreground uppercase">
             {group.heading}
           </p>
           {group.items.map((item) => {

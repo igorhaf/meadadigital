@@ -23,12 +23,16 @@ export function createBarber(input: CreateBarberInput): Promise<Barber> {
 }
 
 export function updateBarber(id: string, input: UpdateBarberInput): Promise<Barber> {
-  return apiFetch<Barber>(`/api/barbearia/barbers/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Barber>(`/api/barbearia/barbers/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleBarber(id: string, active: boolean): Promise<Barber> {
   return apiFetch<Barber>(`/api/barbearia/barbers/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

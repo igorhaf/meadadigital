@@ -30,15 +30,27 @@ public class CursosEnrollmentService {
     private final CursosEnrollmentRepository enrollmentRepository;
     private final CursosCourseRepository courseRepository;
     private final CursosEnrollmentNotifier notifier;
+    private final com.meada.profiles.cursos.coupons.CursosCouponRepository couponRepository;
+    private final com.meada.profiles.cursos.certificates.CursosCertificateService certificateService;
+    private final com.meada.profiles.cursos.config.CursosConfigRepository configRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final CursosContextCache contextCache;
 
     public CursosEnrollmentService(CursosEnrollmentRepository enrollmentRepository,
                                    CursosCourseRepository courseRepository,
                                    CursosEnrollmentNotifier notifier,
-                                   CursosContextCache contextCache) {
+                                   CursosContextCache contextCache,
+                                   com.meada.profiles.cursos.coupons.CursosCouponRepository couponRepository,
+                                   com.meada.profiles.cursos.certificates.CursosCertificateService certificateService,
+                                   com.meada.profiles.cursos.config.CursosConfigRepository configRepository,
+                                   org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.enrollmentRepository = enrollmentRepository;
         this.courseRepository = courseRepository;
         this.notifier = notifier;
+        this.couponRepository = couponRepository;
+        this.certificateService = certificateService;
+        this.configRepository = configRepository;
+        this.jdbcTemplate = jdbcTemplate;
         this.contextCache = contextCache;
     }
 
@@ -54,7 +66,7 @@ public class CursosEnrollmentService {
      */
     @Transactional
     public CursosEnrollment create(UUID companyId, UUID courseId, UUID contactId, UUID conversationId,
-                                   String studentName, String studentPhone, String notes) {
+                                   String studentName, String studentPhone, String couponCode, String notes) {
         CursosCourse course = courseRepository.findById(companyId, courseId).orElseThrow(CourseNotFoundException::new);
         if (!course.active()) {
             throw new CourseInactiveException();
@@ -63,8 +75,29 @@ public class CursosEnrollmentService {
             && enrollmentRepository.findActiveByContactAndCourse(companyId, contactId, courseId).isPresent()) {
             throw new AlreadyEnrolledException();
         }
+        // Onda 1 (backlog #3): cupom validado no backend — inválido NÃO aborta (sem desconto).
+        int discount = 0;
+        String couponSnapshot = null;
+        if (couponCode != null && !couponCode.isBlank()) {
+            var maybe = couponRepository.findByCode(companyId, couponCode);
+            if (maybe.isPresent()) {
+                var c = maybe.get();
+                boolean valid = c.active()
+                    && (c.validUntil() == null || !c.validUntil().isBefore(java.time.LocalDate.now()))
+                    && (c.maxUses() == null || c.uses() < c.maxUses())
+                    && course.monthlyCents() >= c.minOrderCents();
+                if (valid) {
+                    int raw = "percent".equals(c.kind())
+                        ? course.monthlyCents() * c.value() / 100 : c.value();
+                    discount = Math.min(course.monthlyCents(), raw);
+                    couponSnapshot = c.code();
+                    couponRepository.incrementUses(companyId, c.id());
+                }
+            }
+        }
         CursosEnrollment created = enrollmentRepository.insertEnrollment(companyId, courseId, course.title(),
-            course.monthlyCents(), conversationId, contactId, studentName, studentPhone, notes);
+            course.monthlyCents(), discount, couponSnapshot, conversationId, contactId, studentName,
+            studentPhone, notes);
         // boas-vindas (status inicial ativa).
         notifier.notifyStatus(companyId, conversationId,
             CursoEnrollmentStatus.ATIVA.notificationText(created.studentName(), created.courseTitle()));
@@ -116,6 +149,28 @@ public class CursosEnrollmentService {
         // notifica ativa (retomada) / concluida / cancelada; trancada silenciosa.
         String text = newStatus.notificationText(current.studentName(), current.courseTitle());
         notifier.notifyStatus(companyId, current.conversationId(), text);
+
+        // Onda 1 (backlog #1): CONCLUIDA emite o certificado (código único) e envia o link/código
+        // — a IA só entrega o que o backend gerou (trava intacta).
+        if (newStatus == CursoEnrollmentStatus.CONCLUIDA) {
+            var config = configRepository.findByCompany(companyId);
+            String schoolName = jdbcTemplate.query(
+                    "select name from companies where id = ?",
+                    (rs, rn) -> rs.getString("name"), companyId)
+                .stream().findFirst().orElse(null);
+            String code = certificateService.issue(companyId, id, current.studentName(),
+                current.courseTitle(), schoolName);
+            StringBuilder cert = new StringBuilder("🎓 Seu CERTIFICADO de conclusão está pronto! ");
+            if (config.certificateBaseUrl() != null && !config.certificateBaseUrl().isBlank()) {
+                cert.append("Acesse e compartilhe: ")
+                    .append(config.certificateBaseUrl().replaceAll("/+$", ""))
+                    .append("/public/cursos/certificados/").append(code);
+            } else {
+                cert.append("Código de verificação: ").append(code)
+                    .append(" (a escola te passa o link de acesso).");
+            }
+            notifier.notifyStatus(companyId, current.conversationId(), cert.toString());
+        }
 
         contextCache.invalidate(companyId);
         return enrollmentRepository.findById(companyId, id).orElseThrow(EnrollmentNotFoundException::new);

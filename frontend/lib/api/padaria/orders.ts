@@ -32,3 +32,16 @@ export function updateOrderStatus(
     body: JSON.stringify({ newStatus, rejectionReason }),
   })
 }
+
+export type DepositInput = {
+  depositCents: number | null
+  depositPaid: boolean
+}
+
+/** Registra o sinal da encomenda e/ou marca como recebido (onda #1 — manual até o gateway #50). */
+export function updateDeposit(id: string, input: DepositInput): Promise<Order> {
+  return apiFetch<Order>(`/api/padaria/orders/${id}/deposit`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
+}

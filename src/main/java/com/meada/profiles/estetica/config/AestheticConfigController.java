@@ -36,7 +36,10 @@ public class AestheticConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(5) int slotMinutes) {}
+    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(5) int slotMinutes,
+                                Boolean reminderEnabled, Boolean autoCompleteEnabled,
+                                Boolean autoExpireEnabled, Integer packageValidityDays,
+                                Boolean renewalEnabled, Integer renewalDays, Integer expiryWarningDays) {}
 
     @GetMapping("/api/estetica/config")
     public ResponseEntity<Object> get(
@@ -69,7 +72,15 @@ public class AestheticConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.slotMinutes()));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
+                req.slotMinutes(),
+                req.reminderEnabled() == null || req.reminderEnabled(),
+                req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+                req.autoExpireEnabled() == null || req.autoExpireEnabled(),
+                req.packageValidityDays(),
+                req.renewalEnabled() != null && req.renewalEnabled(),
+                req.renewalDays() == null ? 30 : req.renewalDays(),
+                req.expiryWarningDays() == null ? 7 : req.expiryWarningDays()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

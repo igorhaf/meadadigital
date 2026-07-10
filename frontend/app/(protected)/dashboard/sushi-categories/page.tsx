@@ -4,11 +4,11 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
   createCategory,
   deleteCategory,
@@ -53,7 +53,10 @@ export default function SushiCategoriesPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sushi-categories'] })
       qc.invalidateQueries({ queryKey: ['sushi-menu'] })
-      setModalOpen(false); setEditing(null); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setEditing(null)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'duplicate_category') {
@@ -74,7 +77,8 @@ export default function SushiCategoriesPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['sushi-categories'] })
       qc.invalidateQueries({ queryKey: ['sushi-menu'] })
-      setDeleteTarget(null); setDeleteError(null)
+      setDeleteTarget(null)
+      setDeleteError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'category_in_use') {
@@ -85,11 +89,17 @@ export default function SushiCategoriesPage() {
     },
   })
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setFormError(null); setModalOpen(true) }
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY)
+    setFormError(null)
+    setModalOpen(true)
+  }
   function openEdit(c: Category) {
     setEditing(c)
     setForm({ name: c.name, sortOrder: String(c.sortOrder), active: c.active })
-    setFormError(null); setModalOpen(true)
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const categories = [...(data?.items ?? [])].sort((a, b) => a.sortOrder - b.sortOrder)
@@ -113,7 +123,7 @@ export default function SushiCategoriesPage() {
           {categories.map((c) => (
             <div key={c.id} className="flex items-center justify-between gap-3 px-4 py-3">
               <div className="flex min-w-0 items-center gap-2">
-                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs tabular-nums text-muted-foreground">
+                <span className="shrink-0 rounded bg-muted px-1.5 py-0.5 text-xs text-muted-foreground tabular-nums">
                   {c.sortOrder}
                 </span>
                 <span className="truncate font-medium">{c.name}</span>
@@ -121,43 +131,81 @@ export default function SushiCategoriesPage() {
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <input type="checkbox" checked={c.active} disabled={toggleMutation.isPending}
-                    onChange={() => toggleMutation.mutate(c)} />
+                  <input
+                    type="checkbox"
+                    checked={c.active}
+                    disabled={toggleMutation.isPending}
+                    onChange={() => toggleMutation.mutate(c)}
+                  />
                   ativa
                 </label>
-                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(c)}>Editar</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs"
-                  onClick={() => { setDeleteError(null); setDeleteTarget(c) }}>Excluir</Button>
+                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(c)}>
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  onClick={() => {
+                    setDeleteError(null)
+                    setDeleteTarget(c)
+                  }}
+                >
+                  Excluir
+                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar categoria' : 'Nova categoria'} size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar categoria' : 'Nova categoria'}
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-              maxLength={120} placeholder="Hot rolls, Sashimi, Bebidas…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+              maxLength={120}
+              placeholder="Hot rolls, Sashimi, Bebidas…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Ordem</label>
-              <input type="number" value={form.sortOrder}
+              <input
+                type="number"
+                value={form.sortOrder}
                 onChange={(e) => setForm((f) => ({ ...f, sortOrder: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <label className="flex items-end gap-2 pb-2 text-sm text-muted-foreground">
-              <input type="checkbox" checked={form.active}
-                onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
+              <input
+                type="checkbox"
+                checked={form.active}
+                onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+              />
               Ativa
             </label>
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>
@@ -167,12 +215,19 @@ export default function SushiCategoriesPage() {
 
       <AlertDialog
         open={deleteTarget !== null}
-        onOpenChange={(open) => { if (!open) { setDeleteTarget(null); setDeleteError(null) } }}
+        onOpenChange={(open) => {
+          if (!open) {
+            setDeleteTarget(null)
+            setDeleteError(null)
+          }
+        }}
         title="Excluir categoria?"
         description={deleteError ?? 'Esta ação não pode ser desfeita.'}
         confirmLabel="Excluir"
         loading={deleteMutation.isPending}
-        onConfirm={() => { if (deleteTarget) deleteMutation.mutate(deleteTarget.id) }}
+        onConfirm={() => {
+          if (deleteTarget) deleteMutation.mutate(deleteTarget.id)
+        }}
       />
     </div>
   )

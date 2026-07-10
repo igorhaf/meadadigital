@@ -122,6 +122,13 @@ public class SuplementosMenuCache {
             sb.append("Pedido mínimo: R$ ").append(formatBrl(config.minOrderCents()))
                 .append(" (avise o cliente se o pedido ficar abaixo, mas não recuse — apenas oriente).\n");
         }
+        if (config.freeShippingThresholdCents() != null) {
+            sb.append("FRETE GRÁTIS acima de R$ ")
+                .append(formatBrl(config.freeShippingThresholdCents()))
+                .append(" de subtotal (a taxa é zerada pelo sistema). Se o pedido estiver perto do "
+                    + "piso, você PODE avisar quanto falta pro frete grátis — é um fato do pedido, "
+                    + "não recomendação de uso/saúde.\n");
+        }
         sb.append("CONFIG: delivery_fee_cents=").append(config.deliveryFeeCents())
             .append(", min_order_cents=").append(config.minOrderCents()).append("\n");
         sb.append("Avise o cliente que o pedido ficará AGUARDANDO confirmação da loja.\n\n");

@@ -6,6 +6,8 @@ export type UpdateConfigInput = {
   bufferMinutes: number
   opensAt: string // "HH:MM"
   closesAt: string // "HH:MM"
+  reminderEnabled?: boolean
+  autoCompleteEnabled?: boolean
 }
 
 export function getConfig(): Promise<ReservationConfig> {

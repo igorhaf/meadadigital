@@ -4,11 +4,13 @@ import { apiFetch } from '@/lib/api/client'
 export type FloriculturaConfig = {
   deliveryFeeCents: number
   minOrderCents: number
+  deliveryReminderEnabled: boolean
 }
 
 export type UpdateConfigInput = {
   deliveryFeeCents: number
   minOrderCents: number
+  deliveryReminderEnabled: boolean
 }
 
 export function getConfig(): Promise<FloriculturaConfig> {
@@ -16,5 +18,8 @@ export function getConfig(): Promise<FloriculturaConfig> {
 }
 
 export function updateConfig(input: UpdateConfigInput): Promise<FloriculturaConfig> {
-  return apiFetch<FloriculturaConfig>('/api/floricultura/config', { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<FloriculturaConfig>('/api/floricultura/config', {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }

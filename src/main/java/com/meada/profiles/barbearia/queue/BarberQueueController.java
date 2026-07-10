@@ -137,4 +137,37 @@ public class BarberQueueController {
             return error(409, "Conflict", "invalid_status_transition");
         }
     }
+
+    public record ConvertRequest(UUID barberId) {}
+
+    /**
+     * Onda 2 (backlog #8): "chamar o próximo" vira atendimento — converte o ticket em agendamento
+     * IMEDIATO do barbeiro (start=agora) e muta o ticket pra atendido. barberId sobrepõe o do
+     * ticket (fila "qualquer barbeiro" → o barbeiro livre que puxou).
+     */
+    @PostMapping("/api/barbearia/queue/{id}/convert")
+    public ResponseEntity<Object> convert(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id,
+            @RequestBody(required = false) ConvertRequest req) {
+        UUID companyId;
+        try {
+            companyId = profileGuard.requireBarbearia(user);
+        } catch (WrongProfileException e) {
+            return error(403, "Forbidden", "forbidden_wrong_profile");
+        }
+        try {
+            return ResponseEntity.status(201).body(
+                service.convertToAppointment(companyId, id, req == null ? null : req.barberId()));
+        } catch (TicketNotFoundException e) {
+            return error(404, "Not Found", "ticket_not_found");
+        } catch (InvalidStatusException | InvalidStatusTransitionException e) {
+            return error(409, "Conflict", "invalid_status_transition");
+        } catch (BarberQueueService.BarberRequiredException e) {
+            return error(400, "Bad Request", "barber_required");
+        } catch (RuntimeException e) {
+            // Inclui conflito de slot do barbeiro (409 conflict_slot da agenda) e afins.
+            return error(409, "Conflict", "conflict_slot");
+        }
+    }
 }

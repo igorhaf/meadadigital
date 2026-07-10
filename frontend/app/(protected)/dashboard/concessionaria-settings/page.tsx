@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
+import { ApiError } from '@/lib/api/client'
 import { getConfig, updateConfig } from '@/lib/api/concessionaria/config'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = {
   businessName: string
@@ -32,7 +33,6 @@ function hhmm(t: string): string {
  */
 export default function ConcessionariaSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -41,22 +41,18 @@ export default function ConcessionariaSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({
-        businessName: data.businessName ?? '',
-        durationMinutes: data.durationMinutes,
-        bufferMinutes: data.bufferMinutes,
-        opensAt: hhmm(data.opensAt),
-        closesAt: hhmm(data.closesAt),
-        notes: data.notes ?? '',
-        followupEnabled: data.followupEnabled ?? true,
-        followupDays: data.followupDays ?? 3,
-        testdriveReminderEnabled: data.testdriveReminderEnabled ?? true,
-        autoCompleteEnabled: data.autoCompleteEnabled ?? true,
-      })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    businessName: d.businessName ?? '',
+    durationMinutes: d.durationMinutes,
+    bufferMinutes: d.bufferMinutes,
+    opensAt: hhmm(d.opensAt),
+    closesAt: hhmm(d.closesAt),
+    notes: d.notes ?? '',
+    followupEnabled: d.followupEnabled ?? true,
+    followupDays: d.followupDays ?? 3,
+    testdriveReminderEnabled: d.testdriveReminderEnabled ?? true,
+    autoCompleteEnabled: d.autoCompleteEnabled ?? true,
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -76,7 +72,8 @@ export default function ConcessionariaSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['concessionaria-config'] })
-      setError(null); setSaved(true)
+      setError(null)
+      setSaved(true)
       setTimeout(() => setSaved(false), 2500)
     },
     onError: (e) => {
@@ -103,14 +100,24 @@ export default function ConcessionariaSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Identificação">
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome do negócio</label>
-                <input value={form.businessName}
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Nome do negócio
+                </label>
+                <input
+                  value={form.businessName}
                   onChange={(e) => setForm((f) => f && { ...f, businessName: e.target.value })}
                   placeholder="Ex.: Auto Center Modelo"
-                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                  className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                />
               </div>
             </Section>
 
@@ -120,17 +127,32 @@ export default function ConcessionariaSettingsPage() {
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Duração do test-drive (minutos)
                   </label>
-                  <input type="number" min={15} max={240} step={15} value={form.durationMinutes}
-                    onChange={(e) => setForm((f) => f && { ...f, durationMinutes: Number(e.target.value) })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                  <input
+                    type="number"
+                    min={15}
+                    max={240}
+                    step={15}
+                    value={form.durationMinutes}
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, durationMinutes: Number(e.target.value) })
+                    }
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
                   <label className="mb-1 block text-xs font-medium text-muted-foreground">
                     Intervalo entre test-drives (minutos)
                   </label>
-                  <input type="number" min={0} step={5} value={form.bufferMinutes}
-                    onChange={(e) => setForm((f) => f && { ...f, bufferMinutes: Number(e.target.value) })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                  <input
+                    type="number"
+                    min={0}
+                    step={5}
+                    value={form.bufferMinutes}
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, bufferMinutes: Number(e.target.value) })
+                    }
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
@@ -138,25 +160,38 @@ export default function ConcessionariaSettingsPage() {
             <Section title="Horário de funcionamento">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Abre às</label>
-                  <input type="time" value={form.opensAt}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Abre às
+                  </label>
+                  <input
+                    type="time"
+                    value={form.opensAt}
                     onChange={(e) => setForm((f) => f && { ...f, opensAt: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha às</label>
-                  <input type="time" value={form.closesAt}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Fecha às
+                  </label>
+                  <input
+                    type="time"
+                    value={form.closesAt}
                     onChange={(e) => setForm((f) => f && { ...f, closesAt: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>
 
             <Section title="Observações">
-              <textarea value={form.notes}
+              <textarea
+                value={form.notes}
                 onChange={(e) => setForm((f) => f && { ...f, notes: e.target.value })}
-                rows={3} placeholder="Notas internas da loja"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                rows={3}
+                placeholder="Notas internas da loja"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </Section>
 
             <p className="text-xs text-muted-foreground">
@@ -167,31 +202,63 @@ export default function ConcessionariaSettingsPage() {
             <Section title="Automações (onda 1 do backlog)">
               <div className="space-y-3 text-sm">
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" checked={form.testdriveReminderEnabled} className="mt-0.5"
-                    onChange={(e) => setForm((f) => f && { ...f, testdriveReminderEnabled: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={form.testdriveReminderEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, testdriveReminderEnabled: e.target.checked })
+                    }
+                  />
                   <span>
-                    Lembrar o cliente do <strong>test-drive</strong> nas 24h anteriores (confirma? SIM/CANCELAR)
-                    <span className="block text-xs text-muted-foreground">A resposta confirma ou libera o horário automaticamente.</span>
+                    Lembrar o cliente do <strong>test-drive</strong> nas 24h anteriores (confirma?
+                    SIM/CANCELAR)
+                    <span className="block text-xs text-muted-foreground">
+                      A resposta confirma ou libera o horário automaticamente.
+                    </span>
                   </span>
                 </label>
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" checked={form.followupEnabled} className="mt-0.5"
-                    onChange={(e) => setForm((f) => f && { ...f, followupEnabled: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={form.followupEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, followupEnabled: e.target.checked })
+                    }
+                  />
                   <span>
                     Follow-up automático de <strong>lead parado</strong> após
-                    <input type="number" min="1" value={form.followupDays}
-                      onChange={(e) => setForm((f) => f && { ...f, followupDays: Number(e.target.value) })}
-                      className="mx-1 w-14 rounded-md border border-border bg-background px-1 py-0.5 text-sm" />
+                    <input
+                      type="number"
+                      min="1"
+                      value={form.followupDays}
+                      onChange={(e) =>
+                        setForm((f) => f && { ...f, followupDays: Number(e.target.value) })
+                      }
+                      className="mx-1 w-14 rounded-md border border-border bg-background px-1 py-0.5 text-sm"
+                    />
                     dia(s) sem movimento
-                    <span className="block text-xs text-muted-foreground">Reengaja sem fechar preço — o vendedor assume a conversa.</span>
+                    <span className="block text-xs text-muted-foreground">
+                      Reengaja sem fechar preço — o vendedor assume a conversa.
+                    </span>
                   </span>
                 </label>
                 <label className="flex items-start gap-2">
-                  <input type="checkbox" checked={form.autoCompleteEnabled} className="mt-0.5"
-                    onChange={(e) => setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })} />
+                  <input
+                    type="checkbox"
+                    checked={form.autoCompleteEnabled}
+                    className="mt-0.5"
+                    onChange={(e) =>
+                      setForm((f) => f && { ...f, autoCompleteEnabled: e.target.checked })
+                    }
+                  />
                   <span>
-                    Marcar test-drive <strong>confirmado</strong> como <strong>realizado</strong> após o horário
-                    <span className="block text-xs text-muted-foreground">Automático e silencioso (2h de tolerância).</span>
+                    Marcar test-drive <strong>confirmado</strong> como <strong>realizado</strong>{' '}
+                    após o horário
+                    <span className="block text-xs text-muted-foreground">
+                      Automático e silencioso (2h de tolerância).
+                    </span>
                   </span>
                 </label>
               </div>

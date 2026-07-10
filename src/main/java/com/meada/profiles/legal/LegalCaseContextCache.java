@@ -112,14 +112,41 @@ public class LegalCaseContextCache {
                             .append(": ").append(u.get("title")).append("\n");
                     }
                 }
+                // Onda 1 (backlog #1): prazos/audiências PENDENTES futuros — a IA informa
+                // DATA/hora/local, nunca o mérito.
+                List<Map<String, Object>> deadlines = jdbcTemplate.queryForList(
+                    "select kind, title, due_date, due_time, location from legal_deadlines "
+                        + "where case_id = ? and status = 'pendente' and due_date >= current_date "
+                        + "order by due_date, due_time nulls last limit 5", caseId);
+                if (!deadlines.isEmpty()) {
+                    sb.append("- Próximos compromissos (prazos/audiências):\n");
+                    for (Map<String, Object> d : deadlines) {
+                        java.sql.Date due = (java.sql.Date) d.get("due_date");
+                        java.sql.Time time = (java.sql.Time) d.get("due_time");
+                        String location = (String) d.get("location");
+                        sb.append("  • ")
+                            .append("audiencia".equals(d.get("kind")) ? "AUDIÊNCIA" : "Prazo")
+                            .append(" \"").append(d.get("title")).append("\" em ")
+                            .append(due.toLocalDate().format(DATE));
+                        if (time != null) {
+                            sb.append(" às ").append(time.toLocalTime().toString().substring(0, 5));
+                        }
+                        if (location != null && !location.isBlank()) {
+                            sb.append(" (").append(location).append(")");
+                        }
+                        sb.append("\n");
+                    }
+                }
             }
             sb.append("\n");
         }
 
         sb.append("INSTRUÇÕES:\n")
             .append("Quando o cliente perguntar sobre o processo dele, RESUMA os andamentos recentes "
-                + "acima. NUNCA dê opinião ou aconselhamento jurídico — para dúvidas substantivas, "
-                + "oriente a 'consultar o advogado responsável'.\n\n");
+                + "acima. Se perguntarem sobre datas/audiências, informe os compromissos listados "
+                + "(data, hora e local) SEM comentar estratégia ou desfecho. NUNCA dê opinião ou "
+                + "aconselhamento jurídico — para dúvidas substantivas, oriente a 'consultar o "
+                + "advogado responsável'.\n\n");
         return sb.toString();
     }
 

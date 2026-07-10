@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { Product, Variant } from '@/profiles/suplementos/suplementos-types'
 import type { SuplementosCategoryId } from '@/profiles/suplementos/suplementos-categories'
+import type { Product, Variant } from '@/profiles/suplementos/suplementos-types'
 
 export type CreateProductInput = {
   name: string
@@ -27,11 +27,17 @@ export function getProduct(id: string): Promise<Product> {
 }
 
 export function createProduct(input: CreateProductInput): Promise<Product> {
-  return apiFetch<Product>('/api/suplementos/products', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Product>('/api/suplementos/products', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateProduct(id: string, input: UpdateProductInput): Promise<Product> {
-  return apiFetch<Product>(`/api/suplementos/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Product>(`/api/suplementos/products/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleProduct(id: string, active: boolean): Promise<Product> {
@@ -80,7 +86,11 @@ export function updateVariant(
   })
 }
 
-export function toggleVariant(productId: string, variantId: string, active: boolean): Promise<Variant> {
+export function toggleVariant(
+  productId: string,
+  variantId: string,
+  active: boolean,
+): Promise<Variant> {
   return apiFetch<Variant>(`/api/suplementos/products/${productId}/variants/${variantId}/toggle`, {
     method: 'PATCH',
     body: JSON.stringify({ active }),
@@ -88,5 +98,7 @@ export function toggleVariant(productId: string, variantId: string, active: bool
 }
 
 export function deleteVariant(productId: string, variantId: string): Promise<void> {
-  return apiFetch<void>(`/api/suplementos/products/${productId}/variants/${variantId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/suplementos/products/${productId}/variants/${variantId}`, {
+    method: 'DELETE',
+  })
 }

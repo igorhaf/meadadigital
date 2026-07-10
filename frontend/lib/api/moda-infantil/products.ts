@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { Product, Variant } from '@/profiles/moda-infantil/moda-infantil-types'
 import type { ModaInfantilCategoryId } from '@/profiles/moda-infantil/moda-infantil-categories'
+import type { Product, Variant } from '@/profiles/moda-infantil/moda-infantil-types'
 
 export type CreateProductInput = {
   name: string
@@ -27,11 +27,17 @@ export function getProduct(id: string): Promise<Product> {
 }
 
 export function createProduct(input: CreateProductInput): Promise<Product> {
-  return apiFetch<Product>('/api/moda-infantil/products', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<Product>('/api/moda-infantil/products', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateProduct(id: string, input: UpdateProductInput): Promise<Product> {
-  return apiFetch<Product>(`/api/moda-infantil/products/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Product>(`/api/moda-infantil/products/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleProduct(id: string, available: boolean): Promise<Product> {
@@ -79,13 +85,22 @@ export function updateVariant(
   })
 }
 
-export function toggleVariant(productId: string, variantId: string, available: boolean): Promise<Variant> {
-  return apiFetch<Variant>(`/api/moda-infantil/products/${productId}/variants/${variantId}/toggle`, {
-    method: 'PATCH',
-    body: JSON.stringify({ available }),
-  })
+export function toggleVariant(
+  productId: string,
+  variantId: string,
+  available: boolean,
+): Promise<Variant> {
+  return apiFetch<Variant>(
+    `/api/moda-infantil/products/${productId}/variants/${variantId}/toggle`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ available }),
+    },
+  )
 }
 
 export function deleteVariant(productId: string, variantId: string): Promise<void> {
-  return apiFetch<void>(`/api/moda-infantil/products/${productId}/variants/${variantId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/moda-infantil/products/${productId}/variants/${variantId}`, {
+    method: 'DELETE',
+  })
 }

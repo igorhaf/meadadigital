@@ -8,13 +8,13 @@ import { use, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
-import { PaletteSelect } from '@/components/palette-select'
 import { PageHeader } from '@/components/layout/page-header'
+import { PaletteSelect } from '@/components/palette-select'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
-import { ApiError } from '@/lib/api/client'
 import { getCompany, updateCompany, type UpdateCompanyPayload } from '@/lib/api/admin/companies'
 import { getProfiles } from '@/lib/api/admin/profiles'
+import { ApiError } from '@/lib/api/client'
 import { getProfile } from '@/lib/profiles/profile-type'
 
 /**
@@ -25,9 +25,7 @@ import { getProfile } from '@/lib/profiles/profile-type'
  */
 const editCompanySchema = z.object({
   name: z.string().min(1, 'Informe o nome'),
-  slug: z
-    .string()
-    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'slug inválido: minúsculas, números e hífens'),
+  slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'slug inválido: minúsculas, números e hífens'),
   paletteId: z.string().min(1, 'Selecione uma paleta'),
   profileId: z.string().min(1, 'Selecione um perfil'),
   // Limites: strings no form (input number devolve string); "" = sem limite → null.
@@ -247,18 +245,15 @@ export default function CompanyEditPage({ params }: { params: Promise<{ id: stri
                 )}
                 {profileChanged && (
                   <p className="mt-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-xs text-amber-900 dark:border-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-                    Trocar o perfil muda o produto inteiro para este tenant (tom da IA, navegação
-                    e, futuramente, as features disponíveis). Confirme antes de salvar.
+                    Trocar o perfil muda o produto inteiro para este tenant (tom da IA, navegação e,
+                    futuramente, as features disponíveis). Confirme antes de salvar.
                   </p>
                 )}
               </div>
             </div>
           </Section>
 
-          <Section
-            title="Limites do plano"
-            description="Deixe em branco para 'sem limite'."
-          >
+          <Section title="Limites do plano" description="Deixe em branco para 'sem limite'.">
             <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
               <div>
                 <label htmlFor="maxAdmins" className="mb-1 block text-sm font-medium">

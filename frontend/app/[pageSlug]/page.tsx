@@ -2,9 +2,9 @@ import { headers } from 'next/headers'
 import { notFound } from 'next/navigation'
 
 import { CmsRender } from '@/components/cms/cms-render'
-import { fetchPageBySlug } from '@/lib/cms/public-fetch'
 import { MEADA_INSTITUTIONAL_SLUG } from '@/lib/cms/meada-institutional'
-import { SUBDOMAIN_HEADER, isUniversalSubdomain } from '@/lib/profiles/subdomain'
+import { fetchPageBySlug } from '@/lib/cms/public-fetch'
+import { isUniversalSubdomain, SUBDOMAIN_HEADER } from '@/lib/profiles/subdomain'
 
 /**
  * Subpágina institucional do Meada na RAIZ do domínio-base: meadadigital.com/{pageSlug}

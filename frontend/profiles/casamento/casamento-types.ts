@@ -20,6 +20,10 @@ export type WeddingConfig = {
   paymentReminderEnabled: boolean
   autoCompleteEnabled: boolean
   anniversaryEnabled: boolean
+  postEventEnabled: boolean
+  reviewLink: string | null
+  followUpEnabled: boolean
+  followUpDays: number
 }
 
 /** Item de ORÇAMENTO de uma proposta (espelha WeddingProposalItem). lineTotalCents materializado. */

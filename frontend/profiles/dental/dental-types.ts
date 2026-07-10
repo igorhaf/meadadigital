@@ -21,6 +21,10 @@ export type ClinicConfig = {
   bufferMinutes: number
   opensAt: string
   closesAt: string
+  reminderEnabled: boolean
+  autoCompleteEnabled: boolean
+  recallEnabled: boolean
+  recallMonths: number
 }
 
 /** Consulta (espelha DentalAppointment). startAt/endAt em ISO-8601 instant. */

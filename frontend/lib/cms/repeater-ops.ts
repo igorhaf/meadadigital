@@ -20,7 +20,9 @@ export function getItems(props: Record<string, unknown>, fieldKey: string): Repe
 /** Item vazio conforme o itemSchema (checkbox→false, resto→''). Espelha o RepeaterField do field-renderer. */
 export function emptyItem(itemSchema: FieldDef[] | undefined): RepeaterItem {
   const out: RepeaterItem = {}
-  ;(itemSchema ?? []).forEach((f) => { out[f.key] = f.type === 'checkbox' ? false : '' })
+  ;(itemSchema ?? []).forEach((f) => {
+    out[f.key] = f.type === 'checkbox' ? false : ''
+  })
   return out
 }
 
@@ -41,16 +43,25 @@ export function moveItem(items: RepeaterItem[], index: number, dir: -1 | 1): Rep
   return next
 }
 
-export function updateItem(items: RepeaterItem[], index: number, item: RepeaterItem): RepeaterItem[] {
+export function updateItem(
+  items: RepeaterItem[],
+  index: number,
+  item: RepeaterItem,
+): RepeaterItem[] {
   if (index < 0 || index >= items.length) return items
   return items.map((it, i) => (i === index ? item : it))
 }
 
 /** Rótulo curto de um item pra árvore (ex. "Serviço 2 · Corte"). Usa o 1º campo de texto preenchido
  * como dica; senão "<itemLabel> N". */
-export function itemTitle(item: RepeaterItem, itemSchema: FieldDef[] | undefined, itemLabel: string, index: number): string {
+export function itemTitle(
+  item: RepeaterItem,
+  itemSchema: FieldDef[] | undefined,
+  itemLabel: string,
+  index: number,
+): string {
   const base = `${itemLabel} ${index + 1}`
-  const firstText = (itemSchema ?? []).find((f) => (f.type === 'text' || f.type === 'textarea'))
+  const firstText = (itemSchema ?? []).find((f) => f.type === 'text' || f.type === 'textarea')
   const hint = firstText ? String(item[firstText.key] ?? '').trim() : ''
   return hint ? `${base} · ${hint.slice(0, 24)}` : base
 }

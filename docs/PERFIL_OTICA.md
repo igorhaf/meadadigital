@@ -68,3 +68,15 @@ convênio, laboratório por API, pagamento real (Stripe #50).
 - Os dois fluxos coexistem HARMONICAMENTE (regra do projeto). Cache `OticaContextCache` TTL 30s (per
   contato) injeta os dois fluxos. Base de conhecimento (RAG): disponível como em todo perfil.
 - Guard `/api/otica/**` → 403 `forbidden_wrong_profile`. Paleta `ardosia`. Tenant: `igorhaf23`.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_OTICA #1/#2, migration 97)
+
+- **Lembrete + confirmação de exame (#1, `OticaReminderJob`, cron 10h10):** véspera dos exames
+  agendado/confirmado ("seu exame com {profissional} é amanhã às {hora} — confirma?").
+  Idempotência por (exame, start_at) via `reminded_start_at` (remarcar rearma). A resposta cai
+  na IA, que emite `<confirmacao_exame>{exam_id, decisao}` (confirmado|cancelado) com BARREIRA
+  DE CONTATO — o contexto ganhou o bloco "EXAMES FUTUROS DESTE CLIENTE" + a tag. Trava intacta
+  (só horário; nada de grau). Toggle `exam_reminder_enabled` (ON).
+- **Follow-up de óculos pronto (#2):** pedido parado em `pronto` há `pickup_followup_days`
+  (default 3) recebe UMA cutucada por episódio (re-armada por `status_updated_at`). Toggles e
+  janela em Configurações.

@@ -30,7 +30,9 @@ public class EventConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(String businessName, String notes) {}
+    public record ConfigRequest(String businessName, String notes, Boolean autoCompleteEnabled,
+                                Boolean postEventEnabled, String reviewLink,
+                                Boolean followUpEnabled, Integer followUpDays) {}
 
     @GetMapping("/api/eventos/config")
     public ResponseEntity<Object> get(
@@ -56,6 +58,11 @@ public class EventConfigController {
         }
         String businessName = req.businessName() == null || req.businessName().isBlank() ? null : req.businessName().trim();
         String notes = req.notes() == null || req.notes().isBlank() ? null : req.notes();
-        return ResponseEntity.ok(service.update(companyId, user.userId(), businessName, notes));
+        return ResponseEntity.ok(service.update(companyId, user.userId(), businessName, notes,
+            req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+            req.postEventEnabled() == null || req.postEventEnabled(),
+            req.reviewLink(),
+            req.followUpEnabled() == null || req.followUpEnabled(),
+            req.followUpDays() == null ? 3 : req.followUpDays()));
     }
 }

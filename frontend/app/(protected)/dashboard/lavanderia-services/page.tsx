@@ -4,23 +4,30 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
-  createService,
   createOption,
-  deleteService,
+  createService,
   deleteOption,
+  deleteService,
   listServices,
-  toggleService,
   toggleOption,
-  updateService,
+  toggleService,
   updateOption,
+  updateService,
 } from '@/lib/api/lavanderia/services'
-import { LAVANDERIA_CATEGORIES, type LavanderiaCategoryId } from '@/profiles/lavanderia/lavanderia-categories'
-import { formatBrl, type ServiceItem, type ServiceOption } from '@/profiles/lavanderia/lavanderia-types'
+import {
+  LAVANDERIA_CATEGORIES,
+  type LavanderiaCategoryId,
+} from '@/profiles/lavanderia/lavanderia-categories'
+import {
+  formatBrl,
+  type ServiceItem,
+  type ServiceOption,
+} from '@/profiles/lavanderia/lavanderia-types'
 
 type FormState = {
   name: string
@@ -132,8 +139,7 @@ export default function LavanderiaServicesPage() {
     it.name.toLowerCase().includes(search.trim().toLowerCase()),
   )
 
-  const liveOptionsItem =
-    optionsItem && (data?.items ?? []).find((it) => it.id === optionsItem.id)
+  const liveOptionsItem = optionsItem && (data?.items ?? []).find((it) => it.id === optionsItem.id)
 
   return (
     <div className="space-y-6">
@@ -162,11 +168,16 @@ export default function LavanderiaServicesPage() {
               <section key={cat.id} className="space-y-2">
                 <h2 className="text-sm font-semibold text-muted-foreground">{cat.label}</h2>
                 {catItems.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nenhum serviço nesta categoria ainda.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nenhum serviço nesta categoria ainda.
+                  </p>
                 ) : (
                   <div className="divide-y divide-border rounded-lg border border-border">
                     {catItems.map((it) => (
-                      <div key={it.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div
+                        key={it.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3"
+                      >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{it.name}</span>
@@ -177,10 +188,14 @@ export default function LavanderiaServicesPage() {
                             )}
                           </div>
                           {it.description && (
-                            <p className="truncate text-xs text-muted-foreground">{it.description}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {it.description}
+                            </p>
                           )}
                           {it.careInstructions && (
-                            <p className="truncate text-xs text-muted-foreground">Cuidado: {it.careInstructions}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              Cuidado: {it.careInstructions}
+                            </p>
                           )}
                         </div>
                         <div className="flex shrink-0 items-center gap-3">
@@ -194,10 +209,18 @@ export default function LavanderiaServicesPage() {
                             />
                             disponível
                           </label>
-                          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => setOptionsItem(it)}>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => setOptionsItem(it)}
+                          >
                             Opções
                           </Button>
-                          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(it)}>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => openEdit(it)}
+                          >
                             Editar
                           </Button>
                           <Button
@@ -220,7 +243,12 @@ export default function LavanderiaServicesPage() {
       )}
 
       {/* Modal: criar/editar serviço */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar serviço' : 'Novo serviço'} size="md">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar serviço' : 'Novo serviço'}
+        size="md"
+      >
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -230,47 +258,89 @@ export default function LavanderiaServicesPage() {
         >
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-              maxLength={120} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+              maxLength={120}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição (opcional)</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Descrição (opcional)
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Preço/peça (R$)</label>
-              <input type="number" min="0" step="0.01" value={form.price} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Preço/peça (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Prazo (dias)</label>
-              <input type="number" min="0" step="1" value={form.turnaroundDays} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Prazo (dias)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={form.turnaroundDays}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, turnaroundDays: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Categoria</label>
-              <select value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as LavanderiaCategoryId }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Categoria
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value as LavanderiaCategoryId }))
+                }
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 {LAVANDERIA_CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
                 ))}
               </select>
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Instruções de cuidado (opcional)</label>
-            <input value={form.careInstructions} onChange={(e) => setForm((f) => ({ ...f, careInstructions: e.target.value }))}
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Instruções de cuidado (opcional)
+            </label>
+            <input
+              value={form.careInstructions}
+              onChange={(e) => setForm((f) => ({ ...f, careInstructions: e.target.value }))}
               placeholder="Ex.: lavagem a frio, não usar alvejante…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>
@@ -338,7 +408,11 @@ function OptionsEditor({ item }: { item: ServiceItem }) {
 
   function startEdit(op: ServiceOption) {
     setEditingId(op.id)
-    setForm({ groupLabel: op.groupLabel, optionLabel: op.optionLabel, delta: String(op.priceDeltaCents / 100) })
+    setForm({
+      groupLabel: op.groupLabel,
+      optionLabel: op.optionLabel,
+      delta: String(op.priceDeltaCents / 100),
+    })
     setError(null)
   }
 
@@ -366,14 +440,22 @@ function OptionsEditor({ item }: { item: ServiceItem }) {
               <h3 className="text-sm font-semibold text-muted-foreground">{group}</h3>
               <div className="divide-y divide-border rounded-lg border border-border">
                 {ops.map((op) => (
-                  <div key={op.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <div
+                    key={op.id}
+                    className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                  >
                     <div className="min-w-0">
                       <span className="font-medium">{op.optionLabel}</span>
-                      {!op.available && <Badge variant="muted" className="ml-2">indisponível</Badge>}
+                      {!op.available && (
+                        <Badge variant="muted" className="ml-2">
+                          indisponível
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="tabular-nums text-xs text-muted-foreground">
-                        {op.priceDeltaCents >= 0 ? '+' : ''}{formatBrl(op.priceDeltaCents)}
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {op.priceDeltaCents >= 0 ? '+' : ''}
+                        {formatBrl(op.priceDeltaCents)}
                       </span>
                       <label className="flex items-center gap-1 text-xs text-muted-foreground">
                         <input
@@ -384,7 +466,11 @@ function OptionsEditor({ item }: { item: ServiceItem }) {
                         />
                         disp.
                       </label>
-                      <Button variant="outline" className="h-6 px-2 text-xs" onClick={() => startEdit(op)}>
+                      <Button
+                        variant="outline"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => startEdit(op)}
+                      >
                         Editar
                       </Button>
                       <Button
@@ -411,23 +497,39 @@ function OptionsEditor({ item }: { item: ServiceItem }) {
           saveMutation.mutate()
         }}
       >
-        <div className="flex-1 min-w-[8rem]">
+        <div className="min-w-[8rem] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Grupo</label>
-          <input value={form.groupLabel} onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))} required
-            maxLength={60} placeholder="Acabamento, Cuidado…"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <input
+            value={form.groupLabel}
+            onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))}
+            required
+            maxLength={60}
+            placeholder="Acabamento, Cuidado…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
-        <div className="flex-1 min-w-[8rem]">
+        <div className="min-w-[8rem] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Opção</label>
-          <input value={form.optionLabel} onChange={(e) => setForm((f) => ({ ...f, optionLabel: e.target.value }))} required
-            maxLength={80} placeholder="Passar a vapor, Engomar…"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <input
+            value={form.optionLabel}
+            onChange={(e) => setForm((f) => ({ ...f, optionLabel: e.target.value }))}
+            required
+            maxLength={80}
+            placeholder="Passar a vapor, Engomar…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <div className="w-28">
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">+ R$ (delta)</label>
-          <input type="number" step="0.01" value={form.delta}
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            + R$ (delta)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            value={form.delta}
             onChange={(e) => setForm((f) => ({ ...f, delta: e.target.value }))}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <Button type="submit" className="h-8 px-3 text-xs" disabled={saveMutation.isPending}>
           {saveMutation.isPending ? 'Salvando…' : editingId ? 'Salvar' : 'Adicionar'}

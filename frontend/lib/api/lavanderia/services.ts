@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { ServiceItem, ServiceOption } from '@/profiles/lavanderia/lavanderia-types'
 import type { LavanderiaCategoryId } from '@/profiles/lavanderia/lavanderia-categories'
+import type { ServiceItem, ServiceOption } from '@/profiles/lavanderia/lavanderia-types'
 
 export type CreateServiceInput = {
   name: string
@@ -14,7 +14,9 @@ export type CreateServiceInput = {
 
 export type UpdateServiceInput = Partial<CreateServiceInput> & { available?: boolean }
 
-export function listServices(opts: { category?: string; available?: boolean } = {}): Promise<{ items: ServiceItem[] }> {
+export function listServices(
+  opts: { category?: string; available?: boolean } = {},
+): Promise<{ items: ServiceItem[] }> {
   const p = new URLSearchParams()
   if (opts.category) p.set('category', opts.category)
   if (opts.available) p.set('available', 'true')
@@ -27,11 +29,17 @@ export function getService(id: string): Promise<ServiceItem> {
 }
 
 export function createService(input: CreateServiceInput): Promise<ServiceItem> {
-  return apiFetch<ServiceItem>('/api/lavanderia/services', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<ServiceItem>('/api/lavanderia/services', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateService(id: string, input: UpdateServiceInput): Promise<ServiceItem> {
-  return apiFetch<ServiceItem>(`/api/lavanderia/services/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<ServiceItem>(`/api/lavanderia/services/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleService(id: string, available: boolean): Promise<ServiceItem> {
@@ -67,20 +75,33 @@ export function createOption(serviceId: string, input: CreateOptionInput): Promi
   })
 }
 
-export function updateOption(serviceId: string, optionId: string, input: UpdateOptionInput): Promise<ServiceOption> {
+export function updateOption(
+  serviceId: string,
+  optionId: string,
+  input: UpdateOptionInput,
+): Promise<ServiceOption> {
   return apiFetch<ServiceOption>(`/api/lavanderia/services/${serviceId}/options/${optionId}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
   })
 }
 
-export function toggleOption(serviceId: string, optionId: string, available: boolean): Promise<ServiceOption> {
-  return apiFetch<ServiceOption>(`/api/lavanderia/services/${serviceId}/options/${optionId}/toggle`, {
-    method: 'PATCH',
-    body: JSON.stringify({ available }),
-  })
+export function toggleOption(
+  serviceId: string,
+  optionId: string,
+  available: boolean,
+): Promise<ServiceOption> {
+  return apiFetch<ServiceOption>(
+    `/api/lavanderia/services/${serviceId}/options/${optionId}/toggle`,
+    {
+      method: 'PATCH',
+      body: JSON.stringify({ available }),
+    },
+  )
 }
 
 export function deleteOption(serviceId: string, optionId: string): Promise<void> {
-  return apiFetch<void>(`/api/lavanderia/services/${serviceId}/options/${optionId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/lavanderia/services/${serviceId}/options/${optionId}`, {
+    method: 'DELETE',
+  })
 }

@@ -42,7 +42,11 @@ public class EscolaConfigController {
         @Size(max = 200) String businessName,
         @NotBlank String opensAt,
         @NotBlank String closesAt,
-        String notes) {}
+        String notes,
+        Boolean visitReminderEnabled,
+        Boolean visitAutoCompleteEnabled,
+        Boolean paymentReminderEnabled,
+        Integer paymentDueDay) {}
 
     @GetMapping("/api/escola/config")
     public ResponseEntity<Object> get(
@@ -76,7 +80,11 @@ public class EscolaConfigController {
         }
         try {
             return ResponseEntity.ok(service.update(companyId, user.userId(),
-                req.businessName(), opensAt, closesAt, req.notes()));
+                req.businessName(), opensAt, closesAt, req.notes(),
+                req.visitReminderEnabled() == null || req.visitReminderEnabled(),
+                req.visitAutoCompleteEnabled() == null || req.visitAutoCompleteEnabled(),
+                req.paymentReminderEnabled() != null && req.paymentReminderEnabled(),
+                req.paymentDueDay() == null ? 10 : req.paymentDueDay()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

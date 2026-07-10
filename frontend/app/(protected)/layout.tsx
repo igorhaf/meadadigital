@@ -35,11 +35,7 @@ import { createClient } from '@/lib/supabase/server'
  * dashboard. Ambos são client components ('use client') — o boundary fica neles; o
  * layout segue server (mantém a barreira getUser).
  */
-export default async function ProtectedLayout({
-  children,
-}: {
-  children: React.ReactNode
-}) {
+export default async function ProtectedLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient()
   const {
     data: { user },

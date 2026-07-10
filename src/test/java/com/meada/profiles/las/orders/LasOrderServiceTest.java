@@ -74,7 +74,7 @@ class LasOrderServiceTest extends AbstractIntegrationTest {
         LasProduct p = productService.create(COMPANY, USER, "Lã", null, "las", 5000);
         LasVariant v = productService.addVariant(COMPANY, USER, p.id(), "Azul", "L2024-A", null, null, 5);
         return service.create(COMPANY, conversationId, contactId, "entrega", false, "Rua X 1",
-            List.of(new OrderLineInput(v.id(), 2)), null);
+            List.of(new OrderLineInput(v.id(), 2)), null, null);
     }
 
     // ---- Preço + estoque -----------------------------------------------------
@@ -86,7 +86,7 @@ class LasOrderServiceTest extends AbstractIntegrationTest {
         LasVariant v = productService.addVariant(COMPANY, USER, p.id(), "Azul", "L2024-A", null, 8990, 5);
 
         LasOrder order = service.create(COMPANY, conversationId, contactId, "entrega", false, "Rua Y 2",
-            List.of(new OrderLineInput(v.id(), 2)), null);
+            List.of(new OrderLineInput(v.id(), 2)), null, null);
 
         // unit_price = 8990 (variante); subtotal = 8990*2 = 17980; total = 17980 + 700 = 18680.
         assertThat(order.items().get(0).unitPriceCents()).isEqualTo(8990);
@@ -107,7 +107,7 @@ class LasOrderServiceTest extends AbstractIntegrationTest {
         LasVariant v = productService.addVariant(COMPANY, USER, p.id(), "Nude", "L2024-A", null, null, 1);
 
         assertThatThrownBy(() -> service.create(COMPANY, conversationId, contactId, "retirada", false, null,
-                List.of(new OrderLineInput(v.id(), 2)), null))
+                List.of(new OrderLineInput(v.id(), 2)), null, null))
             .isInstanceOf(OutOfStockException.class);
 
         Long count = jdbcTemplate.queryForObject("select count(*) from las_orders", Long.class);
@@ -183,7 +183,7 @@ class LasOrderServiceTest extends AbstractIntegrationTest {
         LasProduct p = productService.create(COMPANY, USER, "Kit", null, "kits", 9000);
         LasVariant v = productService.addVariant(COMPANY, USER, p.id(), "Azul", "L2024-A", null, null, 3);
         LasOrder order = service.create(COMPANY, conversationId, contactId, "retirada", false, null,
-            List.of(new OrderLineInput(v.id(), 1)), null);
+            List.of(new OrderLineInput(v.id(), 1)), null, null);
 
         service.updateStatus(COMPANY, order.id(), "separando", null);   // 1 (aceite).
         service.updateStatus(COMPANY, order.id(), "enviado", null);     // 2.

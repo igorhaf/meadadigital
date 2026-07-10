@@ -9,18 +9,18 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
-import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import { listOrders, updateOrderStatus } from '@/lib/api/otica/orders'
+import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
+import type { OticaOrderStatusId } from '@/profiles/otica/otica-order-status'
 import {
+  formatBrl,
+  formatDate,
   KANBAN_COLUMNS,
   NEXT_STATUS,
   STATUS_LABEL,
-  formatBrl,
-  formatDate,
   type Order,
   type OrderItem,
 } from '@/profiles/otica/otica-types'
-import type { OticaOrderStatusId } from '@/profiles/otica/otica-order-status'
 
 /** Resumo de um item com seus modifiers: "1× Armação X (Multifocal, +Antirreflexo)". */
 function itemLine(it: OrderItem): string {
@@ -36,8 +36,13 @@ function itemsSummary(order: Order): string {
 /** Há algum dado de receita preenchido? */
 function hasPrescription(o: Order): boolean {
   return Boolean(
-    o.rxOdSpherical || o.rxOdCylindrical || o.rxOdAxis ||
-    o.rxOeSpherical || o.rxOeCylindrical || o.rxOeAxis || o.rxPd,
+    o.rxOdSpherical ||
+    o.rxOdCylindrical ||
+    o.rxOdAxis ||
+    o.rxOeSpherical ||
+    o.rxOeCylindrical ||
+    o.rxOeAxis ||
+    o.rxPd,
   )
 }
 
@@ -68,50 +73,75 @@ function OrderCard({
       {...dragProps}
       className="data-[dragging=true]:opacity-50 [&[draggable=true]]:cursor-grab active:[&[draggable=true]]:cursor-grabbing"
     >
-    <Card className="space-y-2 p-3">
-      <button onClick={() => onOpen(order)} className="w-full space-y-2 text-left">
-        <div className="flex items-center justify-between">
-          <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
-          <span className="text-xs text-muted-foreground">
-            {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-          </span>
-        </div>
-        <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
-        <ul className="space-y-0.5 text-xs text-muted-foreground">
-          {order.items.map((it) => (
-            <li key={it.id} className="line-clamp-1">{itemLine(it)}</li>
-          ))}
-        </ul>
-        <div className="flex flex-wrap items-center gap-1">
-          {order.prescriptionPending && <Badge variant="warning">trazer receita</Badge>}
-          {order.readyDate && <Badge variant="info">pronto em {formatDate(order.readyDate)}</Badge>}
-        </div>
-        <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
-      </button>
-      <div className="flex gap-1 pt-1">
-        {awaiting ? (
-          <>
-            <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAccept(order)}>
-              Aceitar
-            </Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onReject(order)}>
-              Recusar
-            </Button>
-          </>
-        ) : (
-          <>
-            {next && (
-              <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAdvance(order)}>
-                Avançar → {STATUS_LABEL[next]}
-              </Button>
+      <Card className="space-y-2 p-3">
+        <button onClick={() => onOpen(order)} className="w-full space-y-2 text-left">
+          <div className="flex items-center justify-between">
+            <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
+            <span className="text-xs text-muted-foreground">
+              {new Date(order.createdAt).toLocaleTimeString('pt-BR', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </span>
+          </div>
+          <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
+          <ul className="space-y-0.5 text-xs text-muted-foreground">
+            {order.items.map((it) => (
+              <li key={it.id} className="line-clamp-1">
+                {itemLine(it)}
+              </li>
+            ))}
+          </ul>
+          <div className="flex flex-wrap items-center gap-1">
+            {order.prescriptionPending && <Badge variant="warning">trazer receita</Badge>}
+            {order.readyDate && (
+              <Badge variant="info">pronto em {formatDate(order.readyDate)}</Badge>
             )}
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onCancel(order)}>
-              Cancelar
-            </Button>
-          </>
-        )}
-      </div>
-    </Card>
+          </div>
+          <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
+        </button>
+        <div className="flex gap-1 pt-1">
+          {awaiting ? (
+            <>
+              <Button
+                className="h-7 flex-1 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onAccept(order)}
+              >
+                Aceitar
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onReject(order)}
+              >
+                Recusar
+              </Button>
+            </>
+          ) : (
+            <>
+              {next && (
+                <Button
+                  className="h-7 flex-1 px-2 text-xs"
+                  disabled={busy}
+                  onClick={() => onAdvance(order)}
+                >
+                  Avançar → {STATUS_LABEL[next]}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onCancel(order)}
+              >
+                Cancelar
+              </Button>
+            </>
+          )}
+        </div>
+      </Card>
     </div>
   )
 }
@@ -123,7 +153,9 @@ function PrescriptionBlock({ order }: { order: Order }) {
       <div className="space-y-3">
         <div className="flex items-center justify-between">
           <h3 className="text-sm font-semibold">Receita</h3>
-          {order.prescriptionPending && <Badge variant="warning">cliente vai trazer a receita</Badge>}
+          {order.prescriptionPending && (
+            <Badge variant="warning">cliente vai trazer a receita</Badge>
+          )}
         </div>
         {hasPrescription(order) ? (
           <div className="overflow-x-auto">
@@ -151,7 +183,9 @@ function PrescriptionBlock({ order }: { order: Order }) {
                 </tr>
               </tbody>
             </table>
-            <p className="pt-2 text-xs text-muted-foreground">DP (distância pupilar): {order.rxPd ?? '—'}</p>
+            <p className="pt-2 text-xs text-muted-foreground">
+              DP (distância pupilar): {order.rxPd ?? '—'}
+            </p>
           </div>
         ) : (
           <p className="text-xs text-muted-foreground">
@@ -192,8 +226,15 @@ export default function OticaOrdersPage() {
   })
 
   const statusMutation = useMutation({
-    mutationFn: ({ id, status, reason }: { id: string; status: OticaOrderStatusId; reason?: string }) =>
-      updateOrderStatus(id, status, reason),
+    mutationFn: ({
+      id,
+      status,
+      reason,
+    }: {
+      id: string
+      status: OticaOrderStatusId
+      reason?: string
+    }) => updateOrderStatus(id, status, reason),
     onSuccess: () => qc.invalidateQueries({ queryKey: ['otica-orders'] }),
   })
 
@@ -238,13 +279,22 @@ export default function OticaOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pedidos" description="Aceite ou recuse novos pedidos e acompanhe a montagem e a retirada dos óculos." />
+      <PageHeader
+        title="Pedidos"
+        description="Aceite ou recuse novos pedidos e acompanhe a montagem e a retirada dos óculos."
+      />
 
       <div className="flex gap-2">
-        <Button variant={tab === 'andamento' ? 'default' : 'outline'} onClick={() => setTab('andamento')}>
+        <Button
+          variant={tab === 'andamento' ? 'default' : 'outline'}
+          onClick={() => setTab('andamento')}
+        >
           Em andamento
         </Button>
-        <Button variant={tab === 'historico' ? 'default' : 'outline'} onClick={() => setTab('historico')}>
+        <Button
+          variant={tab === 'historico' ? 'default' : 'outline'}
+          onClick={() => setTab('historico')}
+        >
           Histórico
         </Button>
       </div>
@@ -278,7 +328,10 @@ export default function OticaOrdersPage() {
                           dragProps={dnd.cardProps(o.id)}
                           onOpen={setDetail}
                           onAccept={accept}
-                          onReject={(ord) => { setRejectReason(''); setRejectTarget(ord) }}
+                          onReject={(ord) => {
+                            setRejectReason('')
+                            setRejectTarget(ord)
+                          }}
                           onAdvance={advance}
                           onCancel={setCancelTarget}
                         />
@@ -297,11 +350,18 @@ export default function OticaOrdersPage() {
           ) : (
             <div className="divide-y divide-border rounded-lg border border-border">
               {historyItems.map((o) => (
-                <button key={o.id} onClick={() => setDetail(o)}
-                  className="flex w-full flex-col gap-1 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40">
+                <button
+                  key={o.id}
+                  onClick={() => setDetail(o)}
+                  className="flex w-full flex-col gap-1 px-4 py-3 text-left text-sm transition-colors hover:bg-muted/40"
+                >
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
-                    <span className="min-w-0 flex-1 truncate">{o.contactName ?? 'Cliente'} · {itemsSummary(o)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      #{o.id.slice(0, 8)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {o.contactName ?? 'Cliente'} · {itemsSummary(o)}
+                    </span>
                     <span className="tabular-nums">{formatBrl(o.totalCents)}</span>
                     <Badge variant={o.status === 'retirado' ? 'success' : 'danger'}>
                       {STATUS_LABEL[o.status]}
@@ -322,7 +382,9 @@ export default function OticaOrdersPage() {
         {detail && (
           <div className="space-y-4">
             <div className="flex flex-wrap items-center gap-2">
-              <span className="font-mono text-xs text-muted-foreground">#{detail.id.slice(0, 8)}</span>
+              <span className="font-mono text-xs text-muted-foreground">
+                #{detail.id.slice(0, 8)}
+              </span>
               <span className="font-medium">{detail.contactName ?? 'Cliente'}</span>
               <Badge variant="muted">{STATUS_LABEL[detail.status]}</Badge>
             </div>
@@ -333,8 +395,13 @@ export default function OticaOrdersPage() {
                 <ul className="space-y-1 text-sm">
                   {detail.items.map((it) => (
                     <li key={it.id} className="flex items-center justify-between gap-3">
-                      <span>{itemLine(it)}{it.madeToOrder ? ' · sob encomenda' : ''}</span>
-                      <span className="tabular-nums text-muted-foreground">{formatBrl(it.unitPriceCents * it.qtd)}</span>
+                      <span>
+                        {itemLine(it)}
+                        {it.madeToOrder ? ' · sob encomenda' : ''}
+                      </span>
+                      <span className="text-muted-foreground tabular-nums">
+                        {formatBrl(it.unitPriceCents * it.qtd)}
+                      </span>
                     </li>
                   ))}
                 </ul>
@@ -347,9 +414,12 @@ export default function OticaOrdersPage() {
                   <span className="tabular-nums">{formatBrl(detail.totalCents)}</span>
                 </div>
                 <p className="text-xs text-muted-foreground">
-                  Prazo de retirada: {detail.readyDate ? formatDate(detail.readyDate) : 'pronta-entrega'}
+                  Prazo de retirada:{' '}
+                  {detail.readyDate ? formatDate(detail.readyDate) : 'pronta-entrega'}
                 </p>
-                {detail.notes && <p className="text-xs text-muted-foreground">Obs.: {detail.notes}</p>}
+                {detail.notes && (
+                  <p className="text-xs text-muted-foreground">Obs.: {detail.notes}</p>
+                )}
               </div>
             </Card>
 
@@ -377,16 +447,22 @@ export default function OticaOrdersPage() {
       {/* Recusar (gate de aceite): Modal com motivo OPCIONAL (AlertDialog não tem campo de texto livre). */}
       <Modal
         open={rejectTarget !== null}
-        onClose={() => { setRejectTarget(null); setRejectReason('') }}
+        onClose={() => {
+          setRejectTarget(null)
+          setRejectReason('')
+        }}
         title="Recusar pedido?"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao cliente.
+            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao
+            cliente.
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Motivo (opcional)</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Motivo (opcional)
+            </label>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
@@ -397,10 +473,21 @@ export default function OticaOrdersPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => { setRejectTarget(null); setRejectReason('') }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRejectTarget(null)
+                setRejectReason('')
+              }}
+            >
               Voltar
             </Button>
-            <Button variant="destructive" disabled={statusMutation.isPending} onClick={confirmReject}>
+            <Button
+              variant="destructive"
+              disabled={statusMutation.isPending}
+              onClick={confirmReject}
+            >
               {statusMutation.isPending ? 'Recusando…' : 'Recusar pedido'}
             </Button>
           </div>

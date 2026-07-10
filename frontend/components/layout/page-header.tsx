@@ -26,7 +26,10 @@ export function PageHeader({
   return (
     <div className="mb-8 space-y-2">
       {breadcrumb && breadcrumb.length > 0 && (
-        <nav className="flex items-center gap-1.5 text-sm text-muted-foreground" aria-label="Trilha">
+        <nav
+          className="flex items-center gap-1.5 text-sm text-muted-foreground"
+          aria-label="Trilha"
+        >
           {breadcrumb.map((item, i) => (
             <span key={i} className="flex items-center gap-1.5">
               {i > 0 && <span aria-hidden="true">/</span>}

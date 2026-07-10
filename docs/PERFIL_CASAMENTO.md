@@ -183,3 +183,14 @@ outras. O `OutboundService` remove a tag antes de enviar ao cliente.
   `reminded_due_date` no checklist + 4 toggles na config.
 - Guard `/api/casamento/**` → 403 `forbidden_wrong_profile`. Paleta `trigo`.
 - Tenant de teste: `igorhaf18` (Casamento Modelo).
+
+## Onda 2 do backlog (migration 113)
+
+`docs/FEATURES_SUGERIDAS_CASAMENTO.md` #6/#8: **#6 pós-casamento** — REALIZADA encadeia
+agradecimento emocionado + `review_link` + convite de indicação (o auge da emoção é o melhor
+momento de coletar depoimento; toggle `post_event_enabled` ON). **#8 follow-up de orçamento
+parado** — ORCADA há `follow_up_days` (default 5) sem resposta → 1 toque por episódio
+(`follow_up_sent_at` vs `status_updated_at`; re-orçar REARMA) no `WeddingAutoTransitionJob`.
+Settings ganhou "Pós-casamento e follow-up". Teste: `CasamentoOnda2IntegrationTest`. Fica:
+#5 indicação c/ cashback (gateway), #7 CMS, #9 qualificação, #11 fornecedores, #12 RSVP (G),
+#13 mood board (upload).

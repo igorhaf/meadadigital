@@ -1,13 +1,14 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
 import { getConfig, updateConfig } from '@/lib/api/academia/config'
+import { ApiError } from '@/lib/api/client'
+import { useSyncedForm } from '@/lib/use-synced-form'
 
 type FormState = { opensAt: string; closesAt: string }
 
@@ -20,7 +21,6 @@ function hhmm(t: string): string {
  */
 export default function AcademiaSettingsPage() {
   const qc = useQueryClient()
-  const [form, setForm] = useState<FormState | null>(null)
   const [error, setError] = useState<string | null>(null)
   const [saved, setSaved] = useState(false)
 
@@ -29,11 +29,10 @@ export default function AcademiaSettingsPage() {
     queryFn: () => getConfig(),
   })
 
-  useEffect(() => {
-    if (data) {
-      setForm({ opensAt: hhmm(data.opensAt), closesAt: hhmm(data.closesAt) })
-    }
-  }, [data])
+  const [form, setForm] = useSyncedForm(data, (d): FormState => ({
+    opensAt: hhmm(d.opensAt),
+    closesAt: hhmm(d.closesAt),
+  }))
 
   const saveMutation = useMutation({
     mutationFn: () => {
@@ -42,7 +41,9 @@ export default function AcademiaSettingsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['academia-config'] })
-      setError(null); setSaved(true); setTimeout(() => setSaved(false), 2500)
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2500)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'invalid_hours') {
@@ -57,10 +58,7 @@ export default function AcademiaSettingsPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader
-        title="Configurações da academia"
-        description="Horário de funcionamento."
-      />
+      <PageHeader title="Configurações da academia" description="Horário de funcionamento." />
 
       {isError ? (
         <p className="text-sm text-destructive">Erro ao carregar as configurações.</p>
@@ -68,20 +66,36 @@ export default function AcademiaSettingsPage() {
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (
         <Card>
-          <form className="space-y-6" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+          <form
+            className="space-y-6"
+            onSubmit={(e) => {
+              e.preventDefault()
+              saveMutation.mutate()
+            }}
+          >
             <Section title="Horário de funcionamento">
               <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Abre às</label>
-                  <input type="time" value={form.opensAt}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Abre às
+                  </label>
+                  <input
+                    type="time"
+                    value={form.opensAt}
                     onChange={(e) => setForm((f) => f && { ...f, opensAt: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
                 <div>
-                  <label className="mb-1 block text-xs font-medium text-muted-foreground">Fecha às</label>
-                  <input type="time" value={form.closesAt}
+                  <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                    Fecha às
+                  </label>
+                  <input
+                    type="time"
+                    value={form.closesAt}
                     onChange={(e) => setForm((f) => f && { ...f, closesAt: e.target.value })}
-                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                    className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+                  />
                 </div>
               </div>
             </Section>

@@ -10,8 +10,6 @@ import { AlertDialog } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card, Section } from '@/components/ui/card'
-import { ApiError } from '@/lib/api/client'
-import { getProfile } from '@/lib/profiles/profile-type'
 import {
   createNote,
   deleteCompany,
@@ -26,6 +24,8 @@ import {
   type CompanyDetail,
 } from '@/lib/api/admin/companies'
 import { getUsers } from '@/lib/api/admin/users'
+import { ApiError } from '@/lib/api/client'
+import { getProfile } from '@/lib/profiles/profile-type'
 
 /** Formata um Instant ISO (ou null) em pt-BR; "—" quando ausente. */
 function fmtDate(iso: string | null): string {
@@ -198,10 +198,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
     <div className="space-y-6">
       <PageHeader
         title={company.name}
-        breadcrumb={[
-          { label: 'Empresas', href: '/dashboard/companies' },
-          { label: company.name },
-        ]}
+        breadcrumb={[{ label: 'Empresas', href: '/dashboard/companies' }, { label: company.name }]}
         actions={
           <>
             <Link href={`/dashboard/companies/${id}/edit`}>
@@ -239,11 +236,11 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
       />
 
       <div className="flex items-center gap-2">
-        <Badge variant={isActive ? 'success' : 'danger'}>
-          {isActive ? 'ativa' : 'suspensa'}
-        </Badge>
+        <Badge variant={isActive ? 'success' : 'danger'}>{isActive ? 'ativa' : 'suspensa'}</Badge>
         {/* Perfil (produto) do tenant — camada 7.0. */}
-        <Badge variant="info">{getProfile(company.profileId)?.productName ?? company.profileId}</Badge>
+        <Badge variant="info">
+          {getProfile(company.profileId)?.productName ?? company.profileId}
+        </Badge>
         <span className="font-mono text-xs text-muted-foreground">{company.slug}</span>
       </div>
 
@@ -285,13 +282,18 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
 
       {/* Usuários da empresa (admins/operadores). Lista via /admin/users?companyId. */}
       <Card>
-        <Section title="Usuários" description="Admins e operadores com acesso ao painel desta empresa.">
+        <Section
+          title="Usuários"
+          description="Admins e operadores com acesso ao painel desta empresa."
+        >
           {usersQuery.isPending ? (
             <p className="text-sm text-muted-foreground">Carregando…</p>
           ) : usersQuery.isError ? (
             <p className="text-sm text-destructive">Erro ao carregar os usuários.</p>
           ) : (usersQuery.data?.items.length ?? 0) === 0 ? (
-            <p className="text-sm text-muted-foreground">Nenhum usuário cadastrado nesta empresa.</p>
+            <p className="text-sm text-muted-foreground">
+              Nenhum usuário cadastrado nesta empresa.
+            </p>
           ) : (
             <div className="divide-y divide-border rounded-lg border border-border">
               {usersQuery.data!.items.map((u) => (
@@ -313,7 +315,10 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                       ? `último acesso ${new Date(u.lastLoginAt).toLocaleDateString('pt-BR')}`
                       : 'nunca acessou'}
                   </span>
-                  <Link href={`/dashboard/users/${u.id}`} className="text-xs text-primary hover:underline">
+                  <Link
+                    href={`/dashboard/users/${u.id}`}
+                    className="text-xs text-primary hover:underline"
+                  >
                     ver
                   </Link>
                 </div>
@@ -438,12 +443,9 @@ function NotesSection({ companyId }: { companyId: string }) {
             <p className="text-sm text-muted-foreground">Nenhuma nota ainda.</p>
           ) : (
             notes.map((note) => (
-              <div
-                key={note.id}
-                className="rounded-md border border-border bg-background p-3"
-              >
+              <div key={note.id} className="rounded-md border border-border bg-background p-3">
                 <div className="flex items-start justify-between gap-3">
-                  <p className="whitespace-pre-wrap text-sm text-foreground">{note.content}</p>
+                  <p className="text-sm whitespace-pre-wrap text-foreground">{note.content}</p>
                   <Button
                     variant="ghost"
                     size="sm"

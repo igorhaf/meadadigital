@@ -4,23 +4,34 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
   createCatalogItem,
   createOption,
   deleteCatalogItem,
   deleteOption,
   listCatalog,
+  listTiers,
+  putTiers,
   toggleCatalogItem,
   toggleOption,
   updateCatalogItem,
   updateOption,
+  type ItemTier,
 } from '@/lib/api/papelaria/catalog'
-import { PAPELARIA_CATEGORIES, type PapelariaCategoryId } from '@/profiles/papelaria/papelaria-categories'
-import { formatBrl, type CatalogItem, type CatalogOption } from '@/profiles/papelaria/papelaria-types'
+import { useOnSync } from '@/lib/use-synced-form'
+import {
+  PAPELARIA_CATEGORIES,
+  type PapelariaCategoryId,
+} from '@/profiles/papelaria/papelaria-categories'
+import {
+  formatBrl,
+  type CatalogItem,
+  type CatalogOption,
+} from '@/profiles/papelaria/papelaria-types'
 
 type FormState = {
   name: string
@@ -63,6 +74,8 @@ export default function PapelariaCatalogPage() {
 
   // Modal secundário de opções: aberto pelo botão "Opções" do card.
   const [optionsItem, setOptionsItem] = useState<CatalogItem | null>(null)
+  // Modal secundário de faixas de tiragem (onda #2).
+  const [tiersItem, setTiersItem] = useState<CatalogItem | null>(null)
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['papelaria-catalog'],
@@ -78,7 +91,10 @@ export default function PapelariaCatalogPage() {
         priceCents: Math.round(Number(form.price) * 100),
         category: form.category,
         madeToOrder: form.madeToOrder,
-        leadTimeDays: form.madeToOrder && trimmedLead !== '' ? Math.max(0, Math.round(Number(trimmedLead))) : null,
+        leadTimeDays:
+          form.madeToOrder && trimmedLead !== ''
+            ? Math.max(0, Math.round(Number(trimmedLead)))
+            : null,
         specs: form.specs.trim() || null,
       }
       if (editing) return updateCatalogItem(editing.id, payload)
@@ -142,8 +158,7 @@ export default function PapelariaCatalogPage() {
   )
 
   // O modal de opções precisa do item SEMPRE fresco da query (após mutações de opção).
-  const liveOptionsItem =
-    optionsItem && (data?.items ?? []).find((it) => it.id === optionsItem.id)
+  const liveOptionsItem = optionsItem && (data?.items ?? []).find((it) => it.id === optionsItem.id)
 
   return (
     <div className="space-y-6">
@@ -172,18 +187,24 @@ export default function PapelariaCatalogPage() {
               <section key={cat.id} className="space-y-2">
                 <h2 className="text-sm font-semibold text-muted-foreground">{cat.label}</h2>
                 {catItems.length === 0 ? (
-                  <p className="text-xs text-muted-foreground">Nenhum item nesta categoria ainda.</p>
+                  <p className="text-xs text-muted-foreground">
+                    Nenhum item nesta categoria ainda.
+                  </p>
                 ) : (
                   <div className="divide-y divide-border rounded-lg border border-border">
                     {catItems.map((it) => (
-                      <div key={it.id} className="flex items-center justify-between gap-3 px-4 py-3">
+                      <div
+                        key={it.id}
+                        className="flex items-center justify-between gap-3 px-4 py-3"
+                      >
                         <div className="min-w-0">
                           <div className="flex items-center gap-2">
                             <span className="font-medium">{it.name}</span>
                             {!it.available && <Badge variant="muted">indisponível</Badge>}
                             {it.madeToOrder && (
                               <Badge variant="warning">
-                                sob encomenda{it.leadTimeDays != null ? ` · ${it.leadTimeDays}d` : ''}
+                                sob encomenda
+                                {it.leadTimeDays != null ? ` · ${it.leadTimeDays}d` : ''}
                               </Badge>
                             )}
                             {it.options.length > 0 && (
@@ -191,10 +212,14 @@ export default function PapelariaCatalogPage() {
                             )}
                           </div>
                           {it.description && (
-                            <p className="truncate text-xs text-muted-foreground">{it.description}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              {it.description}
+                            </p>
                           )}
                           {it.specs && (
-                            <p className="truncate text-xs text-muted-foreground">Especificações: {it.specs}</p>
+                            <p className="truncate text-xs text-muted-foreground">
+                              Especificações: {it.specs}
+                            </p>
                           )}
                         </div>
                         <div className="flex shrink-0 items-center gap-3">
@@ -208,10 +233,25 @@ export default function PapelariaCatalogPage() {
                             />
                             disponível
                           </label>
-                          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => setOptionsItem(it)}>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => setOptionsItem(it)}
+                          >
                             Opções
                           </Button>
-                          <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(it)}>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => setTiersItem(it)}
+                          >
+                            Tiragem
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-7 px-2 text-xs"
+                            onClick={() => openEdit(it)}
+                          >
                             Editar
                           </Button>
                           <Button
@@ -234,7 +274,12 @@ export default function PapelariaCatalogPage() {
       )}
 
       {/* Modal: criar/editar item */}
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar item' : 'Novo item'} size="md">
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar item' : 'Novo item'}
+        size="md"
+      >
         <form
           className="space-y-4"
           onSubmit={(e) => {
@@ -244,28 +289,55 @@ export default function PapelariaCatalogPage() {
         >
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-            <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-              maxLength={120} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <input
+              value={form.name}
+              onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+              required
+              maxLength={120}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição (opcional)</label>
-            <textarea value={form.description} onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Descrição (opcional)
+            </label>
+            <textarea
+              value={form.description}
+              onChange={(e) => setForm((f) => ({ ...f, description: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Preço (R$)</label>
-              <input type="number" min="0" step="0.01" value={form.price} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Preço (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.price}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Categoria</label>
-              <select value={form.category}
-                onChange={(e) => setForm((f) => ({ ...f, category: e.target.value as PapelariaCategoryId }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Categoria
+              </label>
+              <select
+                value={form.category}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, category: e.target.value as PapelariaCategoryId }))
+                }
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 {PAPELARIA_CATEGORIES.map((c) => (
-                  <option key={c.id} value={c.id}>{c.label}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.label}
+                  </option>
                 ))}
               </select>
             </div>
@@ -285,21 +357,34 @@ export default function PapelariaCatalogPage() {
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 Prazo de produção (dias) — vazio usa o padrão das configurações
               </label>
-              <input type="number" min="0" step="1" value={form.leadTimeDays}
+              <input
+                type="number"
+                min="0"
+                step="1"
+                value={form.leadTimeDays}
                 onChange={(e) => setForm((f) => ({ ...f, leadTimeDays: e.target.value }))}
                 placeholder="Ex.: 5"
-                className="w-full max-w-[12rem] rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full max-w-[12rem] rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           )}
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Especificações (opcional)</label>
-            <input value={form.specs} onChange={(e) => setForm((f) => ({ ...f, specs: e.target.value }))}
-              maxLength={300} placeholder="Ex.: papel couché 250g, 15×21cm, impressão offset"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Especificações (opcional)
+            </label>
+            <input
+              value={form.specs}
+              onChange={(e) => setForm((f) => ({ ...f, specs: e.target.value }))}
+              maxLength={300}
+              placeholder="Ex.: papel couché 250g, 15×21cm, impressão offset"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>
@@ -316,6 +401,20 @@ export default function PapelariaCatalogPage() {
       >
         {liveOptionsItem ? (
           <OptionsEditor item={liveOptionsItem} />
+        ) : (
+          <p className="text-sm text-muted-foreground">Item não encontrado.</p>
+        )}
+      </Modal>
+
+      {/* Modal secundário: faixas de preço por TIRAGEM (onda #2) */}
+      <Modal
+        open={tiersItem !== null}
+        onClose={() => setTiersItem(null)}
+        title={tiersItem ? `Faixas de tiragem — ${tiersItem.name}` : 'Faixas de tiragem'}
+        size="md"
+      >
+        {tiersItem ? (
+          <TiersEditor item={tiersItem} />
         ) : (
           <p className="text-sm text-muted-foreground">Item não encontrado.</p>
         )}
@@ -367,7 +466,11 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
 
   function startEdit(op: CatalogOption) {
     setEditingId(op.id)
-    setForm({ groupLabel: op.groupLabel, optionLabel: op.optionLabel, delta: String(op.priceDeltaCents / 100) })
+    setForm({
+      groupLabel: op.groupLabel,
+      optionLabel: op.optionLabel,
+      delta: String(op.priceDeltaCents / 100),
+    })
     setError(null)
   }
 
@@ -396,14 +499,22 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
               <h3 className="text-sm font-semibold text-muted-foreground">{group}</h3>
               <div className="divide-y divide-border rounded-lg border border-border">
                 {ops.map((op) => (
-                  <div key={op.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                  <div
+                    key={op.id}
+                    className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                  >
                     <div className="min-w-0">
                       <span className="font-medium">{op.optionLabel}</span>
-                      {!op.available && <Badge variant="muted" className="ml-2">indisponível</Badge>}
+                      {!op.available && (
+                        <Badge variant="muted" className="ml-2">
+                          indisponível
+                        </Badge>
+                      )}
                     </div>
                     <div className="flex shrink-0 items-center gap-2">
-                      <span className="tabular-nums text-xs text-muted-foreground">
-                        {op.priceDeltaCents >= 0 ? '+' : ''}{formatBrl(op.priceDeltaCents)}
+                      <span className="text-xs text-muted-foreground tabular-nums">
+                        {op.priceDeltaCents >= 0 ? '+' : ''}
+                        {formatBrl(op.priceDeltaCents)}
                       </span>
                       <label className="flex items-center gap-1 text-xs text-muted-foreground">
                         <input
@@ -414,7 +525,11 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
                         />
                         disp.
                       </label>
-                      <Button variant="outline" className="h-6 px-2 text-xs" onClick={() => startEdit(op)}>
+                      <Button
+                        variant="outline"
+                        className="h-6 px-2 text-xs"
+                        onClick={() => startEdit(op)}
+                      >
                         Editar
                       </Button>
                       <Button
@@ -441,23 +556,39 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
           saveMutation.mutate()
         }}
       >
-        <div className="flex-1 min-w-[8rem]">
+        <div className="min-w-[8rem] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Grupo</label>
-          <input value={form.groupLabel} onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))} required
-            maxLength={80} placeholder="Papel, Acabamento, Cor, Tamanho…"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <input
+            value={form.groupLabel}
+            onChange={(e) => setForm((f) => ({ ...f, groupLabel: e.target.value }))}
+            required
+            maxLength={80}
+            placeholder="Papel, Acabamento, Cor, Tamanho…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
-        <div className="flex-1 min-w-[8rem]">
+        <div className="min-w-[8rem] flex-1">
           <label className="mb-1 block text-xs font-medium text-muted-foreground">Opção</label>
-          <input value={form.optionLabel} onChange={(e) => setForm((f) => ({ ...f, optionLabel: e.target.value }))} required
-            maxLength={80} placeholder="Couché 250g, Hot stamping, Dourado, A5…"
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+          <input
+            value={form.optionLabel}
+            onChange={(e) => setForm((f) => ({ ...f, optionLabel: e.target.value }))}
+            required
+            maxLength={80}
+            placeholder="Couché 250g, Hot stamping, Dourado, A5…"
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <div className="w-28">
-          <label className="mb-1 block text-xs font-medium text-muted-foreground">+ R$ (delta)</label>
-          <input type="number" step="0.01" value={form.delta}
+          <label className="mb-1 block text-xs font-medium text-muted-foreground">
+            + R$ (delta)
+          </label>
+          <input
+            type="number"
+            step="0.01"
+            value={form.delta}
             onChange={(e) => setForm((f) => ({ ...f, delta: e.target.value }))}
-            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+            className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+          />
         </div>
         <Button type="submit" className="h-8 px-3 text-xs" disabled={saveMutation.isPending}>
           {saveMutation.isPending ? 'Salvando…' : editingId ? 'Salvar' : 'Adicionar'}
@@ -468,6 +599,132 @@ function OptionsEditor({ item }: { item: CatalogItem }) {
           </Button>
         )}
       </form>
+      {error && <p className="text-sm text-destructive">{error}</p>}
+    </div>
+  )
+}
+
+/**
+ * Editor das faixas de preço por TIRAGEM do item (onda #2): a faixa com maior "a partir de"
+ * ≤ quantidade define o preço/un da linha do pedido; sem faixas, vale o preço-base do item.
+ */
+function TiersEditor({ item }: { item: CatalogItem }) {
+  const qc = useQueryClient()
+  const [rows, setRows] = useState<{ minQty: string; price: string }[]>([])
+  const [error, setError] = useState<string | null>(null)
+  const [saved, setSaved] = useState(false)
+
+  const { data, isPending } = useQuery({
+    queryKey: ['papelaria-tiers', item.id],
+    queryFn: () => listTiers(item.id),
+  })
+
+  useOnSync(data, (d) => {
+    setRows(
+      d.items.map((t: ItemTier) => ({
+        minQty: String(t.minQty),
+        price: String(t.unitPriceCents / 100),
+      })),
+    )
+  })
+
+  const saveMutation = useMutation({
+    mutationFn: () => {
+      const tiers = rows
+        .filter((r) => r.minQty !== '' && r.price !== '')
+        .map((r) => ({
+          minQty: Math.max(1, Math.round(Number(r.minQty))),
+          unitPriceCents: Math.max(0, Math.round(Number(r.price) * 100)),
+        }))
+      return putTiers(item.id, tiers)
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['papelaria-tiers', item.id] })
+      setError(null)
+      setSaved(true)
+      setTimeout(() => setSaved(false), 2000)
+    },
+    onError: (e) => {
+      if (e instanceof ApiError && e.reason === 'invalid_tier')
+        setError('Faixas inválidas: "a partir de" precisa ser único e maior que zero.')
+      else setError('Erro ao salvar as faixas.')
+    },
+  })
+
+  if (isPending) return <p className="text-sm text-muted-foreground">Carregando…</p>
+
+  return (
+    <div className="space-y-4">
+      <p className="text-sm text-muted-foreground">
+        Preço por unidade conforme a quantidade (a faixa com maior &quot;a partir de&quot; vale).
+        Sem faixas, vale o preço-base (
+        {(item.priceCents / 100).toLocaleString('pt-BR', {
+          style: 'currency',
+          currency: 'BRL',
+        })}
+        /un).
+      </p>
+      <div className="space-y-2">
+        {rows.map((r, i) => (
+          <div key={i} className="flex items-end gap-2">
+            <div className="w-28">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                A partir de (un)
+              </label>
+              <input
+                type="number"
+                min="1"
+                value={r.minQty}
+                onChange={(e) =>
+                  setRows((rs) =>
+                    rs.map((x, j) => (j === i ? { ...x, minQty: e.target.value } : x)),
+                  )
+                }
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              />
+            </div>
+            <div className="w-32">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Preço/un (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={r.price}
+                onChange={(e) =>
+                  setRows((rs) => rs.map((x, j) => (j === i ? { ...x, price: e.target.value } : x)))
+                }
+                className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+              />
+            </div>
+            <Button
+              variant="outline"
+              className="h-8 px-2 text-xs"
+              onClick={() => setRows((rs) => rs.filter((_, j) => j !== i))}
+            >
+              Remover
+            </Button>
+          </div>
+        ))}
+      </div>
+      <div className="flex items-center gap-2">
+        <Button
+          variant="outline"
+          className="h-8 px-3 text-xs"
+          onClick={() => setRows((rs) => [...rs, { minQty: '', price: '' }])}
+        >
+          Adicionar faixa
+        </Button>
+        <Button
+          className="h-8 px-3 text-xs"
+          disabled={saveMutation.isPending}
+          onClick={() => saveMutation.mutate()}
+        >
+          {saveMutation.isPending ? 'Salvando…' : 'Salvar faixas'}
+        </Button>
+        {saved && <span className="text-xs text-emerald-600">Salvo.</span>}
+      </div>
       {error && <p className="text-sm text-destructive">{error}</p>}
     </div>
   )

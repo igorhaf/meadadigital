@@ -42,17 +42,20 @@ public class AtelieProposalService {
     private final AtelieArtisanRepository artisanRepository;
     private final AtelieCouponRepository couponRepository;
     private final AtelieProposalNotifier notifier;
+    private final com.meada.profiles.atelie.config.AtelieConfigRepository configRepository;
     private final AtelieContextCache contextCache;
 
     public AtelieProposalService(AtelieProposalRepository repository,
                                  AtelieArtisanRepository artisanRepository,
                                  AtelieCouponRepository couponRepository,
                                  AtelieProposalNotifier notifier,
-                                 AtelieContextCache contextCache) {
+                                 AtelieContextCache contextCache,
+                                com.meada.profiles.atelie.config.AtelieConfigRepository configRepository) {
         this.repository = repository;
         this.artisanRepository = artisanRepository;
         this.couponRepository = couponRepository;
         this.notifier = notifier;
+        this.configRepository = configRepository;
         this.contextCache = contextCache;
     }
 
@@ -325,6 +328,23 @@ public class AtelieProposalService {
         String text = newStatus.notificationText(pieceLabel(current),
             brl(current.totalCents() - current.discountCents()));
         notifier.notifyStatus(companyId, current.conversationId(), text);
+
+        // Onda 3 (backlog #7): a ENTREGA (realizada) encadeia o pós-entrega — agradecimento +
+        // avaliação + indicação (relacionamento; toggle + review_link na config).
+        if (newStatus == AtelieProposalStatus.REALIZADA) {
+            var config = configRepository.findByCompany(companyId);
+            if (config.postDeliveryEnabled()) {
+                StringBuilder pos = new StringBuilder("Sua peça foi feita com todo o carinho — "
+                    + "esperamos que ame o resultado! 🪡 Obrigado pela confiança. ");
+                if (config.reviewLink() != null) {
+                    pos.append("Se puder, deixe sua avaliação — ajuda muito o ateliê: ")
+                        .append(config.reviewLink()).append(" ");
+                }
+                pos.append("E se conhecer alguém querendo uma peça sob medida, ficaremos felizes "
+                    + "com a indicação!");
+                notifier.notifyStatus(companyId, current.conversationId(), pos.toString());
+            }
+        }
 
         contextCache.invalidate(companyId);
         return repository.findById(companyId, id).orElseThrow(ProposalNotFoundException::new);

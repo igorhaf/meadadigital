@@ -21,13 +21,24 @@ export function FieldRenderer({
   onChange: (v: unknown) => void
 }) {
   if (field.type === 'repeater') {
-    return <RepeaterField field={field} value={Array.isArray(value) ? value : []} onChange={onChange as (v: unknown[]) => void} />
+    return (
+      <RepeaterField
+        field={field}
+        value={Array.isArray(value) ? value : []}
+        onChange={onChange as (v: unknown[]) => void}
+      />
+    )
   }
 
   if (field.type === 'textarea') {
     return (
       <Wrapper field={field}>
-        <textarea value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} rows={3} className={inputClass} />
+        <textarea
+          value={(value as string) ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          rows={3}
+          className={inputClass}
+        />
       </Wrapper>
     )
   }
@@ -35,10 +46,16 @@ export function FieldRenderer({
   if (field.type === 'select') {
     return (
       <Wrapper field={field}>
-        <select value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={inputClass}>
+        <select
+          value={(value as string) ?? ''}
+          onChange={(e) => onChange(e.target.value)}
+          className={inputClass}
+        >
           <option value="">— escolha —</option>
           {field.options?.map((o) => (
-            <option key={o.value} value={o.value}>{o.label}</option>
+            <option key={o.value} value={o.value}>
+              {o.label}
+            </option>
           ))}
         </select>
       </Wrapper>
@@ -59,8 +76,19 @@ export function FieldRenderer({
     return (
       <Wrapper field={field}>
         <div className="flex items-center gap-2">
-          <input type="color" value={(value as string) || '#cccccc'} onChange={(e) => onChange(e.target.value)} className="h-10 w-10 cursor-pointer rounded" />
-          <input type="text" value={(value as string) ?? ''} onChange={(e) => onChange(e.target.value)} className={inputClass} placeholder="#000000" />
+          <input
+            type="color"
+            value={(value as string) || '#cccccc'}
+            onChange={(e) => onChange(e.target.value)}
+            className="h-10 w-10 cursor-pointer rounded"
+          />
+          <input
+            type="text"
+            value={(value as string) ?? ''}
+            onChange={(e) => onChange(e.target.value)}
+            className={inputClass}
+            placeholder="#000000"
+          />
         </div>
       </Wrapper>
     )
@@ -69,7 +97,12 @@ export function FieldRenderer({
   if (field.type === 'number') {
     return (
       <Wrapper field={field}>
-        <input type="number" value={(value as number | string) ?? ''} onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))} className={inputClass} />
+        <input
+          type="number"
+          value={(value as number | string) ?? ''}
+          onChange={(e) => onChange(e.target.value === '' ? null : Number(e.target.value))}
+          className={inputClass}
+        />
       </Wrapper>
     )
   }
@@ -119,7 +152,9 @@ function RepeaterField({
   }
   function addItem() {
     const empty: Record<string, unknown> = {}
-    field.itemSchema?.forEach((f) => { empty[f.key] = f.type === 'checkbox' ? false : '' })
+    field.itemSchema?.forEach((f) => {
+      empty[f.key] = f.type === 'checkbox' ? false : ''
+    })
     onChange([...items, empty])
   }
   function move(idx: number, dir: -1 | 1) {
@@ -133,23 +168,56 @@ function RepeaterField({
   return (
     <div className="space-y-3">
       <div className="text-xs font-medium text-muted-foreground">{field.label}</div>
-      {items.length === 0 && <p className="text-xs italic text-muted-foreground">Nenhum item ainda.</p>}
+      {items.length === 0 && (
+        <p className="text-xs text-muted-foreground italic">Nenhum item ainda.</p>
+      )}
       {items.map((item, idx) => (
         <div key={idx} className="space-y-2.5 rounded-lg border border-border bg-muted/30 p-3">
           <div className="flex items-center justify-between">
-            <span className="text-[11px] uppercase tracking-widest text-muted-foreground">{field.itemLabel ?? 'item'} {idx + 1}</span>
+            <span className="text-[11px] tracking-widest text-muted-foreground uppercase">
+              {field.itemLabel ?? 'item'} {idx + 1}
+            </span>
             <div className="flex gap-1">
-              <button type="button" onClick={() => move(idx, -1)} disabled={idx === 0} className="rounded px-2 py-1 text-xs hover:bg-muted disabled:opacity-30">↑</button>
-              <button type="button" onClick={() => move(idx, 1)} disabled={idx === items.length - 1} className="rounded px-2 py-1 text-xs hover:bg-muted disabled:opacity-30">↓</button>
-              <button type="button" onClick={() => removeItem(idx)} className="rounded px-2 py-1 text-xs text-destructive hover:bg-destructive/10">Excluir</button>
+              <button
+                type="button"
+                onClick={() => move(idx, -1)}
+                disabled={idx === 0}
+                className="rounded px-2 py-1 text-xs hover:bg-muted disabled:opacity-30"
+              >
+                ↑
+              </button>
+              <button
+                type="button"
+                onClick={() => move(idx, 1)}
+                disabled={idx === items.length - 1}
+                className="rounded px-2 py-1 text-xs hover:bg-muted disabled:opacity-30"
+              >
+                ↓
+              </button>
+              <button
+                type="button"
+                onClick={() => removeItem(idx)}
+                className="rounded px-2 py-1 text-xs text-destructive hover:bg-destructive/10"
+              >
+                Excluir
+              </button>
             </div>
           </div>
           {field.itemSchema?.map((f) => (
-            <FieldRenderer key={f.key} field={f} value={item[f.key]} onChange={(v) => updateItem(idx, f.key, v)} />
+            <FieldRenderer
+              key={f.key}
+              field={f}
+              value={item[f.key]}
+              onChange={(v) => updateItem(idx, f.key, v)}
+            />
           ))}
         </div>
       ))}
-      <button type="button" onClick={addItem} className="w-full rounded-lg border border-dashed border-border py-2 text-xs font-medium text-muted-foreground hover:bg-muted">
+      <button
+        type="button"
+        onClick={addItem}
+        className="w-full rounded-lg border border-dashed border-border py-2 text-xs font-medium text-muted-foreground hover:bg-muted"
+      >
         + Adicionar {field.itemLabel ?? 'item'}
       </button>
     </div>

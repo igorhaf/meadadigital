@@ -17,7 +17,9 @@ export type CreateServiceInput = {
  */
 export type UpdateServiceInput = Partial<CreateServiceInput> & { active?: boolean }
 
-export function listServices(opts: { onlyActive?: boolean } = {}): Promise<{ items: PetService[] }> {
+export function listServices(
+  opts: { onlyActive?: boolean } = {},
+): Promise<{ items: PetService[] }> {
   const qs = opts.onlyActive ? '?onlyActive=true' : ''
   return apiFetch<{ items: PetService[] }>(`/api/pet/services${qs}`)
 }
@@ -31,12 +33,16 @@ export function createService(input: CreateServiceInput): Promise<PetService> {
 }
 
 export function updateService(id: string, input: UpdateServiceInput): Promise<PetService> {
-  return apiFetch<PetService>(`/api/pet/services/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<PetService>(`/api/pet/services/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleService(id: string, active: boolean): Promise<PetService> {
   return apiFetch<PetService>(`/api/pet/services/${id}/toggle`, {
-    method: 'PATCH', body: JSON.stringify({ active }),
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
   })
 }
 

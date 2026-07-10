@@ -42,11 +42,12 @@ public class FotografiaPackageService {
 
     @Transactional
     public FotografiaPackage create(UUID companyId, UUID userId, String name, String category, int durationMinutes,
-                                    int priceCents, int deliveryDays, String notes) {
+                                    int priceCents, int deliveryDays, String notes, boolean suggestible) {
         requireValidDuration(durationMinutes);
         requireValidPrice(priceCents);
         requireValidDeliveryDays(deliveryDays);
-        FotografiaPackage created = repository.insert(companyId, name, category, durationMinutes, priceCents, deliveryDays, notes);
+        FotografiaPackage created = repository.insert(companyId, name, category, durationMinutes,
+            priceCents, deliveryDays, notes, suggestible);
         auditLogger.log(companyId, userId, "fotografia_package_created", "fotografia_package",
             created.id(), Map.of("name", created.name()));
         contextCache.invalidate(companyId);
@@ -56,7 +57,7 @@ public class FotografiaPackageService {
     @Transactional
     public FotografiaPackage update(UUID companyId, UUID userId, UUID id, String name, String category,
                                     Integer durationMinutes, Integer priceCents, Integer deliveryDays,
-                                    String notes, Boolean active) {
+                                    String notes, Boolean active, Boolean suggestible) {
         if (durationMinutes != null) {
             requireValidDuration(durationMinutes);
         }
@@ -67,7 +68,7 @@ public class FotografiaPackageService {
             requireValidDeliveryDays(deliveryDays);
         }
         FotografiaPackage updated = repository.update(companyId, id, name, category, durationMinutes,
-            priceCents, deliveryDays, notes, active).orElseThrow(PackageNotFoundException::new);
+            priceCents, deliveryDays, notes, active, suggestible).orElseThrow(PackageNotFoundException::new);
         auditLogger.log(companyId, userId, "fotografia_package_updated", "fotografia_package", id, Map.of());
         contextCache.invalidate(companyId);
         return updated;

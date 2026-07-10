@@ -9,6 +9,12 @@ export type UpdateConfigInput = {
   reminderEnabled?: boolean
   autoCompleteEnabled?: boolean
   upsellEnabled?: boolean
+  reactivationEnabled: boolean
+  reactivationDays: number
+  reactivationCouponCode?: string | null
+  postReviewEnabled: boolean
+  reviewLink?: string | null
+  reviewCooldownDays: number
 }
 
 export function getConfig(): Promise<Config> {

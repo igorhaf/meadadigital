@@ -111,6 +111,8 @@ public class PapelariaOrderController {
             return error(400, "Bad Request", "invalid_status");
         } catch (OrderNotFoundException e) {
             return error(404, "Not Found", "order_not_found");
+        } catch (PapelariaOrderService.DepositRequiredException e) {
+            return error(409, "Conflict", "deposit_required");
         } catch (ArtNotApprovedException e) {
             return error(409, "Conflict", "art_not_approved");
         } catch (InvalidStatusTransitionException e) {
@@ -144,6 +146,31 @@ public class PapelariaOrderController {
             return error(404, "Not Found", "order_not_found");
         } catch (InvalidStatusTransitionException e) {
             return error(409, "Conflict", "invalid_status_transition");
+        }
+    }
+
+    // ---- PATCH deposit (onda #1 — sinal manual até o gateway #50) -------------
+
+    public record DepositRequest(Integer depositCents, Boolean depositPaid) {}
+
+    @PatchMapping("/api/papelaria/orders/{id}/deposit")
+    public ResponseEntity<Object> deposit(
+            @RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user,
+            @PathVariable UUID id,
+            @RequestBody DepositRequest req) {
+        UUID companyId;
+        try {
+            companyId = profileGuard.requirePapelaria(user);
+        } catch (WrongProfileException e) {
+            return error(403, "Forbidden", "forbidden_wrong_profile");
+        }
+        try {
+            return ResponseEntity.ok(service.setDeposit(companyId, id, req.depositCents(),
+                Boolean.TRUE.equals(req.depositPaid())));
+        } catch (OrderNotFoundException e) {
+            return error(404, "Not Found", "order_not_found");
+        } catch (PapelariaOrderService.InvalidDepositException e) {
+            return error(400, "Bad Request", "invalid_deposit");
         }
     }
 }

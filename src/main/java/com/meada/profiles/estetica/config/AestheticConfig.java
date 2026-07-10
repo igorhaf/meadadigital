@@ -11,9 +11,17 @@ public record AestheticConfig(
     UUID companyId,
     LocalTime opensAt,
     LocalTime closesAt,
-    int slotMinutes) {
+    int slotMinutes,
+    boolean reminderEnabled,
+    boolean autoCompleteEnabled,
+    boolean autoExpireEnabled,
+    Integer packageValidityDays,
+    boolean renewalEnabled,
+    int renewalDays,
+    int expiryWarningDays) {
 
     public static AestheticConfig defaultFor(UUID companyId) {
-        return new AestheticConfig(companyId, LocalTime.of(9, 0), LocalTime.of(19, 0), 30);
+        return new AestheticConfig(companyId, LocalTime.of(9, 0), LocalTime.of(19, 0), 30,
+            true, true, true, null, false, 30, 7);
     }
 }

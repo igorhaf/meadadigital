@@ -4,10 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useMemo, useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import {
   createStudent,
   deleteStudent,
@@ -44,11 +44,12 @@ export default function EscolaStudentsPage() {
 
   const { data, isPending, isError } = useQuery({
     queryKey: ['escola-students', contactFilter, search, showInactive],
-    queryFn: () => listStudents({
-      contactId: contactFilter || undefined,
-      active: showInactive ? undefined : true,
-      search: search || undefined,
-    }),
+    queryFn: () =>
+      listStudents({
+        contactId: contactFilter || undefined,
+        active: showInactive ? undefined : true,
+        search: search || undefined,
+      }),
   })
 
   // responsáveis: contatos do WhatsApp (Supabase + RLS). Mapa id→nome/telefone.
@@ -79,7 +80,10 @@ export default function EscolaStudentsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['escola-students'] })
-      setModalOpen(false); setEditing(null); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setEditing(null)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'contact_not_found') {
@@ -100,7 +104,12 @@ export default function EscolaStudentsPage() {
     },
   })
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setFormError(null); setModalOpen(true) }
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY)
+    setFormError(null)
+    setModalOpen(true)
+  }
   function openEdit(s: EscolaStudent) {
     setEditing(s)
     setForm({
@@ -110,7 +119,8 @@ export default function EscolaStudentsPage() {
       intendedGrade: s.intendedGrade ?? '',
       notes: s.notes ?? '',
     })
-    setFormError(null); setModalOpen(true)
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const items = data?.items ?? []
@@ -124,17 +134,30 @@ export default function EscolaStudentsPage() {
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <select value={contactFilter} onChange={(e) => setContactFilter(e.target.value)}
-          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs">
+        <select
+          value={contactFilter}
+          onChange={(e) => setContactFilter(e.target.value)}
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"
+        >
           <option value="">Todos os responsáveis</option>
           {(contacts.data ?? []).map((c) => (
-            <option key={c.id} value={c.id}>{c.name ?? c.phoneNumber}</option>
+            <option key={c.id} value={c.id}>
+              {c.name ?? c.phoneNumber}
+            </option>
           ))}
         </select>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Buscar por nome…"
-          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs" />
+        <input
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Buscar por nome…"
+          className="rounded-md border border-border bg-background px-3 py-1.5 text-xs"
+        />
         <label className="ml-auto flex items-center gap-1 text-xs text-muted-foreground">
-          <input type="checkbox" checked={showInactive} onChange={(e) => setShowInactive(e.target.checked)} />
+          <input
+            type="checkbox"
+            checked={showInactive}
+            onChange={(e) => setShowInactive(e.target.checked)}
+          />
           mostrar inativos
         </label>
       </div>
@@ -161,61 +184,114 @@ export default function EscolaStudentsPage() {
                 </p>
               </div>
               <div className="flex shrink-0 items-center gap-3">
-                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(s)}>Editar</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs"
-                  disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(s.id)}>Excluir</Button>
+                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(s)}>
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(s.id)}
+                >
+                  Excluir
+                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar aluno' : 'Novo aluno'} size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar aluno' : 'Novo aluno'}
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
           {!editing && (
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Responsável (contato)</label>
-              <select value={form.contactId} onChange={(e) => setForm((f) => ({ ...f, contactId: e.target.value }))} required
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Responsável (contato)
+              </label>
+              <select
+                value={form.contactId}
+                onChange={(e) => setForm((f) => ({ ...f, contactId: e.target.value }))}
+                required
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 <option value="">Selecione…</option>
                 {(contacts.data ?? []).map((c) => (
-                  <option key={c.id} value={c.id}>{c.name ?? c.phoneNumber}</option>
+                  <option key={c.id} value={c.id}>
+                    {c.name ?? c.phoneNumber}
+                  </option>
                 ))}
               </select>
             </div>
           )}
           {editing && (
             <p className="text-xs text-muted-foreground">
-              Responsável: <strong>{responsibleLabel.get(form.contactId) ?? '—'}</strong> (não editável)
+              Responsável: <strong>{responsibleLabel.get(form.contactId) ?? '—'}</strong> (não
+              editável)
             </p>
           )}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Nome</label>
-              <input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} required
-                maxLength={200} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <input
+                value={form.name}
+                onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
+                required
+                maxLength={200}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Data de nascimento</label>
-              <input type="date" value={form.birthDate} onChange={(e) => setForm((f) => ({ ...f, birthDate: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Data de nascimento
+              </label>
+              <input
+                type="date"
+                value={form.birthDate}
+                onChange={(e) => setForm((f) => ({ ...f, birthDate: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Série pretendida</label>
-            <input value={form.intendedGrade} onChange={(e) => setForm((f) => ({ ...f, intendedGrade: e.target.value }))}
-              maxLength={100} placeholder="Maternal II, Pré I…"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Série pretendida
+            </label>
+            <input
+              value={form.intendedGrade}
+              onChange={(e) => setForm((f) => ({ ...f, intendedGrade: e.target.value }))}
+              maxLength={100}
+              placeholder="Maternal II, Pré I…"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-            <textarea value={form.notes} onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={2} placeholder="administrativo — sem dado sensível"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Observações
+            </label>
+            <textarea
+              value={form.notes}
+              onChange={(e) => setForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              placeholder="administrativo — sem dado sensível"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>

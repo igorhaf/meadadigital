@@ -12,7 +12,9 @@ import { getHealth, type HealthSummary } from '@/lib/api/admin/health'
 function CounterCard({ label, value, danger }: { label: string; value: number; danger?: boolean }) {
   return (
     <Card>
-      <div className={`text-3xl font-semibold tabular-nums ${danger && value > 0 ? 'text-red-600' : ''}`}>
+      <div
+        className={`text-3xl font-semibold tabular-nums ${danger && value > 0 ? 'text-red-600' : ''}`}
+      >
         {value.toLocaleString('pt-BR')}
       </div>
       <div className="mt-1 text-sm text-muted-foreground">{label}</div>
@@ -45,7 +47,10 @@ export default function HealthPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Saúde da plataforma" description="Status do webhook, jobs e erros recentes." />
+      <PageHeader
+        title="Saúde da plataforma"
+        description="Status do webhook, jobs e erros recentes."
+      />
 
       <Card className="flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">

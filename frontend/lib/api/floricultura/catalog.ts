@@ -1,6 +1,6 @@
 import { apiFetch } from '@/lib/api/client'
-import type { CatalogItem, CatalogOption } from '@/profiles/floricultura/floricultura-types'
 import type { FloriculturaCategoryId } from '@/profiles/floricultura/floricultura-categories'
+import type { CatalogItem, CatalogOption } from '@/profiles/floricultura/floricultura-types'
 
 export type CreateCatalogItemInput = {
   name: string
@@ -8,11 +8,17 @@ export type CreateCatalogItemInput = {
   priceCents: number
   category: FloriculturaCategoryId
   available?: boolean
+  suggestible?: boolean
 }
 
-export type UpdateCatalogItemInput = Partial<CreateCatalogItemInput> & { available?: boolean }
+export type UpdateCatalogItemInput = Partial<CreateCatalogItemInput> & {
+  available?: boolean
+  suggestible?: boolean
+}
 
-export function listCatalog(opts: { category?: string; available?: boolean } = {}): Promise<{ items: CatalogItem[] }> {
+export function listCatalog(
+  opts: { category?: string; available?: boolean; suggestible?: boolean } = {},
+): Promise<{ items: CatalogItem[] }> {
   const p = new URLSearchParams()
   if (opts.category) p.set('category', opts.category)
   if (opts.available) p.set('available', 'true')
@@ -25,11 +31,17 @@ export function getCatalogItem(id: string): Promise<CatalogItem> {
 }
 
 export function createCatalogItem(input: CreateCatalogItemInput): Promise<CatalogItem> {
-  return apiFetch<CatalogItem>('/api/floricultura/catalog', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<CatalogItem>('/api/floricultura/catalog', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateCatalogItem(id: string, input: UpdateCatalogItemInput): Promise<CatalogItem> {
-  return apiFetch<CatalogItem>(`/api/floricultura/catalog/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<CatalogItem>(`/api/floricultura/catalog/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleCatalogItem(id: string, available: boolean): Promise<CatalogItem> {
@@ -52,7 +64,10 @@ export type CreateOptionInput = {
   sortOrder?: number
 }
 
-export type UpdateOptionInput = Partial<CreateOptionInput> & { available?: boolean }
+export type UpdateOptionInput = Partial<CreateOptionInput> & {
+  available?: boolean
+  suggestible?: boolean
+}
 
 export function listOptions(itemId: string): Promise<{ items: CatalogOption[] }> {
   return apiFetch<{ items: CatalogOption[] }>(`/api/floricultura/catalog/${itemId}/options`)
@@ -65,14 +80,22 @@ export function createOption(itemId: string, input: CreateOptionInput): Promise<
   })
 }
 
-export function updateOption(itemId: string, optionId: string, input: UpdateOptionInput): Promise<CatalogOption> {
+export function updateOption(
+  itemId: string,
+  optionId: string,
+  input: UpdateOptionInput,
+): Promise<CatalogOption> {
   return apiFetch<CatalogOption>(`/api/floricultura/catalog/${itemId}/options/${optionId}`, {
     method: 'PATCH',
     body: JSON.stringify(input),
   })
 }
 
-export function toggleOption(itemId: string, optionId: string, available: boolean): Promise<CatalogOption> {
+export function toggleOption(
+  itemId: string,
+  optionId: string,
+  available: boolean,
+): Promise<CatalogOption> {
   return apiFetch<CatalogOption>(`/api/floricultura/catalog/${itemId}/options/${optionId}/toggle`, {
     method: 'PATCH',
     body: JSON.stringify({ available }),
@@ -80,5 +103,7 @@ export function toggleOption(itemId: string, optionId: string, available: boolea
 }
 
 export function deleteOption(itemId: string, optionId: string): Promise<void> {
-  return apiFetch<void>(`/api/floricultura/catalog/${itemId}/options/${optionId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/floricultura/catalog/${itemId}/options/${optionId}`, {
+    method: 'DELETE',
+  })
 }

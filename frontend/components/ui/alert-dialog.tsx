@@ -59,7 +59,7 @@ export function AlertDialog({
     <AlertDialogPrimitive.Root open={open} onOpenChange={handleOpenChange}>
       <AlertDialogPrimitive.Portal>
         <AlertDialogPrimitive.Backdrop className="fixed inset-0 z-50 bg-black/40" />
-        <AlertDialogPrimitive.Popup className="fixed left-1/2 top-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xl outline-none">
+        <AlertDialogPrimitive.Popup className="fixed top-1/2 left-1/2 z-50 w-full max-w-md -translate-x-1/2 -translate-y-1/2 rounded-xl border border-border bg-card p-6 text-card-foreground shadow-xl outline-none">
           <AlertDialogPrimitive.Title className="text-base font-semibold">
             {title}
           </AlertDialogPrimitive.Title>
@@ -67,14 +67,13 @@ export function AlertDialog({
             {description}
           </AlertDialogPrimitive.Description>
 
-          <p className="mt-3 text-xs text-muted-foreground">
-            Esta ação é registrada na auditoria.
-          </p>
+          <p className="mt-3 text-xs text-muted-foreground">Esta ação é registrada na auditoria.</p>
 
           {confirmText && (
             <div className="mt-4">
               <label className="mb-1 block text-sm font-medium">
-                Digite <span className="font-mono text-foreground">{confirmText}</span> para confirmar
+                Digite <span className="font-mono text-foreground">{confirmText}</span> para
+                confirmar
               </label>
               <input
                 type="text"

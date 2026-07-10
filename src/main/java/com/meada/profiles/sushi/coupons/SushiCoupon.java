@@ -1,5 +1,7 @@
 package com.meada.profiles.sushi.coupons;
 
+import com.meada.common.coupons.CouponRecord;
+
 import java.time.Instant;
 import java.time.LocalDate;
 import java.util.UUID;
@@ -21,5 +23,5 @@ public record SushiCoupon(
     LocalDate validUntil,
     boolean active,
     Instant createdAt,
-    Instant updatedAt) {
+    Instant updatedAt) implements CouponRecord {
 }

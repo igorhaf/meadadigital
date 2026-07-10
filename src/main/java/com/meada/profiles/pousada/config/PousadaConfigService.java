@@ -34,8 +34,10 @@ public class PousadaConfigService {
 
     @Transactional
     public PousadaConfig update(UUID companyId, UUID userId, LocalTime checkInTime,
-                               LocalTime checkOutTime, String cancellationPolicy) {
-        PousadaConfig saved = repository.upsert(companyId, checkInTime, checkOutTime, cancellationPolicy);
+                                LocalTime checkOutTime, String cancellationPolicy,
+                                boolean reminderEnabled, boolean autoTransitionEnabled) {
+        PousadaConfig saved = repository.upsert(companyId, checkInTime, checkOutTime, cancellationPolicy,
+            reminderEnabled, autoTransitionEnabled);
         auditLogger.log(companyId, userId, "pousada_config_updated", "pousada_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

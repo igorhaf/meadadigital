@@ -20,9 +20,7 @@ import { DEFAULT_PALETTE_ID } from '@/lib/themes/palettes'
 // tem um id válido (inicia em meada-default), então nunca fica vazio na prática.
 const createCompanySchema = z.object({
   name: z.string().min(1, 'Informe o nome'),
-  slug: z
-    .string()
-    .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'slug inválido: minúsculas, números e hífens'),
+  slug: z.string().regex(/^[a-z0-9]+(-[a-z0-9]+)*$/, 'slug inválido: minúsculas, números e hífens'),
   paletteId: z.string().min(1, 'Selecione uma paleta'),
 })
 

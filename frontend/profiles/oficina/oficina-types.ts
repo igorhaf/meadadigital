@@ -32,6 +32,8 @@ export type OficinaConfig = {
   companyId: string
   opensAt: string
   closesAt: string
+  returnReminderEnabled: boolean
+  returnReminderDays: number
 }
 
 /** Tipo de item da OS. */
@@ -91,10 +93,26 @@ export function formatPrice(cents: number | null | undefined): string {
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 
 export function formatDate(iso: string): string {
   return new Date(iso).toLocaleDateString('pt-BR')
+}
+
+/** Item do catálogo de peças/serviços tabelados (onda Oficina 1, backlog #1 — espelha OficinaCatalogItem). */
+export type OficinaCatalogItem = {
+  id: string
+  companyId: string
+  name: string
+  category: string | null
+  unitPriceCents: number
+  active: boolean
+  notes: string | null
+  createdAt: string
+  updatedAt: string
 }

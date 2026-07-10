@@ -9,15 +9,16 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
+import { listOrders, updateDeposit, updateOrderStatus } from '@/lib/api/padaria/orders'
 import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
-import { listOrders, updateOrderStatus } from '@/lib/api/padaria/orders'
 import { fulfillmentLabel } from '@/profiles/padaria/padaria-fulfillment'
 import { periodLabel } from '@/profiles/padaria/padaria-period'
 import {
-  KANBAN_COLUMNS,
-  STATUS_LABEL,
   formatBrl,
+  KANBAN_COLUMNS,
   nextStatus,
+  STATUS_LABEL,
   type Order,
   type OrderItem,
   type OrderStatus,
@@ -48,6 +49,7 @@ function scheduleLine(order: Order): string | null {
 function OrderCard({
   order,
   onAccept,
+  onDeposit,
   onReject,
   onAdvance,
   onCancel,
@@ -56,6 +58,7 @@ function OrderCard({
 }: {
   order: Order
   onAccept: (o: Order) => void
+  onDeposit: (o: Order) => void
   onReject: (o: Order) => void
   onAdvance: (o: Order) => void
   onCancel: (o: Order) => void
@@ -70,57 +73,96 @@ function OrderCard({
       {...dragProps}
       className="data-[dragging=true]:opacity-50 [&[draggable=true]]:cursor-grab active:[&[draggable=true]]:cursor-grabbing"
     >
-    <Card className="space-y-2 p-3">
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
-        <span className="text-xs text-muted-foreground">
-          {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
-        <Badge variant={order.fulfillment === 'entrega' ? 'info' : 'muted'}>
-          {fulfillmentLabel(order.fulfillment)}
-        </Badge>
-      </div>
-      <ul className="space-y-0.5 text-xs text-muted-foreground">
-        {order.items.map((it) => (
-          <li key={it.id} className="line-clamp-2">
-            {itemLine(it)}
-            {it.madeToOrder && <span className="ml-1 text-[10px] uppercase text-amber-600">· encomenda</span>}
-            {it.cakeMessage && <span className="block italic">Placa: “{it.cakeMessage}”</span>}
-          </li>
-        ))}
-      </ul>
-      {schedule && <p className="text-xs font-medium text-muted-foreground">📅 {schedule}</p>}
-      {order.fulfillment === 'entrega' && order.deliveryAddress && (
-        <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
-      )}
-      <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
-      <div className="flex gap-1 pt-1">
-        {awaiting ? (
-          <>
-            <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAccept(order)}>
-              Aceitar
-            </Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onReject(order)}>
-              Recusar
-            </Button>
-          </>
-        ) : (
-          <>
-            {next && (
-              <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAdvance(order)}>
-                Avançar → {STATUS_LABEL[next]}
-              </Button>
-            )}
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onCancel(order)}>
-              Cancelar
-            </Button>
-          </>
+      <Card className="space-y-2 p-3">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
+          <span className="text-xs text-muted-foreground">
+            {new Date(order.createdAt).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
+          <Badge variant={order.fulfillment === 'entrega' ? 'info' : 'muted'}>
+            {fulfillmentLabel(order.fulfillment)}
+          </Badge>
+        </div>
+        <ul className="space-y-0.5 text-xs text-muted-foreground">
+          {order.items.map((it) => (
+            <li key={it.id} className="line-clamp-2">
+              {itemLine(it)}
+              {it.madeToOrder && (
+                <span className="ml-1 text-[10px] text-amber-600 uppercase">· encomenda</span>
+              )}
+              {it.cakeMessage && <span className="block italic">Placa: “{it.cakeMessage}”</span>}
+            </li>
+          ))}
+        </ul>
+        {schedule && <p className="text-xs font-medium text-muted-foreground">📅 {schedule}</p>}
+        {order.fulfillment === 'entrega' && order.deliveryAddress && (
+          <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
         )}
-      </div>
-    </Card>
+        {order.depositCents != null && order.depositCents > 0 && (
+          <p className="text-xs">
+            <Badge variant={order.depositPaid ? 'success' : 'warning'}>
+              {order.depositPaid ? 'Sinal recebido' : 'Sinal pendente'}
+            </Badge>
+            <span className="ml-1 text-muted-foreground">{formatBrl(order.depositCents)}</span>
+          </p>
+        )}
+        <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
+        <div className="flex gap-1 pt-1">
+          {awaiting ? (
+            <>
+              <Button
+                className="h-7 flex-1 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onAccept(order)}
+              >
+                Aceitar
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onReject(order)}
+              >
+                Recusar
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onDeposit(order)}
+              >
+                Sinal
+              </Button>
+            </>
+          ) : (
+            <>
+              {next && (
+                <Button
+                  className="h-7 flex-1 px-2 text-xs"
+                  disabled={busy}
+                  onClick={() => onAdvance(order)}
+                >
+                  Avançar → {STATUS_LABEL[next]}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onCancel(order)}
+              >
+                Cancelar
+              </Button>
+            </>
+          )}
+        </div>
+      </Card>
     </div>
   )
 }
@@ -153,6 +195,28 @@ export default function PadariaOrdersPage() {
     enabled: tab === 'historico',
   })
 
+  const [depositTarget, setDepositTarget] = useState<Order | null>(null)
+  const [depositValue, setDepositValue] = useState('')
+  const [depositPaid, setDepositPaid] = useState(false)
+  const [depositError, setDepositError] = useState<string | null>(null)
+
+  const depositMutation = useMutation({
+    mutationFn: async (order: Order) => {
+      const cents = depositValue === '' ? null : Math.round(Number(depositValue) * 100)
+      return updateDeposit(order.id, { depositCents: cents, depositPaid })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['padaria-orders'] })
+      setDepositTarget(null)
+      setDepositError(null)
+    },
+    onError: (e) => {
+      if (e instanceof ApiError && e.reason === 'invalid_deposit')
+        setDepositError('Para marcar como recebido, informe um valor de sinal maior que zero.')
+      else setDepositError('Erro ao salvar o sinal.')
+    },
+  })
+
   const statusMutation = useMutation({
     mutationFn: ({ id, status, reason }: { id: string; status: OrderStatus; reason?: string }) =>
       updateOrderStatus(id, status, reason),
@@ -168,7 +232,7 @@ export default function PadariaOrdersPage() {
     if (next) statusMutation.mutate({ id: o.id, status: next })
   }
 
-  const busy = statusMutation.isPending
+  const busy = statusMutation.isPending || depositMutation.isPending
 
   const allActiveForDnd = active.data?.items ?? []
 
@@ -209,13 +273,22 @@ export default function PadariaOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pedidos" description="Aceite ou recuse novos pedidos e acompanhe o preparo, a retirada e a entrega." />
+      <PageHeader
+        title="Pedidos"
+        description="Aceite ou recuse novos pedidos e acompanhe o preparo, a retirada e a entrega."
+      />
 
       <div className="flex gap-2">
-        <Button variant={tab === 'andamento' ? 'default' : 'outline'} onClick={() => setTab('andamento')}>
+        <Button
+          variant={tab === 'andamento' ? 'default' : 'outline'}
+          onClick={() => setTab('andamento')}
+        >
           Em andamento
         </Button>
-        <Button variant={tab === 'historico' ? 'default' : 'outline'} onClick={() => setTab('historico')}>
+        <Button
+          variant={tab === 'historico' ? 'default' : 'outline'}
+          onClick={() => setTab('historico')}
+        >
           Histórico
         </Button>
       </div>
@@ -247,8 +320,19 @@ export default function PadariaOrdersPage() {
                           order={o}
                           busy={busy}
                           dragProps={dnd.cardProps(o.id)}
+                          onDeposit={(ord) => {
+                            setDepositTarget(ord)
+                            setDepositValue(
+                              ord.depositCents != null ? String(ord.depositCents / 100) : '',
+                            )
+                            setDepositPaid(ord.depositPaid)
+                            setDepositError(null)
+                          }}
                           onAccept={accept}
-                          onReject={(ord) => { setRejectReason(''); setRejectTarget(ord) }}
+                          onReject={(ord) => {
+                            setRejectReason('')
+                            setRejectTarget(ord)
+                          }}
                           onAdvance={advance}
                           onCancel={setCancelTarget}
                         />
@@ -269,13 +353,21 @@ export default function PadariaOrdersPage() {
               {historyItems.map((o) => (
                 <div key={o.id} className="flex flex-col gap-1 px-4 py-3 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
-                    <span className="min-w-0 flex-1 truncate">{o.contactName ?? 'Cliente'} · {itemsSummary(o)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      #{o.id.slice(0, 8)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {o.contactName ?? 'Cliente'} · {itemsSummary(o)}
+                    </span>
                     <Badge variant={o.fulfillment === 'entrega' ? 'info' : 'muted'}>
                       {fulfillmentLabel(o.fulfillment)}
                     </Badge>
                     <span className="tabular-nums">{formatBrl(o.totalCents)}</span>
-                    <Badge variant={o.status === 'retirado' || o.status === 'entregue' ? 'success' : 'danger'}>
+                    <Badge
+                      variant={
+                        o.status === 'retirado' || o.status === 'entregue' ? 'success' : 'danger'
+                      }
+                    >
                       {STATUS_LABEL[o.status]}
                     </Badge>
                   </div>
@@ -305,19 +397,76 @@ export default function PadariaOrdersPage() {
         }}
       />
 
+      {/* Sinal/entrada (onda #1 — registro manual até o gateway #50). */}
+      <Modal
+        open={depositTarget !== null}
+        onClose={() => setDepositTarget(null)}
+        title="Sinal / entrada da encomenda"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Com sinal registrado e não recebido, o ACEITE da encomenda fica bloqueado até a
+            confirmação (Pix/dinheiro conferido fora do app, por enquanto).
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="w-32">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Valor (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={depositValue}
+                onChange={(e) => setDepositValue(e.target.value)}
+                placeholder="0,00"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <label className="flex h-9 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={depositPaid}
+                onChange={(e) => setDepositPaid(e.target.checked)}
+              />
+              Recebido
+            </label>
+          </div>
+          {depositError && <p className="text-sm text-destructive">{depositError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDepositTarget(null)}>
+              Voltar
+            </Button>
+            <Button
+              disabled={depositMutation.isPending}
+              onClick={() => depositTarget && depositMutation.mutate(depositTarget)}
+            >
+              {depositMutation.isPending ? 'Salvando…' : 'Salvar sinal'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Recusar (gate de aceite): Modal com motivo OPCIONAL (AlertDialog não tem campo de texto livre). */}
       <Modal
         open={rejectTarget !== null}
-        onClose={() => { setRejectTarget(null); setRejectReason('') }}
+        onClose={() => {
+          setRejectTarget(null)
+          setRejectReason('')
+        }}
         title="Recusar pedido?"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao cliente.
+            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao
+            cliente.
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Motivo (opcional)</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Motivo (opcional)
+            </label>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
@@ -328,10 +477,21 @@ export default function PadariaOrdersPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => { setRejectTarget(null); setRejectReason('') }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRejectTarget(null)
+                setRejectReason('')
+              }}
+            >
               Voltar
             </Button>
-            <Button variant="destructive" disabled={statusMutation.isPending} onClick={confirmReject}>
+            <Button
+              variant="destructive"
+              disabled={statusMutation.isPending}
+              onClick={confirmReject}
+            >
               {statusMutation.isPending ? 'Recusando…' : 'Recusar pedido'}
             </Button>
           </div>

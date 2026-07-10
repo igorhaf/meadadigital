@@ -40,7 +40,9 @@ public class PousadaConfigController {
     public record ConfigRequest(
         @NotBlank String checkInTime,
         @NotBlank String checkOutTime,
-        @Size(max = 2000) String cancellationPolicy) {}
+        @Size(max = 2000) String cancellationPolicy,
+        Boolean reminderEnabled,
+        Boolean autoTransitionEnabled) {}
 
     @GetMapping("/api/pousada/config")
     public ResponseEntity<Object> get(
@@ -74,6 +76,8 @@ public class PousadaConfigController {
         }
         String policy = req.cancellationPolicy() == null || req.cancellationPolicy().isBlank()
             ? null : req.cancellationPolicy();
-        return ResponseEntity.ok(service.update(companyId, user.userId(), checkIn, checkOut, policy));
+        return ResponseEntity.ok(service.update(companyId, user.userId(), checkIn, checkOut, policy,
+            req.reminderEnabled() == null || req.reminderEnabled(),
+            Boolean.TRUE.equals(req.autoTransitionEnabled())));
     }
 }

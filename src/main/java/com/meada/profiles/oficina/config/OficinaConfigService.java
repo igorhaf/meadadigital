@@ -31,11 +31,13 @@ public class OficinaConfigService {
     }
 
     @Transactional
-    public OficinaConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt) {
+    public OficinaConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
+                                boolean returnReminderEnabled, int returnReminderDays) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        OficinaConfig saved = repository.upsert(companyId, opensAt, closesAt);
+        OficinaConfig saved = repository.upsert(companyId, opensAt, closesAt, returnReminderEnabled,
+            Math.max(30, Math.min(730, returnReminderDays)));
         auditLogger.log(companyId, userId, "os_config_updated", "os_config", companyId, Map.of());
         contextCache.invalidate(companyId);
         return saved;

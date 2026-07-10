@@ -13,7 +13,9 @@ export type CreateClassInput = {
 
 export type UpdateClassInput = Partial<CreateClassInput> & { active?: boolean }
 
-export function listClasses(opts: { onlyActive?: boolean; dayOfWeek?: number } = {}): Promise<{ items: Class[] }> {
+export function listClasses(
+  opts: { onlyActive?: boolean; dayOfWeek?: number } = {},
+): Promise<{ items: Class[] }> {
   const p = new URLSearchParams()
   if (opts.onlyActive) p.set('onlyActive', 'true')
   if (opts.dayOfWeek !== undefined) p.set('dayOfWeek', String(opts.dayOfWeek))
@@ -26,11 +28,17 @@ export function createClass(input: CreateClassInput): Promise<Class> {
 }
 
 export function updateClass(id: string, input: UpdateClassInput): Promise<Class> {
-  return apiFetch<Class>(`/api/academia/classes/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<Class>(`/api/academia/classes/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 export function toggleClass(id: string, active: boolean): Promise<Class> {
-  return apiFetch<Class>(`/api/academia/classes/${id}/toggle`, { method: 'PATCH', body: JSON.stringify({ active }) })
+  return apiFetch<Class>(`/api/academia/classes/${id}/toggle`, {
+    method: 'PATCH',
+    body: JSON.stringify({ active }),
+  })
 }
 
 export function deleteClass(id: string): Promise<void> {

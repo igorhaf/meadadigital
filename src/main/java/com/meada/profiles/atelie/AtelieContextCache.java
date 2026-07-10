@@ -33,14 +33,17 @@ public class AtelieContextCache {
     private final AtelieArtisanRepository artisanRepository;
     private final AtelieProposalRepository proposalRepository;
     private final AtelieCatalogRepository catalogRepository;
+    private final org.springframework.jdbc.core.JdbcTemplate jdbcTemplate;
     private final Cache<String, String> cache;
 
     public AtelieContextCache(AtelieArtisanRepository artisanRepository,
                               AtelieProposalRepository proposalRepository,
-                              AtelieCatalogRepository catalogRepository) {
+                              AtelieCatalogRepository catalogRepository,
+                              org.springframework.jdbc.core.JdbcTemplate jdbcTemplate) {
         this.artisanRepository = artisanRepository;
         this.proposalRepository = proposalRepository;
         this.catalogRepository = catalogRepository;
+        this.jdbcTemplate = jdbcTemplate;
         this.cache = Caffeine.newBuilder()
             .expireAfterWrite(Duration.ofSeconds(20))
             .maximumSize(1000)
@@ -134,6 +137,37 @@ public class AtelieContextCache {
         } else {
             sb.append("CLIENTE NÃO IDENTIFICADO pelo telefone. Peça os dados do projeto (tipo: costura sob "
                 + "medida, arte ou design; ocasião; o que ele imagina) para abrir a proposta.\n\n");
+        }
+
+        // Onda 3 (backlog #6): provas PENDENTES do contato — a IA confirma presença via tag.
+        if (contactId != null) {
+            record Prova(java.util.UUID id, String title, java.sql.Date dueDate, boolean confirmed) {}
+            List<Prova> provas = jdbcTemplate.query(
+                "select f.id, f.title, f.due_date, "
+                    + "(f.confirmed_at is not null and f.confirmed_due_date = f.due_date) as confirmed "
+                    + "from atelie_fittings f join atelie_proposals p on p.id = f.proposal_id "
+                    + "where p.company_id = ? and p.contact_id = ? and f.status = 'pendente' "
+                    + "and f.due_date is not null and f.due_date >= current_date "
+                    + "order by f.due_date limit 5",
+                (rs, rn) -> new Prova((java.util.UUID) rs.getObject("id"), rs.getString("title"),
+                    rs.getDate("due_date"), rs.getBoolean("confirmed")),
+                companyId, contactId);
+            if (!provas.isEmpty()) {
+                java.time.format.DateTimeFormatter fmt =
+                    java.time.format.DateTimeFormatter.ofPattern("dd/MM/yyyy");
+                sb.append("PROVAS/AJUSTES DO CLIENTE (use o fitting_id EXATO):\n");
+                for (Prova pr : provas) {
+                    sb.append("- ").append(pr.id()).append(" · ").append(pr.title())
+                        .append(" em ").append(pr.dueDate().toLocalDate().format(fmt))
+                        .append(pr.confirmed() ? " (presença JÁ confirmada)" : "")
+                        .append("\n");
+                }
+                sb.append("Quando o cliente CONFIRMAR presença numa prova (em resposta ao lembrete), "
+                    + "termine com a tag (linha própria, sem markdown): "
+                    + "<confirmacao_prova>{\"fitting_id\":\"UUID_DA_PROVA\"}</confirmacao_prova> — "
+                    + "se ele pedir pra REMARCAR, apenas avise que a equipe entra em contato pra "
+                    + "combinar a nova data (remarcação é com a equipe).\n\n");
+            }
         }
 
         // --- INSTRUÇÕES + TAGS ---

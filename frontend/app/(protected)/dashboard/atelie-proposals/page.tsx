@@ -1,10 +1,9 @@
 'use client'
 
 import { keepPreviousData, useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useEffect, useState } from 'react'
+import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { AlertDialog } from '@/components/ui/alert-dialog'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
@@ -32,6 +31,13 @@ import {
   updateDeposit,
   updateProposalStatus,
 } from '@/lib/api/atelie/proposals'
+import { ApiError } from '@/lib/api/client'
+import { useOnSync } from '@/lib/use-synced-form'
+import {
+  ATELIE_PROJECT_TYPES,
+  typeLabel,
+  type AtelieProjectTypeId,
+} from '@/profiles/atelie/atelie-project-type'
 import {
   ALLOWED_NEXT,
   ATELIE_PROPOSAL_STATUSES,
@@ -39,11 +45,6 @@ import {
   statusLabel,
   type AtelieProposalStatusId,
 } from '@/profiles/atelie/atelie-proposal-status'
-import {
-  ATELIE_PROJECT_TYPES,
-  typeLabel,
-  type AtelieProjectTypeId,
-} from '@/profiles/atelie/atelie-project-type'
 import {
   formatBrl,
   formatDate,
@@ -54,11 +55,15 @@ import {
 
 function StatusBadge({ status }: { status: AtelieProposalStatusId }) {
   const variant =
-    status === 'aprovada' || status === 'fechada' ? 'success'
-    : status === 'realizada' ? 'info'
-    : status === 'orcada' ? 'warning'
-    : status === 'recusada' || status === 'cancelada' ? 'muted'
-    : 'default'
+    status === 'aprovada' || status === 'fechada'
+      ? 'success'
+      : status === 'realizada'
+        ? 'info'
+        : status === 'orcada'
+          ? 'warning'
+          : status === 'recusada' || status === 'cancelada'
+            ? 'muted'
+            : 'default'
   return <Badge variant={variant}>{statusLabel(status)}</Badge>
 }
 
@@ -67,11 +72,22 @@ function TypeBadge({ type }: { type: AtelieProjectTypeId }) {
 }
 
 type OpenForm = {
-  customerName: string; artisanId: string; projectType: AtelieProjectTypeId
-  occasion: string; estimatedDate: string; briefing: string; notes: string
+  customerName: string
+  artisanId: string
+  projectType: AtelieProjectTypeId
+  occasion: string
+  estimatedDate: string
+  briefing: string
+  notes: string
 }
 const EMPTY_OPEN: OpenForm = {
-  customerName: '', artisanId: '', projectType: 'costura', occasion: '', estimatedDate: '', briefing: '', notes: '',
+  customerName: '',
+  artisanId: '',
+  projectType: 'costura',
+  occasion: '',
+  estimatedDate: '',
+  briefing: '',
+  notes: '',
 }
 
 type ItemForm = { description: string; quantity: string; price: string }
@@ -122,9 +138,15 @@ export default function AtelieProposalsPage() {
     placeholderData: keepPreviousData,
   })
 
-  const artisans = useQuery({ queryKey: ['atelie-artisans-all'], queryFn: () => listArtisans({ onlyActive: true }) })
+  const artisans = useQuery({
+    queryKey: ['atelie-artisans-all'],
+    queryFn: () => listArtisans({ onlyActive: true }),
+  })
 
-  const catalog = useQuery({ queryKey: ['atelie-catalog-active'], queryFn: () => listCatalog({ onlyActive: true }) })
+  const catalog = useQuery({
+    queryKey: ['atelie-catalog-active'],
+    queryFn: () => listCatalog({ onlyActive: true }),
+  })
 
   const detail = useQuery({
     queryKey: ['atelie-proposal', detailId],
@@ -140,22 +162,27 @@ export default function AtelieProposalsPage() {
   })
 
   const openMutation = useMutation({
-    mutationFn: () => openProposal({
-      customerName: openForm.customerName || null,
-      artisanId: openForm.artisanId || null,
-      projectType: openForm.projectType,
-      occasion: openForm.occasion || null,
-      estimatedDate: openForm.estimatedDate || null,
-      briefing: openForm.briefing || null,
-      notes: openForm.notes || null,
-    }),
+    mutationFn: () =>
+      openProposal({
+        customerName: openForm.customerName || null,
+        artisanId: openForm.artisanId || null,
+        projectType: openForm.projectType,
+        occasion: openForm.occasion || null,
+        estimatedDate: openForm.estimatedDate || null,
+        briefing: openForm.briefing || null,
+        notes: openForm.notes || null,
+      }),
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['atelie-proposals'] })
-      setOpenModal(false); setOpenForm(EMPTY_OPEN); setOpenError(null)
+      setOpenModal(false)
+      setOpenForm(EMPTY_OPEN)
+      setOpenError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'inactive_artisan') setOpenError('Esse artesão está inativo.')
-      else if (e instanceof ApiError && e.reason === 'invalid_date') setOpenError('Data prevista inválida.')
+      if (e instanceof ApiError && e.reason === 'inactive_artisan')
+        setOpenError('Esse artesão está inativo.')
+      else if (e instanceof ApiError && e.reason === 'invalid_date')
+        setOpenError('Data prevista inválida.')
       else setOpenError('Erro ao abrir a proposta.')
     },
   })
@@ -172,10 +199,12 @@ export default function AtelieProposalsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['atelie-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['atelie-proposals'] })
-      setItemForm(EMPTY_ITEM); setItemError(null)
+      setItemForm(EMPTY_ITEM)
+      setItemError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setItemError('Esta proposta não aceita mais alteração de itens.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setItemError('Esta proposta não aceita mais alteração de itens.')
       else setItemError('Erro ao adicionar o item.')
     },
   })
@@ -202,11 +231,14 @@ export default function AtelieProposalsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['atelie-proposal', detailId] })
-      setFittingForm(EMPTY_FITTING); setFittingError(null)
+      setFittingForm(EMPTY_FITTING)
+      setFittingError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setFittingError('Esta proposta não aceita mais alteração de provas/ajustes.')
-      else if (e instanceof ApiError && e.reason === 'invalid_date') setFittingError('Prazo inválido.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setFittingError('Esta proposta não aceita mais alteração de provas/ajustes.')
+      else if (e instanceof ApiError && e.reason === 'invalid_date')
+        setFittingError('Prazo inválido.')
       else setFittingError('Erro ao adicionar a prova/ajuste.')
     },
   })
@@ -226,8 +258,10 @@ export default function AtelieProposalsPage() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['atelie-proposal', detailId] }),
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setFittingError('Esta proposta não aceita mais alteração de provas/ajustes.')
-      else if (e instanceof ApiError && e.reason === 'invalid_fitting_status') setFittingError('Status de prova/ajuste inválido.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setFittingError('Esta proposta não aceita mais alteração de provas/ajustes.')
+      else if (e instanceof ApiError && e.reason === 'invalid_fitting_status')
+        setFittingError('Status de prova/ajuste inválido.')
       else setFittingError('Erro ao atualizar a prova/ajuste.')
     },
   })
@@ -239,7 +273,8 @@ export default function AtelieProposalsPage() {
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['atelie-proposal', detailId] }),
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setFittingError('Esta proposta não aceita mais reordenação.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setFittingError('Esta proposta não aceita mais reordenação.')
       else setFittingError('Erro ao reordenar.')
     },
   })
@@ -253,11 +288,16 @@ export default function AtelieProposalsPage() {
       qc.invalidateQueries({ queryKey: ['atelie-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['atelie-proposals'] })
       qc.invalidateQueries({ queryKey: ['atelie-coupons'] })
-      setCouponCode(''); setCouponError(null)
+      setCouponCode('')
+      setCouponError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'invalid_coupon') setCouponError('Cupom inválido (inexistente, inativo, vencido, esgotado ou abaixo do orçamento mínimo).')
-      else if (e instanceof ApiError && e.reason === 'proposal_locked') setCouponError('Esta proposta não aceita mais alteração de cupom.')
+      if (e instanceof ApiError && e.reason === 'invalid_coupon')
+        setCouponError(
+          'Cupom inválido (inexistente, inativo, vencido, esgotado ou abaixo do orçamento mínimo).',
+        )
+      else if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setCouponError('Esta proposta não aceita mais alteração de cupom.')
       else setCouponError('Erro ao aplicar o cupom.')
     },
   })
@@ -274,7 +314,8 @@ export default function AtelieProposalsPage() {
       setCouponError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'proposal_locked') setCouponError('Esta proposta não aceita mais alteração de cupom.')
+      if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setCouponError('Esta proposta não aceita mais alteração de cupom.')
       else setCouponError('Erro ao remover o cupom.')
     },
   })
@@ -289,10 +330,12 @@ export default function AtelieProposalsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['atelie-measurements', detailContactId] })
-      setMeasurementForm(EMPTY_MEASUREMENT); setMeasurementError(null)
+      setMeasurementForm(EMPTY_MEASUREMENT)
+      setMeasurementError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'invalid_measurement') setMeasurementError('Medida inválida (etiqueta e valor até 100 caracteres).')
+      if (e instanceof ApiError && e.reason === 'invalid_measurement')
+        setMeasurementError('Medida inválida (etiqueta e valor até 100 caracteres).')
       else setMeasurementError('Erro ao salvar a medida.')
     },
   })
@@ -314,8 +357,10 @@ export default function AtelieProposalsPage() {
       setDepositError(null)
     },
     onError: (e) => {
-      if (e instanceof ApiError && e.reason === 'invalid_deposit') setDepositError('Para marcar como recebido, informe um valor de sinal maior que zero.')
-      else if (e instanceof ApiError && e.reason === 'proposal_locked') setDepositError('Esta proposta não aceita mais alteração do sinal.')
+      if (e instanceof ApiError && e.reason === 'invalid_deposit')
+        setDepositError('Para marcar como recebido, informe um valor de sinal maior que zero.')
+      else if (e instanceof ApiError && e.reason === 'proposal_locked')
+        setDepositError('Esta proposta não aceita mais alteração do sinal.')
       else setDepositError('Erro ao salvar o sinal.')
     },
   })
@@ -328,13 +373,19 @@ export default function AtelieProposalsPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['atelie-proposal', detailId] })
       qc.invalidateQueries({ queryKey: ['atelie-proposals'] })
-      setStatusTarget(null); setStatusError(null)
+      setStatusTarget(null)
+      setStatusError(null)
     },
     onError: (e) => {
       setStatusTarget(null)
-      if (e instanceof ApiError && e.reason === 'empty_budget') setStatusError('Adicione ao menos um item de orçamento antes de orçar.')
-      else if (e instanceof ApiError && e.reason === 'deposit_required') setStatusError('Esta proposta tem sinal registrado e ainda não recebido — marque o sinal como recebido antes de fechar.')
-      else if (e instanceof ApiError && e.reason === 'invalid_status_transition') setStatusError('Transição de status inválida.')
+      if (e instanceof ApiError && e.reason === 'empty_budget')
+        setStatusError('Adicione ao menos um item de orçamento antes de orçar.')
+      else if (e instanceof ApiError && e.reason === 'deposit_required')
+        setStatusError(
+          'Esta proposta tem sinal registrado e ainda não recebido — marque o sinal como recebido antes de fechar.',
+        )
+      else if (e instanceof ApiError && e.reason === 'invalid_status_transition')
+        setStatusError('Transição de status inválida.')
       else setStatusError('Erro ao mudar o status.')
     },
   })
@@ -346,16 +397,18 @@ export default function AtelieProposalsPage() {
   const locked = p ? ITEMS_LOCKED[p.status] : true
 
   // Sincroniza o form do sinal ao abrir o detalhe de OUTRA proposta (não a cada refetch — preserva digitação).
-  const pId = p?.id
-  useEffect(() => {
-    if (p) {
-      setDepositForm({ value: p.depositCents != null ? String(p.depositCents / 100) : '', paid: p.depositPaid })
-      setDepositError(null)
-      setCouponCode(''); setCouponError(null)
-      setMeasurementForm(EMPTY_MEASUREMENT); setMeasurementError(null)
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pId])
+  useOnSync(p?.id, () => {
+    if (!p) return
+    setDepositForm({
+      value: p.depositCents != null ? String(p.depositCents / 100) : '',
+      paid: p.depositPaid,
+    })
+    setDepositError(null)
+    setCouponCode('')
+    setCouponError(null)
+    setMeasurementForm(EMPTY_MEASUREMENT)
+    setMeasurementError(null)
+  })
 
   /** Move a prova/ajuste no índice `idx` para `idx+delta` e persiste a nova ordem. */
   function moveFitting(fittings: AtelieFitting[], idx: number, delta: number) {
@@ -373,17 +426,38 @@ export default function AtelieProposalsPage() {
       <PageHeader
         title="Propostas"
         description="A IA abre a proposta pelo WhatsApp; a equipe orça e planeja as provas/ajustes aqui, e o cliente aprova pela conversa."
-        actions={<Button onClick={() => { setOpenForm(EMPTY_OPEN); setOpenError(null); setOpenModal(true) }}>Nova proposta</Button>}
+        actions={
+          <Button
+            onClick={() => {
+              setOpenForm(EMPTY_OPEN)
+              setOpenError(null)
+              setOpenModal(true)
+            }}
+          >
+            Nova proposta
+          </Button>
+        }
       />
 
       <div className="flex flex-wrap items-center gap-2">
-        <button onClick={() => { setStatus(''); setPage(0) }}
-          className={`rounded-full border px-3 py-1 text-xs ${status === '' ? 'border-primary bg-primary/10' : 'border-border'}`}>
+        <button
+          onClick={() => {
+            setStatus('')
+            setPage(0)
+          }}
+          className={`rounded-full border px-3 py-1 text-xs ${status === '' ? 'border-primary bg-primary/10' : 'border-border'}`}
+        >
           Todas
         </button>
         {ATELIE_PROPOSAL_STATUSES.map((s) => (
-          <button key={s.id} onClick={() => { setStatus(s.id); setPage(0) }}
-            className={`rounded-full border px-3 py-1 text-xs ${status === s.id ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={s.id}
+            onClick={() => {
+              setStatus(s.id)
+              setPage(0)
+            }}
+            className={`rounded-full border px-3 py-1 text-xs ${status === s.id ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {s.label}
           </button>
         ))}
@@ -398,8 +472,16 @@ export default function AtelieProposalsPage() {
       ) : (
         <div className="divide-y divide-border rounded-lg border border-border">
           {items.map((prop: AtelieProposal) => (
-            <button key={prop.id} onClick={() => { setDetailId(prop.id); setItemError(null); setFittingError(null); setStatusError(null) }}
-              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40">
+            <button
+              key={prop.id}
+              onClick={() => {
+                setDetailId(prop.id)
+                setItemError(null)
+                setFittingError(null)
+                setStatusError(null)
+              }}
+              className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40"
+            >
               <div className="min-w-0">
                 <div className="flex items-center gap-2">
                   <span className="font-medium">{prop.customerName}</span>
@@ -412,13 +494,17 @@ export default function AtelieProposalsPage() {
                     <Badge variant="warning">Sinal pendente</Badge>
                   )}
                 </div>
-                <p className={`truncate text-xs ${isDeliveryOverdue(prop.estimatedDate, prop.status) ? 'text-red-600' : 'text-muted-foreground'}`}>
+                <p
+                  className={`truncate text-xs ${isDeliveryOverdue(prop.estimatedDate, prop.status) ? 'text-red-600' : 'text-muted-foreground'}`}
+                >
                   {prop.estimatedDate ? formatDate(prop.estimatedDate) : 'prazo a definir'}
                   {prop.occasion ? ` · ${prop.occasion}` : ''}
                 </p>
               </div>
               <div className="shrink-0 text-right">
-                <div className="text-sm font-medium">{formatBrl(prop.totalCents - prop.discountCents)}</div>
+                <div className="text-sm font-medium">
+                  {formatBrl(prop.totalCents - prop.discountCents)}
+                </div>
                 <div className="text-xs text-muted-foreground">{formatDate(prop.openedAt)}</div>
               </div>
             </button>
@@ -428,72 +514,141 @@ export default function AtelieProposalsPage() {
 
       {totalPages > 1 && (
         <div className="flex items-center justify-between text-xs text-muted-foreground">
-          <span>Página {page + 1} de {totalPages} · {total} propostas</span>
+          <span>
+            Página {page + 1} de {totalPages} · {total} propostas
+          </span>
           <div className="flex gap-1">
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={page === 0}
-              onClick={() => setPage((pg) => Math.max(0, pg - 1))}>←</Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={page + 1 >= totalPages}
-              onClick={() => setPage((pg) => pg + 1)}>→</Button>
+            <Button
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              disabled={page === 0}
+              onClick={() => setPage((pg) => Math.max(0, pg - 1))}
+            >
+              ←
+            </Button>
+            <Button
+              variant="outline"
+              className="h-7 px-2 text-xs"
+              disabled={page + 1 >= totalPages}
+              onClick={() => setPage((pg) => pg + 1)}
+            >
+              →
+            </Button>
           </div>
         </div>
       )}
 
       {/* Modal: nova proposta */}
-      <Modal open={openModal} onClose={() => setOpenModal(false)} title="Nova proposta de ateliê" size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); openMutation.mutate() }}>
+      <Modal
+        open={openModal}
+        onClose={() => setOpenModal(false)}
+        title="Nova proposta de ateliê"
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            openMutation.mutate()
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Cliente</label>
-              <input value={openForm.customerName} onChange={(e) => setOpenForm((f) => ({ ...f, customerName: e.target.value }))} required
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Cliente
+              </label>
+              <input
+                value={openForm.customerName}
+                onChange={(e) => setOpenForm((f) => ({ ...f, customerName: e.target.value }))}
+                required
                 placeholder="Nome do cliente"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Artesão (opcional)</label>
-              <select value={openForm.artisanId} onChange={(e) => setOpenForm((f) => ({ ...f, artisanId: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Artesão (opcional)
+              </label>
+              <select
+                value={openForm.artisanId}
+                onChange={(e) => setOpenForm((f) => ({ ...f, artisanId: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 <option value="">Sem atribuição</option>
                 {(artisans.data?.items ?? []).map((ar) => (
-                  <option key={ar.id} value={ar.id}>{ar.name}</option>
+                  <option key={ar.id} value={ar.id}>
+                    {ar.name}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipo de projeto</label>
-              <select value={openForm.projectType}
-                onChange={(e) => setOpenForm((f) => ({ ...f, projectType: e.target.value as AtelieProjectTypeId }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Tipo de projeto
+              </label>
+              <select
+                value={openForm.projectType}
+                onChange={(e) =>
+                  setOpenForm((f) => ({ ...f, projectType: e.target.value as AtelieProjectTypeId }))
+                }
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 {ATELIE_PROJECT_TYPES.map((t) => (
-                  <option key={t.id} value={t.id}>{t.label}</option>
+                  <option key={t.id} value={t.id}>
+                    {t.label}
+                  </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Ocasião</label>
-              <input value={openForm.occasion} onChange={(e) => setOpenForm((f) => ({ ...f, occasion: e.target.value }))}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Ocasião
+              </label>
+              <input
+                value={openForm.occasion}
+                onChange={(e) => setOpenForm((f) => ({ ...f, occasion: e.target.value }))}
                 placeholder="casamento, formatura, presente…"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Prazo previsto</label>
-              <input type="date" value={openForm.estimatedDate} onChange={(e) => setOpenForm((f) => ({ ...f, estimatedDate: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Prazo previsto
+              </label>
+              <input
+                type="date"
+                value={openForm.estimatedDate}
+                onChange={(e) => setOpenForm((f) => ({ ...f, estimatedDate: e.target.value }))}
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div>
             <label className="mb-1 block text-xs font-medium text-muted-foreground">Briefing</label>
-            <textarea value={openForm.briefing} onChange={(e) => setOpenForm((f) => ({ ...f, briefing: e.target.value }))}
-              rows={2} placeholder="O que o cliente imagina para a peça/projeto"
-              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <textarea
+              value={openForm.briefing}
+              onChange={(e) => setOpenForm((f) => ({ ...f, briefing: e.target.value }))}
+              rows={2}
+              placeholder="O que o cliente imagina para a peça/projeto"
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Observações</label>
-            <textarea value={openForm.notes} onChange={(e) => setOpenForm((f) => ({ ...f, notes: e.target.value }))}
-              rows={2} className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Observações
+            </label>
+            <textarea
+              value={openForm.notes}
+              onChange={(e) => setOpenForm((f) => ({ ...f, notes: e.target.value }))}
+              rows={2}
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+            />
           </div>
           {openError && <p className="text-sm text-destructive">{openError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setOpenModal(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={openMutation.isPending}>
               {openMutation.isPending ? 'Abrindo…' : 'Abrir proposta'}
             </Button>
@@ -502,8 +657,17 @@ export default function AtelieProposalsPage() {
       </Modal>
 
       {/* Modal: detalhe + orçamento + provas/ajustes + status */}
-      <Modal open={detailId !== null} onClose={() => { setDetailId(null); setStatusError(null); setItemError(null); setFittingError(null) }}
-        title="Proposta de ateliê" size="lg">
+      <Modal
+        open={detailId !== null}
+        onClose={() => {
+          setDetailId(null)
+          setStatusError(null)
+          setItemError(null)
+          setFittingError(null)
+        }}
+        title="Proposta de ateliê"
+        size="lg"
+      >
         {detail.isPending || !p ? (
           <p className="text-sm text-muted-foreground">Carregando…</p>
         ) : (
@@ -515,18 +679,41 @@ export default function AtelieProposalsPage() {
             </div>
             <Card>
               <dl className="grid grid-cols-2 gap-3 text-sm">
-                <div><dt className="text-xs text-muted-foreground">Telefone</dt><dd>{p.customerPhone ?? '—'}</dd></div>
-                <div><dt className="text-xs text-muted-foreground">Ocasião</dt><dd>{p.occasion ?? '—'}</dd></div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Telefone</dt>
+                  <dd>{p.customerPhone ?? '—'}</dd>
+                </div>
+                <div>
+                  <dt className="text-xs text-muted-foreground">Ocasião</dt>
+                  <dd>{p.occasion ?? '—'}</dd>
+                </div>
                 <div>
                   <dt className="text-xs text-muted-foreground">Prazo previsto</dt>
-                  <dd className={isDeliveryOverdue(p.estimatedDate, p.status) ? 'font-medium text-red-600' : ''}>
+                  <dd
+                    className={
+                      isDeliveryOverdue(p.estimatedDate, p.status) ? 'font-medium text-red-600' : ''
+                    }
+                  >
                     {p.estimatedDate ? formatDate(p.estimatedDate) : '—'}
                     {isDeliveryOverdue(p.estimatedDate, p.status) && ' · em atraso'}
                   </dd>
                 </div>
-                <div><dt className="text-xs text-muted-foreground">Origem</dt><dd>{p.conversationId ? 'WhatsApp' : 'Manual'}</dd></div>
-                {p.briefing && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Briefing</dt><dd>{p.briefing}</dd></div>}
-                {p.notes && <div className="col-span-2"><dt className="text-xs text-muted-foreground">Observações</dt><dd>{p.notes}</dd></div>}
+                <div>
+                  <dt className="text-xs text-muted-foreground">Origem</dt>
+                  <dd>{p.conversationId ? 'WhatsApp' : 'Manual'}</dd>
+                </div>
+                {p.briefing && (
+                  <div className="col-span-2">
+                    <dt className="text-xs text-muted-foreground">Briefing</dt>
+                    <dd>{p.briefing}</dd>
+                  </div>
+                )}
+                {p.notes && (
+                  <div className="col-span-2">
+                    <dt className="text-xs text-muted-foreground">Observações</dt>
+                    <dd>{p.notes}</dd>
+                  </div>
+                )}
               </dl>
             </Card>
 
@@ -535,42 +722,75 @@ export default function AtelieProposalsPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <h3 className="text-sm font-semibold">Medidas do cliente</h3>
-                  <span className="text-xs text-muted-foreground">valem para todas as peças deste cliente</span>
+                  <span className="text-xs text-muted-foreground">
+                    valem para todas as peças deste cliente
+                  </span>
                 </div>
                 {(measurements.data?.items ?? []).length === 0 ? (
                   <p className="text-xs text-muted-foreground">Nenhuma medida registrada ainda.</p>
                 ) : (
                   <div className="flex flex-wrap gap-2">
                     {(measurements.data?.items ?? []).map((m) => (
-                      <span key={m.id} className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs">
+                      <span
+                        key={m.id}
+                        className="inline-flex items-center gap-1 rounded-full border border-border px-2 py-0.5 text-xs"
+                      >
                         <span className="text-muted-foreground">{m.label}:</span> {m.value}
-                        <button type="button" className="ml-1 text-muted-foreground hover:text-destructive"
+                        <button
+                          type="button"
+                          className="ml-1 text-muted-foreground hover:text-destructive"
                           disabled={deleteMeasurementMutation.isPending}
-                          onClick={() => deleteMeasurementMutation.mutate(m.id)}>×</button>
+                          onClick={() => deleteMeasurementMutation.mutate(m.id)}
+                        >
+                          ×
+                        </button>
                       </span>
                     ))}
                   </div>
                 )}
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); upsertMeasurementMutation.mutate() }}>
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    upsertMeasurementMutation.mutate()
+                  }}
+                >
                   <div className="w-36">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Medida</label>
-                    <input value={measurementForm.label} required maxLength={100} placeholder="busto, cintura, manga…"
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Medida
+                    </label>
+                    <input
+                      value={measurementForm.label}
+                      required
+                      maxLength={100}
+                      placeholder="busto, cintura, manga…"
                       onChange={(e) => setMeasurementForm((f) => ({ ...f, label: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-28">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Valor</label>
-                    <input value={measurementForm.value} required maxLength={100} placeholder="92 cm"
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Valor
+                    </label>
+                    <input
+                      value={measurementForm.value}
+                      required
+                      maxLength={100}
+                      placeholder="92 cm"
                       onChange={(e) => setMeasurementForm((f) => ({ ...f, value: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={upsertMeasurementMutation.isPending}>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={upsertMeasurementMutation.isPending}
+                  >
                     Salvar medida
                   </Button>
                   <p className="w-full text-xs text-muted-foreground">
-                    Regravar a mesma medida atualiza o valor. As medidas ficam no cadastro do cliente
-                    (não na proposta) e NÃO vão para a IA.
+                    Regravar a mesma medida atualiza o valor. As medidas ficam no cadastro do
+                    cliente (não na proposta) e NÃO vão para a IA.
                   </p>
                 </form>
                 {measurementError && <p className="text-sm text-destructive">{measurementError}</p>}
@@ -595,7 +815,10 @@ export default function AtelieProposalsPage() {
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {p.items.map((it) => (
-                    <div key={it.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={it.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="min-w-0">
                         <span className="font-medium">{it.description}</span>
                         <span className="ml-2 text-xs text-muted-foreground">
@@ -605,8 +828,12 @@ export default function AtelieProposalsPage() {
                       <div className="flex shrink-0 items-center gap-2">
                         <span>{formatBrl(it.lineTotalCents)}</span>
                         {!locked && (
-                          <Button variant="outline" className="h-6 px-2 text-xs"
-                            disabled={deleteItemMutation.isPending} onClick={() => deleteItemMutation.mutate(it.id)}>
+                          <Button
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
+                            disabled={deleteItemMutation.isPending}
+                            onClick={() => deleteItemMutation.mutate(it.id)}
+                          >
                             Remover
                           </Button>
                         )}
@@ -617,45 +844,90 @@ export default function AtelieProposalsPage() {
               )}
 
               {!locked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addItemMutation.mutate() }}>
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addItemMutation.mutate()
+                  }}
+                >
                   {(catalog.data?.items ?? []).length > 0 && (
                     <div className="w-full">
-                      <label className="mb-1 block text-xs font-medium text-muted-foreground">Do catálogo (autofill, opcional)</label>
-                      <select value="" onChange={(e) => {
-                        const item = (catalog.data?.items ?? []).find((c) => c.id === e.target.value)
-                        if (item) {
-                          setItemForm((f) => ({ ...f, description: item.name, price: String(item.unitPriceCents / 100) }))
-                        }
-                      }} className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Do catálogo (autofill, opcional)
+                      </label>
+                      <select
+                        value=""
+                        onChange={(e) => {
+                          const item = (catalog.data?.items ?? []).find(
+                            (c) => c.id === e.target.value,
+                          )
+                          if (item) {
+                            setItemForm((f) => ({
+                              ...f,
+                              description: item.name,
+                              price: String(item.unitPriceCents / 100),
+                            }))
+                          }
+                        }}
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                      >
                         <option value="">Preencher com um material/técnica cadastrado…</option>
                         {(catalog.data?.items ?? []).map((c) => (
                           <option key={c.id} value={c.id}>
-                            {c.name}{c.category ? ` (${c.category})` : ''} — {formatBrl(c.unitPriceCents)}
+                            {c.name}
+                            {c.category ? ` (${c.category})` : ''} — {formatBrl(c.unitPriceCents)}
                           </option>
                         ))}
                       </select>
                     </div>
                   )}
-                  <div className="flex-1 min-w-[8rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Descrição</label>
-                    <input value={itemForm.description} onChange={(e) => setItemForm((f) => ({ ...f, description: e.target.value }))} required
-                      maxLength={200} placeholder="Tecido, mão de obra, bordado…"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                  <div className="min-w-[8rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Descrição
+                    </label>
+                    <input
+                      value={itemForm.description}
+                      onChange={(e) => setItemForm((f) => ({ ...f, description: e.target.value }))}
+                      required
+                      maxLength={200}
+                      placeholder="Tecido, mão de obra, bordado…"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-16">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Qtd</label>
-                    <input type="number" min="1" value={itemForm.quantity}
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Qtd
+                    </label>
+                    <input
+                      type="number"
+                      min="1"
+                      value={itemForm.quantity}
                       onChange={(e) => setItemForm((f) => ({ ...f, quantity: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-24">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Unit. (R$)</label>
-                    <input type="number" min="0" step="0.01" value={itemForm.price} required
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Unit. (R$)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={itemForm.price}
+                      required
                       onChange={(e) => setItemForm((f) => ({ ...f, price: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addItemMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addItemMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                 </form>
               )}
               {itemError && <p className="text-sm text-destructive">{itemError}</p>}
@@ -664,30 +936,54 @@ export default function AtelieProposalsPage() {
               {p.couponCodeSnapshot ? (
                 <div className="flex items-center justify-between rounded-lg border border-border px-3 py-2 text-sm">
                   <span>
-                    Cupom <span className="font-mono font-medium">{p.couponCodeSnapshot}</span> aplicado
-                    <span className="ml-1 text-xs text-muted-foreground">(−{formatBrl(p.discountCents)})</span>
+                    Cupom <span className="font-mono font-medium">{p.couponCodeSnapshot}</span>{' '}
+                    aplicado
+                    <span className="ml-1 text-xs text-muted-foreground">
+                      (−{formatBrl(p.discountCents)})
+                    </span>
                   </span>
                   {!locked && (
-                    <Button variant="outline" className="h-7 px-2 text-xs"
-                      disabled={removeCouponMutation.isPending} onClick={() => removeCouponMutation.mutate()}>
+                    <Button
+                      variant="outline"
+                      className="h-7 px-2 text-xs"
+                      disabled={removeCouponMutation.isPending}
+                      onClick={() => removeCouponMutation.mutate()}
+                    >
                       Remover cupom
                     </Button>
                   )}
                 </div>
-              ) : !locked && (
-                <form className="flex flex-wrap items-end gap-2"
-                  onSubmit={(e) => { e.preventDefault(); applyCouponMutation.mutate() }}>
-                  <div className="w-44">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Cupom (opcional)</label>
-                    <input value={couponCode} maxLength={40} placeholder="CÓDIGO"
-                      onChange={(e) => setCouponCode(e.target.value)}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm uppercase" />
-                  </div>
-                  <Button type="submit" variant="outline" className="h-8 px-3 text-xs"
-                    disabled={applyCouponMutation.isPending || !couponCode.trim()}>
-                    Aplicar
-                  </Button>
-                </form>
+              ) : (
+                !locked && (
+                  <form
+                    className="flex flex-wrap items-end gap-2"
+                    onSubmit={(e) => {
+                      e.preventDefault()
+                      applyCouponMutation.mutate()
+                    }}
+                  >
+                    <div className="w-44">
+                      <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                        Cupom (opcional)
+                      </label>
+                      <input
+                        value={couponCode}
+                        maxLength={40}
+                        placeholder="CÓDIGO"
+                        onChange={(e) => setCouponCode(e.target.value)}
+                        className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm uppercase"
+                      />
+                    </div>
+                    <Button
+                      type="submit"
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      disabled={applyCouponMutation.isPending || !couponCode.trim()}
+                    >
+                      Aplicar
+                    </Button>
+                  </form>
+                )
               )}
               {couponError && <p className="text-sm text-destructive">{couponError}</p>}
             </div>
@@ -699,34 +995,80 @@ export default function AtelieProposalsPage() {
                 <span className="text-xs text-muted-foreground">não entra no total</span>
               </div>
               {p.fittings.length === 0 ? (
-                <p className="text-xs text-muted-foreground">Nenhuma prova/ajuste planejada ainda.</p>
+                <p className="text-xs text-muted-foreground">
+                  Nenhuma prova/ajuste planejada ainda.
+                </p>
               ) : (
                 <div className="divide-y divide-border rounded-lg border border-border">
                   {p.fittings.map((ft, idx) => (
-                    <div key={ft.id} className="flex items-center justify-between gap-3 px-3 py-2 text-sm">
+                    <div
+                      key={ft.id}
+                      className="flex items-center justify-between gap-3 px-3 py-2 text-sm"
+                    >
                       <div className="flex min-w-0 items-center gap-2">
-                        <input type="checkbox" checked={ft.status === 'realizada'}
+                        <input
+                          type="checkbox"
+                          checked={ft.status === 'realizada'}
                           disabled={locked || transitionFittingMutation.isPending}
-                          onChange={() => { setFittingError(null); transitionFittingMutation.mutate(ft) }} />
+                          onChange={() => {
+                            setFittingError(null)
+                            transitionFittingMutation.mutate(ft)
+                          }}
+                        />
                         <div className="min-w-0">
-                          <span className={`font-medium ${ft.status === 'realizada' ? 'text-muted-foreground line-through' : ''}`}>{ft.title}</span>
-                          {ft.dueDate && <span className="ml-2 text-xs text-muted-foreground">prazo {formatDate(ft.dueDate)}</span>}
-                          {ft.status === 'realizada' && ft.completedAt && (
-                            <span className="ml-2 text-xs text-emerald-600">concluída {formatDate(ft.completedAt)}</span>
+                          <span
+                            className={`font-medium ${ft.status === 'realizada' ? 'text-muted-foreground line-through' : ''}`}
+                          >
+                            {ft.title}
+                          </span>
+                          {ft.dueDate && (
+                            <span className="ml-2 text-xs text-muted-foreground">
+                              prazo {formatDate(ft.dueDate)}
+                            </span>
                           )}
-                          {ft.description && <p className="text-xs text-muted-foreground">{ft.description}</p>}
+                          {ft.status === 'pendente' &&
+                            ft.confirmedAt &&
+                            ft.confirmedDueDate === ft.dueDate && (
+                              <span className="ml-2 text-xs font-medium text-emerald-600">
+                                presença confirmada
+                              </span>
+                            )}
+                          {ft.status === 'realizada' && ft.completedAt && (
+                            <span className="ml-2 text-xs text-emerald-600">
+                              concluída {formatDate(ft.completedAt)}
+                            </span>
+                          )}
+                          {ft.description && (
+                            <p className="text-xs text-muted-foreground">{ft.description}</p>
+                          )}
                         </div>
                       </div>
                       {!locked && (
                         <div className="flex shrink-0 items-center gap-1">
-                          <Button variant="outline" className="h-6 px-2 text-xs"
+                          <Button
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
                             disabled={idx === 0 || reorderFittingMutation.isPending}
-                            onClick={() => moveFitting(p.fittings, idx, -1)}>↑</Button>
-                          <Button variant="outline" className="h-6 px-2 text-xs"
-                            disabled={idx === p.fittings.length - 1 || reorderFittingMutation.isPending}
-                            onClick={() => moveFitting(p.fittings, idx, 1)}>↓</Button>
-                          <Button variant="outline" className="h-6 px-2 text-xs"
-                            disabled={deleteFittingMutation.isPending} onClick={() => deleteFittingMutation.mutate(ft.id)}>
+                            onClick={() => moveFitting(p.fittings, idx, -1)}
+                          >
+                            ↑
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
+                            disabled={
+                              idx === p.fittings.length - 1 || reorderFittingMutation.isPending
+                            }
+                            onClick={() => moveFitting(p.fittings, idx, 1)}
+                          >
+                            ↓
+                          </Button>
+                          <Button
+                            variant="outline"
+                            className="h-6 px-2 text-xs"
+                            disabled={deleteFittingMutation.isPending}
+                            onClick={() => deleteFittingMutation.mutate(ft.id)}
+                          >
                             Remover
                           </Button>
                         </div>
@@ -737,21 +1079,44 @@ export default function AtelieProposalsPage() {
               )}
 
               {!locked && (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); addFittingMutation.mutate() }}>
-                  <div className="flex-1 min-w-[8rem]">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Etapa</label>
-                    <input value={fittingForm.title} onChange={(e) => setFittingForm((f) => ({ ...f, title: e.target.value }))} required
-                      maxLength={200} placeholder="1ª prova, ajuste de barra, prova final…"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    addFittingMutation.mutate()
+                  }}
+                >
+                  <div className="min-w-[8rem] flex-1">
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Etapa
+                    </label>
+                    <input
+                      value={fittingForm.title}
+                      onChange={(e) => setFittingForm((f) => ({ ...f, title: e.target.value }))}
+                      required
+                      maxLength={200}
+                      placeholder="1ª prova, ajuste de barra, prova final…"
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <div className="w-36">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Prazo (opcional)</label>
-                    <input type="date" value={fittingForm.dueDate}
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Prazo (opcional)
+                    </label>
+                    <input
+                      type="date"
+                      value={fittingForm.dueDate}
                       onChange={(e) => setFittingForm((f) => ({ ...f, dueDate: e.target.value }))}
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={addFittingMutation.isPending}>Adicionar</Button>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={addFittingMutation.isPending}
+                  >
+                    Adicionar
+                  </Button>
                 </form>
               )}
               {fittingError && <p className="text-sm text-destructive">{fittingError}</p>}
@@ -774,21 +1139,40 @@ export default function AtelieProposalsPage() {
                     : 'Sem sinal registrado.'}
                 </p>
               ) : (
-                <form className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
-                  onSubmit={(e) => { e.preventDefault(); depositMutation.mutate() }}>
+                <form
+                  className="flex flex-wrap items-end gap-2 rounded-lg border border-dashed border-border p-3"
+                  onSubmit={(e) => {
+                    e.preventDefault()
+                    depositMutation.mutate()
+                  }}
+                >
                   <div className="w-28">
-                    <label className="mb-1 block text-xs font-medium text-muted-foreground">Valor (R$)</label>
-                    <input type="number" min="0" step="0.01" value={depositForm.value}
+                    <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                      Valor (R$)
+                    </label>
+                    <input
+                      type="number"
+                      min="0"
+                      step="0.01"
+                      value={depositForm.value}
                       onChange={(e) => setDepositForm((f) => ({ ...f, value: e.target.value }))}
                       placeholder="0,00"
-                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm" />
+                      className="w-full rounded-md border border-border bg-background px-2 py-1.5 text-sm"
+                    />
                   </div>
                   <label className="flex h-8 items-center gap-2 text-sm">
-                    <input type="checkbox" checked={depositForm.paid}
-                      onChange={(e) => setDepositForm((f) => ({ ...f, paid: e.target.checked }))} />
+                    <input
+                      type="checkbox"
+                      checked={depositForm.paid}
+                      onChange={(e) => setDepositForm((f) => ({ ...f, paid: e.target.checked }))}
+                    />
                     Recebido
                   </label>
-                  <Button type="submit" className="h-8 px-3 text-xs" disabled={depositMutation.isPending}>
+                  <Button
+                    type="submit"
+                    className="h-8 px-3 text-xs"
+                    disabled={depositMutation.isPending}
+                  >
                     {depositMutation.isPending ? 'Salvando…' : 'Salvar sinal'}
                   </Button>
                   <p className="w-full text-xs text-muted-foreground">
@@ -803,10 +1187,17 @@ export default function AtelieProposalsPage() {
             {/* Status */}
             {ALLOWED_NEXT[p.status].length > 0 ? (
               <div>
-                <label className="mb-1 block text-xs font-medium text-muted-foreground">Mudar status para…</label>
+                <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                  Mudar status para…
+                </label>
                 <div className="flex flex-wrap gap-2">
                   {ALLOWED_NEXT[p.status].map((next) => (
-                    <Button key={next} variant="outline" className="h-8 px-3 text-xs" onClick={() => setStatusTarget(next)}>
+                    <Button
+                      key={next}
+                      variant="outline"
+                      className="h-8 px-3 text-xs"
+                      onClick={() => setStatusTarget(next)}
+                    >
                       {statusLabel(next)}
                     </Button>
                   ))}
@@ -828,7 +1219,9 @@ export default function AtelieProposalsPage() {
         confirmLabel="Mudar status"
         destructive={false}
         loading={statusMutation.isPending}
-        onConfirm={() => { if (statusTarget) statusMutation.mutate(statusTarget) }}
+        onConfirm={() => {
+          if (statusTarget) statusMutation.mutate(statusTarget)
+        }}
       />
     </div>
   )

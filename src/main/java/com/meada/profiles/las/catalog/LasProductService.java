@@ -27,15 +27,18 @@ public class LasProductService {
     private final LasVariantRepository variantRepository;
     private final AuditLogger auditLogger;
     private final LasMenuCache menuCache;
+    private final com.meada.profiles.las.waitlist.LasWaitlistService waitlistService;
 
     public LasProductService(LasProductRepository repository,
                              LasVariantRepository variantRepository,
                              AuditLogger auditLogger,
-                             LasMenuCache menuCache) {
+                             LasMenuCache menuCache,
+                             com.meada.profiles.las.waitlist.LasWaitlistService waitlistService) {
         this.repository = repository;
         this.variantRepository = variantRepository;
         this.auditLogger = auditLogger;
         this.menuCache = menuCache;
+        this.waitlistService = waitlistService;
     }
 
     /** Categoria inválida (→ 400 invalid_category no controller). */
@@ -144,6 +147,9 @@ public class LasProductService {
                                     String color, String dyeLot, String sku, Integer priceCents,
                                     Integer stockQty, Boolean available, boolean clearPrice) {
         requireProduct(companyId, productId);
+        // Onda 1 (backlog #1): estoque anterior ANTES do update — reposição 0→N notifica a waitlist.
+        Integer previousStock = variantRepository.findById(companyId, productId, variantId)
+            .map(LasVariant::stockQty).orElse(null);
         LasVariant updated;
         try {
             updated = variantRepository.update(companyId, productId, variantId, color, dyeLot, sku,
@@ -154,6 +160,9 @@ public class LasProductService {
         }
         auditLogger.log(companyId, userId, "las_variant_updated", "las_variant", variantId, Map.of());
         menuCache.invalidate(companyId);
+        if (previousStock != null && previousStock == 0 && updated.stockQty() > 0) {
+            waitlistService.notifyBackInStock(companyId, variantId);
+        }
         return updated;
     }
 

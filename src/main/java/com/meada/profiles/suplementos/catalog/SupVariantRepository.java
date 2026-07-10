@@ -167,4 +167,12 @@ public class SupVariantRepository {
             qtd, variantId, companyId, qtd);
         return n > 0;
     }
+
+    /** Devolve estoque ao cancelar/recusar o pedido (onda #9 — restock idempotente no chamador). */
+    public void restockStock(UUID companyId, UUID variantId, int qtd) {
+        jdbcTemplate.update(
+            "update sup_variants set stock_quantity = stock_quantity + ?, updated_at = now() "
+                + "where id = ? and company_id = ?",
+            qtd, variantId, companyId);
+    }
 }

@@ -36,7 +36,9 @@ public class NutriConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(0) int bufferMinutes) {}
+    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(0) int bufferMinutes,
+                                Boolean reminderEnabled, Boolean autoCompleteEnabled,
+                                Boolean reengagementEnabled, Integer reengagementDays) {}
 
     @GetMapping("/api/nutri/config")
     public ResponseEntity<Object> get(
@@ -69,7 +71,12 @@ public class NutriConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.bufferMinutes()));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt,
+                req.bufferMinutes(),
+                req.reminderEnabled() == null || req.reminderEnabled(),
+                req.autoCompleteEnabled() == null || req.autoCompleteEnabled(),
+                Boolean.TRUE.equals(req.reengagementEnabled()),
+                req.reengagementDays() == null ? 30 : req.reengagementDays()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

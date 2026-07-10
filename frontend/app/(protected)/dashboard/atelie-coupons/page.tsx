@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Modal } from '@/components/ui/modal'
@@ -15,6 +14,7 @@ import {
   toggleCoupon,
   updateCoupon,
 } from '@/lib/api/atelie/coupons'
+import { ApiError } from '@/lib/api/client'
 import { formatBrl, type AtelieCoupon } from '@/profiles/atelie/atelie-types'
 
 type FormState = {
@@ -26,7 +26,15 @@ type FormState = {
   validUntil: string // yyyy-mm-dd ou vazio
   active: boolean
 }
-const EMPTY: FormState = { code: '', kind: 'percent', value: '', minOrder: '', maxUses: '', validUntil: '', active: true }
+const EMPTY: FormState = {
+  code: '',
+  kind: 'percent',
+  value: '',
+  minOrder: '',
+  maxUses: '',
+  validUntil: '',
+  active: true,
+}
 
 function couponValueLabel(c: AtelieCoupon): string {
   return c.kind === 'percent' ? `${c.value}%` : formatBrl(c.value)
@@ -68,7 +76,10 @@ export default function AtelieCouponsPage() {
     },
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['atelie-coupons'] })
-      setModalOpen(false); setEditing(null); setForm(EMPTY); setFormError(null)
+      setModalOpen(false)
+      setEditing(null)
+      setForm(EMPTY)
+      setFormError(null)
     },
     onError: (e) => {
       if (e instanceof ApiError && e.reason === 'duplicate_coupon') {
@@ -91,7 +102,12 @@ export default function AtelieCouponsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['atelie-coupons'] }),
   })
 
-  function openCreate() { setEditing(null); setForm(EMPTY); setFormError(null); setModalOpen(true) }
+  function openCreate() {
+    setEditing(null)
+    setForm(EMPTY)
+    setFormError(null)
+    setModalOpen(true)
+  }
   function openEdit(c: AtelieCoupon) {
     setEditing(c)
     setForm({
@@ -103,7 +119,8 @@ export default function AtelieCouponsPage() {
       validUntil: c.validUntil ?? '',
       active: c.active,
     })
-    setFormError(null); setModalOpen(true)
+    setFormError(null)
+    setModalOpen(true)
   }
 
   const coupons = data?.items ?? []
@@ -130,13 +147,16 @@ export default function AtelieCouponsPage() {
                 <span className="truncate font-mono font-medium">{c.code}</span>
                 <Badge variant="info">{couponValueLabel(c)}</Badge>
                 {c.minOrderCents > 0 && (
-                  <span className="text-xs text-muted-foreground">mín. {formatBrl(c.minOrderCents)}</span>
+                  <span className="text-xs text-muted-foreground">
+                    mín. {formatBrl(c.minOrderCents)}
+                  </span>
                 )}
                 {!c.active && <Badge variant="muted">inativo</Badge>}
               </div>
               <div className="flex shrink-0 items-center gap-3">
                 <span className="text-xs text-muted-foreground tabular-nums">
-                  {c.uses}{c.maxUses !== null ? `/${c.maxUses}` : ''} usos
+                  {c.uses}
+                  {c.maxUses !== null ? `/${c.maxUses}` : ''} usos
                 </span>
                 {c.validUntil && (
                   <span className="text-xs text-muted-foreground">
@@ -144,33 +164,65 @@ export default function AtelieCouponsPage() {
                   </span>
                 )}
                 <label className="flex items-center gap-1 text-xs text-muted-foreground">
-                  <input type="checkbox" checked={c.active} disabled={toggleMutation.isPending}
-                    onChange={() => toggleMutation.mutate(c)} />
+                  <input
+                    type="checkbox"
+                    checked={c.active}
+                    disabled={toggleMutation.isPending}
+                    onChange={() => toggleMutation.mutate(c)}
+                  />
                   ativo
                 </label>
-                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(c)}>Editar</Button>
-                <Button variant="outline" className="h-7 px-2 text-xs"
-                  disabled={deleteMutation.isPending} onClick={() => deleteMutation.mutate(c.id)}>Excluir</Button>
+                <Button variant="outline" className="h-7 px-2 text-xs" onClick={() => openEdit(c)}>
+                  Editar
+                </Button>
+                <Button
+                  variant="outline"
+                  className="h-7 px-2 text-xs"
+                  disabled={deleteMutation.isPending}
+                  onClick={() => deleteMutation.mutate(c.id)}
+                >
+                  Excluir
+                </Button>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      <Modal open={modalOpen} onClose={() => setModalOpen(false)} title={editing ? 'Editar cupom' : 'Novo cupom'} size="md">
-        <form className="space-y-4" onSubmit={(e) => { e.preventDefault(); saveMutation.mutate() }}>
+      <Modal
+        open={modalOpen}
+        onClose={() => setModalOpen(false)}
+        title={editing ? 'Editar cupom' : 'Novo cupom'}
+        size="md"
+      >
+        <form
+          className="space-y-4"
+          onSubmit={(e) => {
+            e.preventDefault()
+            saveMutation.mutate()
+          }}
+        >
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Código</label>
-              <input value={form.code} onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))} required
-                maxLength={40} placeholder="PRIMEIRAPECA10"
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm uppercase" />
+              <input
+                value={form.code}
+                onChange={(e) => setForm((f) => ({ ...f, code: e.target.value }))}
+                required
+                maxLength={40}
+                placeholder="PRIMEIRAPECA10"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm uppercase"
+              />
             </div>
             <div>
               <label className="mb-1 block text-xs font-medium text-muted-foreground">Tipo</label>
-              <select value={form.kind}
-                onChange={(e) => setForm((f) => ({ ...f, kind: e.target.value as 'percent' | 'fixed' }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm">
+              <select
+                value={form.kind}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, kind: e.target.value as 'percent' | 'fixed' }))
+                }
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              >
                 <option value="percent">Percentual (%)</option>
                 <option value="fixed">Valor fixo (R$)</option>
               </select>
@@ -181,39 +233,70 @@ export default function AtelieCouponsPage() {
               <label className="mb-1 block text-xs font-medium text-muted-foreground">
                 {form.kind === 'percent' ? 'Desconto (%)' : 'Desconto (R$)'}
               </label>
-              <input type="number" min="0" step={form.kind === 'percent' ? '1' : '0.01'} value={form.value} required
+              <input
+                type="number"
+                min="0"
+                step={form.kind === 'percent' ? '1' : '0.01'}
+                value={form.value}
+                required
                 onChange={(e) => setForm((f) => ({ ...f, value: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Orçamento mínimo (R$)</label>
-              <input type="number" min="0" step="0.01" value={form.minOrder}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Orçamento mínimo (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={form.minOrder}
                 onChange={(e) => setForm((f) => ({ ...f, minOrder: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Máx. de usos (opcional)</label>
-              <input type="number" min="1" step="1" value={form.maxUses} placeholder="ilimitado"
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Máx. de usos (opcional)
+              </label>
+              <input
+                type="number"
+                min="1"
+                step="1"
+                value={form.maxUses}
+                placeholder="ilimitado"
                 onChange={(e) => setForm((f) => ({ ...f, maxUses: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
             <div>
-              <label className="mb-1 block text-xs font-medium text-muted-foreground">Válido até (opcional)</label>
-              <input type="date" value={form.validUntil}
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Válido até (opcional)
+              </label>
+              <input
+                type="date"
+                value={form.validUntil}
                 onChange={(e) => setForm((f) => ({ ...f, validUntil: e.target.value }))}
-                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm" />
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
             </div>
           </div>
           <label className="flex items-center gap-2 text-sm text-muted-foreground">
-            <input type="checkbox" checked={form.active}
-              onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} />
+            <input
+              type="checkbox"
+              checked={form.active}
+              onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))}
+            />
             Ativo
           </label>
           {formError && <p className="text-sm text-destructive">{formError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>Cancelar</Button>
+            <Button type="button" variant="outline" onClick={() => setModalOpen(false)}>
+              Cancelar
+            </Button>
             <Button type="submit" disabled={saveMutation.isPending}>
               {saveMutation.isPending ? 'Salvando…' : editing ? 'Salvar' : 'Criar'}
             </Button>

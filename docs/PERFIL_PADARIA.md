@@ -75,3 +75,16 @@ horário fino (é dia + faixa); tabela nutricional estruturada.
   (a migration que reescreve a CHECK por último precisa ter a lista completa — lição atelie).
 - Base de conhecimento (RAG): disponível como em todo perfil.
 - Guard `/api/padaria/**` → 403 `forbidden_wrong_profile`. Paleta `abobora`. Tenant: `igorhaf19`.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_PADARIA #1/#6, migration 96)
+
+- **Sinal em encomenda (#1):** `deposit_cents/paid/paid_at` no pedido (PATCH
+  `/api/padaria/orders/{id}/deposit`, registro manual até o gateway #50). Com sinal REGISTRADO
+  e não pago, o GATE DE ACEITE fica bloqueado: aguardando→em_preparo → **409
+  `deposit_required`**; pagar libera. Sem sinal, aceite livre. Painel: selo + modal "Sinal" no
+  card em aguardando. O cache instrui a IA a informar o valor sem nunca confirmar pagamento.
+- **Upsell na persona (#6, sem DDL):** UMA sugestão de complemento do próprio cardápio (vela/
+  refrigerante/docinhos/cartão) no fechamento, sem insistir.
+- **Nota de flakiness (2ª ocorrência):** `PessimisticLockingFailureException` transitória no
+  TRUNCATE do `AbstractIntegrationTest` (contenção entre ApplicationContexts) — não relacionada
+  à onda; re-rodar o gate resolve.

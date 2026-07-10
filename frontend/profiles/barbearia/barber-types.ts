@@ -35,6 +35,12 @@ export type Config = {
   reminderEnabled: boolean
   autoCompleteEnabled: boolean
   upsellEnabled: boolean
+  reactivationEnabled: boolean
+  reactivationDays: number
+  reactivationCouponCode: string | null
+  postReviewEnabled: boolean
+  reviewLink: string | null
+  reviewCooldownDays: number
 }
 
 /** Agendamento (espelha BarberAppointment). startAt/endAt em ISO-8601 instant. */
@@ -147,7 +153,10 @@ export function formatPrice(cents: number | null): string {
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 

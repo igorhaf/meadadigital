@@ -42,7 +42,7 @@ class FloriculturaCatalogServiceTest extends AbstractIntegrationTest {
     @DisplayName("create válido → persiste + audita floricultura_catalog_item_created")
     void create_persistsAndAudits() {
         FloriculturaCatalogItem item = service.create(COMPANY, USER, "X-Burger", "Pão, carne, queijo",
-            2500, "buques");
+            2500, "buques", false);
         assertThat(item.name()).isEqualTo("X-Burger");
         assertThat(item.priceCents()).isEqualTo(2500);
         assertThat(item.available()).isTrue();
@@ -56,15 +56,15 @@ class FloriculturaCatalogServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("create com categoria inválida → InvalidCategoryException")
     void create_invalidCategory() {
-        assertThatThrownBy(() -> service.create(COMPANY, USER, "X", null, 100, "hot_rolls"))
+        assertThatThrownBy(() -> service.create(COMPANY, USER, "X", null, 100, "hot_rolls", false))
             .isInstanceOf(FloriculturaCatalogService.InvalidCategoryException.class);
     }
 
     @Test
     @DisplayName("update parcial (só preço) preserva os demais campos")
     void update_partial() {
-        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Coca-Cola", "Lata 350ml", 600, "coroas");
-        FloriculturaCatalogItem updated = service.update(COMPANY, USER, item.id(), null, null, 700, null, null);
+        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Coca-Cola", "Lata 350ml", 600, "coroas", false);
+        FloriculturaCatalogItem updated = service.update(COMPANY, USER, item.id(), null, null, 700, null, null, null);
         assertThat(updated.priceCents()).isEqualTo(700);
         assertThat(updated.name()).isEqualTo("Coca-Cola");      // preservado
         assertThat(updated.category()).isEqualTo("coroas");    // preservado
@@ -73,7 +73,7 @@ class FloriculturaCatalogServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("toggle desliga available")
     void toggle() {
-        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Pizza Calabresa", null, 4500, "arranjos");
+        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Pizza Calabresa", null, 4500, "arranjos", false);
         FloriculturaCatalogItem off = service.toggle(COMPANY, USER, item.id(), false);
         assertThat(off.available()).isFalse();
     }
@@ -81,7 +81,7 @@ class FloriculturaCatalogServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("delete de item referenciado por pedido → CatalogItemInUseException (409)")
     void delete_inUse() {
-        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Combo Família", null, 9000, "buques");
+        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Combo Família", null, 9000, "buques", false);
         // Semeia uma conversa+contato+pedido+order_item referenciando o item.
         UUID contact = UUID.randomUUID();
         UUID instance = UUID.randomUUID();
@@ -109,7 +109,7 @@ class FloriculturaCatalogServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("addOption → persiste a opção + audita floricultura_catalog_option_created")
     void addOption_persistsAndAudits() {
-        FloriculturaCatalogItem item = service.create(COMPANY, USER, "X-Salada", null, 2700, "buques");
+        FloriculturaCatalogItem item = service.create(COMPANY, USER, "X-Salada", null, 2700, "buques", false);
         FloriculturaCatalogOption opt = service.addOption(COMPANY, USER, item.id(), "Adicionais", "Bacon", 300, 0);
         assertThat(opt.groupLabel()).isEqualTo("Adicionais");
         assertThat(opt.optionLabel()).isEqualTo("Bacon");
@@ -128,7 +128,7 @@ class FloriculturaCatalogServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("updateOption parcial (só delta) preserva os demais campos")
     void updateOption_partial() {
-        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Pizza Grande", null, 5000, "arranjos");
+        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Pizza Grande", null, 5000, "arranjos", false);
         FloriculturaCatalogOption opt = service.addOption(COMPANY, USER, item.id(), "Borda", "Catupiry", 800, 1);
         FloriculturaCatalogOption updated = service.updateOption(COMPANY, USER, item.id(), opt.id(),
             null, null, 1000, null, null);
@@ -140,7 +140,7 @@ class FloriculturaCatalogServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("toggleOption desliga available; deleteOption remove; opção inexistente → OptionNotFoundException")
     void toggleAndDeleteOption() {
-        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Porção Fritas", null, 2000, "plantas");
+        FloriculturaCatalogItem item = service.create(COMPANY, USER, "Porção Fritas", null, 2000, "plantas", false);
         FloriculturaCatalogOption opt = service.addOption(COMPANY, USER, item.id(), "Tamanho", "Grande", 500, 0);
 
         FloriculturaCatalogOption off = service.toggleOption(COMPANY, USER, item.id(), opt.id(), false);

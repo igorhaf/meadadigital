@@ -62,3 +62,17 @@ A IA conhece os mecânicos, os veículos de cada cliente e as OS em aberto do cl
 Catálogo de peças/serviços com preço pré-cadastrado (o orçamento é digitado pelo mecânico),
 agendamento de entrada por horário, integração com tabela FIPE, foto do veículo/avaria, pagamento
 online, nota fiscal e controle de estoque. Esses são temas de fases futuras.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_OFICINA #1/#2, migration 98)
+
+- **Catálogo de peças/serviços tabelados (#1, `oficina_catalog_items`, clone do catálogo
+  atelie):** nome + categoria livre + preço padrão + ativo; CRUD `/api/oficina/catalog` + tela
+  `/dashboard/oficina-catalog` + item "Catálogo" no nav. DESTRAVA a IA: o contexto injeta os
+  tabelados e a tag `<ordem_servico>` ganha o campo OPCIONAL `servicos:[{id,qtd}]` — o
+  `openWithCatalogItems` resolve do catálogo (só ativos, preço do tenant; inválido é ignorado,
+  best-effort) e a OS nasce 'aberta' já com os itens (o mecânico revisa e orça). Trava intacta:
+  a IA continua sem inventar preço; queixa com diagnóstico abre sem itens.
+- **Lembrete de retorno/revisão (#2, `OficinaReminderJob`, cron 10h30):** a ENTREGA materializa
+  `next_return_date = hoje + return_reminder_days` (config, default 180); no vencimento o
+  cliente recebe "hora da revisão do {modelo/placa}?" — 1x por OS (`return_reminded_at`).
+  Toggle + janela em Configurações.

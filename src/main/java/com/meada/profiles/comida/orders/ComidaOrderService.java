@@ -62,10 +62,21 @@ public class ComidaOrderService {
      * aplica cupom (#1) + fidelidade (#2) e recalcula os totais (descarta o total da IA).
      */
     @Transactional
+    /** Pedido fora do horário do delivery (→ 422 outside_hours). */
+    public static class OutsideHoursException extends RuntimeException {}
+
     public ComidaOrder create(UUID companyId, UUID conversationId, UUID contactId,
                               String deliveryAddress, List<OrderLineInput> lines, String couponCode,
-                              UUID zoneId, String notes) {
+                              UUID zoneId, String fulfillment, String notes) {
         ComidaConfig config = configRepository.findByCompany(companyId);
+        // Onda 2 (backlog #9): janela do delivery (null = sempre aberto). Defensivo — a IA já
+        // avisa fora do horário pelo contexto.
+        if (config.opensAt() != null && config.closesAt() != null) {
+            java.time.LocalTime now = java.time.LocalTime.now(java.time.ZoneId.of("America/Sao_Paulo"));
+            if (now.isBefore(config.opensAt()) || !now.isBefore(config.closesAt())) {
+                throw new OutsideHoursException();
+            }
+        }
         int deliveryFee = config.deliveryFeeCents();
         String zoneName = null;
         Optional<ComidaDeliveryZone> zone = zoneRepository.findActiveById(companyId, zoneId);
@@ -75,7 +86,7 @@ public class ComidaOrderService {
         }
         return orderRepository.createOrder(
             companyId, conversationId, contactId, deliveryAddress, lines, couponCode, deliveryFee,
-            zoneName, notes);
+            zoneName, fulfillment, notes);
     }
 
     public List<ComidaOrder> list(UUID companyId, String status, int limit, int offset) {

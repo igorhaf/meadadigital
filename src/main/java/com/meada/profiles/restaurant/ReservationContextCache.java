@@ -60,6 +60,37 @@ public class ReservationContextCache {
         return cache.get(companyId, this::buildSegment);
     }
 
+    /**
+     * Segmento com o bloco FRESCO do contato ao final (onda 1, backlog #1): as próximas reservas
+     * DELE (id exato) + a instrução da tag &lt;confirmacao_reserva&gt; — fecha o loop do lembrete
+     * "confirma? SIM/NÃO". O bloco do contato NÃO é cacheado (o cache é por company).
+     */
+    public String contextSegment(UUID companyId, UUID contactId) {
+        String base = contextSegment(companyId);
+        if (contactId == null) {
+            return base;
+        }
+        List<Reservation> upcoming = reservationRepository.listUpcomingByContact(companyId, contactId, 5);
+        if (upcoming.isEmpty()) {
+            return base;
+        }
+        StringBuilder sb = new StringBuilder(base);
+        sb.append("RESERVAS FUTURAS DESTE CLIENTE (use o id EXATO na tag de confirmação):\n");
+        for (Reservation r : upcoming) {
+            ZonedDateTime s = r.startAt().atZone(TENANT_ZONE);
+            sb.append("- ").append(r.id()).append(" · ").append(r.tableLabel())
+                .append(", ").append(DATE_FMT.format(s)).append(" às ").append(TIME_FMT.format(s))
+                .append(", ").append(r.numPeople()).append(" pessoa(s) · status ")
+                .append(r.status()).append("\n");
+        }
+        sb.append("Quando o cliente CONFIRMAR uma reserva futura (ex.: responder SIM ao lembrete) ou "
+            + "pedir para CANCELAR, sua ÚLTIMA mensagem deve TERMINAR com a tag (linha própria):\n"
+            + "<confirmacao_reserva>{\"reservation_id\":\"UUID\",\"decisao\":\"confirmada|cancelada\"}"
+            + "</confirmacao_reserva>\n"
+            + "Você só REFLETE a decisão do cliente — NUNCA confirme ou cancele sem ele pedir.\n\n");
+        return sb.toString();
+    }
+
     /** Invalida o cache de uma empresa (chamado pelos services ao mutar mesa/reserva/config). */
     public void invalidate(UUID companyId) {
         cache.invalidate(companyId);

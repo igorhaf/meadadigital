@@ -36,7 +36,8 @@ public class PetConfigController {
         return ResponseEntity.status(status).body(Map.of("error", error, "reason", reason));
     }
 
-    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(0) int bufferMinutes) {}
+    public record ConfigRequest(@NotBlank String opensAt, @NotBlank String closesAt, @Min(0) int bufferMinutes,
+                                Boolean reminderEnabled) {}
 
     @GetMapping("/api/pet/config")
     public ResponseEntity<Object> get(
@@ -69,7 +70,8 @@ public class PetConfigController {
             return error(400, "Bad Request", "invalid_time");
         }
         try {
-            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.bufferMinutes()));
+            return ResponseEntity.ok(service.update(companyId, user.userId(), opensAt, closesAt, req.bufferMinutes(),
+                req.reminderEnabled() == null || req.reminderEnabled()));
         } catch (InvalidHoursException e) {
             return error(400, "Bad Request", "invalid_hours");
         }

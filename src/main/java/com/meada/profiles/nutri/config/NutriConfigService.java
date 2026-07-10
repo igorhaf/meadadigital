@@ -30,11 +30,15 @@ public class NutriConfigService {
     }
 
     @Transactional
-    public NutriConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt, int bufferMinutes) {
+    public NutriConfig update(UUID companyId, UUID userId, LocalTime opensAt, LocalTime closesAt,
+                              int bufferMinutes, boolean reminderEnabled, boolean autoCompleteEnabled,
+                              boolean reengagementEnabled, int reengagementDays) {
         if (!opensAt.isBefore(closesAt)) {
             throw new InvalidHoursException();
         }
-        NutriConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes);
+        NutriConfig saved = repository.upsert(companyId, opensAt, closesAt, bufferMinutes,
+            reminderEnabled, autoCompleteEnabled, reengagementEnabled,
+            Math.max(7, Math.min(365, reengagementDays)));
         auditLogger.log(companyId, userId, "nutri_config_updated", "nutri_config", companyId, Map.of("buffer_minutes", bufferMinutes));
         contextCache.invalidate(companyId);
         return saved;

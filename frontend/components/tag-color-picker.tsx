@@ -84,7 +84,7 @@ export function TagColorPicker({
           aria-label={`Cor ${color}`}
           aria-pressed={value === color}
           className={`size-7 rounded-full ${SWATCH_BG[color]} ${
-            value === color ? 'ring-2 ring-offset-2 ring-foreground' : ''
+            value === color ? 'ring-2 ring-foreground ring-offset-2' : ''
           }`}
         />
       ))}

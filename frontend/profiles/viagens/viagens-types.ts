@@ -16,6 +16,9 @@ export type Config = {
   companyId: string
   businessName: string | null
   notes: string | null
+  tripReminderEnabled: boolean
+  quoteFollowupEnabled: boolean
+  quoteFollowupDays: number
 }
 
 /**
@@ -87,6 +90,9 @@ export type Proposal = {
   openedAt: string
   closedAt: string | null
   statusUpdatedAt: string
+  depositCents: number | null
+  depositPaid: boolean
+  depositPaidAt: string | null
   items: ProposalItem[]
   itinerary: ItineraryDay[]
 }
@@ -99,7 +105,10 @@ export function formatBrl(cents: number | null | undefined): string {
 
 export function formatDateTime(iso: string): string {
   return new Date(iso).toLocaleString('pt-BR', {
-    day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit',
+    day: '2-digit',
+    month: '2-digit',
+    hour: '2-digit',
+    minute: '2-digit',
   })
 }
 

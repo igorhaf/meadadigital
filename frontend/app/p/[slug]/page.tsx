@@ -13,5 +13,13 @@ export default async function PublicHome({ params }: { params: Promise<{ slug: s
   if (!view) {
     notFound()
   }
-  return <CmsRender title={view.title} blocks={view.blocks} theme={view.theme} nav={view.nav} navBase={`/p/${slug}`} />
+  return (
+    <CmsRender
+      title={view.title}
+      blocks={view.blocks}
+      theme={view.theme}
+      nav={view.nav}
+      navBase={`/p/${slug}`}
+    />
+  )
 }

@@ -9,15 +9,22 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
+import {
+  approveArt,
+  listOrders,
+  setArtUrl,
+  updateDeposit,
+  updateOrderStatus,
+} from '@/lib/api/papelaria/orders'
 import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
-import { approveArt, listOrders, setArtUrl, updateOrderStatus } from '@/lib/api/papelaria/orders'
 import { fulfillmentLabel } from '@/profiles/papelaria/papelaria-fulfillment'
 import { periodLabel } from '@/profiles/papelaria/papelaria-period'
 import {
-  KANBAN_COLUMNS,
-  STATUS_LABEL,
   formatBrl,
+  KANBAN_COLUMNS,
   nextStatus,
+  STATUS_LABEL,
   type Order,
   type OrderItem,
   type OrderStatus,
@@ -57,6 +64,7 @@ function OrderCard({
   onReject,
   onUploadArt,
   onApproveArt,
+  onDeposit,
   onSendToProduction,
   onAdvance,
   onCancel,
@@ -68,6 +76,7 @@ function OrderCard({
   onReject: (o: Order) => void
   onUploadArt: (o: Order) => void
   onApproveArt: (o: Order) => void
+  onDeposit: (o: Order) => void
   onSendToProduction: (o: Order) => void
   onAdvance: (o: Order) => void
   onCancel: (o: Order) => void
@@ -81,101 +90,186 @@ function OrderCard({
       {...dragProps}
       className="data-[dragging=true]:opacity-50 [&[draggable=true]]:cursor-grab active:[&[draggable=true]]:cursor-grabbing"
     >
-    <Card className="space-y-2 p-3">
-      <div className="flex items-center justify-between">
-        <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
-        <span className="text-xs text-muted-foreground">
-          {new Date(order.createdAt).toLocaleTimeString('pt-BR', { hour: '2-digit', minute: '2-digit' })}
-        </span>
-      </div>
-      <div className="flex items-center justify-between gap-2">
-        <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
-        <Badge variant={order.fulfillment === 'entrega' ? 'info' : 'muted'}>
-          {fulfillmentLabel(order.fulfillment)}
-        </Badge>
-      </div>
-      <ul className="space-y-0.5 text-xs text-muted-foreground">
-        {order.items.map((it) => (
-          <li key={it.id} className="line-clamp-2">
-            {itemLine(it)}
-            {it.madeToOrder && <span className="ml-1 text-[10px] uppercase text-amber-600">· encomenda</span>}
-            {it.customText && <span className="block italic">Texto: “{it.customText}”</span>}
-          </li>
-        ))}
-      </ul>
-      {schedule && <p className="text-xs font-medium text-muted-foreground">📅 {schedule}</p>}
-      {order.fulfillment === 'entrega' && order.deliveryAddress && (
-        <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
-      )}
-      {/* PROVA DE ARTE (ESCAPADA 8.15): mostra a arte enviada + se já foi aprovada. */}
-      {order.artUrl && (
-        <p className="text-xs">
-          <a href={order.artUrl} target="_blank" rel="noopener noreferrer" className="text-primary underline">
-            Ver arte
-          </a>
-          {order.artApproved ? (
-            <Badge variant="success" className="ml-2">arte aprovada</Badge>
-          ) : (
-            <Badge variant="warning" className="ml-2">arte pendente</Badge>
-          )}
-        </p>
-      )}
-      <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
-      <div className="flex flex-wrap gap-1 pt-1">
-        {order.status === 'aguardando' ? (
-          <>
-            <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAccept(order)}>
-              Aceitar
-            </Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onReject(order)}>
-              Recusar
-            </Button>
-          </>
-        ) : order.status === 'aceito' ? (
-          <>
-            <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onUploadArt(order)}>
-              Subir arte
-            </Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onCancel(order)}>
-              Cancelar
-            </Button>
-          </>
-        ) : order.status === 'arte_aprovacao' ? (
-          <>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onUploadArt(order)}>
-              Reenviar arte
-            </Button>
-            {!order.artApproved && (
-              <Button className="h-7 px-2 text-xs" disabled={busy} onClick={() => onApproveArt(order)}>
-                Marcar arte aprovada
-              </Button>
-            )}
-            <Button
-              className="h-7 px-2 text-xs"
-              disabled={busy || !order.artApproved}
-              title={!order.artApproved ? 'Aprove a arte antes de produzir.' : undefined}
-              onClick={() => onSendToProduction(order)}
-            >
-              Enviar pra produção
-            </Button>
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onCancel(order)}>
-              Cancelar
-            </Button>
-          </>
-        ) : (
-          <>
-            {next && (
-              <Button className="h-7 flex-1 px-2 text-xs" disabled={busy} onClick={() => onAdvance(order)}>
-                Avançar → {STATUS_LABEL[next]}
-              </Button>
-            )}
-            <Button variant="outline" className="h-7 px-2 text-xs" disabled={busy} onClick={() => onCancel(order)}>
-              Cancelar
-            </Button>
-          </>
+      <Card className="space-y-2 p-3">
+        <div className="flex items-center justify-between">
+          <span className="font-mono text-xs text-muted-foreground">#{order.id.slice(0, 8)}</span>
+          <span className="text-xs text-muted-foreground">
+            {new Date(order.createdAt).toLocaleTimeString('pt-BR', {
+              hour: '2-digit',
+              minute: '2-digit',
+            })}
+          </span>
+        </div>
+        <div className="flex items-center justify-between gap-2">
+          <p className="text-sm font-medium">{order.contactName ?? 'Cliente'}</p>
+          <Badge variant={order.fulfillment === 'entrega' ? 'info' : 'muted'}>
+            {fulfillmentLabel(order.fulfillment)}
+          </Badge>
+        </div>
+        <ul className="space-y-0.5 text-xs text-muted-foreground">
+          {order.items.map((it) => (
+            <li key={it.id} className="line-clamp-2">
+              {itemLine(it)}
+              {it.madeToOrder && (
+                <span className="ml-1 text-[10px] text-amber-600 uppercase">· encomenda</span>
+              )}
+              {it.customText && <span className="block italic">Texto: “{it.customText}”</span>}
+            </li>
+          ))}
+        </ul>
+        {schedule && <p className="text-xs font-medium text-muted-foreground">📅 {schedule}</p>}
+        {order.fulfillment === 'entrega' && order.deliveryAddress && (
+          <p className="text-xs text-muted-foreground">{order.deliveryAddress}</p>
         )}
-      </div>
-    </Card>
+        {/* Sinal/entrada (onda #1): selo de pendente/recebido quando registrado. */}
+        {order.depositCents != null && order.depositCents > 0 && (
+          <p className="text-xs">
+            <Badge variant={order.depositPaid ? 'success' : 'warning'}>
+              {order.depositPaid ? 'Sinal recebido' : 'Sinal pendente'}
+            </Badge>
+            <span className="ml-1 text-muted-foreground">
+              {(order.depositCents / 100).toLocaleString('pt-BR', {
+                style: 'currency',
+                currency: 'BRL',
+              })}
+            </span>
+          </p>
+        )}
+        {/* PROVA DE ARTE (ESCAPADA 8.15): mostra a arte enviada + se já foi aprovada. */}
+        {order.artUrl && (
+          <p className="text-xs">
+            <a
+              href={order.artUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="text-primary underline"
+            >
+              Ver arte
+            </a>
+            {order.artApproved ? (
+              <Badge variant="success" className="ml-2">
+                arte aprovada
+              </Badge>
+            ) : (
+              <Badge variant="warning" className="ml-2">
+                arte pendente
+              </Badge>
+            )}
+          </p>
+        )}
+        <p className="text-sm font-semibold tabular-nums">{formatBrl(order.totalCents)}</p>
+        <div className="flex flex-wrap gap-1 pt-1">
+          {order.status === 'aguardando' ? (
+            <>
+              <Button
+                className="h-7 flex-1 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onAccept(order)}
+              >
+                Aceitar
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onReject(order)}
+              >
+                Recusar
+              </Button>
+            </>
+          ) : order.status === 'aceito' ? (
+            <>
+              <Button
+                className="h-7 flex-1 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onUploadArt(order)}
+              >
+                Subir arte
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onDeposit(order)}
+              >
+                Sinal
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onCancel(order)}
+              >
+                Cancelar
+              </Button>
+            </>
+          ) : order.status === 'arte_aprovacao' ? (
+            <>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onUploadArt(order)}
+              >
+                Reenviar arte
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onDeposit(order)}
+              >
+                Sinal
+              </Button>
+              {!order.artApproved && (
+                <Button
+                  className="h-7 px-2 text-xs"
+                  disabled={busy}
+                  onClick={() => onApproveArt(order)}
+                >
+                  Marcar arte aprovada
+                </Button>
+              )}
+              <Button
+                className="h-7 px-2 text-xs"
+                disabled={busy || !order.artApproved}
+                title={!order.artApproved ? 'Aprove a arte antes de produzir.' : undefined}
+                onClick={() => onSendToProduction(order)}
+              >
+                Enviar pra produção
+              </Button>
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onCancel(order)}
+              >
+                Cancelar
+              </Button>
+            </>
+          ) : (
+            <>
+              {next && (
+                <Button
+                  className="h-7 flex-1 px-2 text-xs"
+                  disabled={busy}
+                  onClick={() => onAdvance(order)}
+                >
+                  Avançar → {STATUS_LABEL[next]}
+                </Button>
+              )}
+              <Button
+                variant="outline"
+                className="h-7 px-2 text-xs"
+                disabled={busy}
+                onClick={() => onCancel(order)}
+              >
+                Cancelar
+              </Button>
+            </>
+          )}
+        </div>
+      </Card>
     </div>
   )
 }
@@ -197,6 +291,10 @@ export default function PapelariaOrdersPage() {
   const [rejectTarget, setRejectTarget] = useState<Order | null>(null)
   const [rejectReason, setRejectReason] = useState('')
   const [artTarget, setArtTarget] = useState<Order | null>(null)
+  const [depositTarget, setDepositTarget] = useState<Order | null>(null)
+  const [depositValue, setDepositValue] = useState('')
+  const [depositPaid, setDepositPaid] = useState(false)
+  const [depositError, setDepositError] = useState<string | null>(null)
   const [artUrlInput, setArtUrlInput] = useState('')
   const [artError, setArtError] = useState<string | null>(null)
 
@@ -304,7 +402,28 @@ export default function PapelariaOrdersPage() {
     setRejectReason('')
   }
 
-  const busy = statusMutation.isPending || approveMutation.isPending || artMutation.isPending
+  const depositMutation = useMutation({
+    mutationFn: async (order: Order) => {
+      const cents = depositValue === '' ? null : Math.round(Number(depositValue) * 100)
+      return updateDeposit(order.id, { depositCents: cents, depositPaid })
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['papelaria-orders'] })
+      setDepositTarget(null)
+      setDepositError(null)
+    },
+    onError: (e) => {
+      if (e instanceof ApiError && e.reason === 'invalid_deposit')
+        setDepositError('Para marcar como recebido, informe um valor de sinal maior que zero.')
+      else setDepositError('Erro ao salvar o sinal.')
+    },
+  })
+
+  const busy =
+    statusMutation.isPending ||
+    approveMutation.isPending ||
+    artMutation.isPending ||
+    depositMutation.isPending
 
   const allActive = active.data?.items ?? []
   const historyItems = (history.data?.items ?? []).filter(
@@ -317,13 +436,22 @@ export default function PapelariaOrdersPage() {
 
   return (
     <div className="space-y-6">
-      <PageHeader title="Pedidos" description="Aceite ou recuse novos pedidos, gerencie a aprovação da arte e acompanhe a produção, a retirada e a entrega." />
+      <PageHeader
+        title="Pedidos"
+        description="Aceite ou recuse novos pedidos, gerencie a aprovação da arte e acompanhe a produção, a retirada e a entrega."
+      />
 
       <div className="flex gap-2">
-        <Button variant={tab === 'andamento' ? 'default' : 'outline'} onClick={() => setTab('andamento')}>
+        <Button
+          variant={tab === 'andamento' ? 'default' : 'outline'}
+          onClick={() => setTab('andamento')}
+        >
           Em andamento
         </Button>
-        <Button variant={tab === 'historico' ? 'default' : 'outline'} onClick={() => setTab('historico')}>
+        <Button
+          variant={tab === 'historico' ? 'default' : 'outline'}
+          onClick={() => setTab('historico')}
+        >
           Histórico
         </Button>
       </div>
@@ -356,9 +484,20 @@ export default function PapelariaOrdersPage() {
                           busy={busy}
                           dragProps={dnd.cardProps(o.id)}
                           onAccept={accept}
-                          onReject={(ord) => { setRejectReason(''); setRejectTarget(ord) }}
+                          onReject={(ord) => {
+                            setRejectReason('')
+                            setRejectTarget(ord)
+                          }}
                           onUploadArt={openArt}
                           onApproveArt={(ord) => approveMutation.mutate(ord.id)}
+                          onDeposit={(ord) => {
+                            setDepositTarget(ord)
+                            setDepositValue(
+                              ord.depositCents != null ? String(ord.depositCents / 100) : '',
+                            )
+                            setDepositPaid(ord.depositPaid)
+                            setDepositError(null)
+                          }}
                           onSendToProduction={sendToProduction}
                           onAdvance={advance}
                           onCancel={setCancelTarget}
@@ -380,13 +519,21 @@ export default function PapelariaOrdersPage() {
               {historyItems.map((o) => (
                 <div key={o.id} className="flex flex-col gap-1 px-4 py-3 text-sm">
                   <div className="flex items-center justify-between gap-3">
-                    <span className="font-mono text-xs text-muted-foreground">#{o.id.slice(0, 8)}</span>
-                    <span className="min-w-0 flex-1 truncate">{o.contactName ?? 'Cliente'} · {itemsSummary(o)}</span>
+                    <span className="font-mono text-xs text-muted-foreground">
+                      #{o.id.slice(0, 8)}
+                    </span>
+                    <span className="min-w-0 flex-1 truncate">
+                      {o.contactName ?? 'Cliente'} · {itemsSummary(o)}
+                    </span>
                     <Badge variant={o.fulfillment === 'entrega' ? 'info' : 'muted'}>
                       {fulfillmentLabel(o.fulfillment)}
                     </Badge>
                     <span className="tabular-nums">{formatBrl(o.totalCents)}</span>
-                    <Badge variant={o.status === 'retirado' || o.status === 'entregue' ? 'success' : 'danger'}>
+                    <Badge
+                      variant={
+                        o.status === 'retirado' || o.status === 'entregue' ? 'success' : 'danger'
+                      }
+                    >
                       {STATUS_LABEL[o.status]}
                     </Badge>
                   </div>
@@ -416,19 +563,77 @@ export default function PapelariaOrdersPage() {
         }}
       />
 
+      {/* Sinal/entrada (onda #1 — registro manual até o gateway #50). */}
+      <Modal
+        open={depositTarget !== null}
+        onClose={() => setDepositTarget(null)}
+        title="Sinal / entrada do pedido"
+        size="md"
+      >
+        <div className="space-y-4">
+          <p className="text-sm text-muted-foreground">
+            Com sinal registrado e não recebido, a arte aprovada NÃO entra em produção até a
+            confirmação. Marcar como recebido com a arte já aprovada envia o pedido pra produção
+            automaticamente.
+          </p>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="w-32">
+              <label className="mb-1 block text-xs font-medium text-muted-foreground">
+                Valor (R$)
+              </label>
+              <input
+                type="number"
+                min="0"
+                step="0.01"
+                value={depositValue}
+                onChange={(e) => setDepositValue(e.target.value)}
+                placeholder="0,00"
+                className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
+              />
+            </div>
+            <label className="flex h-9 items-center gap-2 text-sm">
+              <input
+                type="checkbox"
+                checked={depositPaid}
+                onChange={(e) => setDepositPaid(e.target.checked)}
+              />
+              Recebido
+            </label>
+          </div>
+          {depositError && <p className="text-sm text-destructive">{depositError}</p>}
+          <div className="flex justify-end gap-2">
+            <Button type="button" variant="outline" onClick={() => setDepositTarget(null)}>
+              Voltar
+            </Button>
+            <Button
+              disabled={depositMutation.isPending}
+              onClick={() => depositTarget && depositMutation.mutate(depositTarget)}
+            >
+              {depositMutation.isPending ? 'Salvando…' : 'Salvar sinal'}
+            </Button>
+          </div>
+        </div>
+      </Modal>
+
       {/* Recusar (gate de aceite): Modal com motivo OPCIONAL (AlertDialog não tem campo de texto livre). */}
       <Modal
         open={rejectTarget !== null}
-        onClose={() => { setRejectTarget(null); setRejectReason('') }}
+        onClose={() => {
+          setRejectTarget(null)
+          setRejectReason('')
+        }}
         title="Recusar pedido?"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao cliente.
+            O cliente será notificado da recusa. O motivo é opcional e, se informado, é enviado ao
+            cliente.
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">Motivo (opcional)</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              Motivo (opcional)
+            </label>
             <textarea
               value={rejectReason}
               onChange={(e) => setRejectReason(e.target.value)}
@@ -439,10 +644,21 @@ export default function PapelariaOrdersPage() {
             />
           </div>
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => { setRejectTarget(null); setRejectReason('') }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setRejectTarget(null)
+                setRejectReason('')
+              }}
+            >
               Voltar
             </Button>
-            <Button variant="destructive" disabled={statusMutation.isPending} onClick={confirmReject}>
+            <Button
+              variant="destructive"
+              disabled={statusMutation.isPending}
+              onClick={confirmReject}
+            >
               {statusMutation.isPending ? 'Recusando…' : 'Recusar pedido'}
             </Button>
           </div>
@@ -453,17 +669,23 @@ export default function PapelariaOrdersPage() {
           encadeado. Colar uma nova arte ZERA a aprovação (o backend trata). */}
       <Modal
         open={artTarget !== null}
-        onClose={() => { setArtTarget(null); setArtUrlInput(''); setArtError(null) }}
+        onClose={() => {
+          setArtTarget(null)
+          setArtUrlInput('')
+          setArtError(null)
+        }}
         title="Subir arte do pedido"
         size="md"
       >
         <div className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Cole a URL da arte (link de imagem/PDF). O pedido vai para a aprovação da arte; ao reenviar uma
-            arte, a aprovação anterior é zerada.
+            Cole a URL da arte (link de imagem/PDF). O pedido vai para a aprovação da arte; ao
+            reenviar uma arte, a aprovação anterior é zerada.
           </p>
           <div>
-            <label className="mb-1 block text-xs font-medium text-muted-foreground">URL da arte</label>
+            <label className="mb-1 block text-xs font-medium text-muted-foreground">
+              URL da arte
+            </label>
             <input
               value={artUrlInput}
               onChange={(e) => setArtUrlInput(e.target.value)}
@@ -473,7 +695,15 @@ export default function PapelariaOrdersPage() {
           </div>
           {artError && <p className="text-sm text-destructive">{artError}</p>}
           <div className="flex justify-end gap-2">
-            <Button type="button" variant="outline" onClick={() => { setArtTarget(null); setArtUrlInput(''); setArtError(null) }}>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => {
+                setArtTarget(null)
+                setArtUrlInput('')
+                setArtError(null)
+              }}
+            >
               Voltar
             </Button>
             <Button disabled={artMutation.isPending} onClick={confirmArt}>

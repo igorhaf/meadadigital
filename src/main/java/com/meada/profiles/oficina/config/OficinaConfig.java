@@ -10,9 +10,11 @@ import java.util.UUID;
 public record OficinaConfig(
     UUID companyId,
     LocalTime opensAt,
-    LocalTime closesAt) {
+    LocalTime closesAt,
+    boolean returnReminderEnabled,
+    int returnReminderDays) {
 
     public static OficinaConfig defaultFor(UUID companyId) {
-        return new OficinaConfig(companyId, LocalTime.of(8, 0), LocalTime.of(18, 0));
+        return new OficinaConfig(companyId, LocalTime.of(8, 0), LocalTime.of(18, 0), true, 180);
     }
 }

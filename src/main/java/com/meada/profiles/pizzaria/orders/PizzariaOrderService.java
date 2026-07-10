@@ -57,10 +57,12 @@ public class PizzariaOrderService {
      */
     @Transactional
     public PizzariaOrder create(UUID companyId, UUID conversationId, UUID contactId,
-                              String deliveryAddress, List<OrderLineInput> lines, String notes) {
+                              String deliveryAddress, List<OrderLineInput> lines, String couponCode,
+                              String notes) {
         PizzariaConfig config = configRepository.findByCompany(companyId);
         return orderRepository.createOrder(
-            companyId, conversationId, contactId, deliveryAddress, lines, config.deliveryFeeCents(), notes);
+            companyId, conversationId, contactId, deliveryAddress, lines, couponCode,
+            config.deliveryFeeCents(), notes);
     }
 
     public List<PizzariaOrder> list(UUID companyId, String status, int limit, int offset) {

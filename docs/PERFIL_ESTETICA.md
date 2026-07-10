@@ -79,3 +79,30 @@ Estados do agendamento: `agendado → confirmado → realizado`; `agendado/confi
 Foto antes/depois, prontuário/anamnese estruturada (dado sensível — fase futura com criptografia),
 pagamento real do pacote (Stripe), assinatura/recorrência de pacote, comissão de profissional,
 estoque de produtos. Tudo fase futura.
+
+## Onda 1 do backlog (migration 108)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_ESTETICA.md` (#1, #2, #3 e #4):
+
+- **#1/#2 LEMBRETE DE VÉSPERA + CONFIRMAÇÃO SIM/NÃO:** o `EsteticaReminderJob` (cron
+  `${estetica.reminder-cron:0 50 10 * * *}`) lembra a cliente na véspera ("Confirma? SIM ou
+  NÃO") — marker `reminded_start_at` (remarcar REARMA). A resposta fecha o loop via
+  `ConfirmacaoEsteticaHandler` (`<confirmacao_estetica>{appointment_id, decisao}`, barreira de
+  contato); o **NÃO cancela e DEVOLVE a sessão ao pacote** pela mecânica existente do
+  updateStatus. Toggle `reminder_enabled` (default ON). Trava intacta (tudo operacional).
+- **#4 AUTO-TRANSIÇÕES:** confirmado vencido → realizado (silencioso, `auto_complete_enabled`)
+  e pacote ATIVO com `valid_until` vencida → EXPIRADO (`auto_expire_enabled`) — a data que
+  faltava pro estado que já existia. `valid_until` é **materializada na ativação** quando
+  `package_validity_days` está configurado (em Java) e aparece no card do pacote no painel.
+- **#3 RÉGUA DE RENOVAÇÃO** (opt-in `renewal_enabled` **OFF por default** — lição Baileys):
+  pacote ESGOTADO há `renewal_days` sem pacote novo do contato (quem já recomprou é suprimido)
+  OU pacote ATIVO a vencer em `expiry_warning_days` → 1 toque por pacote
+  (`renewal_reminded_at`). A resposta cai no fluxo `<compra_pacote>` existente.
+
+Settings ganhou a seção "Automações" (3 toggles + validade + régua). Teste:
+`EsteticaOnda1IntegrationTest` (lembrete+rearm+confirmação com devolução de saldo;
+auto-transições; régua opt-in com supressão por recompra).
+
+**Fica pra onda 2** (registrado, não pedido): #5 pagamento/sinal do pacote com ativação
+automática (bloqueado pelo gateway #50), #6 assinatura/recorrência, #7 NPS pós-sessão,
+#8 fidelidade/cashback, #11 lista de encaixe, #14 cupom, #15 aniversário.

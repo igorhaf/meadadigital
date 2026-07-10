@@ -16,6 +16,8 @@ public record CursosEnrollment(
     UUID courseId,
     String courseTitle,
     int courseMonthlyCents,
+    int discountCents,
+    String couponCode,
     UUID conversationId,
     UUID contactId,
     String studentName,

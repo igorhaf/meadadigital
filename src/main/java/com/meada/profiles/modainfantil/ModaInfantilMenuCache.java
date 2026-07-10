@@ -96,7 +96,15 @@ public class ModaInfantilMenuCache {
                 + "ENTREGA — o endereço, sua ÚLTIMA mensagem deve TERMINAR com a tag (em uma linha "
                 + "própria, sem markdown):\n")
             .append("<pedido_moda_infantil>{\"items\":[{\"variant_id\":\"UUID_EXATO_DA_VARIANTE\",\"qtd\":N}],"
-                + "\"fulfillment\":\"entrega\",\"endereco\":\"...\",\"total_cents\":NNN}</pedido_moda_infantil>\n")
+                + "\"fulfillment\":\"entrega\",\"endereco\":\"...\","
+                + "\"cupom\":\"CODIGO_SE_HOUVER\",\"total_cents\":NNN}</pedido_moda_infantil>\n")
+            .append("Se o cliente informar um CUPOM de desconto, registre o código no campo \"cupom\" "
+                + "(omita se não houver) — quem VALIDA e calcula é o sistema; NUNCA invente desconto "
+                + "(cupom inválido: o pedido sai sem o desconto). Se a variante desejada estiver "
+                + "ESGOTADA, ofereça avisar quando voltar; se o cliente aceitar, TERMINE a mensagem "
+                + "com a tag (linha própria): "
+                + "<aviso_estoque_moda>{\"variant_id\":\"UUID_DA_VARIANTE\"}</aviso_estoque_moda> "
+                + "— NUNCA prometa data de reposição.\n")
             .append("Cada item referencia o variant_id EXATO de uma VARIANTE (combinação faixa-etária×cor) "
                 + "do catálogo acima — NUNCA o product_id. Só ofereça variantes COM estoque (as "
                 + "marcadas \"esgotado\" NÃO podem ser pedidas). \"fulfillment\" é \"entrega\" (exige "

@@ -22,6 +22,7 @@ public record ComidaOrder(
     String couponCodeSnapshot,
     boolean loyaltyApplied,
     String zoneNameSnapshot,
+    String fulfillment,
     String deliveryAddress,
     String notes,
     String rejectionReason,

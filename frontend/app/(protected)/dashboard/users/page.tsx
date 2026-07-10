@@ -5,11 +5,11 @@ import Link from 'next/link'
 import { useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
-import { ApiError } from '@/lib/api/client'
 import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { getUsers, type AdminUserListItem } from '@/lib/api/admin/users'
+import { ApiError } from '@/lib/api/client'
 
 const PAGE_SIZE = 20
 
@@ -59,7 +59,11 @@ export default function UsersPage() {
       key: 'suspended',
       header: 'Status',
       render: (u) =>
-        u.suspended ? <Badge variant="danger">suspenso</Badge> : <Badge variant="success">ativo</Badge>,
+        u.suspended ? (
+          <Badge variant="danger">suspenso</Badge>
+        ) : (
+          <Badge variant="success">ativo</Badge>
+        ),
     },
     {
       key: 'lastLoginAt',

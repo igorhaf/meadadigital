@@ -165,4 +165,13 @@ public class PetAppointmentRepository {
             return conflict;
         }
     }
+
+    /** Próximos agendamentos ATIVOS do TUTOR — bloco do contexto (onda 1, tag de confirmação). */
+    public java.util.List<PetAppointment> listUpcomingByContact(UUID companyId, UUID contactId, int limit) {
+        return jdbcTemplate.query(
+            "select " + COLS + " from pet_appointments where company_id = ? and contact_id = ? "
+                + "and status in ('agendado','confirmado') and start_at >= now() "
+                + "order by start_at asc limit " + Math.max(1, limit),
+            MAPPER, companyId, contactId);
+    }
 }

@@ -65,7 +65,7 @@ class ComidaOrderServiceTest extends AbstractIntegrationTest {
     private ComidaOrder seedOrder() {
         ComidaMenuItem item = menuService.create(COMPANY, USER, "X-Burger", null, 2500, "lanches");
         return service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item.id(), 2, List.of())), null, null, null);
+            List.of(new OrderLineInput(item.id(), 2, List.of())), null, null, "entrega", null);
     }
 
     @Test
@@ -165,7 +165,7 @@ class ComidaOrderServiceTest extends AbstractIntegrationTest {
         seedCoupon("DEZ", "percent", 10, 0);
 
         ComidaOrder withCoupon = service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item, 2, List.of())), "dez", null, null);   // case-insensitive
+            List.of(new OrderLineInput(item, 2, List.of())), "dez", null, "entrega", null);   // case-insensitive
         assertThat(withCoupon.discountCents()).isEqualTo(400);
         assertThat(withCoupon.totalCents()).isEqualTo(3600);
         assertThat(withCoupon.couponCodeSnapshot()).isEqualTo("DEZ");
@@ -174,7 +174,7 @@ class ComidaOrderServiceTest extends AbstractIntegrationTest {
             Integer.class, COMPANY)).isEqualTo(1);
 
         ComidaOrder invalid = service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item, 1, List.of())), "NAOEXISTE", null, null);
+            List.of(new OrderLineInput(item, 1, List.of())), "NAOEXISTE", null, "entrega", null);
         assertThat(invalid.discountCents()).isZero();
         assertThat(invalid.couponCodeSnapshot()).isNull();
     }
@@ -194,12 +194,12 @@ class ComidaOrderServiceTest extends AbstractIntegrationTest {
         // 2 pedidos ENTREGUES no histórico do contato.
         for (int i = 0; i < 2; i++) {
             ComidaOrder o = service.create(COMPANY, conversationId, contactId, "Rua X 1",
-                List.of(new OrderLineInput(item, 1, List.of())), null, null, null);
+                List.of(new OrderLineInput(item, 1, List.of())), null, null, "entrega", null);
             jdbcTemplate.update("update comida_orders set status = 'entregue' where id = ?", o.id());
         }
 
         ComidaOrder third = service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item, 1, List.of())), null, null, null);
+            List.of(new OrderLineInput(item, 1, List.of())), null, null, "entrega", null);
         assertThat(third.loyaltyApplied()).isTrue();
         assertThat(third.discountCents()).isEqualTo(1500);
         assertThat(third.totalCents()).isEqualTo(1500);
@@ -222,13 +222,13 @@ class ComidaOrderServiceTest extends AbstractIntegrationTest {
         UUID item = seedMenuItem("Combo", 4000);
 
         ComidaOrder zoned = service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item, 1, List.of())), null, zone, null);
+            List.of(new OrderLineInput(item, 1, List.of())), null, zone, "entrega", null);
         assertThat(zoned.deliveryFeeCents()).isEqualTo(900);
         assertThat(zoned.zoneNameSnapshot()).isEqualTo("Centro");
         assertThat(zoned.totalCents()).isEqualTo(4900);
 
         ComidaOrder fallback = service.create(COMPANY, conversationId, contactId, "Rua X 1",
-            List.of(new OrderLineInput(item, 1, List.of())), null, inactive, null);
+            List.of(new OrderLineInput(item, 1, List.of())), null, inactive, "entrega", null);
         assertThat(fallback.deliveryFeeCents()).isEqualTo(500);
         assertThat(fallback.zoneNameSnapshot()).isNull();
     }

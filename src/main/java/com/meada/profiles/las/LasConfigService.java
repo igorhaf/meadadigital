@@ -30,9 +30,14 @@ public class LasConfigService {
     }
 
     @Transactional
-    public LasConfig update(UUID companyId, UUID userId, int deliveryFeeCents, int minOrderCents) {
+    public LasConfig update(UUID companyId, UUID userId, int deliveryFeeCents, int minOrderCents,
+                            boolean reactivationEnabled, int reactivationDays,
+                            String reactivationCouponCode) {
         LasConfig saved = repository.upsert(companyId, Math.max(0, deliveryFeeCents),
-            Math.max(0, minOrderCents));
+            Math.max(0, minOrderCents), reactivationEnabled,
+            Math.min(365, Math.max(7, reactivationDays)),
+            reactivationCouponCode == null || reactivationCouponCode.isBlank()
+                ? null : reactivationCouponCode.strip());
         auditLogger.log(companyId, userId, "las_config_updated", "las_config", companyId, Map.of());
         menuCache.invalidate(companyId);
         return saved;

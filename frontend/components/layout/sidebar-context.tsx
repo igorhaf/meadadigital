@@ -1,6 +1,14 @@
 'use client'
 
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from 'react'
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState,
+  type ReactNode,
+} from 'react'
 
 /**
  * Estado do sidebar colapsável global (desktop), modo PUSH único: a aba-balão é CLIQUE-TOGGLE; o
@@ -29,6 +37,7 @@ export function SidebarProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     try {
       const saved = window.localStorage.getItem(STORAGE_KEY)
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- hidratação da preferência salva (localStorage) no mount
       if (saved != null) setCollapsed(saved === '1')
     } catch {
       /* localStorage indisponível — usa default */

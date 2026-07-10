@@ -68,3 +68,12 @@ NUNCA oferece variante esgotada, e o backend descarta o `total_cents`.
 - Base de conhecimento (RAG): disponível como em todo perfil (item "Conhecimento" do nav +
   `{{knowledge}}` do PromptBuilder, sem gate de perfil).
 - Guard `/api/lingerie/**` → 403 `forbidden_wrong_profile`. Paleta `ameixa`. Tenant: `igorhaf32`.
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_LINGERIE #1/#3/#4, migration 101)
+
+- **Cupom (#4, motor unificado):** `lingerie_coupons` + desconto materializado; campo `cupom` na
+  tag `<pedido_lingerie>`; inválido não aborta. Tela Cupons + nav.
+- **Avise-me quando voltar (#1, `lingerie_stock_alerts`):** espelho da moda infantil — tag
+  `<aviso_estoque_lingerie>{variant_id}` + disparo na reposição 0→N do painel.
+- **Cross-sell "completa o conjunto" (#3, sem DDL):** a persona oferece UMA vez a peça-par/
+  complementar do catálogo, tom discreto, sem insistir.

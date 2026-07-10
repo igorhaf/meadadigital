@@ -32,6 +32,8 @@ public class CursosEnrollmentRepository {
         (UUID) rs.getObject("course_id"),
         rs.getString("course_title"),
         rs.getInt("course_monthly_cents"),
+        rs.getInt("discount_cents"),
+        rs.getString("coupon_code_snapshot"),
         (UUID) rs.getObject("conversation_id"),
         (UUID) rs.getObject("contact_id"),
         rs.getString("student_name"),
@@ -44,7 +46,8 @@ public class CursosEnrollmentRepository {
         rs.getTimestamp("status_updated_at").toInstant());
 
     private static final String COLS =
-        "id, course_id, course_title, course_monthly_cents, conversation_id, contact_id, student_name, "
+        "id, course_id, course_title, course_monthly_cents, discount_cents, coupon_code_snapshot, "
+            + "conversation_id, contact_id, student_name, "
             + "student_phone, start_date, end_date, status, notes, created_at, status_updated_at";
 
     private static final RowMapper<CursosModule> MODULE_MAPPER = (rs, rn) -> new CursosModule(
@@ -111,17 +114,19 @@ public class CursosEnrollmentRepository {
      */
     @Transactional
     public CursosEnrollment insertEnrollment(UUID companyId, UUID courseId, String courseTitle,
-                                             int courseMonthlyCents, UUID conversationId, UUID contactId,
+                                             int courseMonthlyCents, int discountCents, String couponCode,
+                                             UUID conversationId, UUID contactId,
                                              String studentName, String studentPhone, String notes) {
         if (contactId != null && findActiveByContactAndCourse(companyId, contactId, courseId).isPresent()) {
             throw new AlreadyEnrolledException();
         }
         UUID id = jdbcTemplate.queryForObject(
             "insert into cursos_enrollments (company_id, course_id, conversation_id, contact_id, "
-                + "student_name, student_phone, course_title, course_monthly_cents, notes) "
-                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
+                + "student_name, student_phone, course_title, course_monthly_cents, "
+                + "discount_cents, coupon_code_snapshot, notes) "
+                + "values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?) returning id",
             UUID.class, companyId, courseId, conversationId, contactId, studentName, studentPhone,
-            courseTitle, courseMonthlyCents, notes);
+            courseTitle, courseMonthlyCents, discountCents, couponCode, notes);
         return findById(companyId, id).orElseThrow();
     }
 

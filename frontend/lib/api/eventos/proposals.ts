@@ -54,8 +54,13 @@ export type UpdateTimelineInput = {
 
 export function listProposals(
   opts: {
-    status?: string; plannerId?: string; contactId?: string
-    eventDateFrom?: string; eventDateTo?: string; page?: number; pageSize?: number
+    status?: string
+    plannerId?: string
+    contactId?: string
+    eventDateFrom?: string
+    eventDateTo?: string
+    page?: number
+    pageSize?: number
   } = {},
 ): Promise<ProposalPage> {
   const p = new URLSearchParams()
@@ -75,53 +80,82 @@ export function getProposal(id: string): Promise<EventProposal> {
 }
 
 export function openProposal(input: OpenProposalInput): Promise<EventProposal> {
-  return apiFetch<EventProposal>('/api/eventos/proposals', { method: 'POST', body: JSON.stringify(input) })
+  return apiFetch<EventProposal>('/api/eventos/proposals', {
+    method: 'POST',
+    body: JSON.stringify(input),
+  })
 }
 
 export function updateProposal(id: string, input: UpdateProposalInput): Promise<EventProposal> {
-  return apiFetch<EventProposal>(`/api/eventos/proposals/${id}`, { method: 'PATCH', body: JSON.stringify(input) })
+  return apiFetch<EventProposal>(`/api/eventos/proposals/${id}`, {
+    method: 'PATCH',
+    body: JSON.stringify(input),
+  })
 }
 
 // ---- Itens de ORÇAMENTO (entram no total) ----
 
 export function addItem(proposalId: string, input: AddItemInput): Promise<EventProposalItem> {
   return apiFetch<EventProposalItem>(`/api/eventos/proposals/${proposalId}/items`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
-export function updateItem(proposalId: string, itemId: string, input: UpdateItemInput): Promise<EventProposalItem> {
+export function updateItem(
+  proposalId: string,
+  itemId: string,
+  input: UpdateItemInput,
+): Promise<EventProposalItem> {
   return apiFetch<EventProposalItem>(`/api/eventos/proposals/${proposalId}/items/${itemId}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
 export function deleteItem(proposalId: string, itemId: string): Promise<void> {
-  return apiFetch<void>(`/api/eventos/proposals/${proposalId}/items/${itemId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/eventos/proposals/${proposalId}/items/${itemId}`, {
+    method: 'DELETE',
+  })
 }
 
 // ---- Marcos de CRONOGRAMA (a escapada — NÃO entram no total) ----
 
-export function addTimelineItem(proposalId: string, input: AddTimelineInput): Promise<EventTimelineItem> {
+export function addTimelineItem(
+  proposalId: string,
+  input: AddTimelineInput,
+): Promise<EventTimelineItem> {
   return apiFetch<EventTimelineItem>(`/api/eventos/proposals/${proposalId}/timeline`, {
-    method: 'POST', body: JSON.stringify(input),
+    method: 'POST',
+    body: JSON.stringify(input),
   })
 }
 
-export function updateTimelineItem(proposalId: string, itemId: string, input: UpdateTimelineInput): Promise<EventTimelineItem> {
+export function updateTimelineItem(
+  proposalId: string,
+  itemId: string,
+  input: UpdateTimelineInput,
+): Promise<EventTimelineItem> {
   return apiFetch<EventTimelineItem>(`/api/eventos/proposals/${proposalId}/timeline/${itemId}`, {
-    method: 'PATCH', body: JSON.stringify(input),
+    method: 'PATCH',
+    body: JSON.stringify(input),
   })
 }
 
 export function deleteTimelineItem(proposalId: string, itemId: string): Promise<void> {
-  return apiFetch<void>(`/api/eventos/proposals/${proposalId}/timeline/${itemId}`, { method: 'DELETE' })
+  return apiFetch<void>(`/api/eventos/proposals/${proposalId}/timeline/${itemId}`, {
+    method: 'DELETE',
+  })
 }
 
 // ---- Status ----
 
-export function updateProposalStatus(id: string, newStatus: EventProposalStatusId): Promise<EventProposal> {
+export function updateProposalStatus(
+  id: string,
+  newStatus: EventProposalStatusId,
+): Promise<EventProposal> {
   return apiFetch<EventProposal>(`/api/eventos/proposals/${id}/status`, {
-    method: 'PATCH', body: JSON.stringify({ newStatus }),
+    method: 'PATCH',
+    body: JSON.stringify({ newStatus }),
   })
 }

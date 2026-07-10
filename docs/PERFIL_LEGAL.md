@@ -45,3 +45,34 @@ o advogado para dúvidas substantivas.
 - **Sem partes formais** (autor/réu/terceiros), recursos, custas ou peças.
 - **Sem anexo/documento** (bloqueador técnico de Storage).
 - Os textos de notificação são fixos nesta versão (personalização por escritório: fase futura).
+
+## Onda 1 do backlog (migration 102)
+
+Entregue a partir de `docs/FEATURES_SUGERIDAS_LEGAL.md` (#1 e #3):
+
+- **#1 — Agenda de prazos e audiências com lembrete automático** (`legal_deadlines`): o advogado
+  cadastra prazos/audiências por processo (kind `prazo|audiencia`, título, data, hora opcional,
+  local opcional, status `pendente|cumprido|perdido` — gestão livre, sem máquina rígida). Tela
+  "Prazos" no grupo Escritório (CRUD + filtro por status + mudança de status inline). O
+  `LegalDeadlineReminderJob` (cron `${legal.deadline-reminder-cron:0 30 8 * * *}`) varre os
+  pendentes com vencimento em **D-3 e D-1** e avisa o CLIENTE vinculado via `LegalCaseNotifier`
+  (contato → conversa mais recente; sem vínculo WhatsApp marca sem envio). Texto FIXO com
+  data/hora/local — **NUNCA mérito** (trava jurídica intacta). Idempotência por
+  (`reminded3_due_date`/`reminded1_due_date` = due_date): **remarcar REARMA** os dois avisos.
+  Toggle `deadline_reminder_enabled` (default ON, `coalesce(true)` sem linha de config). A IA
+  ganhou no contexto do cliente o bloco "Próximos compromissos" (data/hora/local, até 5 futuros)
+  com instrução explícita de não comentar estratégia/desfecho.
+- **#3 — Pós-encerramento (agradecimento + avaliação + indicação)** (`legal_config`): ao mudar o
+  processo para **encerrado**, além da notificação de status, o `LegalCaseService` encadeia uma
+  segunda mensagem de agradecimento com o `review_link` (se configurado) e convite de indicação.
+  Toggle `post_closure_enabled` (default ON). Tela "Configurações" do grupo Escritório (link de
+  avaliação + os 2 toggles), endpoints `GET/PUT /api/legal/config`.
+
+Endpoints novos: `GET/POST /api/legal/deadlines`, `PATCH/DELETE /api/legal/deadlines/{id}`,
+`GET/PUT /api/legal/config` (todos atrás do `LegalProfileGuard`). Teste:
+`LegalOnda1IntegrationTest` (janelas D-3/D-1 + idempotência + rearm ao remarcar + status
+cumprido/toggle silenciam + pós-encerramento ON/OFF com link).
+
+**Fica pra onda 2** (registrado, não pedido): #2 controle de honorários/parcelas, alerta interno
+de prazo ao ADVOGADO (hoje o lembrete é ao cliente), integração com tribunais (push de
+andamento), documentos do processo (bloqueador SERVICE_ROLE_KEY).

@@ -42,12 +42,16 @@ class TravelConfigServiceTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("PUT upsert grava nome da agência + notas e GET reflete")
     void putUpsert() {
-        TravelConfig saved = service.update(COMPANY, USER, "Agência Modelo", "Atendimento 9h-18h");
+        TravelConfig saved = service.update(COMPANY, USER, "Agência Modelo", "Atendimento 9h-18h",
+            true, true, 2);
         assertThat(saved.businessName()).isEqualTo("Agência Modelo");
         assertThat(saved.notes()).isEqualTo("Atendimento 9h-18h");
 
         TravelConfig fetched = service.get(COMPANY);
         assertThat(fetched.businessName()).isEqualTo("Agência Modelo");
         assertThat(fetched.notes()).isEqualTo("Atendimento 9h-18h");
+        assertThat(fetched.tripReminderEnabled()).isTrue();
+        assertThat(fetched.quoteFollowupEnabled()).isTrue();
+        assertThat(fetched.quoteFollowupDays()).isEqualTo(2);
     }
 }

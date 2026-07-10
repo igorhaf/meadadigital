@@ -137,3 +137,21 @@ remove a tag antes de enviar a mensagem ao cliente. Cada item tem **dois modos**
   linhas/tabelas (lição das migrations anteriores).
 - Paleta `carmim`.
 - Tenant de teste: `igorhaf17` (Pizzaria Modelo).
+
+## Onda 1 do backlog (2026-07 — FEATURES_SUGERIDAS_PIZZARIA #1/#2/#3, migration 93)
+
+Clone da onda adega (mig 80), sobre o motor unificado `com.meada.common.coupons`:
+
+- **Cupom (#1, `pizzaria_coupons`):** percent/fixed + mínimo + validade + max usos; CRUD
+  `/api/pizzaria/coupons` + tela `/dashboard/pizzaria-coupons`. A IA passa SÓ o código no campo
+  `cupom` da tag `<pedido_pizza>`; o backend valida (active + validade + mínimo + usos) e aplica
+  no total materializado; cupom inválido NÃO aborta (o pedido sai sem desconto); `uses`
+  incrementa na MESMA transação.
+- **Fidelidade por contagem (#2, `pizzaria_loyalty_config`):** enabled + threshold_orders +
+  reward percent/fixed. Conta os pedidos ENTREGUES do contato ANTES do insert; `count>0 &&
+  count%threshold==0` → desconto automático + `loyalty_applied=true`. Tela
+  `/dashboard/pizzaria-loyalty`. Cupom + fidelidade SOMAM, clampados ao subtotal
+  (`total = subtotal − discount + delivery_fee`).
+- **Upsell na persona (#3, sem DDL):** o bloco do `PizzariaMenuCache` autoriza UMA sugestão de
+  complemento do próprio cardápio (borda recheada/bebida/sobremesa) antes de fechar, sem
+  insistir; e ensina o campo `cupom` ("quem valida/calcula é o sistema").

@@ -8,10 +8,7 @@ import { Card, Section } from '@/components/ui/card'
 import { getReportSummary } from '@/lib/api/concessionaria/reports'
 import { LEAD_STATUSES } from '@/profiles/concessionaria/concessionaria-lead-status'
 import { TEST_DRIVE_STATUSES } from '@/profiles/concessionaria/concessionaria-test-drive-status'
-import {
-  formatBrl,
-  type ConcessionariaReportRow,
-} from '@/profiles/concessionaria/concessionaria-types'
+import { formatBrl } from '@/profiles/concessionaria/concessionaria-types'
 
 const WINDOWS = [3, 6, 12, 24]
 
@@ -37,9 +34,8 @@ export default function ConcessionariaReportsPage() {
     queryFn: () => getReportSummary(months),
   })
 
-  const conversion = data && data.leadsCreated > 0
-    ? Math.round((data.leadsClosed / data.leadsCreated) * 100)
-    : 0
+  const conversion =
+    data && data.leadsCreated > 0 ? Math.round((data.leadsClosed / data.leadsCreated) * 100) : 0
 
   return (
     <div className="space-y-6">
@@ -50,8 +46,11 @@ export default function ConcessionariaReportsPage() {
 
       <div className="flex flex-wrap items-center gap-2">
         {WINDOWS.map((w) => (
-          <button key={w} onClick={() => setMonths(w)}
-            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}>
+          <button
+            key={w}
+            onClick={() => setMonths(w)}
+            className={`rounded-full border px-3 py-1 text-xs ${months === w ? 'border-primary bg-primary/10' : 'border-border'}`}
+          >
             {w} meses
           </button>
         ))}
@@ -94,7 +93,9 @@ export default function ConcessionariaReportsPage() {
                       <tr key={i}>
                         <td className="px-3 py-2">{statusLabelOf(LEAD_STATUSES, r.status)}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{r.count}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatBrl(r.totalCents ?? 0)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {formatBrl(r.totalCents ?? 0)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -121,7 +122,9 @@ export default function ConcessionariaReportsPage() {
                         <td className="px-3 py-2">{r.salesperson ?? '—'}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{r.testDrives ?? 0}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{r.closedLeads ?? 0}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatBrl(r.closedCents ?? 0)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {formatBrl(r.closedCents ?? 0)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -146,7 +149,9 @@ export default function ConcessionariaReportsPage() {
                       <tr key={i}>
                         <td className="px-3 py-2">{r.month ? monthLabel(r.month) : '—'}</td>
                         <td className="px-3 py-2 text-right tabular-nums">{r.count}</td>
-                        <td className="px-3 py-2 text-right tabular-nums">{formatBrl(r.totalCents ?? 0)}</td>
+                        <td className="px-3 py-2 text-right tabular-nums">
+                          {formatBrl(r.totalCents ?? 0)}
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -168,7 +173,9 @@ export default function ConcessionariaReportsPage() {
                   <tbody className="divide-y divide-border">
                     {data.testDrivesByStatus.map((r, i) => (
                       <tr key={i}>
-                        <td className="px-3 py-2">{statusLabelOf(TEST_DRIVE_STATUSES, r.status)}</td>
+                        <td className="px-3 py-2">
+                          {statusLabelOf(TEST_DRIVE_STATUSES, r.status)}
+                        </td>
                         <td className="px-3 py-2 text-right tabular-nums">{r.count}</td>
                       </tr>
                     ))}

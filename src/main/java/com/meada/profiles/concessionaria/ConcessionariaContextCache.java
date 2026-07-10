@@ -183,6 +183,12 @@ public class ConcessionariaContextCache {
                 + "registrar o interesse pra loja avisar assim que chegar — colete marca/modelo (pelo "
                 + "menos um), opcionalmente o teto de preço e o ano mínimo QUE O CLIENTE DECLAROU, e "
                 + "termine a mensagem com a tag:\n")
+            .append("TROCA (trade-in): se o cliente quiser dar o carro ATUAL na troca, COLETE marca, "
+                + "modelo, ano, km, estado geral e (se ele declarar) o valor pretendido — e termine com "
+                + "(linha própria, sem markdown): <troca_carro>{\"brand\":\"...\",\"model\":\"...\","
+                + "\"year\":N,\"km\":N,\"condition\":\"...\",\"asking_cents\":N,"
+                + "\"interest_vehicle_id\":\"UUID|null\"}</troca_carro> — NUNCA avalie nem prometa "
+                + "valor pelo usado (a avaliação é da equipe; diga que a loja retorna com a proposta).\n")
             .append("<desejo_carro>{\"brand\":\"...|null\",\"model\":\"...|null\","
                 + "\"max_price_cents\":N|null,\"min_year\":N|null,\"notes\":\"...|null\"}</desejo_carro>\n")
             .append("NUNCA prometa quando o carro chega nem reserve por conta própria — o aviso é "

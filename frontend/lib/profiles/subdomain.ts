@@ -1,4 +1,4 @@
-import { getProfileBySubdomain, GENERIC_PROFILE, type Profile } from '@/lib/profiles/profile-type'
+import { GENERIC_PROFILE, getProfileBySubdomain, type Profile } from '@/lib/profiles/profile-type'
 
 /**
  * Resolução de subdomínio (camada 7.0). Meada se apresenta como N produtos por subdomínio:
@@ -68,10 +68,16 @@ export function baseUrl(reqUrl: URL, host: string | null | undefined): URL {
  * URL de login do NICHO para uma empresa sem CMS: {profileSubdomain}.<base>/login.
  * Ex.: empresa perfil 'comida' em padaria.meadadigital.com → comida.meadadigital.com/login.
  */
-export function nicheLoginUrl(reqUrl: URL, host: string | null | undefined, profileSubdomain: string): URL {
+export function nicheLoginUrl(
+  reqUrl: URL,
+  host: string | null | undefined,
+  profileSubdomain: string,
+): URL {
   const base = baseUrl(reqUrl, host)
   const port = base.port
-  base.host = port ? `${profileSubdomain}.${base.hostname}:${port}` : `${profileSubdomain}.${base.hostname}`
+  base.host = port
+    ? `${profileSubdomain}.${base.hostname}:${port}`
+    : `${profileSubdomain}.${base.hostname}`
   base.pathname = '/login'
   return base
 }
@@ -101,6 +107,10 @@ export function isMeadaHost(host: string | null | undefined): boolean {
   if (!host) return true
   const hostname = host.split(':')[0]
   if (hostname === 'localhost' || hostname === '127.0.0.1') return true
-  return hostname === 'meadadigital.local' || hostname.endsWith('.meadadigital.local')
-    || hostname === 'meadadigital.com' || hostname.endsWith('.meadadigital.com')
+  return (
+    hostname === 'meadadigital.local' ||
+    hostname.endsWith('.meadadigital.local') ||
+    hostname === 'meadadigital.com' ||
+    hostname.endsWith('.meadadigital.com')
+  )
 }
