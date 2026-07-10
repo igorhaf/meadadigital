@@ -27,7 +27,7 @@
             { "label": "Tecnologias", "value": "20+" },
             { "label": "Anos no mercado", "value": "5+" }
           ],
-          "showcase": "terminal",
+          "showcase": "chat",
           "subtitle": "Desenvolvimento personalizado do site institucional ao sistema completo. Código limpo, prazo claro e foco no que importa pro seu negócio.",
           "chatTitle": "Assistente Meada",
           "chatMessage": "Olá! 👋 Sou o assistente da Meada Digital. Como posso te ajudar hoje?",
@@ -237,7 +237,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "Da ideia ao produto final, construímos com excelência técnica em cada etapa. Escolha as soluções que impulsionam seu crescimento.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! 👋 Qual solução faz sentido pro seu projeto?",
@@ -247,11 +247,21 @@
             "gradientText": "Escala",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -461,7 +471,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "Sou desenvolvedor especializado em criar sites e sistemas sob medida — sempre com foco em qualidade, prazo e resultado real para o cliente.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! 👋 Quer conhecer a Meada? Pergunta o que quiser.",
@@ -471,11 +481,21 @@
             "gradientText": "Cuidado de Verdade",
             "primaryLabel": "Falar sobre meu projeto",
             "secondaryHref": "",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -669,7 +689,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "Tem um projeto em mente? Nossa equipe está pronta para transformar sua visão em realidade. Fale conosco.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! 👋 Conta seu projeto que a gente te responde rapidinho.",
@@ -679,11 +699,21 @@
             "gradientText": "Algo Incrível",
             "primaryLabel": "Chamar no WhatsApp",
             "secondaryHref": "",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -1074,7 +1104,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "Seu escritório de advocacia responde clientes pelo WhatsApp 24h: consulta de processos, andamentos e agendamentos — com a IA treinada nos seus dados.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Posso consultar o andamento do seu processo. Qual o seu CPF?",
@@ -1084,11 +1114,21 @@
             "gradientText": "automatizado",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -1224,7 +1264,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "Pacientes agendam consultas pelo WhatsApp com tom acolhedor. A IA identifica pelo telefone, mostra próximas consultas e marca novas — sem nunca dar diagnóstico.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Posso agendar sua consulta. Qual o melhor dia pra você?",
@@ -1234,11 +1274,21 @@
             "gradientText": "sempre disponível",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -1374,7 +1424,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "Clientes pedem em linguagem natural pelo WhatsApp; a IA monta o carrinho, aplica cupom, e o pedido cai num Kanban. Com retirada, agendamento e fidelidade.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Bem-vindo. Quer ver nosso cardápio de hoje?",
@@ -1384,11 +1434,21 @@
             "gradientText": "no automático",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -1524,7 +1584,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA atende clientes pelo WhatsApp, verifica disponibilidade de mesa em tempo real e confirma a reserva — fechando a janela de conflito no banco.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Para quantas pessoas e qual dia você quer reservar?",
@@ -1534,11 +1594,21 @@
             "gradientText": "sem telefone tocando",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -1674,7 +1744,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "Clientes escolhem serviço e profissional pelo WhatsApp; a IA verifica a agenda de cada profissional e marca — com tom acolhedor e sem julgamento.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual serviço você quer agendar hoje?",
@@ -1684,11 +1754,21 @@
             "gradientText": "agendado sozinho",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -1824,7 +1904,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA mostra quartos por número de pessoas e datas, calcula a diária × noites e reserva — tratando o intervalo de dias e a rotação de check-in/check-out.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Para quantas pessoas e quais datas você procura?",
@@ -1834,11 +1914,21 @@
             "gradientText": "reservando hóspedes",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -1974,7 +2064,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA oferece planos e aulas com vaga em tempo real, matricula alunos (assinatura) e registra pagamentos — sem nunca prescrever treino ou dieta.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer conhecer nossos planos e aulas?",
@@ -1984,11 +2074,21 @@
             "gradientText": "com matrícula no WhatsApp",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -2124,7 +2224,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA cadastra os animais de cada tutor e agenda banho, tosa e consulta na agenda de cada profissional — respeitando restrição de espécie.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual pet você quer agendar e pra qual serviço?",
@@ -2134,11 +2234,21 @@
             "gradientText": "cuidando dos tutores",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -2274,7 +2384,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA abre a ordem de serviço pela queixa do cliente, informa o orçamento quando existe e captura a aprovação — em duas fases.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Me conta o que está acontecendo com o veículo.",
@@ -2284,11 +2394,21 @@
             "gradientText": "com OS pelo WhatsApp",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -2424,7 +2544,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA agenda consultas e entrega o plano alimentar que o nutricionista gravou — sem nunca criar, calcular ou ajustar plano.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar sua consulta de nutrição?",
@@ -2434,11 +2554,21 @@
             "gradientText": "agendando e entregando o plano",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -2574,7 +2704,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA marca horário com um barbeiro ou coloca o cliente na fila de walk-in por ordem de chegada — com posição e tempo estimado.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "E aí! Quer marcar um horário ou entrar na fila?",
@@ -2584,11 +2714,21 @@
             "gradientText": "com agenda e fila",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -2724,7 +2864,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA abre propostas a partir do briefing; a equipe monta o orçamento e o cronograma do dia, e a IA captura a aprovação.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Me conta sobre o evento que você está planejando.",
@@ -2734,11 +2874,21 @@
             "gradientText": "com proposta no WhatsApp",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -2874,7 +3024,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA vende pacotes de sessões, agenda consumindo o saldo do pacote e registra a ficha de cada sessão — sem indicar procedimento.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer conhecer nossos pacotes e procedimentos?",
@@ -2884,11 +3034,21 @@
             "gradientText": "com pacote de sessões",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -3024,7 +3184,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido com opções e adicionais, e o restaurante aceita ou recusa no painel — gate de aceite humano.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver o cardápio de hoje?",
@@ -3034,11 +3194,21 @@
             "gradientText": "estilo iFood",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -3174,7 +3344,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido de flores como presente agendado: data, período, destinatário e mensagem do cartão.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer enviar flores? Para qual data?",
@@ -3184,11 +3354,21 @@
             "gradientText": "com entrega agendada",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -3324,7 +3504,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta a pizza inteira ou meio-a-meio; o preço da fracionada é a regra do maior valor — recalculado pelo sistema.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer montar sua pizza? Pode ser meio-a-meio.",
@@ -3334,11 +3514,21 @@
             "gradientText": "com meio-a-meio",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -3474,7 +3664,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido de vinhos e bebidas, confirma a maioridade (+18) e a loja acompanha num Kanban.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Posso ajudar a escolher um bom rótulo?",
@@ -3484,11 +3674,21 @@
             "gradientText": "com delivery de bebidas",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -3624,7 +3824,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA atende os responsáveis, cadastra os alunos, matricula em turmas com vaga e agenda visitas da família.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer matricular seu filho ou agendar uma visita?",
@@ -3634,11 +3834,21 @@
             "gradientText": "com matrícula no WhatsApp",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -3774,7 +3984,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA abre propostas de peça sob medida (costura, arte, design); a equipe orça e gerencia as provas/ajustes.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Me conta a peça que você imagina.",
@@ -3784,11 +3994,21 @@
             "gradientText": "sob encomenda",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -3924,7 +4144,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA atende os noivos, abre a proposta e captura a aprovação — com orçamento, cronograma do dia e checklist pré-casamento.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Parabéns! Me conta sobre o casamento de vocês.",
@@ -3934,11 +4154,21 @@
             "gradientText": "do briefing à aprovação",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -4074,7 +4304,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA mostra o estoque, agenda test-drive com um vendedor e registra lead de compra — sem fechar preço.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver nossos carros ou agendar um test-drive?",
@@ -4084,11 +4314,21 @@
             "gradientText": "estoque, test-drive e leads",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -4224,7 +4464,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA agenda a coleta e calcula a entrega pelo turnaround de cada serviço — sempre coleta + entrega.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar a coleta das suas roupas?",
@@ -4234,11 +4474,21 @@
             "gradientText": "com coleta e entrega",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -4374,7 +4624,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA agenda consultas e entrega a orientação de preparo gravada pelo médico — sem nunca avaliar lesão, mancha ou foto.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar sua consulta dermatológica?",
@@ -4384,11 +4634,21 @@
             "gradientText": "agendando com segurança",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -4524,7 +4784,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA agenda sessões com um fotógrafo e entrega o link do material gravado pelo estúdio — sem prometer resultado estético.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar uma sessão de fotos?",
@@ -4534,11 +4794,21 @@
             "gradientText": "agenda e entrega de material",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -4674,7 +4944,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA matricula alunos, entrega o conteúdo do próximo módulo da trilha e registra a mensalidade.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer conhecer nossos cursos?",
@@ -4684,11 +4954,21 @@
             "gradientText": "com trilha de módulos",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -4824,7 +5104,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido pela variante exata (tamanho × cor) com estoque, e a loja acompanha num Kanban.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver nosso catálogo? Me diz tamanho e cor.",
@@ -4834,11 +5114,21 @@
             "gradientText": "com grade de variantes",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -4974,7 +5264,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA sugere o tamanho pela idade da criança, monta o pedido pela variante e a loja acompanha — com devolução de estoque ao cancelar.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual a idade da criança? Já sugiro o tamanho.",
@@ -4984,11 +5274,21 @@
             "gradientText": "com tamanho por idade",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -5124,7 +5424,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido por cor e lote, garantindo o mesmo lote para projetos grandes — onde o tom precisa bater.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual cor e quantos novelos você precisa?",
@@ -5134,11 +5434,21 @@
             "gradientText": "com lote de tingimento",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -5274,7 +5584,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido com itens de pronta-entrega e bolos sob encomenda — respeitando a antecedência e a personalização.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer encomendar um bolo ou pedir pães?",
@@ -5284,11 +5594,21 @@
             "gradientText": "pronta-entrega e encomenda",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -5424,7 +5744,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA agenda exame de vista e registra a encomenda de óculos com os dados de receita — sem nunca prescrever grau.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar um exame ou encomendar óculos?",
@@ -5434,11 +5754,21 @@
             "gradientText": "exame e óculos sob receita",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -5574,7 +5904,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido com tiragem e personalização; a equipe sobe a arte e o cliente aprova antes da produção.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer encomendar convites? Me conta o tema.",
@@ -5584,11 +5914,21 @@
             "gradientText": "convites personalizados",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -5724,7 +6064,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA abre a proposta a partir do briefing; a equipe monta a cotação e o roteiro dia-a-dia, e a IA captura a aprovação.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Para onde você sonha viajar?",
@@ -5734,11 +6074,21 @@
             "gradientText": "do briefing à aprovação",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
@@ -5874,7 +6224,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "showcase": "terminal",
             "subtitle": "A IA monta o pedido pela variante (sabor × peso) com estoque, e a loja acompanha — sem nunca prescrever dosagem.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver o catálogo? Me diz sabor e tamanho.",
@@ -5884,11 +6234,21 @@
             "gradientText": "com variantes e estoque",
             "primaryLabel": "Falar com especialista",
             "secondaryHref": "/produtos",
-            "terminalLines": [],
-            "terminalTitle": "",
+            "terminalLines": [
+              { "kind": "cmd", "text": "meada start --tipo=ecommerce" },
+              { "kind": "info", "text": "Discovery e arquitetura definidos." },
+              { "kind": "check", "text": "Frontend Next.js + Tailwind" },
+              { "kind": "check", "text": "Backend escalável + API REST" },
+              { "kind": "check", "text": "Banco de dados + migrations" },
+              { "kind": "check", "text": "Pagamentos integrados" },
+              { "kind": "check", "text": "CI/CD + deploy em produção" },
+              { "kind": "check", "text": "Painel admin para gestão" },
+              { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
+            ],
+            "terminalTitle": "meada — projeto.sh",
             "secondaryLabel": "Ver todos os nichos",
-            "terminalCaptionLeft": "",
-            "terminalCaptionRight": ""
+            "terminalCaptionLeft": "do briefing ao ar em produção",
+            "terminalCaptionRight": "~ 2-6 sem"
           }
         },
         {
