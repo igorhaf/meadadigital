@@ -1,0 +1,40 @@
+# Deploy manual no servidor — bem simples (por enquanto): SSH com login/senha,
+# derruba o docker-compose e sobe de novo. Disparado manualmente pela UI/API.
+#
+# Pré-requisitos no servidor (ver README de deploy):
+#   1. Docker + Docker Compose instalados.
+#   2. O projeto (com docker-compose.yml na raiz) presente em `project_dir`.
+#
+# Secrets usados (Settings > Secrets and variables > Actions):
+#   SERVER_SSH_HOST, SERVER_SSH_USER, SERVER_SSH_PASSWORD
+
+name: Deploy (servidor)
+
+on:
+  workflow_dispatch:
+    inputs:
+      project_dir:
+        description: 'Caminho do projeto no servidor (docker-compose.yml na raiz)'
+        default: '/opt/meada'
+        required: true
+        type: string
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: SSH — docker compose down + up
+        uses: appleboy/ssh-action@v1.2.0
+        with:
+          host: ${{ secrets.SERVER_SSH_HOST }}
+          username: ${{ secrets.SERVER_SSH_USER }}
+          password: ${{ secrets.SERVER_SSH_PASSWORD }}
+          script: |
+            set -e
+            cd "${{ inputs.project_dir }}"
+            echo "== Derrubando a stack (docker compose down) =="
+            docker compose down
+            echo "== Subindo a stack (docker compose up -d --build) =="
+            docker compose up -d --build
+            echo "== Status =="
+            docker compose ps
