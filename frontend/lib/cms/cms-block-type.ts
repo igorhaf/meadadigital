@@ -139,7 +139,8 @@ export type LogoStripProps = { label: string; items: LogoItem[] }
 export type MeadaStat = { value: string; label: string }
 export type MeadaTermLine = { kind: 'cmd' | 'check' | 'info' | 'done'; text: string }
 /** Hero institucional Meada — fiel ao meada-page. O título é prefixo + trecho em gradiente +
- * sufixo. showcase: 'terminal' (animação projeto.sh) ou 'chat' (widget de assistente). */
+ * sufixo. showcase: 'terminal' (animação projeto.sh), 'chat' (widget de assistente) ou 'plan'
+ * (card de plano/preço no lado direito — usado nas páginas de nicho). */
 export type MeadaHeroProps = {
   titlePrefix: string
   gradientText: string
@@ -150,13 +151,19 @@ export type MeadaHeroProps = {
   secondaryLabel: string
   secondaryHref: string
   stats: MeadaStat[]
-  showcase: 'terminal' | 'chat'
+  showcase: 'terminal' | 'chat' | 'plan'
   terminalTitle: string
   terminalLines: MeadaTermLine[]
   terminalCaptionLeft: string
   terminalCaptionRight: string
   chatTitle: string
   chatMessage: string
+  planBadge: string
+  planName: string
+  planDescription: string
+  planPrice: string
+  planButtonLabel: string
+  planButtonHref: string
 }
 
 /** Serviço do bloco meada_services. icon = nome lucide (Code, Cloud, Heart, Smartphone, Layers,

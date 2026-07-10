@@ -213,6 +213,8 @@ export function MeadaHero({ props }: { props: MeadaHeroProps }) {
           <div style={{ position: 'relative', height: '520px' }}>
             {props.showcase === 'chat' ? (
               <ChatShowcase props={props} />
+            ) : props.showcase === 'plan' ? (
+              <PlanShowcase props={props} />
             ) : (
               <TerminalShowcase props={props} />
             )}
@@ -220,6 +222,78 @@ export function MeadaHero({ props }: { props: MeadaHeroProps }) {
         </div>
       </div>
     </section>
+  )
+}
+
+/** Card de plano/preço no lado direito do hero (páginas de nicho) — substitui o console. */
+function PlanShowcase({ props }: { props: MeadaHeroProps }) {
+  return (
+    <div
+      style={{
+        height: '520px',
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+      }}
+    >
+      <div
+        style={{
+          width: '100%',
+          maxWidth: '420px',
+          background: '#ffffff',
+          color: '#0b1220',
+          borderRadius: '20px',
+          padding: '2.25rem',
+          border: '1px solid rgba(59,130,246,0.55)',
+          boxShadow: '0 0 0 4px rgba(59,130,246,0.12), 0 30px 60px -20px rgba(0,0,0,0.65)',
+        }}
+      >
+        {props.planBadge && (
+          <div
+            style={{
+              fontSize: '12px',
+              fontWeight: 700,
+              letterSpacing: '0.08em',
+              textTransform: 'uppercase',
+              color: '#3b82f6',
+              marginBottom: '0.9rem',
+            }}
+          >
+            {props.planBadge}
+          </div>
+        )}
+        <div style={{ fontSize: '1.4rem', fontWeight: 800, marginBottom: '0.75rem' }}>
+          {props.planName}
+        </div>
+        {props.planDescription && (
+          <p
+            style={{ fontSize: '15px', lineHeight: 1.55, color: '#475569', marginBottom: '1.5rem' }}
+          >
+            {props.planDescription}
+          </p>
+        )}
+        <div style={{ fontSize: '2.4rem', fontWeight: 800, marginBottom: '1.5rem' }}>
+          {props.planPrice}
+        </div>
+        {props.planButtonLabel && (
+          <a
+            href={props.planButtonHref || '#'}
+            style={{
+              display: 'block',
+              textAlign: 'center',
+              background: '#3b82f6',
+              color: '#fff',
+              fontWeight: 700,
+              padding: '0.9rem 1rem',
+              borderRadius: '12px',
+              textDecoration: 'none',
+            }}
+          >
+            {props.planButtonLabel}
+          </a>
+        )}
+      </div>
+    </div>
   )
 }
 

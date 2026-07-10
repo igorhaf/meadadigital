@@ -503,8 +503,15 @@ export const blockSchemas: Record<CmsBlockTypeId, BlockSchema> = {
         options: [
           { value: 'terminal', label: 'Terminal animado (projeto.sh)' },
           { value: 'chat', label: 'Assistente / chat IA' },
+          { value: 'plan', label: 'Card de plano/preço' },
         ],
       },
+      { key: 'planBadge', label: 'Plano — etiqueta', type: 'text', hint: 'Ex.: Mais escolhido' },
+      { key: 'planName', label: 'Plano — nome', type: 'text', hint: 'Ex.: Plano Comida' },
+      { key: 'planDescription', label: 'Plano — descrição', type: 'textarea' },
+      { key: 'planPrice', label: 'Plano — preço', type: 'text', hint: 'Ex.: R$ 197/mês' },
+      { key: 'planButtonLabel', label: 'Plano — texto do botão', type: 'text' },
+      { key: 'planButtonHref', label: 'Plano — link do botão', type: 'url' },
       { key: 'terminalTitle', label: 'Terminal — título', type: 'text' },
       {
         key: 'terminalLines',

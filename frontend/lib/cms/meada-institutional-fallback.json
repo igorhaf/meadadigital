@@ -171,12 +171,12 @@
     ],
     "theme": { "preset": "meada-dark" },
     "nav": [
+      { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+      { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
       { "pageSlug": "home", "title": "Meada", "isHome": true },
       { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
       { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
       { "pageSlug": "contato", "title": "Contato", "isHome": false },
-      { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-      { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
       { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
       { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
       { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -213,6 +213,250 @@
     ]
   },
   "pages": {
+    "portfolio": {
+      "title": "Portfólio",
+      "blocks": [
+        {
+          "id": "nav",
+          "type": "meada_navbar",
+          "props": {
+            "links": [
+              { "href": "/servicos", "label": "Serviços" },
+              { "href": "/produtos", "label": "Produtos" },
+              { "href": "/sobre", "label": "Sobre" },
+              { "href": "/contato", "label": "Contato" }
+            ],
+            "ctaHref": "/contato",
+            "ctaLabel": "Pedir orçamento",
+            "brandName": "Meada",
+            "brandSuffix": "Digital"
+          }
+        },
+        {
+          "id": "port",
+          "type": "meada_portfolio",
+          "props": {
+            "items": [],
+            "title": "Todos os Projetos",
+            "eyebrow": "Portfolio",
+            "linkHref": "/portfolio",
+            "linkLabel": "Ver detalhes →"
+          }
+        },
+        {
+          "id": "cta",
+          "type": "meada_cta",
+          "props": {
+            "subtitle": "Do site institucional ao sistema completo. Cada projeto é construído sob medida para o negócio do cliente.",
+            "primaryHref": "/contato",
+            "titlePrefix": "Quer um projeto",
+            "gradientText": "como esses?",
+            "primaryLabel": "Começar meu projeto",
+            "secondaryHref": "/servicos",
+            "secondaryLabel": "Ver Serviços"
+          }
+        },
+        {
+          "id": "ft",
+          "type": "meada_footer",
+          "props": {
+            "columns": [
+              {
+                "links": [
+                  { "href": "/servicos", "label": "Sites Profissionais" },
+                  { "href": "/servicos", "label": "Sistemas sob Medida" },
+                  { "href": "/contato", "label": "Manutenção & Suporte" }
+                ],
+                "heading": "Serviços"
+              },
+              {
+                "links": [
+                  { "href": "/sobre", "label": "Sobre Nós" },
+                  { "href": "/produtos", "label": "Produtos" },
+                  { "href": "/servicos", "label": "Serviços" }
+                ],
+                "heading": "Empresa"
+              },
+              {
+                "links": [
+                  { "href": "mailto:oi@meadadigital.com", "label": "oi@meadadigital.com" },
+                  { "href": "https://wa.me/5581992612292", "label": "(81) 99261-2292" },
+                  { "href": "https://instagram.com/meadadigital", "label": "@meadadigital" }
+                ],
+                "heading": "Contato"
+              }
+            ],
+            "tagline": "Agência digital especializada em sites e sistemas sob medida para pequenos e médios negócios.",
+            "brandName": "Meada",
+            "copyright": "© Meada Agência Digital. Todos os direitos reservados.",
+            "brandSuffix": "Digital",
+            "whatsappUrl": "https://wa.me/5581992612292",
+            "instagramUrl": "https://instagram.com/meadadigital"
+          }
+        }
+      ],
+      "theme": { "preset": "meada-dark" },
+      "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
+        { "pageSlug": "home", "title": "Meada", "isHome": true },
+        { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
+        { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
+        { "pageSlug": "contato", "title": "Contato", "isHome": false },
+        { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
+        { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
+        { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
+        { "pageSlug": "restaurant", "title": "MesaBot", "isHome": false },
+        { "pageSlug": "salon", "title": "SalãoBot", "isHome": false },
+        { "pageSlug": "pousada", "title": "PousadaBot", "isHome": false },
+        { "pageSlug": "academia", "title": "AcademiaBot", "isHome": false },
+        { "pageSlug": "pet", "title": "PetBot", "isHome": false },
+        { "pageSlug": "oficina", "title": "OficinaBot", "isHome": false },
+        { "pageSlug": "nutri", "title": "NutriBot", "isHome": false },
+        { "pageSlug": "barbearia", "title": "BarbeariaBot", "isHome": false },
+        { "pageSlug": "eventos", "title": "EventosBot", "isHome": false },
+        { "pageSlug": "estetica", "title": "EsteticaBot", "isHome": false },
+        { "pageSlug": "comida", "title": "ComidaBot", "isHome": false },
+        { "pageSlug": "floricultura", "title": "FloriculturaBot", "isHome": false },
+        { "pageSlug": "pizzaria", "title": "PizzariaBot", "isHome": false },
+        { "pageSlug": "adega", "title": "AdegaBot", "isHome": false },
+        { "pageSlug": "escola", "title": "EscolaBot", "isHome": false },
+        { "pageSlug": "atelie", "title": "AtelieBot", "isHome": false },
+        { "pageSlug": "casamento", "title": "CasamentoBot", "isHome": false },
+        { "pageSlug": "concessionaria", "title": "ConcessionariaBot", "isHome": false },
+        { "pageSlug": "lavanderia", "title": "LavanderiaBot", "isHome": false },
+        { "pageSlug": "dermatologia", "title": "DermatologiaBot", "isHome": false },
+        { "pageSlug": "fotografia", "title": "FotografiaBot", "isHome": false },
+        { "pageSlug": "cursos", "title": "CursosBot", "isHome": false },
+        { "pageSlug": "lingerie", "title": "LingerieBot", "isHome": false },
+        { "pageSlug": "moda_infantil", "title": "ModaInfantilBot", "isHome": false },
+        { "pageSlug": "las", "title": "LasBot", "isHome": false },
+        { "pageSlug": "padaria", "title": "PadariaBot", "isHome": false },
+        { "pageSlug": "otica", "title": "OticaBot", "isHome": false },
+        { "pageSlug": "papelaria", "title": "PapelariaBot", "isHome": false },
+        { "pageSlug": "viagens", "title": "ViagensBot", "isHome": false },
+        { "pageSlug": "suplementos", "title": "SuplementosBot", "isHome": false }
+      ]
+    },
+    "produtos": {
+      "title": "Produtos",
+      "blocks": [
+        {
+          "id": "nav",
+          "type": "meada_navbar",
+          "props": {
+            "links": [
+              { "href": "/servicos", "label": "Serviços" },
+              { "href": "/produtos", "label": "Produtos" },
+              { "href": "/sobre", "label": "Sobre" },
+              { "href": "/contato", "label": "Contato" }
+            ],
+            "ctaHref": "/contato",
+            "ctaLabel": "Pedir orçamento",
+            "brandName": "Meada",
+            "brandSuffix": "Digital"
+          }
+        },
+        {
+          "id": "niches",
+          "type": "niches_grid",
+          "props": { "mode": "all", "title": "Um produto pra cada nicho", "eyebrow": "Produtos" }
+        },
+        {
+          "id": "cta",
+          "type": "meada_cta",
+          "props": {
+            "subtitle": "A Meada cria sistemas sob medida — fale com a gente e montamos a solução do seu jeito.",
+            "primaryHref": "/contato",
+            "titlePrefix": "Não achou o seu",
+            "gradientText": "nicho?",
+            "primaryLabel": "Falar com especialista",
+            "secondaryHref": "/servicos",
+            "secondaryLabel": "Ver Serviços"
+          }
+        },
+        {
+          "id": "ft",
+          "type": "meada_footer",
+          "props": {
+            "columns": [
+              {
+                "links": [
+                  { "href": "/servicos", "label": "Sites Profissionais" },
+                  { "href": "/servicos", "label": "Sistemas sob Medida" },
+                  { "href": "/contato", "label": "Manutenção & Suporte" }
+                ],
+                "heading": "Serviços"
+              },
+              {
+                "links": [
+                  { "href": "/sobre", "label": "Sobre Nós" },
+                  { "href": "/produtos", "label": "Produtos" },
+                  { "href": "/servicos", "label": "Serviços" }
+                ],
+                "heading": "Empresa"
+              },
+              {
+                "links": [
+                  { "href": "mailto:oi@meadadigital.com", "label": "oi@meadadigital.com" },
+                  { "href": "https://wa.me/5581992612292", "label": "(81) 99261-2292" },
+                  { "href": "https://instagram.com/meadadigital", "label": "@meadadigital" }
+                ],
+                "heading": "Contato"
+              }
+            ],
+            "tagline": "Agência digital especializada em sites e sistemas sob medida para pequenos e médios negócios.",
+            "brandName": "Meada",
+            "copyright": "© Meada Agência Digital. Todos os direitos reservados.",
+            "brandSuffix": "Digital",
+            "whatsappUrl": "https://wa.me/5581992612292",
+            "instagramUrl": "https://instagram.com/meadadigital"
+          }
+        }
+      ],
+      "theme": { "preset": "meada-dark" },
+      "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
+        { "pageSlug": "home", "title": "Meada", "isHome": true },
+        { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
+        { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
+        { "pageSlug": "contato", "title": "Contato", "isHome": false },
+        { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
+        { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
+        { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
+        { "pageSlug": "restaurant", "title": "MesaBot", "isHome": false },
+        { "pageSlug": "salon", "title": "SalãoBot", "isHome": false },
+        { "pageSlug": "pousada", "title": "PousadaBot", "isHome": false },
+        { "pageSlug": "academia", "title": "AcademiaBot", "isHome": false },
+        { "pageSlug": "pet", "title": "PetBot", "isHome": false },
+        { "pageSlug": "oficina", "title": "OficinaBot", "isHome": false },
+        { "pageSlug": "nutri", "title": "NutriBot", "isHome": false },
+        { "pageSlug": "barbearia", "title": "BarbeariaBot", "isHome": false },
+        { "pageSlug": "eventos", "title": "EventosBot", "isHome": false },
+        { "pageSlug": "estetica", "title": "EsteticaBot", "isHome": false },
+        { "pageSlug": "comida", "title": "ComidaBot", "isHome": false },
+        { "pageSlug": "floricultura", "title": "FloriculturaBot", "isHome": false },
+        { "pageSlug": "pizzaria", "title": "PizzariaBot", "isHome": false },
+        { "pageSlug": "adega", "title": "AdegaBot", "isHome": false },
+        { "pageSlug": "escola", "title": "EscolaBot", "isHome": false },
+        { "pageSlug": "atelie", "title": "AtelieBot", "isHome": false },
+        { "pageSlug": "casamento", "title": "CasamentoBot", "isHome": false },
+        { "pageSlug": "concessionaria", "title": "ConcessionariaBot", "isHome": false },
+        { "pageSlug": "lavanderia", "title": "LavanderiaBot", "isHome": false },
+        { "pageSlug": "dermatologia", "title": "DermatologiaBot", "isHome": false },
+        { "pageSlug": "fotografia", "title": "FotografiaBot", "isHome": false },
+        { "pageSlug": "cursos", "title": "CursosBot", "isHome": false },
+        { "pageSlug": "lingerie", "title": "LingerieBot", "isHome": false },
+        { "pageSlug": "moda_infantil", "title": "ModaInfantilBot", "isHome": false },
+        { "pageSlug": "las", "title": "LasBot", "isHome": false },
+        { "pageSlug": "padaria", "title": "PadariaBot", "isHome": false },
+        { "pageSlug": "otica", "title": "OticaBot", "isHome": false },
+        { "pageSlug": "papelaria", "title": "PapelariaBot", "isHome": false },
+        { "pageSlug": "viagens", "title": "ViagensBot", "isHome": false },
+        { "pageSlug": "suplementos", "title": "SuplementosBot", "isHome": false }
+      ]
+    },
     "servicos": {
       "title": "Serviços",
       "blocks": [
@@ -406,12 +650,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -624,12 +868,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -795,256 +1039,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
-        { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
-        { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
-        { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
-        { "pageSlug": "restaurant", "title": "MesaBot", "isHome": false },
-        { "pageSlug": "salon", "title": "SalãoBot", "isHome": false },
-        { "pageSlug": "pousada", "title": "PousadaBot", "isHome": false },
-        { "pageSlug": "academia", "title": "AcademiaBot", "isHome": false },
-        { "pageSlug": "pet", "title": "PetBot", "isHome": false },
-        { "pageSlug": "oficina", "title": "OficinaBot", "isHome": false },
-        { "pageSlug": "nutri", "title": "NutriBot", "isHome": false },
-        { "pageSlug": "barbearia", "title": "BarbeariaBot", "isHome": false },
-        { "pageSlug": "eventos", "title": "EventosBot", "isHome": false },
-        { "pageSlug": "estetica", "title": "EsteticaBot", "isHome": false },
-        { "pageSlug": "comida", "title": "ComidaBot", "isHome": false },
-        { "pageSlug": "floricultura", "title": "FloriculturaBot", "isHome": false },
-        { "pageSlug": "pizzaria", "title": "PizzariaBot", "isHome": false },
-        { "pageSlug": "adega", "title": "AdegaBot", "isHome": false },
-        { "pageSlug": "escola", "title": "EscolaBot", "isHome": false },
-        { "pageSlug": "atelie", "title": "AtelieBot", "isHome": false },
-        { "pageSlug": "casamento", "title": "CasamentoBot", "isHome": false },
-        { "pageSlug": "concessionaria", "title": "ConcessionariaBot", "isHome": false },
-        { "pageSlug": "lavanderia", "title": "LavanderiaBot", "isHome": false },
-        { "pageSlug": "dermatologia", "title": "DermatologiaBot", "isHome": false },
-        { "pageSlug": "fotografia", "title": "FotografiaBot", "isHome": false },
-        { "pageSlug": "cursos", "title": "CursosBot", "isHome": false },
-        { "pageSlug": "lingerie", "title": "LingerieBot", "isHome": false },
-        { "pageSlug": "moda_infantil", "title": "ModaInfantilBot", "isHome": false },
-        { "pageSlug": "las", "title": "LasBot", "isHome": false },
-        { "pageSlug": "padaria", "title": "PadariaBot", "isHome": false },
-        { "pageSlug": "otica", "title": "OticaBot", "isHome": false },
-        { "pageSlug": "papelaria", "title": "PapelariaBot", "isHome": false },
-        { "pageSlug": "viagens", "title": "ViagensBot", "isHome": false },
-        { "pageSlug": "suplementos", "title": "SuplementosBot", "isHome": false }
-      ]
-    },
-    "portfolio": {
-      "title": "Portfólio",
-      "blocks": [
-        {
-          "id": "nav",
-          "type": "meada_navbar",
-          "props": {
-            "links": [
-              { "href": "/servicos", "label": "Serviços" },
-              { "href": "/produtos", "label": "Produtos" },
-              { "href": "/sobre", "label": "Sobre" },
-              { "href": "/contato", "label": "Contato" }
-            ],
-            "ctaHref": "/contato",
-            "ctaLabel": "Pedir orçamento",
-            "brandName": "Meada",
-            "brandSuffix": "Digital"
-          }
-        },
-        {
-          "id": "port",
-          "type": "meada_portfolio",
-          "props": {
-            "items": [],
-            "title": "Todos os Projetos",
-            "eyebrow": "Portfolio",
-            "linkHref": "/portfolio",
-            "linkLabel": "Ver detalhes →"
-          }
-        },
-        {
-          "id": "cta",
-          "type": "meada_cta",
-          "props": {
-            "subtitle": "Do site institucional ao sistema completo. Cada projeto é construído sob medida para o negócio do cliente.",
-            "primaryHref": "/contato",
-            "titlePrefix": "Quer um projeto",
-            "gradientText": "como esses?",
-            "primaryLabel": "Começar meu projeto",
-            "secondaryHref": "/servicos",
-            "secondaryLabel": "Ver Serviços"
-          }
-        },
-        {
-          "id": "ft",
-          "type": "meada_footer",
-          "props": {
-            "columns": [
-              {
-                "links": [
-                  { "href": "/servicos", "label": "Sites Profissionais" },
-                  { "href": "/servicos", "label": "Sistemas sob Medida" },
-                  { "href": "/contato", "label": "Manutenção & Suporte" }
-                ],
-                "heading": "Serviços"
-              },
-              {
-                "links": [
-                  { "href": "/sobre", "label": "Sobre Nós" },
-                  { "href": "/produtos", "label": "Produtos" },
-                  { "href": "/servicos", "label": "Serviços" }
-                ],
-                "heading": "Empresa"
-              },
-              {
-                "links": [
-                  { "href": "mailto:oi@meadadigital.com", "label": "oi@meadadigital.com" },
-                  { "href": "https://wa.me/5581992612292", "label": "(81) 99261-2292" },
-                  { "href": "https://instagram.com/meadadigital", "label": "@meadadigital" }
-                ],
-                "heading": "Contato"
-              }
-            ],
-            "tagline": "Agência digital especializada em sites e sistemas sob medida para pequenos e médios negócios.",
-            "brandName": "Meada",
-            "copyright": "© Meada Agência Digital. Todos os direitos reservados.",
-            "brandSuffix": "Digital",
-            "whatsappUrl": "https://wa.me/5581992612292",
-            "instagramUrl": "https://instagram.com/meadadigital"
-          }
-        }
-      ],
-      "theme": { "preset": "meada-dark" },
-      "nav": [
-        { "pageSlug": "home", "title": "Meada", "isHome": true },
-        { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
-        { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
-        { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
-        { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
-        { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
-        { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
-        { "pageSlug": "restaurant", "title": "MesaBot", "isHome": false },
-        { "pageSlug": "salon", "title": "SalãoBot", "isHome": false },
-        { "pageSlug": "pousada", "title": "PousadaBot", "isHome": false },
-        { "pageSlug": "academia", "title": "AcademiaBot", "isHome": false },
-        { "pageSlug": "pet", "title": "PetBot", "isHome": false },
-        { "pageSlug": "oficina", "title": "OficinaBot", "isHome": false },
-        { "pageSlug": "nutri", "title": "NutriBot", "isHome": false },
-        { "pageSlug": "barbearia", "title": "BarbeariaBot", "isHome": false },
-        { "pageSlug": "eventos", "title": "EventosBot", "isHome": false },
-        { "pageSlug": "estetica", "title": "EsteticaBot", "isHome": false },
-        { "pageSlug": "comida", "title": "ComidaBot", "isHome": false },
-        { "pageSlug": "floricultura", "title": "FloriculturaBot", "isHome": false },
-        { "pageSlug": "pizzaria", "title": "PizzariaBot", "isHome": false },
-        { "pageSlug": "adega", "title": "AdegaBot", "isHome": false },
-        { "pageSlug": "escola", "title": "EscolaBot", "isHome": false },
-        { "pageSlug": "atelie", "title": "AtelieBot", "isHome": false },
-        { "pageSlug": "casamento", "title": "CasamentoBot", "isHome": false },
-        { "pageSlug": "concessionaria", "title": "ConcessionariaBot", "isHome": false },
-        { "pageSlug": "lavanderia", "title": "LavanderiaBot", "isHome": false },
-        { "pageSlug": "dermatologia", "title": "DermatologiaBot", "isHome": false },
-        { "pageSlug": "fotografia", "title": "FotografiaBot", "isHome": false },
-        { "pageSlug": "cursos", "title": "CursosBot", "isHome": false },
-        { "pageSlug": "lingerie", "title": "LingerieBot", "isHome": false },
-        { "pageSlug": "moda_infantil", "title": "ModaInfantilBot", "isHome": false },
-        { "pageSlug": "las", "title": "LasBot", "isHome": false },
-        { "pageSlug": "padaria", "title": "PadariaBot", "isHome": false },
-        { "pageSlug": "otica", "title": "OticaBot", "isHome": false },
-        { "pageSlug": "papelaria", "title": "PapelariaBot", "isHome": false },
-        { "pageSlug": "viagens", "title": "ViagensBot", "isHome": false },
-        { "pageSlug": "suplementos", "title": "SuplementosBot", "isHome": false }
-      ]
-    },
-    "produtos": {
-      "title": "Produtos",
-      "blocks": [
-        {
-          "id": "nav",
-          "type": "meada_navbar",
-          "props": {
-            "links": [
-              { "href": "/servicos", "label": "Serviços" },
-              { "href": "/produtos", "label": "Produtos" },
-              { "href": "/sobre", "label": "Sobre" },
-              { "href": "/contato", "label": "Contato" }
-            ],
-            "ctaHref": "/contato",
-            "ctaLabel": "Pedir orçamento",
-            "brandName": "Meada",
-            "brandSuffix": "Digital"
-          }
-        },
-        {
-          "id": "niches",
-          "type": "niches_grid",
-          "props": { "mode": "all", "title": "Um produto pra cada nicho", "eyebrow": "Produtos" }
-        },
-        {
-          "id": "cta",
-          "type": "meada_cta",
-          "props": {
-            "subtitle": "A Meada cria sistemas sob medida — fale com a gente e montamos a solução do seu jeito.",
-            "primaryHref": "/contato",
-            "titlePrefix": "Não achou o seu",
-            "gradientText": "nicho?",
-            "primaryLabel": "Falar com especialista",
-            "secondaryHref": "/servicos",
-            "secondaryLabel": "Ver Serviços"
-          }
-        },
-        {
-          "id": "ft",
-          "type": "meada_footer",
-          "props": {
-            "columns": [
-              {
-                "links": [
-                  { "href": "/servicos", "label": "Sites Profissionais" },
-                  { "href": "/servicos", "label": "Sistemas sob Medida" },
-                  { "href": "/contato", "label": "Manutenção & Suporte" }
-                ],
-                "heading": "Serviços"
-              },
-              {
-                "links": [
-                  { "href": "/sobre", "label": "Sobre Nós" },
-                  { "href": "/produtos", "label": "Produtos" },
-                  { "href": "/servicos", "label": "Serviços" }
-                ],
-                "heading": "Empresa"
-              },
-              {
-                "links": [
-                  { "href": "mailto:oi@meadadigital.com", "label": "oi@meadadigital.com" },
-                  { "href": "https://wa.me/5581992612292", "label": "(81) 99261-2292" },
-                  { "href": "https://instagram.com/meadadigital", "label": "@meadadigital" }
-                ],
-                "heading": "Contato"
-              }
-            ],
-            "tagline": "Agência digital especializada em sites e sistemas sob medida para pequenos e médios negócios.",
-            "brandName": "Meada",
-            "copyright": "© Meada Agência Digital. Todos os direitos reservados.",
-            "brandSuffix": "Digital",
-            "whatsappUrl": "https://wa.me/5581992612292",
-            "instagramUrl": "https://instagram.com/meadadigital"
-          }
-        }
-      ],
-      "theme": { "preset": "meada-dark" },
-      "nav": [
-        { "pageSlug": "home", "title": "Meada", "isHome": true },
-        { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
-        { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
-        { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -1104,9 +1104,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Legal",
+            "showcase": "plan",
             "subtitle": "Seu escritório de advocacia responde clientes pelo WhatsApp 24h: consulta de processos, andamentos e agendamentos — com a IA treinada nos seus dados.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 447/mês",
             "chatMessage": "Olá! Posso consultar o andamento do seu processo. Qual o seu CPF?",
             "primaryHref": "/contato",
             "titlePrefix": "Atendimento jurídico",
@@ -1126,7 +1129,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para legal, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -1154,25 +1160,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ProcessoBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Legal",
-                "price": "R$ 447/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para legal, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Legal hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1218,12 +1205,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -1283,9 +1270,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Dental",
+            "showcase": "plan",
             "subtitle": "Pacientes agendam consultas pelo WhatsApp com tom acolhedor. A IA identifica pelo telefone, mostra próximas consultas e marca novas — sem nunca dar diagnóstico.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 397/mês",
             "chatMessage": "Oi! Posso agendar sua consulta. Qual o melhor dia pra você?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua clínica odontológica",
@@ -1305,7 +1295,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para dental, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -1333,25 +1326,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "DentalBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Dental",
-                "price": "R$ 397/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para dental, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Dental hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1397,12 +1371,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -1462,9 +1436,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Sushi",
+            "showcase": "plan",
             "subtitle": "Clientes pedem em linguagem natural pelo WhatsApp; a IA monta o carrinho, aplica cupom, e o pedido cai num Kanban. Com retirada, agendamento e fidelidade.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Olá! Bem-vindo. Quer ver nosso cardápio de hoje?",
             "primaryHref": "/contato",
             "titlePrefix": "Seu restaurante de sushi",
@@ -1484,7 +1461,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para sushi, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -1512,25 +1492,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "SushiBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Sushi",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para sushi, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Sushi hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1576,12 +1537,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -1641,9 +1602,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Restaurante",
+            "showcase": "plan",
             "subtitle": "A IA atende clientes pelo WhatsApp, verifica disponibilidade de mesa em tempo real e confirma a reserva — fechando a janela de conflito no banco.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 247/mês",
             "chatMessage": "Oi! Para quantas pessoas e qual dia você quer reservar?",
             "primaryHref": "/contato",
             "titlePrefix": "Reservas do seu restaurante",
@@ -1663,7 +1627,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para restaurante, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -1691,25 +1658,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "MesaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Restaurante",
-                "price": "R$ 247/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para restaurante, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Restaurante hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1755,12 +1703,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -1820,9 +1768,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Salão",
+            "showcase": "plan",
             "subtitle": "Clientes escolhem serviço e profissional pelo WhatsApp; a IA verifica a agenda de cada profissional e marca — com tom acolhedor e sem julgamento.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 247/mês",
             "chatMessage": "Oi! Qual serviço você quer agendar hoje?",
             "primaryHref": "/contato",
             "titlePrefix": "Seu salão de beleza",
@@ -1842,7 +1793,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para salão, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -1870,25 +1824,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "SalãoBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Salão",
-                "price": "R$ 247/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para salão, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Salão hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1934,12 +1869,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -1999,9 +1934,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Pousada",
+            "showcase": "plan",
             "subtitle": "A IA mostra quartos por número de pessoas e datas, calcula a diária × noites e reserva — tratando o intervalo de dias e a rotação de check-in/check-out.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 297/mês",
             "chatMessage": "Olá! Para quantas pessoas e quais datas você procura?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua pousada",
@@ -2021,7 +1959,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para pousada, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -2049,25 +1990,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PousadaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Pousada",
-                "price": "R$ 297/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para pousada, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Pousada hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2113,12 +2035,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -2178,9 +2100,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Academia",
+            "showcase": "plan",
             "subtitle": "A IA oferece planos e aulas com vaga em tempo real, matricula alunos (assinatura) e registra pagamentos — sem nunca prescrever treino ou dieta.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 297/mês",
             "chatMessage": "Oi! Quer conhecer nossos planos e aulas?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua academia",
@@ -2200,7 +2125,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para academia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -2228,25 +2156,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "AcademiaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Academia",
-                "price": "R$ 297/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para academia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Academia hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2292,12 +2201,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -2357,9 +2266,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Pet",
+            "showcase": "plan",
             "subtitle": "A IA cadastra os animais de cada tutor e agenda banho, tosa e consulta na agenda de cada profissional — respeitando restrição de espécie.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 247/mês",
             "chatMessage": "Oi! Qual pet você quer agendar e pra qual serviço?",
             "primaryHref": "/contato",
             "titlePrefix": "Seu pet shop",
@@ -2379,7 +2291,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para pet, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -2407,25 +2322,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PetBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Pet",
-                "price": "R$ 247/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para pet, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Pet hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2471,12 +2367,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -2536,9 +2432,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Oficina",
+            "showcase": "plan",
             "subtitle": "A IA abre a ordem de serviço pela queixa do cliente, informa o orçamento quando existe e captura a aprovação — em duas fases.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 297/mês",
             "chatMessage": "Oi! Me conta o que está acontecendo com o veículo.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua oficina mecânica",
@@ -2558,7 +2457,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para oficina, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -2586,25 +2488,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "OficinaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Oficina",
-                "price": "R$ 297/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para oficina, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Oficina hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2650,12 +2533,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -2715,9 +2598,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Nutri",
+            "showcase": "plan",
             "subtitle": "A IA agenda consultas e entrega o plano alimentar que o nutricionista gravou — sem nunca criar, calcular ou ajustar plano.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 297/mês",
             "chatMessage": "Oi! Quer agendar sua consulta de nutrição?",
             "primaryHref": "/contato",
             "titlePrefix": "Seu consultório de nutrição",
@@ -2737,7 +2623,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para nutri, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -2765,25 +2654,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "NutriBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Nutri",
-                "price": "R$ 297/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para nutri, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Nutri hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2829,12 +2699,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -2894,9 +2764,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Barbearia",
+            "showcase": "plan",
             "subtitle": "A IA marca horário com um barbeiro ou coloca o cliente na fila de walk-in por ordem de chegada — com posição e tempo estimado.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "E aí! Quer marcar um horário ou entrar na fila?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua barbearia",
@@ -2916,7 +2789,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para barbearia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -2944,25 +2820,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "BarbeariaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Barbearia",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para barbearia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Barbearia hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3008,12 +2865,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -3073,9 +2930,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Eventos",
+            "showcase": "plan",
             "subtitle": "A IA abre propostas a partir do briefing; a equipe monta o orçamento e o cronograma do dia, e a IA captura a aprovação.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 347/mês",
             "chatMessage": "Olá! Me conta sobre o evento que você está planejando.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua casa de festas",
@@ -3095,7 +2955,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para eventos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -3123,25 +2986,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "EventosBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Eventos",
-                "price": "R$ 347/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para eventos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Eventos hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3187,12 +3031,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -3252,9 +3096,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Estética",
+            "showcase": "plan",
             "subtitle": "A IA vende pacotes de sessões, agenda consumindo o saldo do pacote e registra a ficha de cada sessão — sem indicar procedimento.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 347/mês",
             "chatMessage": "Oi! Quer conhecer nossos pacotes e procedimentos?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua clínica de estética",
@@ -3274,7 +3121,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para estética, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -3302,25 +3152,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "EsteticaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Estética",
-                "price": "R$ 347/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para estética, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Estética hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3366,12 +3197,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -3431,9 +3262,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Comida",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido com opções e adicionais, e o restaurante aceita ou recusa no painel — gate de aceite humano.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Oi! Quer ver o cardápio de hoje?",
             "primaryHref": "/contato",
             "titlePrefix": "Seu delivery",
@@ -3453,7 +3287,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para comida, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -3481,25 +3318,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ComidaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Comida",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para comida, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Comida hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3545,12 +3363,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -3610,9 +3428,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Floricultura",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido de flores como presente agendado: data, período, destinatário e mensagem do cartão.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Oi! Quer enviar flores? Para qual data?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua floricultura",
@@ -3632,7 +3453,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para floricultura, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -3660,25 +3484,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "FloriculturaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Floricultura",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para floricultura, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Floricultura hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3724,12 +3529,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -3789,9 +3594,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Pizzaria",
+            "showcase": "plan",
             "subtitle": "A IA monta a pizza inteira ou meio-a-meio; o preço da fracionada é a regra do maior valor — recalculado pelo sistema.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Oi! Quer montar sua pizza? Pode ser meio-a-meio.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua pizzaria",
@@ -3811,7 +3619,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para pizzaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -3839,25 +3650,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PizzariaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Pizzaria",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para pizzaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Pizzaria hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3903,12 +3695,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -3968,9 +3760,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Adega",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido de vinhos e bebidas, confirma a maioridade (+18) e a loja acompanha num Kanban.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Olá! Posso ajudar a escolher um bom rótulo?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua adega",
@@ -3990,7 +3785,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para adega, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -4018,25 +3816,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "AdegaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Adega",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para adega, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Adega hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4082,12 +3861,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -4147,9 +3926,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Escola",
+            "showcase": "plan",
             "subtitle": "A IA atende os responsáveis, cadastra os alunos, matricula em turmas com vaga e agenda visitas da família.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 347/mês",
             "chatMessage": "Oi! Quer matricular seu filho ou agendar uma visita?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua escola",
@@ -4169,7 +3951,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para escola, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -4197,25 +3982,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "EscolaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Escola",
-                "price": "R$ 347/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para escola, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Escola hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4261,12 +4027,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -4326,9 +4092,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Ateliê",
+            "showcase": "plan",
             "subtitle": "A IA abre propostas de peça sob medida (costura, arte, design); a equipe orça e gerencia as provas/ajustes.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Oi! Me conta a peça que você imagina.",
             "primaryHref": "/contato",
             "titlePrefix": "Seu ateliê",
@@ -4348,7 +4117,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para ateliê, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -4376,25 +4148,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "AtelieBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Ateliê",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para ateliê, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Ateliê hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4440,12 +4193,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -4505,9 +4258,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Casamento",
+            "showcase": "plan",
             "subtitle": "A IA atende os noivos, abre a proposta e captura a aprovação — com orçamento, cronograma do dia e checklist pré-casamento.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 397/mês",
             "chatMessage": "Oi! Parabéns! Me conta sobre o casamento de vocês.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua assessoria de casamento",
@@ -4527,7 +4283,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para casamento, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -4555,25 +4314,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "CasamentoBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Casamento",
-                "price": "R$ 397/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para casamento, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Casamento hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4619,12 +4359,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -4684,9 +4424,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Concessionária",
+            "showcase": "plan",
             "subtitle": "A IA mostra o estoque, agenda test-drive com um vendedor e registra lead de compra — sem fechar preço.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 497/mês",
             "chatMessage": "Oi! Quer ver nossos carros ou agendar um test-drive?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua concessionária",
@@ -4706,7 +4449,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para concessionária, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -4734,25 +4480,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ConcessionariaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Concessionária",
-                "price": "R$ 497/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para concessionária, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Concessionária hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4798,12 +4525,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -4863,9 +4590,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Lavanderia",
+            "showcase": "plan",
             "subtitle": "A IA agenda a coleta e calcula a entrega pelo turnaround de cada serviço — sempre coleta + entrega.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 147/mês",
             "chatMessage": "Oi! Quer agendar a coleta das suas roupas?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua lavanderia",
@@ -4885,7 +4615,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para lavanderia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -4913,25 +4646,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "LavanderiaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Lavanderia",
-                "price": "R$ 147/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para lavanderia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Lavanderia hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4977,12 +4691,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -5042,9 +4756,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Dermatologia",
+            "showcase": "plan",
             "subtitle": "A IA agenda consultas e entrega a orientação de preparo gravada pelo médico — sem nunca avaliar lesão, mancha ou foto.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 447/mês",
             "chatMessage": "Oi! Quer agendar sua consulta dermatológica?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua clínica de dermatologia",
@@ -5064,7 +4781,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para dermatologia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -5092,25 +4812,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "DermatologiaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Dermatologia",
-                "price": "R$ 447/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para dermatologia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Dermatologia hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5156,12 +4857,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -5221,9 +4922,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Fotografia",
+            "showcase": "plan",
             "subtitle": "A IA agenda sessões com um fotógrafo e entrega o link do material gravado pelo estúdio — sem prometer resultado estético.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 247/mês",
             "chatMessage": "Oi! Quer agendar uma sessão de fotos?",
             "primaryHref": "/contato",
             "titlePrefix": "Seu estúdio de fotografia",
@@ -5243,7 +4947,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para fotografia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -5271,25 +4978,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "FotografiaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Fotografia",
-                "price": "R$ 247/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para fotografia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Fotografia hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5335,12 +5023,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -5400,9 +5088,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Cursos",
+            "showcase": "plan",
             "subtitle": "A IA matricula alunos, entrega o conteúdo do próximo módulo da trilha e registra a mensalidade.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 247/mês",
             "chatMessage": "Oi! Quer conhecer nossos cursos?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua escola de cursos",
@@ -5422,7 +5113,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para cursos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -5450,25 +5144,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "CursosBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Cursos",
-                "price": "R$ 247/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para cursos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Cursos hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5514,12 +5189,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -5579,9 +5254,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Lingerie",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido pela variante exata (tamanho × cor) com estoque, e a loja acompanha num Kanban.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Oi! Quer ver nosso catálogo? Me diz tamanho e cor.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua loja de lingerie",
@@ -5601,7 +5279,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para lingerie, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -5629,25 +5310,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "LingerieBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Lingerie",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para lingerie, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Lingerie hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5693,12 +5355,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -5758,9 +5420,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Moda Infantil",
+            "showcase": "plan",
             "subtitle": "A IA sugere o tamanho pela idade da criança, monta o pedido pela variante e a loja acompanha — com devolução de estoque ao cancelar.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 197/mês",
             "chatMessage": "Oi! Qual a idade da criança? Já sugiro o tamanho.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua loja de moda infantil",
@@ -5780,7 +5445,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para moda infantil, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -5808,25 +5476,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ModaInfantilBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Moda Infantil",
-                "price": "R$ 197/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para moda infantil, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Moda Infantil hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5872,12 +5521,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -5937,9 +5586,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Lãs",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido por cor e lote, garantindo o mesmo lote para projetos grandes — onde o tom precisa bater.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 147/mês",
             "chatMessage": "Oi! Qual cor e quantos novelos você precisa?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua loja de lãs",
@@ -5959,7 +5611,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para lãs, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -5987,25 +5642,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "LasBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Lãs",
-                "price": "R$ 147/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para lãs, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Lãs hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6051,12 +5687,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -6116,9 +5752,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Padaria",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido com itens de pronta-entrega e bolos sob encomenda — respeitando a antecedência e a personalização.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 147/mês",
             "chatMessage": "Oi! Quer encomendar um bolo ou pedir pães?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua padaria e confeitaria",
@@ -6138,7 +5777,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para padaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -6166,25 +5808,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PadariaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Padaria",
-                "price": "R$ 147/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para padaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Padaria hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6230,12 +5853,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -6295,9 +5918,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Ótica",
+            "showcase": "plan",
             "subtitle": "A IA agenda exame de vista e registra a encomenda de óculos com os dados de receita — sem nunca prescrever grau.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 297/mês",
             "chatMessage": "Oi! Quer agendar um exame ou encomendar óculos?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua ótica",
@@ -6317,7 +5943,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para ótica, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -6345,25 +5974,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "OticaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Ótica",
-                "price": "R$ 297/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para ótica, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Ótica hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6409,12 +6019,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -6474,9 +6084,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Papelaria",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido com tiragem e personalização; a equipe sobe a arte e o cliente aprova antes da produção.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 147/mês",
             "chatMessage": "Oi! Quer encomendar convites? Me conta o tema.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua papelaria",
@@ -6496,7 +6109,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para papelaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -6524,25 +6140,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PapelariaBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Papelaria",
-                "price": "R$ 147/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para papelaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Papelaria hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6588,12 +6185,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -6653,9 +6250,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Viagens",
+            "showcase": "plan",
             "subtitle": "A IA abre a proposta a partir do briefing; a equipe monta a cotação e o roteiro dia-a-dia, e a IA captura a aprovação.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 347/mês",
             "chatMessage": "Oi! Para onde você sonha viajar?",
             "primaryHref": "/contato",
             "titlePrefix": "Sua agência de viagens",
@@ -6675,7 +6275,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para viagens, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -6703,25 +6306,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ViagensBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Viagens",
-                "price": "R$ 347/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para viagens, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Viagens hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6767,12 +6351,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
@@ -6832,9 +6416,12 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "chat",
+            "planName": "Plano Suplementos",
+            "showcase": "plan",
             "subtitle": "A IA monta o pedido pela variante (sabor × peso) com estoque, e a loja acompanha — sem nunca prescrever dosagem.",
             "chatTitle": "Assistente Meada",
+            "planBadge": "Plano",
+            "planPrice": "R$ 247/mês",
             "chatMessage": "Oi! Quer ver o catálogo? Me diz sabor e tamanho.",
             "primaryHref": "/contato",
             "titlePrefix": "Sua loja de suplementos",
@@ -6854,7 +6441,10 @@
               { "kind": "done", "text": "Projeto entregue ✦ pronto pra escalar" }
             ],
             "terminalTitle": "meada — projeto.sh",
+            "planButtonHref": "/contato",
             "secondaryLabel": "Ver todos os nichos",
+            "planButtonLabel": "Falar com a gente",
+            "planDescription": "Atendimento com IA no WhatsApp para suplementos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto.",
             "terminalCaptionLeft": "do briefing ao ar em produção",
             "terminalCaptionRight": "~ 2-6 sem"
           }
@@ -6882,25 +6472,6 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "SuplementosBot"
-          }
-        },
-        {
-          "id": "pricing-plan",
-          "type": "packages",
-          "props": {
-            "items": [
-              {
-                "name": "Plano Suplementos",
-                "price": "R$ 247/mês",
-                "popular": true,
-                "buttonHref": "/contato",
-                "buttonLabel": "Falar com a gente",
-                "description": "Atendimento com IA no WhatsApp para suplementos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
-              }
-            ],
-            "title": "Comece o Suplementos hoje",
-            "eyebrow": "Plano e preço",
-            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6946,12 +6517,12 @@
       ],
       "theme": { "preset": "meada-dark" },
       "nav": [
+        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
+        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "home", "title": "Meada", "isHome": true },
         { "pageSlug": "servicos", "title": "Serviços", "isHome": false },
         { "pageSlug": "sobre", "title": "Sobre", "isHome": false },
         { "pageSlug": "contato", "title": "Contato", "isHome": false },
-        { "pageSlug": "portfolio", "title": "Portfólio", "isHome": false },
-        { "pageSlug": "produtos", "title": "Produtos", "isHome": false },
         { "pageSlug": "legal", "title": "ProcessoBot", "isHome": false },
         { "pageSlug": "dental", "title": "DentalBot", "isHome": false },
         { "pageSlug": "sushi", "title": "SushiBot", "isHome": false },
