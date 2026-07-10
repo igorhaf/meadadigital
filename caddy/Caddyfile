@@ -41,6 +41,18 @@ http://muda.meadadigital.local {
 	reverse_proxy muda-nginx:80
 }
 
+# Projeto externo conexao-municipio (Laravel API + Next) — subdomínio próprio.
+# Path-based mesma-origem: /api/* vai pro backend Laravel; o resto pro frontend Next.
+# Prod: conexao-municipio.meadadigital.com.
+http://conexao-municipio.meadadigital.local {
+	handle /api/* {
+		reverse_proxy conexao-municipio-backend:8000
+	}
+	handle {
+		reverse_proxy conexao-municipio-frontend:3000
+	}
+}
+
 # Catch-all dos SUBDOMÍNIOS DE EMPRESA (slug.meadadigital.local) — qualquer host *.meadadigital.local
 # que NÃO casou os blocos acima (nichos fixos + api) cai aqui e vai pro frontend. Necessário porque
 # o "Acessar admin" do root abre {slug}.meadadigital.local/auth/confirm, e os slugs de empresa
