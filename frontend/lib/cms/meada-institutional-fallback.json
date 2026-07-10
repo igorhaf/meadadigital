@@ -1104,7 +1104,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "Seu escritório de advocacia responde clientes pelo WhatsApp 24h: consulta de processos, andamentos e agendamentos — com a IA treinada nos seus dados.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Posso consultar o andamento do seu processo. Qual o seu CPF?",
@@ -1154,6 +1154,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ProcessoBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Legal",
+                "price": "R$ 447/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para legal, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Legal hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1264,7 +1283,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "Pacientes agendam consultas pelo WhatsApp com tom acolhedor. A IA identifica pelo telefone, mostra próximas consultas e marca novas — sem nunca dar diagnóstico.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Posso agendar sua consulta. Qual o melhor dia pra você?",
@@ -1314,6 +1333,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "DentalBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Dental",
+                "price": "R$ 397/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para dental, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Dental hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1424,7 +1462,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "Clientes pedem em linguagem natural pelo WhatsApp; a IA monta o carrinho, aplica cupom, e o pedido cai num Kanban. Com retirada, agendamento e fidelidade.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Bem-vindo. Quer ver nosso cardápio de hoje?",
@@ -1474,6 +1512,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "SushiBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Sushi",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para sushi, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Sushi hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1584,7 +1641,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA atende clientes pelo WhatsApp, verifica disponibilidade de mesa em tempo real e confirma a reserva — fechando a janela de conflito no banco.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Para quantas pessoas e qual dia você quer reservar?",
@@ -1634,6 +1691,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "MesaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Restaurante",
+                "price": "R$ 247/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para restaurante, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Restaurante hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1744,7 +1820,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "Clientes escolhem serviço e profissional pelo WhatsApp; a IA verifica a agenda de cada profissional e marca — com tom acolhedor e sem julgamento.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual serviço você quer agendar hoje?",
@@ -1794,6 +1870,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "SalãoBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Salão",
+                "price": "R$ 247/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para salão, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Salão hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -1904,7 +1999,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA mostra quartos por número de pessoas e datas, calcula a diária × noites e reserva — tratando o intervalo de dias e a rotação de check-in/check-out.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Para quantas pessoas e quais datas você procura?",
@@ -1954,6 +2049,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PousadaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Pousada",
+                "price": "R$ 297/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para pousada, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Pousada hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2064,7 +2178,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA oferece planos e aulas com vaga em tempo real, matricula alunos (assinatura) e registra pagamentos — sem nunca prescrever treino ou dieta.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer conhecer nossos planos e aulas?",
@@ -2114,6 +2228,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "AcademiaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Academia",
+                "price": "R$ 297/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para academia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Academia hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2224,7 +2357,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA cadastra os animais de cada tutor e agenda banho, tosa e consulta na agenda de cada profissional — respeitando restrição de espécie.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual pet você quer agendar e pra qual serviço?",
@@ -2274,6 +2407,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PetBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Pet",
+                "price": "R$ 247/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para pet, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Pet hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2384,7 +2536,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA abre a ordem de serviço pela queixa do cliente, informa o orçamento quando existe e captura a aprovação — em duas fases.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Me conta o que está acontecendo com o veículo.",
@@ -2434,6 +2586,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "OficinaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Oficina",
+                "price": "R$ 297/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para oficina, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Oficina hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2544,7 +2715,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA agenda consultas e entrega o plano alimentar que o nutricionista gravou — sem nunca criar, calcular ou ajustar plano.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar sua consulta de nutrição?",
@@ -2594,6 +2765,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "NutriBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Nutri",
+                "price": "R$ 297/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para nutri, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Nutri hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2704,7 +2894,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA marca horário com um barbeiro ou coloca o cliente na fila de walk-in por ordem de chegada — com posição e tempo estimado.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "E aí! Quer marcar um horário ou entrar na fila?",
@@ -2754,6 +2944,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "BarbeariaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Barbearia",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para barbearia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Barbearia hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -2864,7 +3073,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA abre propostas a partir do briefing; a equipe monta o orçamento e o cronograma do dia, e a IA captura a aprovação.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Me conta sobre o evento que você está planejando.",
@@ -2914,6 +3123,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "EventosBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Eventos",
+                "price": "R$ 347/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para eventos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Eventos hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3024,7 +3252,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA vende pacotes de sessões, agenda consumindo o saldo do pacote e registra a ficha de cada sessão — sem indicar procedimento.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer conhecer nossos pacotes e procedimentos?",
@@ -3074,6 +3302,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "EsteticaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Estética",
+                "price": "R$ 347/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para estética, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Estética hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3184,7 +3431,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido com opções e adicionais, e o restaurante aceita ou recusa no painel — gate de aceite humano.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver o cardápio de hoje?",
@@ -3234,6 +3481,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ComidaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Comida",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para comida, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Comida hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3344,7 +3610,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido de flores como presente agendado: data, período, destinatário e mensagem do cartão.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer enviar flores? Para qual data?",
@@ -3394,6 +3660,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "FloriculturaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Floricultura",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para floricultura, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Floricultura hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3504,7 +3789,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta a pizza inteira ou meio-a-meio; o preço da fracionada é a regra do maior valor — recalculado pelo sistema.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer montar sua pizza? Pode ser meio-a-meio.",
@@ -3554,6 +3839,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PizzariaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Pizzaria",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para pizzaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Pizzaria hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3664,7 +3968,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido de vinhos e bebidas, confirma a maioridade (+18) e a loja acompanha num Kanban.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Olá! Posso ajudar a escolher um bom rótulo?",
@@ -3714,6 +4018,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "AdegaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Adega",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para adega, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Adega hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3824,7 +4147,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA atende os responsáveis, cadastra os alunos, matricula em turmas com vaga e agenda visitas da família.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer matricular seu filho ou agendar uma visita?",
@@ -3874,6 +4197,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "EscolaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Escola",
+                "price": "R$ 347/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para escola, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Escola hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -3984,7 +4326,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA abre propostas de peça sob medida (costura, arte, design); a equipe orça e gerencia as provas/ajustes.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Me conta a peça que você imagina.",
@@ -4034,6 +4376,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "AtelieBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Ateliê",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para ateliê, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Ateliê hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4144,7 +4505,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA atende os noivos, abre a proposta e captura a aprovação — com orçamento, cronograma do dia e checklist pré-casamento.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Parabéns! Me conta sobre o casamento de vocês.",
@@ -4194,6 +4555,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "CasamentoBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Casamento",
+                "price": "R$ 397/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para casamento, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Casamento hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4304,7 +4684,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA mostra o estoque, agenda test-drive com um vendedor e registra lead de compra — sem fechar preço.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver nossos carros ou agendar um test-drive?",
@@ -4354,6 +4734,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ConcessionariaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Concessionária",
+                "price": "R$ 497/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para concessionária, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Concessionária hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4464,7 +4863,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA agenda a coleta e calcula a entrega pelo turnaround de cada serviço — sempre coleta + entrega.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar a coleta das suas roupas?",
@@ -4514,6 +4913,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "LavanderiaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Lavanderia",
+                "price": "R$ 147/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para lavanderia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Lavanderia hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4624,7 +5042,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA agenda consultas e entrega a orientação de preparo gravada pelo médico — sem nunca avaliar lesão, mancha ou foto.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar sua consulta dermatológica?",
@@ -4674,6 +5092,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "DermatologiaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Dermatologia",
+                "price": "R$ 447/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para dermatologia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Dermatologia hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4784,7 +5221,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA agenda sessões com um fotógrafo e entrega o link do material gravado pelo estúdio — sem prometer resultado estético.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar uma sessão de fotos?",
@@ -4834,6 +5271,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "FotografiaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Fotografia",
+                "price": "R$ 247/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para fotografia, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Fotografia hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -4944,7 +5400,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA matricula alunos, entrega o conteúdo do próximo módulo da trilha e registra a mensalidade.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer conhecer nossos cursos?",
@@ -4994,6 +5450,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "CursosBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Cursos",
+                "price": "R$ 247/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para cursos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Cursos hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5104,7 +5579,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido pela variante exata (tamanho × cor) com estoque, e a loja acompanha num Kanban.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver nosso catálogo? Me diz tamanho e cor.",
@@ -5154,6 +5629,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "LingerieBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Lingerie",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para lingerie, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Lingerie hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5264,7 +5758,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA sugere o tamanho pela idade da criança, monta o pedido pela variante e a loja acompanha — com devolução de estoque ao cancelar.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual a idade da criança? Já sugiro o tamanho.",
@@ -5314,6 +5808,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ModaInfantilBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Moda Infantil",
+                "price": "R$ 197/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para moda infantil, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Moda Infantil hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5424,7 +5937,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido por cor e lote, garantindo o mesmo lote para projetos grandes — onde o tom precisa bater.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Qual cor e quantos novelos você precisa?",
@@ -5474,6 +5987,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "LasBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Lãs",
+                "price": "R$ 147/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para lãs, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Lãs hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5584,7 +6116,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido com itens de pronta-entrega e bolos sob encomenda — respeitando a antecedência e a personalização.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer encomendar um bolo ou pedir pães?",
@@ -5634,6 +6166,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PadariaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Padaria",
+                "price": "R$ 147/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para padaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Padaria hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5744,7 +6295,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA agenda exame de vista e registra a encomenda de óculos com os dados de receita — sem nunca prescrever grau.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer agendar um exame ou encomendar óculos?",
@@ -5794,6 +6345,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "OticaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Ótica",
+                "price": "R$ 297/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para ótica, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Ótica hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -5904,7 +6474,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido com tiragem e personalização; a equipe sobe a arte e o cliente aprova antes da produção.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer encomendar convites? Me conta o tema.",
@@ -5954,6 +6524,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "PapelariaBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Papelaria",
+                "price": "R$ 147/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para papelaria, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Papelaria hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6064,7 +6653,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA abre a proposta a partir do briefing; a equipe monta a cotação e o roteiro dia-a-dia, e a IA captura a aprovação.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Para onde você sonha viajar?",
@@ -6114,6 +6703,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "ViagensBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Viagens",
+                "price": "R$ 347/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para viagens, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Viagens hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
@@ -6224,7 +6832,7 @@
           "type": "meada_hero",
           "props": {
             "stats": [],
-            "showcase": "terminal",
+            "showcase": "chat",
             "subtitle": "A IA monta o pedido pela variante (sabor × peso) com estoque, e a loja acompanha — sem nunca prescrever dosagem.",
             "chatTitle": "Assistente Meada",
             "chatMessage": "Oi! Quer ver o catálogo? Me diz sabor e tamanho.",
@@ -6274,6 +6882,25 @@
             ],
             "title": "O que o atendente faz",
             "eyebrow": "SuplementosBot"
+          }
+        },
+        {
+          "id": "pricing-plan",
+          "type": "packages",
+          "props": {
+            "items": [
+              {
+                "name": "Plano Suplementos",
+                "price": "R$ 247/mês",
+                "popular": true,
+                "buttonHref": "/contato",
+                "buttonLabel": "Falar com a gente",
+                "description": "Atendimento com IA no WhatsApp para suplementos, 24 horas — agenda e pedidos do nicho, painel completo e todas as automações do produto."
+              }
+            ],
+            "title": "Comece o Suplementos hoje",
+            "eyebrow": "Plano e preço",
+            "subtitle": "Seu atendente de IA no WhatsApp, 24/7. Sem fidelidade, cancele quando quiser."
           }
         },
         {
