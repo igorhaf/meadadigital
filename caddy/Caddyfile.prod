@@ -55,9 +55,12 @@ conexao-municipio.meadadigital.com {
 	}
 }
 
-# Catch-all dos SUBDOMÍNIOS DE EMPRESA (slug.meadadigital.com) — o que não casou acima
-# vai pro frontend (o Next resolve empresa/perfil pelo host). Caddy casa o host mais
-# específico primeiro, então api./meada./sushi./muda./... continuam certos.
-*.meadadigital.com {
-	reverse_proxy frontend:3000
-}
+# Catch-all dos SUBDOMÍNIOS DE EMPRESA (slug.meadadigital.com) — DESATIVADO por enquanto.
+# O wildcard exige cert via DNS-01 (Let's Encrypt não faz HTTP-01 pra wildcard), o que
+# precisa do plugin caddy-dns/cloudflare + token da API do Cloudflare. Enquanto o wildcard
+# fica configurado, o Caddy tenta cobrir os subdomínios NOMEADOS com o cert-wildcard (que
+# falha) em vez de pegar cert individual — quebrando muda./api./conexao. (erro 525).
+# Reativar quando montarmos o Caddy com DNS-01 (ver docs/DEPLOY.md).
+# *.meadadigital.com {
+# 	reverse_proxy frontend:3000
+# }

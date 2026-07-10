@@ -23,19 +23,12 @@ services:
     container_name: meada-backend
     env_file: .env
     environment:
-      # sidecar pelo nome do serviço (não localhost — ver nota de rede).
+      # sidecar pelo nome do serviço (universal dev+prod — rede interna do compose).
       - KNOWLEDGE_EMBEDDING_ENDPOINT=http://embeddings:7080
-      # Supabase LOCAL roda no HOST (escuta em 0.0.0.0); dentro do container 127.0.0.1 = o próprio
-      # container. Usa o IP do WSL (mesmo que o frontend), alcançável do container. Sem alterar o .env.
-      - SPRING_DATASOURCE_URL=jdbc:postgresql://${SUPABASE_HOST_IP:-172.27.153.135}:54322/postgres
-      - SUPABASE_JWKS_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321/auth/v1/.well-known/jwks.json
-      - SUPABASE_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321
-      # CORS: domínio-base + os 10 subdomínios de produto + legado localhost:3000.
-      # AdminCorsConfig usa setAllowedOriginPatterns → aceita curinga de subdomínio.
-      # http://*.meadadigital.local cobre TODOS os subdomínios de nicho E os slugs de empresa
-      # (suplementos-modelo, belezapura, ...) — necessário pro impersonate, onde o dashboard
-      # abre em {slug}.meadadigital.local e chama api.meadadigital.local cross-origin.
-      - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://*.meadadigital.local,http://localhost:3000
+      # SPRING_DATASOURCE_URL / SUPABASE_URL / SUPABASE_JWKS_URL / ADMIN_CORS_ALLOWED_ORIGINS
+      # vêm do env_file (.env): em PROD apontam pro Supabase remoto + CORS .com. Em DEV, o
+      # docker-compose.override.yml sobrepõe pro Supabase LOCAL (IP do WSL) — carregado
+      # automaticamente por `docker compose up`; produção roda `-f docker-compose.yml` (só a base).
     ports:
       - "8095:8095"   # exposto p/ debugging host-side (o smoke E2E bate aqui direto também)
     volumes:
@@ -55,17 +48,11 @@ services:
     container_name: meada-frontend
     env_file: ./frontend/.env.local
     environment:
-      # var de BROWSER: o navegador chama a API via Caddy (sem porta).
-      - NEXT_PUBLIC_API_URL=http://api.meadadigital.local
-      # var de SERVER (SM-M / CMS público): o Next SSR chama o backend pela rede interna do compose,
-      # não via Caddy (o /etc/hosts do host não existe dentro do container).
+      # var de SERVER (SM-M / CMS público): o Next SSR chama o backend pela rede interna do
+      # compose (universal dev+prod). NEXT_PUBLIC_API_URL e NEXT_PUBLIC_SUPABASE_URL vêm do
+      # env_file (.env.local): PROD = .com/https + Supabase remoto; DEV é sobreposto pelo
+      # docker-compose.override.yml (Caddy .local + Supabase do WSL).
       - CMS_BACKEND_URL=http://backend:8095
-      # hot-reload de FS dentro do Docker (o inotify nem sempre propaga via bind mount).
-      - WATCHPACK_POLLING=true
-      # Supabase LOCAL roda no HOST e escuta em 0.0.0.0; o IP do WSL funciona TANTO no browser
-      # (é o próprio host) QUANTO no SSR dentro do container. Default = IP atual do WSL;
-      # se o WSL trocar o IP no boot, exporte SUPABASE_HOST_IP=<novo ip> antes do compose up.
-      - NEXT_PUBLIC_SUPABASE_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321
     ports:
       - "3000:3000"   # exposto p/ debugging host-side
     volumes:

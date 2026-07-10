@@ -1,0 +1,25 @@
+# docker-compose.override.yml — overrides de DESENVOLVIMENTO LOCAL.
+#
+# O Docker Compose carrega este arquivo AUTOMATICAMENTE em `docker compose up` (dev).
+# Em PRODUÇÃO, o deploy roda `docker compose -f docker-compose.yml up` (só a base),
+# então estes overrides NÃO se aplicam — lá valem os valores do .env / .env.local de prod.
+#
+# Aqui ficam só as diferenças de ambiente local:
+#   - Supabase LOCAL (via CLI no host WSL) alcançado pelo IP do WSL a partir dos containers.
+#   - URLs de domínio .local (Caddy dev) e CORS de dev.
+#   - hot-reload (WATCHPACK_POLLING).
+# Se o WSL trocar de IP no boot: exporte SUPABASE_HOST_IP=<novo ip> antes do compose up.
+
+services:
+  backend:
+    environment:
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://${SUPABASE_HOST_IP:-172.27.153.135}:54322/postgres
+      - SUPABASE_JWKS_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321/auth/v1/.well-known/jwks.json
+      - SUPABASE_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321
+      - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://*.meadadigital.local,http://localhost:3000
+
+  frontend:
+    environment:
+      - NEXT_PUBLIC_API_URL=http://api.meadadigital.local
+      - WATCHPACK_POLLING=true
+      - NEXT_PUBLIC_SUPABASE_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321

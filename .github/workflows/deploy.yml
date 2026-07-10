@@ -42,8 +42,8 @@ jobs:
             echo "== git pull (traz as alteracoes do github) =="
             git pull origin main
             echo "== docker compose down =="
-            docker compose down
-            echo "== docker compose up -d --build (rebuilda + atualiza libs) =="
-            docker compose up -d --build
+            docker compose -f docker-compose.yml down
+            echo "== docker compose up -d --build (base SEM override de dev; rebuilda + atualiza libs) =="
+            docker compose -f docker-compose.yml up -d --build
             echo "== Status =="
-            docker compose ps
+            docker compose -f docker-compose.yml ps
