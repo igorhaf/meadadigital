@@ -10,7 +10,8 @@
 # Banco: Supabase REMOTO (lido do .env via env_file no compose). Nada de Postgres aqui.
 
 # ---- builder -------------------------------------------------------------
-FROM eclipse-temurin:17-jdk AS builder
+# Imagem com Maven + JDK 17 (o temurin puro NÃO traz o mvn). Compila o jar de produção.
+FROM maven:3.9-eclipse-temurin-17 AS builder
 
 WORKDIR /build
 
