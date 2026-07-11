@@ -59,6 +59,51 @@ services:
     networks: [meada]
     depends_on: [backend]
 
+  # ---------------------------------------------------------------------------
+  # AMBIENTE DE DEMO — MESMO código (mesma main) que o prod, mas banco Supabase SEPARADO
+  # (isolado do de produção). Só sobe no deploy via `--profile demo`; o dev local ignora.
+  # Auto-sincroniza a cada deploy (mesma fonte); os dados de demonstração (tenants/logins)
+  # vivem no Supabase de demo e PERSISTEM entre deploys. As DEMO_* vêm do .env do servidor
+  # (segredos, nunca commitados). Sem portas no host — acessível só via Caddy (demo./api-demo.).
+  # ---------------------------------------------------------------------------
+  demo-backend:
+    profiles: [demo]
+    build:
+      context: .
+      target: runtime
+    container_name: demo-backend
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      - KNOWLEDGE_EMBEDDING_ENDPOINT=http://embeddings:7080
+      # override do env_file: aponta pro Supabase de DEMO (isolado do de prod) + CORS do demo.
+      - SPRING_DATASOURCE_URL=${DEMO_SPRING_DATASOURCE_URL:-}
+      - SPRING_DATASOURCE_USERNAME=${DEMO_SPRING_DATASOURCE_USERNAME:-}
+      - SPRING_DATASOURCE_PASSWORD=${DEMO_SPRING_DATASOURCE_PASSWORD:-}
+      - SUPABASE_URL=${DEMO_SUPABASE_URL:-}
+      - SUPABASE_JWKS_URL=${DEMO_SUPABASE_JWKS_URL:-}
+      - SUPABASE_SERVICE_ROLE_KEY=${DEMO_SUPABASE_SERVICE_ROLE_KEY:-}
+      - ADMIN_CORS_ALLOWED_ORIGINS=https://demo.meadadigital.com
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks: [meada]
+
+  demo-frontend:
+    profiles: [demo]
+    build:
+      context: ./frontend
+      target: prod
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${DEMO_NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${DEMO_NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+        NEXT_PUBLIC_API_URL: ${DEMO_NEXT_PUBLIC_API_URL:-}
+    container_name: demo-frontend
+    restart: unless-stopped
+    environment:
+      - CMS_BACKEND_URL=http://demo-backend:8095
+    networks: [meada]
+    depends_on: [demo-backend]
+
   embeddings:
     build:
       context: ./docker/embedding-sidecar

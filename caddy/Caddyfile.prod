@@ -40,6 +40,15 @@ api.meadadigital.com {
 	reverse_proxy backend:8095
 }
 
+# Ambiente de DEMO (banco Supabase SEPARADO do de prod) — mesmo app, subdomínio próprio.
+# Só responde quando o stack de demo está de pé (deploy com --profile demo).
+demo.meadadigital.com {
+	reverse_proxy demo-frontend:3000
+}
+api-demo.meadadigital.com {
+	reverse_proxy demo-backend:8095
+}
+
 # Projeto externo muda (Laravel) — subdomínio próprio.
 muda.meadadigital.com {
 	reverse_proxy muda-nginx:80

@@ -42,9 +42,9 @@ jobs:
             echo "== git fetch + reset --hard (traz as alteracoes; ignora drift de arquivos rastreados) =="
             git fetch origin main
             git reset --hard origin/main
-            echo "== docker compose down =="
-            docker compose -f docker-compose.yml down
-            echo "== docker compose up -d --build (base SEM override de dev; rebuilda + atualiza libs) =="
-            docker compose -f docker-compose.yml up -d --build
+            echo "== docker compose down (inclui o profile demo) =="
+            docker compose -f docker-compose.yml --profile demo down
+            echo "== docker compose up -d --build (base + profile demo; SEM override de dev; rebuilda + atualiza libs) =="
+            docker compose -f docker-compose.yml --profile demo up -d --build
             echo "== Status =="
-            docker compose -f docker-compose.yml ps
+            docker compose -f docker-compose.yml --profile demo ps
