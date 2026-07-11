@@ -29,9 +29,16 @@ export function subdomainFromHost(host: string | null | undefined): string {
 }
 
 /**
+ * Subdomínios RESERVADOS de infraestrutura — não são empresa nem nicho; caem no institucional
+ * (base), igual ao domínio-base. `demo` = ambiente de demonstração (demo.meadadigital.com).
+ */
+const RESERVED_SUBDOMAINS = new Set(['www', 'demo'])
+
+/**
  * 1º segmento CRU do host (sem cair para 'meada' quando desconhecido). É o slug candidato a
  * EMPRESA em {empresa}.meadadigital.com — o subdomainFromHost engole desconhecidos pra 'meada',
- * o que perderia o slug. null quando não há subdomínio (localhost / domínio-base / 2 partes).
+ * o que perderia o slug. null quando não há subdomínio (localhost / domínio-base / 2 partes) OU
+ * quando é um subdomínio reservado (www/demo) — que deve servir o institucional, não virar empresa.
  */
 export function rawSubdomain(host: string | null | undefined): string | null {
   if (!host) return null
@@ -39,7 +46,8 @@ export function rawSubdomain(host: string | null | undefined): string | null {
   if (hostname === 'localhost' || hostname === '127.0.0.1') return null
   const parts = hostname.split('.')
   if (parts.length <= 2) return null
-  return parts[0]
+  const first = parts[0]
+  return RESERVED_SUBDOMAINS.has(first) ? null : first
 }
 
 /** True se o segmento é um subdomínio de NICHO conhecido (perfil vertical). */
