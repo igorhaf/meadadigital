@@ -49,25 +49,34 @@
         <div class="card space-y-3 p-6">
             <label class="block text-sm font-medium text-neutral-700">Imagens do produto</label>
 
-            @if($product->exists && $product->images->isNotEmpty())
-                <div class="grid grid-cols-4 gap-3">
-                    @foreach($product->images as $image)
-                        <label class="group relative cursor-pointer overflow-hidden rounded-xl border border-neutral-200">
-                            <img src="{{ $image->path }}" alt="" class="aspect-square w-full object-cover">
-                            <span class="absolute inset-x-0 bottom-0 flex items-center gap-1 bg-neutral-900/70 px-2 py-1 text-[11px] font-medium text-white">
-                                <input type="checkbox" name="remove_images[]" value="{{ $image->id }}" class="rounded border-white/50 text-red-500 focus:ring-0">
-                                Remover
-                            </span>
-                            @if($image->is_primary)<span class="absolute left-1 top-1 chip bg-brand-600 text-white">Capa</span>@endif
-                        </label>
-                    @endforeach
-                </div>
-                <p class="text-xs text-neutral-400">Marque para remover. A primeira imagem é a capa.</p>
-            @endif
+            @php($galleryProps = [
+                'existing' => $product->exists
+                    ? $product->images->map(fn ($i) => ['id' => $i->id, 'url' => $i->path, 'primary' => (bool) $i->is_primary])->values()
+                    : [],
+                'maxFiles' => 8,
+            ])
+            <div data-island="ProductImagesManager" data-props='@json($galleryProps)'>
+                {{-- Fallback sem JS: comportamento clássico (checkbox p/ remover; 1ª imagem é a capa). --}}
+                @if($product->exists && $product->images->isNotEmpty())
+                    <div class="grid grid-cols-4 gap-3">
+                        @foreach($product->images as $image)
+                            <label class="group relative cursor-pointer overflow-hidden rounded-xl border border-neutral-200">
+                                <img src="{{ $image->path }}" alt="" class="aspect-square w-full object-cover">
+                                <span class="absolute inset-x-0 bottom-0 flex items-center gap-1 bg-neutral-900/70 px-2 py-1 text-[11px] font-medium text-white">
+                                    <input type="checkbox" name="remove_images[]" value="{{ $image->id }}" class="rounded border-white/50 text-red-500 focus:ring-0">
+                                    Remover
+                                </span>
+                                @if($image->is_primary)<span class="absolute left-1 top-1 chip bg-brand-600 text-white">Capa</span>@endif
+                            </label>
+                        @endforeach
+                    </div>
+                    <p class="text-xs text-neutral-400">Marque para remover. A primeira imagem é a capa.</p>
+                @endif
 
-            <input type="file" name="images[]" accept="image/png,image/jpeg,image/webp" multiple
-                class="w-full rounded-xl border border-dashed border-neutral-300 px-4 py-3 text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700 hover:border-brand-400">
-            <p class="text-xs text-neutral-400">Envie fotos do seu computador (JPG, PNG ou WEBP, até 5&nbsp;MB cada). Sem imagens, geramos um placeholder colorido.</p>
+                <input type="file" name="images[]" accept="image/png,image/jpeg,image/webp" multiple
+                    class="mt-3 w-full rounded-xl border border-dashed border-neutral-300 px-4 py-3 text-sm text-neutral-600 file:mr-3 file:rounded-lg file:border-0 file:bg-brand-50 file:px-3 file:py-1.5 file:text-sm file:font-semibold file:text-brand-700 hover:border-brand-400">
+                <p class="mt-2 text-xs text-neutral-400">Envie fotos do seu computador (JPG, PNG ou WEBP, até 8&nbsp;MB cada — redimensionamos automaticamente). Sem imagens, geramos um placeholder colorido.</p>
+            </div>
         </div>
     </div>
 

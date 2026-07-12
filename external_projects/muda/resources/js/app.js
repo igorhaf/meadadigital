@@ -8,6 +8,7 @@ import CartDrawer from './components/CartDrawer.vue';
 import ProductGallery from './components/ProductGallery.vue';
 import CartPage from './components/CartPage.vue';
 import ShippingCalculator from './components/ShippingCalculator.vue';
+import ProductImagesManager from './components/ProductImagesManager.vue';
 
 // Registry of interactive "islands" mounted into server-rendered Blade markup.
 const registry = {
@@ -19,6 +20,7 @@ const registry = {
     ProductGallery,
     CartPage,
     ShippingCalculator,
+    ProductImagesManager,
 };
 
 document.querySelectorAll('[data-island]').forEach((el) => {

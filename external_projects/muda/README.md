@@ -29,31 +29,41 @@ e montadas por [`resources/js/app.js`](resources/js/app.js).
 
 ## Como rodar
 
-Pré-requisitos: Docker + Docker Compose.
+A Muda **não tem compose próprio**. Ela é um serviço do compose da Meada
+(`../../docker-compose.yml`, serviços `muda-postgres`/`muda-app`/`muda-nginx`) e roda na
+mesma rede, atrás do Caddy. **Nenhum container publica porta no host** — o Caddy roteia
+por nome de container, em dev e em produção. (Um `docker-compose.yml` standalone existia
+aqui e foi aposentado: ele publicava a 8095, que é do backend Spring da Meada, e as duas
+stacks colidiam.)
+
+Pré-requisitos: Docker + Docker Compose, e `muda.meadadigital.local` no `/etc/hosts`.
 
 ```bash
 # 1. Configurar o ambiente
 cp .env.example .env
-docker compose run --rm app php artisan key:generate
 
 # 2. Compilar os assets (Vue + Tailwind)
-npm install
-npm run build
+npm install && npm run build
 
-# 3. Subir a stack
-docker compose up -d --build
+# 3. Subir a stack (a partir da RAIZ da meada)
+cd ../.. && docker compose up -d --build muda-postgres muda-app muda-nginx caddy
 
 # 4. Migrar e popular com dados de exemplo
-docker compose exec app php artisan migrate:fresh --seed
+docker exec muda-app php artisan migrate --seed
 ```
 
-Acesse **http://localhost:8095**.
+Acesse **http://muda.meadadigital.local**.
 
-| Serviço | Porta host |
-|---------|-----------|
-| Loja (nginx) | http://localhost:8095 |
-| PostgreSQL | localhost:5440 |
-| Vite dev (opcional) | `docker compose --profile dev up node` → :5173 |
+| Ambiente | Endereço |
+|----------|----------|
+| dev (local) | http://muda.meadadigital.local |
+| dev (callbacks externos) | https://slum-feminist-speculate.ngrok-free.dev — `ngrok start muda-web` |
+| homolog | https://homologmuda.meadadigital.com |
+| produção | https://muda.meadadigital.com |
+
+O túnel ngrok aponta para o **Caddy (porta 80)**, que tem um vhost para o domínio fixo do
+túnel → `muda-nginx:80`. É por ele que chegam os callbacks (Mercado Pago, Google OAuth,
+MelhorEnvio) e o webhook do WhatsApp em dev.
 
 > Durante o desenvolvimento do frontend, rode `npm run dev` (ou o serviço `node`) para
 > hot-reload; sem ele, o Blade usa os assets compilados em `public/build`.

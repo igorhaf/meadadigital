@@ -6,8 +6,13 @@ RUN apk add --no-cache \
         libzip-dev \
         icu-dev \
         oniguruma-dev \
+        freetype-dev \
+        libjpeg-turbo-dev \
+        libpng-dev \
+        libwebp-dev \
         bash \
         $PHPIZE_DEPS \
+    && docker-php-ext-configure gd --with-freetype --with-jpeg --with-webp \
     && docker-php-ext-install \
         pdo \
         pdo_pgsql \
@@ -15,6 +20,8 @@ RUN apk add --no-cache \
         bcmath \
         intl \
         zip \
+        gd \
+        exif \
         opcache \
     && apk del $PHPIZE_DEPS
 

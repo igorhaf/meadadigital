@@ -111,9 +111,12 @@ class ProductController extends Controller
             'free_shipping' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'images' => ['nullable', 'array', 'max:8'],
-            'images.*' => ['image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'images.*' => ['image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
             'remove_images' => ['nullable', 'array'],
             'remove_images.*' => ['integer'],
+            'gallery' => ['nullable', 'array', 'max:16'],
+            'gallery.*' => ['string', 'max:40'],
+            'gallery_primary' => ['nullable', 'string', 'max:40'],
         ]);
     }
 
@@ -152,19 +155,22 @@ class ProductController extends Controller
             });
         }
 
-        // 2. Store newly uploaded files (local upload -> public disk).
-        foreach ($request->file('images', []) as $file) {
+        // 2. Store newly uploaded files (local upload -> public disk). O índice do
+        // arquivo enviado é referenciado pelos tokens "new:IDX" da galeria.
+        $created = [];
+        foreach (array_values((array) $request->file('images', [])) as $i => $file) {
             if (! $file || ! $file->isValid()) {
                 continue;
             }
 
-            $stored = $file->store('products', 'public');   // e.g. products/ab12.jpg
+            // Reencoda para o tamanho usado na galeria/zoom (economia de disco).
+            $stored = \App\Support\ImageOptimizer::store($file, 'products');
 
-            $product->images()->create([
+            $created[$i] = $product->images()->create([
                 'path' => '/storage/' . $stored,
                 'alt' => $product->title,
                 'is_primary' => false,
-                'position' => 900,                          // appended; normalized below
+                'position' => 900 + $i,                     // appended; normalized below
             ]);
         }
 
@@ -180,7 +186,54 @@ class ProductController extends Controller
             return;
         }
 
-        // 4. Renormalize order + primary flag (first image is the cover).
+        // 4. Galeria do formulário: tokens "existing:ID" / "new:IDX" na ordem final
+        // escolhida por arrastar-e-soltar; gallery_primary aponta o destaque (thumb).
+        $byToken = [];
+        foreach ($product->images()->get() as $image) {
+            $byToken["existing:{$image->id}"] = $image;
+        }
+        foreach ($created as $i => $image) {
+            $byToken["new:{$i}"] = $image;
+        }
+
+        $orderTokens = array_values(array_filter(
+            (array) $request->input('gallery', []),
+            fn ($t) => isset($byToken[$t]),
+        ));
+
+        if ($orderTokens) {
+            $primaryToken = (string) $request->input('gallery_primary', '');
+            $seen = [];
+            $position = 0;
+            foreach ($orderTokens as $token) {
+                $image = $byToken[$token];
+                if (isset($seen[$image->id])) {
+                    continue;
+                }
+                $seen[$image->id] = true;
+                $image->forceFill([
+                    'position' => $position++,
+                    'is_primary' => $token === $primaryToken,
+                ])->save();
+            }
+
+            // Imagens fora da lista (não deveria ocorrer): vão para o fim.
+            foreach ($product->images()->get() as $image) {
+                if (! isset($seen[$image->id])) {
+                    $image->forceFill(['position' => $position++, 'is_primary' => false])->save();
+                }
+            }
+
+            // Garante exatamente um destaque.
+            if (! $product->images()->where('is_primary', true)->exists()) {
+                $product->images()->orderBy('position')->first()
+                    ?->forceFill(['is_primary' => true])->save();
+            }
+
+            return;
+        }
+
+        // 4b. Sem JS: renormaliza e a primeira imagem vira a capa (comportamento clássico).
         $product->images()->orderBy('position')->orderBy('id')->get()
             ->each(fn ($image, $i) => $image->forceFill([
                 'position' => $i,

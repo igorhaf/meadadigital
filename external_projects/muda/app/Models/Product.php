@@ -16,6 +16,7 @@ class Product extends Model
         'stock', 'weight_grams', 'length_cm', 'width_cm', 'height_cm', 'sku', 'is_active', 'is_featured',
         'rating', 'reviews_count', 'sold_count', 'views',
         'seller_name', 'seller_location',
+        'status', 'category_suggested', 'source', 'rejection_reason',
     ];
 
     protected $casts = [
@@ -25,12 +26,25 @@ class Product extends Model
         'free_shipping' => 'boolean',
         'is_active' => 'boolean',
         'is_featured' => 'boolean',
+        'category_suggested' => 'boolean',
     ];
 
     public const CONDITIONS = [
         'novo' => 'Novo',
         'seminovo' => 'Seminovo',
         'usado' => 'Usado',
+    ];
+
+    public const STATUS_RASCUNHO = 'rascunho';
+    public const STATUS_PENDENTE = 'pendente';
+    public const STATUS_APROVADO = 'aprovado';
+    public const STATUS_RECUSADO = 'recusado';
+
+    public const STATUSES = [
+        self::STATUS_RASCUNHO => 'Rascunho',
+        self::STATUS_PENDENTE => 'Pendente',
+        self::STATUS_APROVADO => 'Aprovado',
+        self::STATUS_RECUSADO => 'Recusado',
     ];
 
     /* ---------------------------------------------------------------- Relations */
@@ -52,9 +66,21 @@ class Product extends Model
 
     /* ------------------------------------------------------------------- Scopes */
 
+    /**
+     * Visibilidade na loja: exige aprovação do root E não estar pausado pelo
+     * vendedor. Home, categoria, busca, loja e facets passam todos por aqui —
+     * pendente não vaza por nenhum deles.
+     */
     public function scopeActive(Builder $query): Builder
     {
-        return $query->where('is_active', true);
+        return $query->where('is_active', true)
+            ->where('status', self::STATUS_APROVADO);
+    }
+
+    /** Mesma regra do scopeActive, para uma instância já carregada. */
+    public function isVisible(): bool
+    {
+        return $this->is_active && $this->status === self::STATUS_APROVADO;
     }
 
     public function scopeFeatured(Builder $query): Builder
