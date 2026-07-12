@@ -115,9 +115,6 @@ export default function GastosPanel({ pageId }: { pageId: number }) {
           </tbody>
         </table>
       </div>
-      <p className="text-xs text-[#9b9a97]">
-        Lançamentos (daqui ou do Telegram: “anota 250 de mercado no nubank”) vão pro Google Sheets quando a integração estiver configurada.
-      </p>
     </div>
   )
 }

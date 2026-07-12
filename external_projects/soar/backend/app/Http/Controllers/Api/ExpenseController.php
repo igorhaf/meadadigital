@@ -6,17 +6,12 @@ use App\Http\Controllers\Concerns\AuthorizesPageAccess;
 use App\Http\Controllers\Controller;
 use App\Models\ExpenseEntry;
 use App\Models\Page;
-use App\Services\Google\GoogleSheetsSync;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class ExpenseController extends Controller
 {
     use AuthorizesPageAccess;
-
-    public function __construct(private readonly GoogleSheetsSync $sheets)
-    {
-    }
 
     public function index(Request $request, Page $page): JsonResponse
     {
@@ -44,7 +39,6 @@ class ExpenseController extends Controller
         $this->authorizeKind($page, 'gastos');
 
         $entry = $page->expenseEntries()->create($this->validated($request));
-        $this->sheets->appendExpense($entry);
 
         return response()->json($entry->fresh(), 201);
     }

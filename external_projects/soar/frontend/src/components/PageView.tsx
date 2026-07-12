@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { useEffect, useRef, useState } from 'react'
+import { Link } from 'react-router-dom'
 
 import { apiFetch } from '../api'
 import type { PageDetail } from '../types'
@@ -8,6 +9,7 @@ import CalendarPanel from './panels/CalendarPanel'
 import DietPanel from './panels/DietPanel'
 import GastosPanel from './panels/GastosPanel'
 import MedsPanel from './panels/MedsPanel'
+import RegistroItemPanel from './panels/RegistroItemPanel'
 import RegistroPanel from './panels/RegistroPanel'
 import TasksPanel from './panels/TasksPanel'
 import VaultPanel from './panels/VaultPanel'
@@ -78,14 +80,37 @@ export default function PageView({ pageId }: { pageId: number }) {
         className="mb-6 w-full border-none bg-transparent text-4xl font-bold text-[#37352f] outline-none placeholder:text-[#d3d1cb]"
       />
 
-      {page.kind === 'note' && <NoteEditor page={page} />}
+      {page.kind === 'note' && (
+        <>
+          <SubpagesList page={page} />
+          <NoteEditor page={page} />
+        </>
+      )}
       {page.kind === 'tasks' && <TasksPanel pageId={page.id} />}
       {page.kind === 'calendar' && <CalendarPanel pageId={page.id} />}
       {page.kind === 'vault' && <VaultPanel pageId={page.id} />}
-      {page.kind === 'registro' && <RegistroPanel pageId={page.id} />}
+      {page.kind === 'registro' && <RegistroPanel page={page} />}
+      {page.kind === 'registro_item' && <RegistroItemPanel page={page} />}
       {page.kind === 'meds' && <MedsPanel pageId={page.id} />}
       {page.kind === 'diet' && <DietPanel page={page} />}
       {page.kind === 'gastos' && <GastosPanel pageId={page.id} />}
+    </div>
+  )
+}
+
+function SubpagesList({ page }: { page: PageDetail }) {
+  if (page.children.length === 0) return null
+  return (
+    <div className="mb-6 grid grid-cols-2 gap-2 md:grid-cols-3">
+      {page.children.map((child) => (
+        <Link
+          key={child.id}
+          to={`/p/${child.id}`}
+          className="rounded-lg border border-[#e9e9e7] px-3 py-2.5 text-sm font-medium transition hover:bg-[#f7f7f5]"
+        >
+          {child.icon ?? KIND_INFO[child.kind].icon} {child.title}
+        </Link>
+      ))}
     </div>
   )
 }

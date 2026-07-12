@@ -1,10 +1,14 @@
 # Soar
 
-Dashboard colaborativo estilo Notion: páginas em árvore, com um espaço **compartilhado**
-(grupo único — todos os usuários veem e editam) e um espaço **pessoal** por usuário.
+Dashboard colaborativo estilo Notion, com **categorias fixas espelhadas** em dois espaços:
+**Compartilhado** (o casal vê e edita) e **Pessoal** (só o dono). As categorias são
+sempre as mesmas — Agenda, Tarefas, Gastos, Senhas, Remédios, Cartões, Filhos, Cachorro,
+Dietas e Notas — não podem ser criadas nem excluídas. Tudo o mais é **subpágina** dentro
+delas: cada cartão, cada ficha de filho, cada dieta é uma página própria; abrir a
+categoria lista os itens, clicar num item abre a ficha dele no layout da categoria.
 
 É a plataforma de organização da família: cada página é uma mini-aplicação —
-agenda (Google Calendar), tarefas, gastos (Google Sheets), cofre de senhas cifrado,
+agenda, tarefas, gastos, cofre de senhas cifrado,
 registros dinâmicos (cartões, filhos, cachorro), remédios com lembretes e dietas
 geradas por IA. Tudo operável pelo **assistente no Telegram** (@RosendoFrancaBot),
 que conversa via **Elo** (proxy do Claude Code).
@@ -15,7 +19,7 @@ que conversa via **Elo** (proxy do Claude Code).
   Sanctum. Scheduler com lembretes de remédio, resumo diário e alertas de receita/estoque.
 - **Frontend:** React 19 + Vite + TypeScript + Tailwind 4 + TanStack Query + React Router.
 - **IA:** Elo (proxy Claude Code, host:8200) — ações por tag `<acao>` no Telegram e
-  geração de dietas. **Google:** service account (Calendar por usuário + Sheets de gastos).
+  geração de dietas.
 
 ## Subir (pelo compose do MEADA — não há docker próprio)
 
@@ -36,19 +40,12 @@ docker compose restart caddy   # se o Caddyfile mudou
 O backend migra e semeia sozinho no boot (seed idempotente — só roda com o banco vazio).
 O banco é o **Supabase** (compartilhado entre local e produção — cuidado: dados reais).
 Segredos vivem SÓ em `backend/.env` (gitignored): senha do banco, `SEED_USER_PASSWORD`,
-`TELEGRAM_BOT_TOKEN`, `SOAR_ELO_KEY` e credenciais Google. ⚠️ O `APP_KEY` precisa ser o
+`TELEGRAM_BOT_TOKEN` e `SOAR_ELO_KEY`. ⚠️ O `APP_KEY` precisa ser o
 MESMO em local e produção (o cofre de senhas cifra com ele).
 
 O serviço `soar-bot` (bot Telegram + scheduler) roda **só local** (precisa do Elo no
 host:8200) e opera os mesmos dados da produção via Supabase.
 
-### Google (Calendar + Sheets) — ativar depois
-
-1. No Google Cloud: criar service account, baixar o JSON e apontar `GOOGLE_SA_JSON_PATH`.
-2. Igor e Aline compartilham seus calendários (gmail) com o `client_email` da SA
-   (permissão "Fazer alterações"); `users.google_calendar_id` já aponta os gmails.
-3. Compartilhar a planilha de gastos com a SA e setar `GOOGLE_SHEET_ID_GASTOS`.
-Sem credenciais, o sync fica desligado (best-effort) e o resto do app funciona normal.
 
 ## Usuários (seed)
 

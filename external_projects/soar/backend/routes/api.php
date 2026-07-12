@@ -6,7 +6,6 @@ use App\Http\Controllers\Api\DietController;
 use App\Http\Controllers\Api\ExpenseController;
 use App\Http\Controllers\Api\MedicationController;
 use App\Http\Controllers\Api\PageController;
-use App\Http\Controllers\Api\RegistroController;
 use App\Http\Controllers\Api\TaskController;
 use App\Http\Controllers\Api\TelegramController;
 use App\Http\Controllers\Api\VaultController;
@@ -45,13 +44,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/pages/{page}/tasks', [TaskController::class, 'store']);
     Route::put('/pages/{page}/tasks/{task}', [TaskController::class, 'update']);
     Route::delete('/pages/{page}/tasks/{task}', [TaskController::class, 'destroy']);
-
-    // Registros (template dinâmico)
-    Route::get('/pages/{page}/registro', [RegistroController::class, 'index']);
-    Route::put('/pages/{page}/registro/template', [RegistroController::class, 'updateTemplate']);
-    Route::post('/pages/{page}/registro', [RegistroController::class, 'store']);
-    Route::put('/pages/{page}/registro/{entry}', [RegistroController::class, 'update']);
-    Route::delete('/pages/{page}/registro/{entry}', [RegistroController::class, 'destroy']);
 
     // Remédios
     Route::get('/pages/{page}/medications', [MedicationController::class, 'index']);

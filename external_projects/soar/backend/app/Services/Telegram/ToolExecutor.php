@@ -8,8 +8,6 @@ use App\Models\Page;
 use App\Models\TaskItem;
 use App\Models\User;
 use App\Services\DietGenerator;
-use App\Services\Google\GoogleCalendarSync;
-use App\Services\Google\GoogleSheetsSync;
 use Carbon\Carbon;
 use Illuminate\Support\Str;
 
@@ -20,11 +18,8 @@ use Illuminate\Support\Str;
  */
 class ToolExecutor
 {
-    public function __construct(
-        private readonly GoogleCalendarSync $googleCalendar,
-        private readonly GoogleSheetsSync $googleSheets,
-        private readonly DietGenerator $dietGenerator,
-    ) {
+    public function __construct(private readonly DietGenerator $dietGenerator)
+    {
     }
 
     /** @param array<string, mixed> $args */
@@ -93,15 +88,11 @@ class ToolExecutor
             'notes' => $args['notas'] ?? null,
         ]);
 
-        $this->googleCalendar->syncEvent($event);
-        $google = ! empty($event->fresh()->google_event_ids);
-
         return [
             'ok' => true,
             'evento' => $event->title,
             'quando' => $startsAt->format('d/m/Y').($time ? ' às '.$startsAt->format('H:i') : ' (dia inteiro)'),
             'agenda' => $page->scope === 'shared' ? 'do casal (Igor e Aline)' : 'pessoal',
-            'google_calendar' => $google ? 'sincronizado' : 'não configurado ainda',
         ];
     }
 
@@ -246,13 +237,10 @@ class ToolExecutor
             'card' => $args['cartao'] ?? null,
         ]);
 
-        $this->googleSheets->appendExpense($entry);
-
         return [
             'ok' => true,
             'gasto' => $entry->description,
             'valor' => 'R$ '.number_format($amountCents / 100, 2, ',', '.'),
-            'google_sheets' => $entry->fresh()->synced_to_sheet ? 'sincronizado' : 'não configurado ainda',
         ];
     }
 
@@ -290,17 +278,31 @@ class ToolExecutor
         }
 
         $shared = $args['compartilhada'] ?? true;
+        $scope = $shared ? Page::SCOPE_SHARED : Page::SCOPE_PERSONAL;
+
+        // categorias raiz são fixas — o novo registro nasce como SUBcategoria
+        $parent = null;
+        if (! empty($args['categoria'])) {
+            $parent = Page::whereNull('parent_id')->where('is_system', true)
+                ->where('scope', $scope)
+                ->when(! $shared, fn ($q) => $q->where('owner_id', $user->id))
+                ->where('title', 'ilike', '%'.$args['categoria'].'%')
+                ->first();
+        }
+        $parent ??= $this->pageOfKind($user, 'note', $scope, 'Notas', '🗒️');
+
         $page = Page::create([
-            'scope' => $shared ? Page::SCOPE_SHARED : Page::SCOPE_PERSONAL,
+            'scope' => $scope,
             'owner_id' => $shared ? null : $user->id,
             'kind' => 'registro',
+            'parent_id' => $parent->id,
             'title' => $args['titulo'] ?? 'Registro',
             'icon' => $args['icone'] ?? '📋',
             'meta' => ['template' => $campos],
-            'position' => (Page::where('scope', $shared ? Page::SCOPE_SHARED : Page::SCOPE_PERSONAL)->whereNull('parent_id')->max('position') ?? -1) + 1,
+            'position' => (Page::where('parent_id', $parent->id)->max('position') ?? -1) + 1,
         ]);
 
-        return ['ok' => true, 'pagina' => $page->title, 'campos' => collect($campos)->pluck('label')->all()];
+        return ['ok' => true, 'pagina' => $page->title, 'dentro_de' => $parent->title, 'campos' => collect($campos)->pluck('label')->all()];
     }
 
     private function adicionarRegistro(User $user, array $args): array
@@ -325,12 +327,25 @@ class ToolExecutor
             $normalized[$field['key'] ?? Str::slug($k, '_')] = $v;
         }
 
-        $page->registroEntries()->create([
-            'data' => $normalized,
-            'position' => ($page->registroEntries()->max('position') ?? -1) + 1,
+        $title = null;
+        foreach ($template as $field) {
+            if (! empty($normalized[$field['key']])) {
+                $title = (string) $normalized[$field['key']];
+                break;
+            }
+        }
+
+        $item = Page::create([
+            'scope' => $page->scope,
+            'owner_id' => $page->owner_id,
+            'kind' => 'registro_item',
+            'parent_id' => $page->id,
+            'title' => $title ?? 'Item',
+            'meta' => ['data' => $normalized],
+            'position' => (Page::where('parent_id', $page->id)->max('position') ?? -1) + 1,
         ]);
 
-        return ['ok' => true, 'pagina' => $page->title, 'registrado' => $normalized];
+        return ['ok' => true, 'pagina' => $page->title, 'item' => $item->title, 'registrado' => $normalized];
     }
 
     // ── Dieta / busca / notas ────────────────────────────────────────────
@@ -383,7 +398,8 @@ class ToolExecutor
                 return ['erro' => 'Página não encontrada: '.$args['pagina']];
             }
         } else {
-            $page = $this->pageOfKind($user, 'note', Page::SCOPE_PERSONAL, 'Notas Rápidas', '🗒️');
+            $page = Page::whereNull('parent_id')->where('is_system', true)->where('title', 'Notas')
+                ->personalOf($user->id)->firstOrFail();
         }
 
         $stamp = now()->format('d/m/Y H:i');
@@ -394,22 +410,29 @@ class ToolExecutor
 
     // ── Helpers ───────────────────────────────────────────────────────────
 
-    /** Primeira página do tipo/escopo (raiz de preferência); cria se não existir. */
+    /** Categoria fixa (raiz is_system) do tipo/escopo — criada pela migração. */
     private function pageOfKind(User $user, string $kind, string $scope, string $defaultTitle, string $icon): Page
     {
-        $query = Page::where('kind', $kind)->where('scope', $scope)->orderBy('position');
+        $query = Page::whereNull('parent_id')->where('is_system', true)
+            ->where('kind', $kind)->where('scope', $scope)->orderBy('position');
         if ($scope === Page::SCOPE_PERSONAL) {
             $query->where('owner_id', $user->id);
         }
 
-        return $query->first() ?? Page::create([
-            'scope' => $scope,
-            'owner_id' => $scope === Page::SCOPE_PERSONAL ? $user->id : null,
-            'kind' => $kind,
-            'title' => $defaultTitle,
-            'icon' => $icon,
-            'position' => 99,
-        ]);
+        $page = $query->first();
+        if (! $page) {
+            $page = Page::create([
+                'scope' => $scope,
+                'owner_id' => $scope === Page::SCOPE_PERSONAL ? $user->id : null,
+                'kind' => $kind,
+                'title' => $defaultTitle,
+                'icon' => $icon,
+                'position' => 99,
+            ]);
+            $page->forceFill(['is_system' => true])->save();
+        }
+
+        return $page;
     }
 
     /** @return array{0: Carbon, 1: Carbon} */

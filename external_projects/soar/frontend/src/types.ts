@@ -12,6 +12,7 @@ export type PageKind =
   | 'calendar'
   | 'tasks'
   | 'registro'
+  | 'registro_item'
   | 'meds'
   | 'diet'
   | 'gastos'
@@ -24,6 +25,7 @@ export type TreeNode = {
   title: string
   icon: string | null
   position: number
+  is_system: boolean
   children: TreeNode[]
 }
 
@@ -34,12 +36,12 @@ export type Tree = {
 
 export type PageMeta = {
   template?: RegistroField[]
+  data?: Record<string, string>
   person?: string
   restrictions?: string
   goals?: string
   generate_requested?: boolean
   generated_at?: string
-  google_sheet_id?: string
 }
 
 export type PageDetail = {
@@ -53,7 +55,20 @@ export type PageDetail = {
   content: string | null
   meta: PageMeta | null
   position: number
+  is_system: boolean
   updated_at: string
+  parent: { id: number; title: string; kind: PageKind; meta: PageMeta | null } | null
+  children: PageChild[]
+}
+
+export type PageChild = {
+  id: number
+  parent_id: number
+  kind: PageKind
+  title: string
+  icon: string | null
+  position: number
+  meta: PageMeta | null
 }
 
 export type VaultEntry = {
@@ -72,7 +87,6 @@ export type CalendarEvent = {
   all_day: boolean
   recurrence: string
   notes: string | null
-  google_event_ids: Record<string, string> | null
 }
 
 export type TaskItem = {
@@ -124,7 +138,6 @@ export type ExpenseEntry = {
   amount_cents: number
   paid_by: string | null
   card: string | null
-  synced_to_sheet: boolean
 }
 
 export type ExpensesResponse = {
@@ -136,10 +149,11 @@ export type ExpensesResponse = {
 export const KIND_INFO: Record<PageKind, { icon: string; label: string; desc: string }> = {
   note: { icon: '📝', label: 'Nota', desc: 'Texto livre, como uma página do Notion' },
   tasks: { icon: '✅', label: 'Tarefas', desc: 'Lista de tarefas com responsável e prazo' },
-  calendar: { icon: '📅', label: 'Agenda', desc: 'Eventos — sincroniza com Google Calendar' },
-  gastos: { icon: '💸', label: 'Gastos', desc: 'Lançamentos — sincroniza com Google Sheets' },
+  calendar: { icon: '📅', label: 'Agenda', desc: 'Eventos e compromissos' },
+  gastos: { icon: '💸', label: 'Gastos', desc: 'Lançamentos com total por categoria' },
   vault: { icon: '🔐', label: 'Senhas', desc: 'Cofre cifrado; nunca sai pelo Telegram' },
   registro: { icon: '📋', label: 'Registro', desc: 'Cadastro com campos personalizados' },
+  registro_item: { icon: '📄', label: 'Item', desc: 'Um item dentro de um registro' },
   meds: { icon: '💊', label: 'Remédios', desc: 'Medicações com lembretes no Telegram' },
   diet: { icon: '🥗', label: 'Dieta', desc: 'Plano alimentar gerado pela IA' },
 }

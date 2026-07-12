@@ -45,9 +45,4 @@ return [
         'token' => env('TELEGRAM_BOT_TOKEN'),
     ],
 
-    'google' => [
-        'sa_json_path' => env('GOOGLE_SA_JSON_PATH'),
-        'sheet_id_gastos' => env('GOOGLE_SHEET_ID_GASTOS'),
-    ],
-
 ];

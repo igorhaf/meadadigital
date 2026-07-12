@@ -8,9 +8,9 @@ import NewPageDialog from '../components/NewPageDialog'
 import PageView from '../components/PageView'
 import TelegramDialog from '../components/TelegramDialog'
 import TreeView from '../components/TreeView'
-import type { PageScope, Tree, TreeNode } from '../types'
+import type { PageKind, PageScope, Tree, TreeNode } from '../types'
 
-type NewPageTarget = { scope: PageScope; parentId: number | null; parentTitle?: string }
+type NewPageTarget = { scope: PageScope; parentId: number; parentTitle: string; parentKind: PageKind }
 
 export default function Dashboard() {
   const { user, logout } = useAuth()
@@ -59,9 +59,8 @@ export default function Dashboard() {
             nodes={tree?.shared ?? []}
             loading={isLoading}
             activeId={activeId}
-            onCreateRoot={() => setNewPage({ scope: 'shared', parentId: null })}
             onCreateChild={(parent) =>
-              setNewPage({ scope: 'shared', parentId: parent.id, parentTitle: parent.title })
+              setNewPage({ scope: 'shared', parentId: parent.id, parentTitle: parent.title, parentKind: parent.kind })
             }
             onDelete={handleDelete}
           />
@@ -71,9 +70,8 @@ export default function Dashboard() {
             nodes={tree?.personal ?? []}
             loading={isLoading}
             activeId={activeId}
-            onCreateRoot={() => setNewPage({ scope: 'personal', parentId: null })}
             onCreateChild={(parent) =>
-              setNewPage({ scope: 'personal', parentId: parent.id, parentTitle: parent.title })
+              setNewPage({ scope: 'personal', parentId: parent.id, parentTitle: parent.title, parentKind: parent.kind })
             }
             onDelete={handleDelete}
           />
@@ -126,6 +124,7 @@ export default function Dashboard() {
           scope={newPage.scope}
           parentId={newPage.parentId}
           parentTitle={newPage.parentTitle}
+          parentKind={newPage.parentKind}
           onClose={() => setNewPage(null)}
           onCreated={(page) => {
             setNewPage(null)
@@ -145,7 +144,6 @@ type SectionProps = {
   nodes: TreeNode[]
   loading: boolean
   activeId: number | null
-  onCreateRoot: () => void
   onCreateChild: (parent: TreeNode) => void
   onDelete: (node: TreeNode) => void
 }
@@ -156,25 +154,15 @@ function Section({
   nodes,
   loading,
   activeId,
-  onCreateRoot,
   onCreateChild,
   onDelete,
 }: SectionProps) {
   return (
     <div>
-      <div className="group flex items-center justify-between px-2 pb-1">
+      <div className="flex items-center justify-between px-2 pb-1">
         <span className="text-xs font-semibold tracking-wide text-[#9b9a97] uppercase" title={hint}>
           {label}
         </span>
-        <button
-          type="button"
-          title={`Nova página em ${label}`}
-          aria-label={`Nova página em ${label}`}
-          onClick={onCreateRoot}
-          className="flex h-5 w-5 items-center justify-center rounded text-[#9b9a97] opacity-0 transition-opacity group-hover:opacity-100 hover:bg-[#e3e2e0] hover:text-[#37352f]"
-        >
-          +
-        </button>
       </div>
       {loading ? (
         <p className="px-3 py-1 text-xs text-[#9b9a97]">Carregando…</p>

@@ -144,9 +144,6 @@ export default function CalendarPanel({ pageId }: { pageId: number }) {
             )
           })}
         </div>
-        <p className="mt-2 text-xs text-[#9b9a97]">
-          Eventos criados aqui (ou pelo Telegram) são espelhados no Google Calendar quando a integração estiver configurada.
-        </p>
       </div>
     </div>
   )

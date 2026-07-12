@@ -9,7 +9,6 @@ class CalendarEvent extends Model
 {
     protected $fillable = [
         'page_id', 'title', 'starts_at', 'ends_at', 'all_day', 'recurrence', 'notes',
-        'google_event_ids',
     ];
 
     protected function casts(): array
@@ -18,7 +17,6 @@ class CalendarEvent extends Model
             'starts_at' => 'datetime',
             'ends_at' => 'datetime',
             'all_day' => 'boolean',
-            'google_event_ids' => 'array',
         ];
     }
 

@@ -6,17 +6,12 @@ use App\Http\Controllers\Concerns\AuthorizesPageAccess;
 use App\Http\Controllers\Controller;
 use App\Models\CalendarEvent;
 use App\Models\Page;
-use App\Services\Google\GoogleCalendarSync;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 class CalendarController extends Controller
 {
     use AuthorizesPageAccess;
-
-    public function __construct(private readonly GoogleCalendarSync $google)
-    {
-    }
 
     public function index(Request $request, Page $page): JsonResponse
     {
@@ -41,7 +36,6 @@ class CalendarController extends Controller
 
         $data = $this->validated($request);
         $event = $page->events()->create($data);
-        $this->google->syncEvent($event);
 
         return response()->json($event->fresh(), 201);
     }
@@ -52,7 +46,6 @@ class CalendarController extends Controller
         abort_unless($event->page_id === $page->id, 404);
 
         $event->update($this->validated($request, partial: true));
-        $this->google->syncEvent($event);
 
         return response()->json($event->fresh());
     }
@@ -62,7 +55,6 @@ class CalendarController extends Controller
         $this->authorizeAccess($request, $page);
         abort_unless($event->page_id === $page->id, 404);
 
-        $this->google->deleteEvent($event);
         $event->delete();
 
         return response()->json(['ok' => true]);

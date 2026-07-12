@@ -87,33 +87,37 @@ function TreeItem({ node, depth, activeId, onCreateChild, onDelete }: TreeItemPr
         <span className="min-w-0 flex-1 truncate">{node.title}</span>
 
         <span className="hidden shrink-0 items-center gap-0.5 group-hover:flex">
-          <button
-            type="button"
-            title="Nova subpágina"
-            aria-label="Nova subpágina"
-            onClick={(e) => {
-              e.stopPropagation()
-              setOpen(true)
-              onCreateChild(node)
-            }}
-            className="flex h-5 w-5 items-center justify-center rounded text-[#9b9a97] hover:bg-[#e3e2e0] hover:text-[#37352f]"
-          >
-            +
-          </button>
-          <button
-            type="button"
-            title="Excluir página"
-            aria-label="Excluir página"
-            onClick={(e) => {
-              e.stopPropagation()
-              onDelete(node)
-            }}
-            className="flex h-5 w-5 items-center justify-center rounded text-[#9b9a97] hover:bg-[#e3e2e0] hover:text-red-600"
-          >
-            <svg viewBox="0 0 16 16" className="h-3 w-3" fill="currentColor">
-              <path d="M6 2h4v1h4v1.5H2V3h4V2zm-2.5 3.5h9L12 14H4L3.5 5.5zM6.5 7v5h1V7h-1zm2 0v5h1V7h-1z" />
-            </svg>
-          </button>
+          {node.kind !== 'registro_item' && (
+            <button
+              type="button"
+              title={node.kind === 'registro' ? 'Novo item' : 'Nova subpágina'}
+              aria-label="Nova subpágina"
+              onClick={(e) => {
+                e.stopPropagation()
+                setOpen(true)
+                onCreateChild(node)
+              }}
+              className="flex h-5 w-5 items-center justify-center rounded text-[#9b9a97] hover:bg-[#e3e2e0] hover:text-[#37352f]"
+            >
+              +
+            </button>
+          )}
+          {!node.is_system && (
+            <button
+              type="button"
+              title="Excluir página"
+              aria-label="Excluir página"
+              onClick={(e) => {
+                e.stopPropagation()
+                onDelete(node)
+              }}
+              className="flex h-5 w-5 items-center justify-center rounded text-[#9b9a97] hover:bg-[#e3e2e0] hover:text-red-600"
+            >
+              <svg viewBox="0 0 16 16" className="h-3 w-3" fill="currentColor">
+                <path d="M6 2h4v1h4v1.5H2V3h4V2zm-2.5 3.5h9L12 14H4L3.5 5.5zM6.5 7v5h1V7h-1zm2 0v5h1V7h-1z" />
+              </svg>
+            </button>
+          )}
         </span>
       </div>
 

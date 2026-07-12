@@ -12,7 +12,7 @@ class Page extends Model
     public const SCOPE_SHARED = 'shared';
     public const SCOPE_PERSONAL = 'personal';
 
-    public const KINDS = ['note', 'vault', 'calendar', 'tasks', 'registro', 'meds', 'diet', 'gastos'];
+    public const KINDS = ['note', 'vault', 'calendar', 'tasks', 'registro', 'registro_item', 'meds', 'diet', 'gastos'];
 
     protected $fillable = [
         'parent_id',
@@ -28,7 +28,7 @@ class Page extends Model
 
     protected function casts(): array
     {
-        return ['meta' => 'array'];
+        return ['meta' => 'array', 'is_system' => 'boolean'];
     }
 
     public function parent(): BelongsTo
@@ -59,11 +59,6 @@ class Page extends Model
     public function taskItems(): HasMany
     {
         return $this->hasMany(TaskItem::class)->orderBy('done')->orderBy('position');
-    }
-
-    public function registroEntries(): HasMany
-    {
-        return $this->hasMany(RegistroEntry::class)->orderBy('position');
     }
 
     public function medications(): HasMany
