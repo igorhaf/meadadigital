@@ -54,6 +54,7 @@ import {
   ShieldCheck,
   Shirt,
   ShoppingBag,
+  Smartphone,
   Sparkles,
   Star,
   Stethoscope,
@@ -105,6 +106,7 @@ export const NAV_GROUPS: NavGroup[] = [
   {
     heading: 'Configuração IA',
     items: [
+      { label: 'WhatsApp', href: '/dashboard/whatsapp', icon: Smartphone },
       { label: 'IA', href: '/dashboard/ai-settings', icon: Sparkles },
       { label: 'FAQs', href: '/dashboard/faqs', icon: HelpCircle },
       { label: 'Serviços', href: '/dashboard/services', icon: Package },

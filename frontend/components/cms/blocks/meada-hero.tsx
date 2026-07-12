@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 
 import type { MeadaHeroProps } from '@/lib/cms/cms-block-type'
+import { safeUrl } from '@/lib/cms/safe-url'
 
 /**
  * Bloco HERO da marca Meada (preset meada-dark) — réplica FIEL do hero do meada-page
@@ -125,7 +126,7 @@ export function MeadaHero({ props }: { props: MeadaHeroProps }) {
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '4.5rem', flexWrap: 'wrap' }}>
               {props.primaryLabel && (
                 <a
-                  href={props.primaryHref || '#'}
+                  href={safeUrl(props.primaryHref) || '#'}
                   style={{
                     padding: '15px 34px',
                     background: 'linear-gradient(135deg, #3b82f6, #6366f1)',
@@ -143,7 +144,7 @@ export function MeadaHero({ props }: { props: MeadaHeroProps }) {
               )}
               {props.secondaryLabel && (
                 <a
-                  href={props.secondaryHref || '#'}
+                  href={safeUrl(props.secondaryHref) || '#'}
                   style={{
                     padding: '15px 34px',
                     background: 'transparent',
@@ -295,7 +296,7 @@ function PlanShowcase({ props }: { props: MeadaHeroProps }) {
         </div>
         {props.planButtonLabel && (
           <a
-            href={props.planButtonHref || '#'}
+            href={safeUrl(props.planButtonHref) || '#'}
             style={{
               display: 'block',
               textAlign: 'center',
@@ -312,9 +313,9 @@ function PlanShowcase({ props }: { props: MeadaHeroProps }) {
             {props.planButtonLabel}
           </a>
         )}
-        {props.planDemoHref && (
+        {safeUrl(props.planDemoHref) && (
           <a
-            href={props.planDemoHref}
+            href={safeUrl(props.planDemoHref)}
             style={{
               display: 'block',
               textAlign: 'center',

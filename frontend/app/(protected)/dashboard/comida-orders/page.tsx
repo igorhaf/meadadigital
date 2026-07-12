@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import { listOrders, updateOrderStatus } from '@/lib/api/comida/orders'
 import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import {
@@ -154,10 +155,23 @@ export default function ComidaOrdersPage() {
     enabled: tab === 'historico',
   })
 
+  const [statusError, setStatusError] = useState<string | null>(null)
   const statusMutation = useMutation({
     mutationFn: ({ id, status, reason }: { id: string; status: OrderStatus; reason?: string }) =>
       updateOrderStatus(id, status, reason),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['comida-orders'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['comida-orders'] })
+      setStatusError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant sem saber que a ação não valeu; re-busca o estado real.
+      qc.invalidateQueries({ queryKey: ['comida-orders'] })
+      setStatusError(
+        e instanceof ApiError && e.reason === 'invalid_status_transition'
+          ? 'O status já mudou em outra tela — a lista foi atualizada.'
+          : 'Erro ao atualizar o status. Tente novamente.',
+      )
+    },
   })
 
   function accept(o: Order) {
@@ -206,6 +220,8 @@ export default function ComidaOrdersPage() {
         title="Pedidos"
         description="Aceite ou recuse novos pedidos e acompanhe o preparo e a entrega."
       />
+
+      {statusError && <p className="text-sm text-destructive">{statusError}</p>}
 
       <div className="flex gap-2">
         <Button

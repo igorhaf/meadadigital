@@ -96,42 +96,57 @@ public class EntregaModuloHandler {
             return false;
         }
 
-        Optional<CursosEnrollment> enrollment = enrollmentRepository.findById(companyId, enrollmentId);
-        if (enrollment.isEmpty()) {
-            log.warn("cursos: <entrega_modulo> referencia matrícula inexistente {} p/ conversa {} — não entregue",
-                enrollmentId, conversationId);
+        // Best-effort DE VERDADE: lookups/envio dentro do catch-all — uma RuntimeException
+        // transitória (banco, rede) NÃO pode derrubar o envio da resposta da IA ao cliente.
+        try {
+            Optional<CursosEnrollment> enrollment = enrollmentRepository.findById(companyId, enrollmentId);
+            if (enrollment.isEmpty()) {
+                log.warn("cursos: <entrega_modulo> referencia matrícula inexistente {} p/ conversa {} — não entregue",
+                    enrollmentId, conversationId);
+                return false;
+            }
+
+            // BARREIRA DE SEGURANÇA: o módulo só sai para o contato dono da matrícula.
+            if (!Objects.equals(enrollment.get().contactId(), contactId)) {
+                log.warn("cursos: <entrega_modulo> de matrícula de outro contato (matrícula {} contato {} ≠ conversa {}) — bloqueado",
+                    enrollmentId, enrollment.get().contactId(), contactId);
+                return false;
+            }
+
+            Optional<CursosModule> next = enrollmentRepository.findNextModule(enrollmentId);
+            if (next.isEmpty()) {
+                log.info("cursos: <entrega_modulo> matrícula {} sem próximo módulo (trilha concluída) p/ conversa {} — nada a entregar",
+                    enrollmentId, conversationId);
+                return false;
+            }
+
+            String content = next.get().content();
+            if (content == null || content.isBlank()) {
+                log.warn("cursos: <entrega_modulo> próximo módulo {} sem content p/ conversa {} — não entregue",
+                    next.get().id(), conversationId);
+                return false;
+            }
+
+            if (notifier.sendText(companyId, conversationId, content)) {
+                // recordProgress falhar APÓS o envio não pode estourar: módulo já entregue —
+                // o progresso fica pendente com warn e a resposta ao cliente segue.
+                try {
+                    enrollmentRepository.recordProgress(enrollmentId, next.get().id());
+                } catch (RuntimeException e) {
+                    log.warn("cursos: módulo {} entregue mas recordProgress falhou p/ matrícula {} ({}) — progresso pendente",
+                        next.get().id(), enrollmentId, e.getMessage());
+                }
+                log.info("cursos: módulo {} (matrícula {}) entregue VERBATIM + progresso registrado p/ conversa {}",
+                    next.get().id(), enrollmentId, conversationId);
+                return true;
+            }
+            log.warn("cursos: <entrega_modulo> falhou ao enviar o módulo {} p/ conversa {} (matrícula {}) — não entregue",
+                next.get().id(), conversationId, enrollmentId);
+            return false;
+        } catch (RuntimeException e) {
+            log.warn("cursos: <entrega_modulo> falhou inesperadamente p/ conversa {} ({}) — não entregue (best-effort)",
+                conversationId, e.getMessage());
             return false;
         }
-
-        // BARREIRA DE SEGURANÇA: o módulo só sai para o contato dono da matrícula.
-        if (!Objects.equals(enrollment.get().contactId(), contactId)) {
-            log.warn("cursos: <entrega_modulo> de matrícula de outro contato (matrícula {} contato {} ≠ conversa {}) — bloqueado",
-                enrollmentId, enrollment.get().contactId(), contactId);
-            return false;
-        }
-
-        Optional<CursosModule> next = enrollmentRepository.findNextModule(enrollmentId);
-        if (next.isEmpty()) {
-            log.info("cursos: <entrega_modulo> matrícula {} sem próximo módulo (trilha concluída) p/ conversa {} — nada a entregar",
-                enrollmentId, conversationId);
-            return false;
-        }
-
-        String content = next.get().content();
-        if (content == null || content.isBlank()) {
-            log.warn("cursos: <entrega_modulo> próximo módulo {} sem content p/ conversa {} — não entregue",
-                next.get().id(), conversationId);
-            return false;
-        }
-
-        if (notifier.sendText(companyId, conversationId, content)) {
-            enrollmentRepository.recordProgress(enrollmentId, next.get().id());
-            log.info("cursos: módulo {} (matrícula {}) entregue VERBATIM + progresso registrado p/ conversa {}",
-                next.get().id(), enrollmentId, conversationId);
-            return true;
-        }
-        log.warn("cursos: <entrega_modulo> falhou ao enviar o módulo {} p/ conversa {} (matrícula {}) — não entregue",
-            next.get().id(), conversationId, enrollmentId);
-        return false;
     }
 }

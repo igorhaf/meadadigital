@@ -143,8 +143,8 @@ export default function FloriculturaCatalogPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Cardápio"
-        description="Itens do seu delivery. A IA usa este cardápio (com as opções) para atender os clientes."
+        title="Catálogo"
+        description="Itens do seu catálogo de entrega. A IA usa este catálogo (com as opções) para atender os clientes."
         actions={<Button onClick={openCreate}>Novo item</Button>}
       />
 
@@ -156,7 +156,7 @@ export default function FloriculturaCatalogPage() {
       />
 
       {isError ? (
-        <p className="text-sm text-destructive">Erro ao carregar o cardápio.</p>
+        <p className="text-sm text-destructive">Erro ao carregar o catálogo.</p>
       ) : isPending ? (
         <p className="text-sm text-muted-foreground">Carregando…</p>
       ) : (

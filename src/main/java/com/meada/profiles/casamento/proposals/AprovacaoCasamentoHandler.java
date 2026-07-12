@@ -50,10 +50,12 @@ public class AprovacaoCasamentoHandler {
 
     /**
      * Extrai a tag e aplica a decisão. {@link Optional#empty()} quando: não há tag, JSON inválido,
-     * id/decisão faltando ou inválida, proposta inexistente, ou a proposta NÃO está em 'orcada'
-     * (ignorado). Devolve a proposta atualizada em caso de sucesso.
+     * id/decisão faltando ou inválida, proposta inexistente, proposta de OUTRO contato (barreira
+     * de contato), ou a proposta NÃO está em 'orcada' (ignorado). Devolve a proposta atualizada
+     * em caso de sucesso.
      */
-    public Optional<WeddingProposal> parseAndApply(UUID companyId, UUID conversationId, String aiResponseText) {
+    public Optional<WeddingProposal> parseAndApply(UUID companyId, UUID conversationId, UUID contactId,
+                                                   String aiResponseText) {
         if (aiResponseText == null) {
             return Optional.empty();
         }
@@ -92,6 +94,13 @@ public class AprovacaoCasamentoHandler {
         if (current.isEmpty()) {
             log.warn("casamento: <aprovacao_casamento> referencia proposta inexistente {} p/ conversa {} — ignorada",
                 proposalId, conversationId);
+            return Optional.empty();
+        }
+        // BARREIRA DE CONTATO: a aprovação só vale vinda do contato DONO da proposta — impede que a
+        // tag (id alucinado/chutado) aprove/recuse a proposta de outro cliente do mesmo tenant.
+        if (contactId == null || !java.util.Objects.equals(current.get().contactId(), contactId)) {
+            log.warn("casamento: <aprovacao_casamento> em proposta de outro contato (proposta {} contato {} ≠ conversa {}) — bloqueada",
+                proposalId, current.get().contactId(), contactId);
             return Optional.empty();
         }
         // SÓ muta uma proposta que está aguardando aprovação (orcada). Caso contrário ignora sem efeito.

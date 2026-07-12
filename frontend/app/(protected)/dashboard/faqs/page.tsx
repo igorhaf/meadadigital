@@ -99,6 +99,12 @@ export default function FaqsPage() {
     return (
       <div className="space-y-4">
         <PageHeader title="FAQs" />
+
+        {toggleActive.isError && (
+          <p className="text-sm text-destructive">
+            Erro ao salvar a alteração da FAQ. Tente novamente.
+          </p>
+        )}
         <p className="text-sm text-destructive">Erro ao carregar FAQs.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>

@@ -3,6 +3,7 @@ package com.meada.profiles.estetica.appointments;
 import com.meada.AbstractIntegrationTest;
 import com.meada.outbound.EvolutionSender;
 import com.meada.profiles.estetica.appointments.AestheticAppointmentService.ConflictException;
+import com.meada.profiles.estetica.appointments.AestheticAppointmentService.OutsideHoursException;
 import com.meada.profiles.estetica.appointments.AestheticAppointmentService.PackageExhaustedException;
 import com.meada.profiles.estetica.appointments.AestheticAppointmentService.PackageNotActiveException;
 import com.meada.profiles.estetica.appointments.AestheticAppointmentService.PackageWrongContactException;
@@ -85,6 +86,21 @@ class AestheticAppointmentServiceTest extends AbstractIntegrationTest {
 
     private Instant slot(int plusDays, int hour) {
         return LocalDate.now(TZ).plusDays(plusDays).atTime(LocalTime.of(hour, 0)).atZone(TZ).toInstant();
+    }
+
+    @Test
+    @DisplayName("fora do horário: antes do opens (06:00) e terminando após o closes → OutsideHoursException, nada persiste")
+    void create_outsideHours() {
+        // Único perfil de agenda que estava sem exercitar a validação outside_hours.
+        assertThatThrownBy(() -> service.create(COMPANY, prof1, procedureId, null, contactId, null,
+            slot(1, 6), "Marina", null, null))
+            .isInstanceOf(OutsideHoursException.class);
+        // 19:30 + 50min de duração termina 20:20, depois do closes 20:00 → também fora.
+        assertThatThrownBy(() -> service.create(COMPANY, prof1, procedureId, null, contactId, null,
+            slot(1, 19).plusSeconds(30 * 60), "Marina", null, null))
+            .isInstanceOf(OutsideHoursException.class);
+        Long count = jdbcTemplate.queryForObject("select count(*) from aesthetic_appointments", Long.class);
+        assertThat(count).isZero();
     }
 
     @Test

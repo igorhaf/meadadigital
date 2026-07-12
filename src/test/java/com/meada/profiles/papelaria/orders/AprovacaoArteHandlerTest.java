@@ -136,6 +136,22 @@ class AprovacaoArteHandlerTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("BARREIRA DE CONTATO: aprovação com order_id explícito vinda de OUTRO contato → empty + estado intacto")
+    void contactBarrier_blocksOtherContact() {
+        PapelariaOrder order = orderInArteAprovacao();
+        UUID otherContact = UUID.randomUUID();
+        jdbcTemplate.update("insert into contacts (id, company_id, phone_number, name) values (?, ?, ?, ?)",
+            otherContact, COMPANY, "+5511999990075", "Outro Cliente");
+        String aiText = "Aprovado!\n<aprovacao_arte>{\"order_id\":\"" + order.id() + "\"}</aprovacao_arte>";
+
+        Optional<PapelariaOrder> result = handler.parseAndApply(COMPANY, conversationId, otherContact, aiText);
+
+        assertThat(result).isEmpty();
+        assertThat(orderService.get(COMPANY, order.id()).orElseThrow().status()).isEqualTo("arte_aprovacao");
+        assertThat(fakeEvolution.sent()).isEmpty();
+    }
+
+    @Test
     @DisplayName("hasTag/stripTag detectam e removem a tag")
     void hasAndStrip() {
         String aiText = "Aprovado!\n<aprovacao_arte>{\"order_id\":null}</aprovacao_arte>";

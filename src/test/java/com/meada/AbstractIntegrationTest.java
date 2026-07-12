@@ -64,8 +64,12 @@ public abstract class AbstractIntegrationTest {
      * Scripts em ordem explícita (não confiamos em ordem alfabética de classpath):
      * bootstrap (andaime que simula a superfície Supabase) primeiro, depois as
      * migrations de produção 01..06 (vindas de supabase/migrations/ via testResource).
+     *
+     * <p>Package-private (não {@code private}) para o {@code MigrationScriptsCompletenessTest}
+     * comparar o array com o diretório supabase/migrations/ e acusar omissão futura — as
+     * migrations 48/70/71/118 ficaram FORA daqui silenciosamente por meses.
      */
-    private static final String[] SCRIPTS = {
+    static final String[] SCRIPTS = {
         "db/bootstrap/00_test_bootstrap.sql",
         "db/migrations/01_extensions_and_schema.sql",
         "db/migrations/02_tables.sql",
@@ -114,6 +118,7 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/45_eventos.sql",
         "db/migrations/46_estetica.sql",
         "db/migrations/47_comida.sql",
+        "db/migrations/48_niche_showcase.sql",
         "db/migrations/49_floricultura.sql",
         "db/migrations/50_pizzaria.sql",
         "db/migrations/53_adega.sql",
@@ -134,6 +139,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/62_viagens.sql",
         "db/migrations/68_suplementos.sql",
         "db/migrations/69_sushi_funcional.sql",
+        "db/migrations/70_meada_niche_pages.sql",
+        "db/migrations/71_company_admin_token.sql",
         "db/migrations/72_academia_inadimplencia.sql",
         "db/migrations/73_academia_checkins.sql",
         "db/migrations/74_academia_waitlist.sql",
@@ -179,7 +186,8 @@ public abstract class AbstractIntegrationTest {
         "db/migrations/114_comida_onda2.sql",
         "db/migrations/115_concessionaria_onda2.sql",
         "db/migrations/116_dental_onda1.sql",
-        "db/migrations/117_cursos_onda1.sql"
+        "db/migrations/117_cursos_onda1.sql",
+        "db/migrations/118_subscriptions.sql"
     };
 
     /**

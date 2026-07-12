@@ -97,6 +97,22 @@ class ReservationServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("half-open: reserva que COMEÇA exatamente onde a outra TERMINA não conflita; parcial conflita")
+    void create_halfOpenWindow() {
+        // Base própria à tarde (14:00–16:00 BRT = 17:00 UTC) pra não esbarrar no fechamento.
+        Instant base = Instant.parse("2026-07-01T17:00:00Z");
+        service.create(COMPANY, tableId, null, null, "Base", null, base, 2, null);
+        // Borda exata (16:00 BRT = fim da primeira): janela half-open NÃO conflita — invariante do chassi A.
+        Reservation adjacent = service.create(COMPANY, tableId, null, null, "Borda", null,
+            base.plusSeconds(2 * 60 * 60), 2, null);
+        assertThat(adjacent.status()).isEqualTo("pendente");
+        // Sobreposição parcial (15:00 BRT) → conflita.
+        assertThatThrownBy(() -> service.create(COMPANY, tableId, null, null, "Parcial", null,
+            base.plusSeconds(60 * 60), 2, null))
+            .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
     @DisplayName("updateStatus pendente→confirmada → notifica o cliente")
     void confirm_notifies() {
         Reservation r = seedReservation();

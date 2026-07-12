@@ -311,10 +311,23 @@ export default function PapelariaOrdersPage() {
     enabled: tab === 'historico',
   })
 
+  const [statusError, setStatusError] = useState<string | null>(null)
   const statusMutation = useMutation({
     mutationFn: ({ id, status, reason }: { id: string; status: OrderStatus; reason?: string }) =>
       updateOrderStatus(id, status, reason),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['papelaria-orders'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['papelaria-orders'] })
+      setStatusError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant sem saber que a ação não valeu; re-busca o estado real.
+      qc.invalidateQueries({ queryKey: ['papelaria-orders'] })
+      setStatusError(
+        e instanceof ApiError && e.reason === 'invalid_status_transition'
+          ? 'O status já mudou em outra tela — a lista foi atualizada.'
+          : 'Erro ao atualizar o status. Tente novamente.',
+      )
+    },
   })
 
   const approveMutation = useMutation({
@@ -440,6 +453,8 @@ export default function PapelariaOrdersPage() {
         title="Pedidos"
         description="Aceite ou recuse novos pedidos, gerencie a aprovação da arte e acompanhe a produção, a retirada e a entrega."
       />
+
+      {statusError && <p className="text-sm text-destructive">{statusError}</p>}
 
       <div className="flex gap-2">
         <Button

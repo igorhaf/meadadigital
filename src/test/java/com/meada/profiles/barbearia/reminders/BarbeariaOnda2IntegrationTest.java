@@ -110,6 +110,11 @@ class BarbeariaOnda2IntegrationTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("fila → atendimento: ticket chamado converte em agendamento imediato e vira atendido")
     void convertQueueTicket() {
+        // Janela cheia: o convert agenda em Instant.now() — sem config explícita o default
+        // 09-20h flakeava o teste em runs fora do horário comercial (falha real vista em run
+        // à 01:30: OutsideHoursException).
+        jdbcTemplate.update("insert into barber_config (company_id, opens_at, closes_at) "
+            + "values (?, '00:00', '23:59:59')", COMPANY);
         UUID ticketId = jdbcTemplate.queryForObject(
             "insert into barber_queue_tickets (company_id, barber_id, service_id, contact_id, "
                 + "conversation_id, guest_name, service_name, duration_minutes, barber_name, status, called_at) "

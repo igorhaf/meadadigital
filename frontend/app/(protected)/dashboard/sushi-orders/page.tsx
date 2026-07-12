@@ -1,11 +1,12 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 
 import { PageHeader } from '@/components/layout/page-header'
 import { Badge } from '@/components/ui/badge'
 import { Card } from '@/components/ui/card'
+import { ApiError } from '@/lib/api/client'
 import { listOrderStatuses } from '@/lib/api/sushi/order-statuses'
 import { listOrders, updateOrderStatus } from '@/lib/api/sushi/orders'
 import { formatBrl, type Order, type OrderStatusDef } from '@/profiles/sushi/sushi-types'
@@ -120,10 +121,23 @@ export default function OrdersPage() {
     refetchInterval: 30_000,
   })
 
+  const [statusError, setStatusError] = useState<string | null>(null)
   const statusMutation = useMutation({
     mutationFn: ({ id, statusId }: { id: string; statusId: string }) =>
       updateOrderStatus(id, statusId),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['sushi-orders'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['sushi-orders'] })
+      setStatusError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant sem saber que a ação não valeu; re-busca o estado real.
+      qc.invalidateQueries({ queryKey: ['sushi-orders'] })
+      setStatusError(
+        e instanceof ApiError && e.reason === 'invalid_status_transition'
+          ? 'O status já mudou em outra tela — a lista foi atualizada.'
+          : 'Erro ao atualizar o status. Tente novamente.',
+      )
+    },
   })
 
   const statuses = useMemo(
@@ -152,6 +166,8 @@ export default function OrdersPage() {
         title="Pedidos"
         description="Acompanhe e mova os pedidos pelos status definidos no seu fluxo."
       />
+
+      {statusError && <p className="text-sm text-destructive">{statusError}</p>}
 
       {error ? (
         <p className="text-sm text-destructive">Erro ao carregar os pedidos.</p>

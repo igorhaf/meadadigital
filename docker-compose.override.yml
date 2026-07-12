@@ -24,7 +24,21 @@ services:
       - SPRING_DATASOURCE_URL=jdbc:postgresql://${SUPABASE_HOST_IP:-172.27.153.135}:54322/postgres
       - SUPABASE_JWKS_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321/auth/v1/.well-known/jwks.json
       - SUPABASE_URL=http://${SUPABASE_HOST_IP:-172.27.153.135}:54321
+      # O GoTrue local emite iss=http://127.0.0.1:54321/auth/v1 (independente do IP de
+      # alcance acima). Sem este override, o filtro JWT derivava o issuer do SUPABASE_URL
+      # e rejeitava TODO token de tenant com 401 invalid_claims (stack dev inutilizável).
+      - SUPABASE_ISSUER=http://127.0.0.1:54321/auth/v1
       - ADMIN_CORS_ALLOWED_ORIGINS=http://meadadigital.local,http://*.meadadigital.local,http://localhost:3000
+      # Evolution LOCAL (evolution-local/docker-compose.yml, host :8086). O backend roda em
+      # container → 'localhost' seria ele mesmo; alcança o host pelo host.docker.internal.
+      - EVOLUTION_BASE_URL=http://host.docker.internal:8086
+      # Conexão do WhatsApp pelo painel (Fase 0). A chave GLOBAL é SEGREDO — vem do ambiente
+      # (.env da raiz ou export no shell), NUNCA hardcoded aqui. Vazia = recurso desligado (503),
+      # o boot NÃO quebra.
+      - EVOLUTION_GLOBAL_API_KEY=${EVOLUTION_GLOBAL_API_KEY:-}
+      # A Evolution (outro compose) alcança o backend pelo host.docker.internal:8095.
+      # O secret do webhook viaja no header apikey (não em query param).
+      - EVOLUTION_WEBHOOK_URL=http://host.docker.internal:8095/webhooks/evolution
 
   frontend:
     build:

@@ -102,6 +102,25 @@ class ServiceOrderServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("updateItem parcial (só quantity / só preço) materializa line_total com os valores FINAIS")
+    void updateItem_partial_materializesFinalLineTotal() {
+        ServiceOrder o = service.open(COMPANY, vehicleId, null, null, "Troca de óleo", null, null, null);
+        OsItem item = service.addItem(COMPANY, o.id(), "peca", "Filtro", 2, 10000);
+        assertThat(item.lineTotalCents()).isEqualTo(20000);
+
+        // Muda SÓ a quantidade → 3 × 10000 (unit mantido) = 30000. Regressão real: a SET clause
+        // referenciando quantity * unit_price_cents lia os valores ANTIGOS da linha e gravava 20000.
+        OsItem updated = service.updateItem(COMPANY, o.id(), item.id(), null, null, 3, null);
+        assertThat(updated.lineTotalCents()).isEqualTo(30000);
+        assertThat(service.get(COMPANY, o.id()).orElseThrow().totalCents()).isEqualTo(30000);
+
+        // Muda SÓ o preço unitário → 3 × 20000 = 60000.
+        OsItem repriced = service.updateItem(COMPANY, o.id(), item.id(), null, null, null, 20000);
+        assertThat(repriced.lineTotalCents()).isEqualTo(60000);
+        assertThat(service.get(COMPANY, o.id()).orElseThrow().totalCents()).isEqualTo(60000);
+    }
+
+    @Test
     @DisplayName("orçar OS sem item → EmptyBudgetException")
     void orcar_emptyBudget() {
         ServiceOrder o = service.open(COMPANY, vehicleId, null, null, "Diagnóstico", null, null, null);

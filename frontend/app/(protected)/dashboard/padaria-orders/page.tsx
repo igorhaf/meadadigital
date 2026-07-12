@@ -217,10 +217,23 @@ export default function PadariaOrdersPage() {
     },
   })
 
+  const [statusError, setStatusError] = useState<string | null>(null)
   const statusMutation = useMutation({
     mutationFn: ({ id, status, reason }: { id: string; status: OrderStatus; reason?: string }) =>
       updateOrderStatus(id, status, reason),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['padaria-orders'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['padaria-orders'] })
+      setStatusError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant sem saber que a ação não valeu; re-busca o estado real.
+      qc.invalidateQueries({ queryKey: ['padaria-orders'] })
+      setStatusError(
+        e instanceof ApiError && e.reason === 'invalid_status_transition'
+          ? 'O status já mudou em outra tela — a lista foi atualizada.'
+          : 'Erro ao atualizar o status. Tente novamente.',
+      )
+    },
   })
 
   function accept(o: Order) {
@@ -277,6 +290,8 @@ export default function PadariaOrdersPage() {
         title="Pedidos"
         description="Aceite ou recuse novos pedidos e acompanhe o preparo, a retirada e a entrega."
       />
+
+      {statusError && <p className="text-sm text-destructive">{statusError}</p>}
 
       <div className="flex gap-2">
         <Button

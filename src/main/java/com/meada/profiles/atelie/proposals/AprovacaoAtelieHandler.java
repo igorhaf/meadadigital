@@ -96,6 +96,13 @@ public class AprovacaoAtelieHandler {
                 proposalId, conversationId);
             return Optional.empty();
         }
+        // BARREIRA DE CONTATO: a aprovação só vale vinda do contato DONO da proposta — impede que a
+        // tag (id alucinado/chutado) aprove/recuse a proposta de outro cliente do mesmo tenant.
+        if (contactId == null || !java.util.Objects.equals(current.get().contactId(), contactId)) {
+            log.warn("atelie: <aprovacao_atelie> em proposta de outro contato (proposta {} contato {} ≠ conversa {}) — bloqueada",
+                proposalId, current.get().contactId(), contactId);
+            return Optional.empty();
+        }
         // SÓ muta uma proposta que está aguardando aprovação (orcada). Caso contrário ignora sem efeito.
         if (!"orcada".equals(current.get().status())) {
             log.warn("atelie: <aprovacao_atelie> em proposta {} que NÃO está orcada (status {}) p/ conversa {} — ignorada",

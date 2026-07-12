@@ -73,7 +73,7 @@ class AprovacaoPropostaHandlerTest extends AbstractIntegrationTest {
         String aiText = "Que ótimo! Registrei sua aprovação.\n"
             + "<aprovacao_proposta>{\"proposal_id\":\"" + proposalId + "\",\"decisao\":\"aprovada\"}</aprovacao_proposta>";
 
-        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
 
         assertThat(o).isPresent();
         assertThat(o.get().status()).isEqualTo("aprovada");
@@ -88,7 +88,7 @@ class AprovacaoPropostaHandlerTest extends AbstractIntegrationTest {
         String aiText = "Aprovado!\n<aprovacao_proposta>{\"proposal_id\":\"" + proposalId
             + "\",\"decisao\":\"aprovada\"}</aprovacao_proposta>";
 
-        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
 
         assertThat(o).isEmpty();
         String status = jdbcTemplate.queryForObject("select status from event_proposals where id = ?", String.class, proposalId);
@@ -100,7 +100,7 @@ class AprovacaoPropostaHandlerTest extends AbstractIntegrationTest {
     void parseAndApply_unknownProposal() {
         String aiText = "Aprovado!\n<aprovacao_proposta>{\"proposal_id\":\"" + UUID.randomUUID()
             + "\",\"decisao\":\"aprovada\"}</aprovacao_proposta>";
-        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
         assertThat(o).isEmpty();
     }
 
@@ -111,7 +111,24 @@ class AprovacaoPropostaHandlerTest extends AbstractIntegrationTest {
         String aiText = "Ok!\n<aprovacao_proposta>{\"proposal_id\":\"" + proposalId
             + "\",\"decisao\":\"xpto\"}</aprovacao_proposta>";
 
-        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
+
+        assertThat(o).isEmpty();
+        String status = jdbcTemplate.queryForObject("select status from event_proposals where id = ?", String.class, proposalId);
+        assertThat(status).isEqualTo("orcada");
+    }
+
+    @Test
+    @DisplayName("BARREIRA DE CONTATO: aprovação vinda de OUTRO contato → Optional.empty + estado intacto")
+    void parseAndApply_contactBarrier() {
+        UUID proposalId = seedProposal("orcada");
+        UUID otherContact = UUID.randomUUID();
+        jdbcTemplate.update("insert into contacts (id, company_id, phone_number, name) values (?, ?, ?, ?)",
+            otherContact, COMPANY, "+5511999990293", "Outro Cliente");
+        String aiText = "Aprovado!\n<aprovacao_proposta>{\"proposal_id\":\"" + proposalId
+            + "\",\"decisao\":\"aprovada\"}</aprovacao_proposta>";
+
+        Optional<EventProposal> o = handler.parseAndApply(COMPANY, conversationId, otherContact, aiText);
 
         assertThat(o).isEmpty();
         String status = jdbcTemplate.queryForObject("select status from event_proposals where id = ?", String.class, proposalId);

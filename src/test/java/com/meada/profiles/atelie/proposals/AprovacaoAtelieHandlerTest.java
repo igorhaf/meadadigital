@@ -117,6 +117,23 @@ class AprovacaoAtelieHandlerTest extends AbstractIntegrationTest {
         assertThat(o).isEmpty();
     }
 
+    @Test
+    @DisplayName("BARREIRA DE CONTATO: aprovação vinda de OUTRO contato → Optional.empty + estado intacto")
+    void parseAndApply_contactBarrier() {
+        UUID proposalId = seedProposal("orcada");
+        UUID otherContact = UUID.randomUUID();
+        jdbcTemplate.update("insert into contacts (id, company_id, phone_number, name) values (?, ?, ?, ?)",
+            otherContact, COMPANY, "+5511999990183", "Outro Cliente");
+        String aiText = "Aprovado!\n<aprovacao_atelie>{\"proposal_id\":\"" + proposalId
+            + "\",\"decisao\":\"aprovada\"}</aprovacao_atelie>";
+
+        Optional<AtelieProposal> o = handler.parseAndApply(COMPANY, conversationId, otherContact, aiText);
+
+        assertThat(o).isEmpty();
+        String status = jdbcTemplate.queryForObject("select status from atelie_proposals where id = ?", String.class, proposalId);
+        assertThat(status).isEqualTo("orcada");
+    }
+
     record SentMessage(String instanceName, String token, String number, String text) {}
 
     static class FakeEvolutionSender implements EvolutionSender {

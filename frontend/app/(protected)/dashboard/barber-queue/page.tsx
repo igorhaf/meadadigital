@@ -120,10 +120,23 @@ export default function BarberQueuePage() {
     },
   })
 
+  const [statusError, setStatusError] = useState<string | null>(null)
   const statusMutation = useMutation({
     mutationFn: ({ id, newStatus }: { id: string; newStatus: BarberQueueStatusId }) =>
       updateTicketStatus(id, newStatus),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['barber-queue'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['barber-queue'] })
+      setStatusError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant sem saber que a ação não valeu; re-busca o estado real.
+      qc.invalidateQueries({ queryKey: ['barber-queue'] })
+      setStatusError(
+        e instanceof ApiError && e.reason === 'invalid_status_transition'
+          ? 'O status já mudou em outra tela — a lista foi atualizada.'
+          : 'Erro ao atualizar o status. Tente novamente.',
+      )
+    },
   })
 
   const items = data?.items ?? []
@@ -147,6 +160,8 @@ export default function BarberQueuePage() {
           </Button>
         }
       />
+
+      {statusError && <p className="text-sm text-destructive">{statusError}</p>}
 
       <p className="text-sm text-muted-foreground">
         <strong>{waiting}</strong> aguardando no total.

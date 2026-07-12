@@ -55,9 +55,13 @@ public class CmsSiteRepository {
         return jdbcTemplate.query(SELECT + "where s.company_id = ?", mapper(), companyId).stream().findFirst();
     }
 
-    /** companyId a partir do slug da empresa (resolução pública /p/{slug}). null se não existe. */
+    /**
+     * companyId a partir do slug da empresa (resolução pública /p/{slug}). null se não existe.
+     * Empresa SUSPENSA é tratada como inexistente — mesmo contrato do resolvePublicCompany
+     * (o site público some enquanto a suspensão durar).
+     */
     public UUID companyIdBySlug(String slug) {
-        return jdbcTemplate.query("select id from companies where slug = ?",
+        return jdbcTemplate.query("select id from companies where slug = ? and status <> 'suspended'",
                 (rs, rn) -> (UUID) rs.getObject("id"), slug)
             .stream().findFirst().orElse(null);
     }
@@ -83,9 +87,14 @@ public class CmsSiteRepository {
             .stream().findFirst();
     }
 
-    /** Site publicado por domínio VERIFICADO (resolução pública por host custom). */
+    /**
+     * Site publicado por domínio VERIFICADO (resolução pública por host custom). Empresa
+     * SUSPENSA não serve site — e, por consequência, não recebe cert TLS on-demand
+     * (domainAllowedForTls passa por aqui).
+     */
     public Optional<CmsSite> findByVerifiedDomain(String domain) {
-        return jdbcTemplate.query(SELECT + "where s.domain = ? and s.domain_verified = true and s.published = true",
+        return jdbcTemplate.query(SELECT + "where s.domain = ? and s.domain_verified = true and s.published = true "
+                + "and c.status <> 'suspended'",
                 mapper(), domain).stream().findFirst();
     }
 

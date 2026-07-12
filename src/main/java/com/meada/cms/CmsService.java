@@ -90,7 +90,11 @@ public class CmsService {
             domain = null;
         }
         if (domain != null) {
-            if (!DOMAIN.matcher(domain).matches() || domain.endsWith("meadadigital.com") || domain.endsWith("meadadigital.local")) {
+            // Bloqueio por igualdade OU sufixo COM PONTO: endsWith("meadadigital.com") sem o
+            // separador de label rejeitava domínios legítimos como 'minhameadadigital.com'.
+            boolean meadaDomain = domain.equals("meadadigital.com") || domain.endsWith(".meadadigital.com")
+                || domain.equals("meadadigital.local") || domain.endsWith(".meadadigital.local");
+            if (!DOMAIN.matcher(domain).matches() || meadaDomain) {
                 throw new InvalidDomainException();
             }
         }

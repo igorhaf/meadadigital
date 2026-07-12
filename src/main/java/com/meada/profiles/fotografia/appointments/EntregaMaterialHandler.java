@@ -95,33 +95,41 @@ public class EntregaMaterialHandler {
             return false;
         }
 
-        Optional<FotografiaSessionAppointment> session = appointmentRepository.findDeliverable(companyId, sessionId);
-        if (session.isEmpty()) {
-            log.warn("fotografia: <entrega_material> referencia sessão inexistente {} p/ conversa {} — não entregue",
-                sessionId, conversationId);
+        // Best-effort DE VERDADE: lookups/envio dentro do catch-all — uma RuntimeException
+        // transitória (banco, rede) NÃO pode derrubar o envio da resposta da IA ao cliente.
+        try {
+            Optional<FotografiaSessionAppointment> session = appointmentRepository.findDeliverable(companyId, sessionId);
+            if (session.isEmpty()) {
+                log.warn("fotografia: <entrega_material> referencia sessão inexistente {} p/ conversa {} — não entregue",
+                    sessionId, conversationId);
+                return false;
+            }
+
+            // BARREIRA DE SEGURANÇA: o material só sai para o contato dono da sessão.
+            if (!Objects.equals(session.get().contactId(), contactId)) {
+                log.warn("fotografia: <entrega_material> de sessão de outro contato (sessão {} contato {} ≠ conversa {}) — bloqueado, não entregue",
+                    sessionId, session.get().contactId(), contactId);
+                return false;
+            }
+
+            String link = session.get().deliveryLink();
+            if (link == null || link.isBlank()) {
+                log.warn("fotografia: <entrega_material> sessão {} sem delivery_link p/ conversa {} — não entregue",
+                    sessionId, conversationId);
+                return false;
+            }
+
+            if (notifier.sendText(companyId, conversationId, link)) {
+                log.info("fotografia: material da sessão {} entregue VERBATIM p/ conversa {}", sessionId, conversationId);
+                return true;
+            }
+            log.warn("fotografia: <entrega_material> falhou ao enviar o link p/ conversa {} (sessão {}) — não entregue",
+                conversationId, sessionId);
+            return false;
+        } catch (RuntimeException e) {
+            log.warn("fotografia: <entrega_material> falhou inesperadamente p/ conversa {} ({}) — não entregue (best-effort)",
+                conversationId, e.getMessage());
             return false;
         }
-
-        // BARREIRA DE SEGURANÇA: o material só sai para o contato dono da sessão.
-        if (!Objects.equals(session.get().contactId(), contactId)) {
-            log.warn("fotografia: <entrega_material> de sessão de outro contato (sessão {} contato {} ≠ conversa {}) — bloqueado, não entregue",
-                sessionId, session.get().contactId(), contactId);
-            return false;
-        }
-
-        String link = session.get().deliveryLink();
-        if (link == null || link.isBlank()) {
-            log.warn("fotografia: <entrega_material> sessão {} sem delivery_link p/ conversa {} — não entregue",
-                sessionId, conversationId);
-            return false;
-        }
-
-        if (notifier.sendText(companyId, conversationId, link)) {
-            log.info("fotografia: material da sessão {} entregue VERBATIM p/ conversa {}", sessionId, conversationId);
-            return true;
-        }
-        log.warn("fotografia: <entrega_material> falhou ao enviar o link p/ conversa {} (sessão {}) — não entregue",
-            conversationId, sessionId);
-        return false;
     }
 }

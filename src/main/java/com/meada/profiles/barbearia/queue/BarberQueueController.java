@@ -4,6 +4,7 @@ import com.meada.admin.security.AuthenticatedUser;
 import com.meada.admin.security.JwtAuthenticationFilter;
 import com.meada.profiles.barbearia.BarberProfileGuard;
 import com.meada.profiles.barbearia.BarberProfileGuard.WrongProfileException;
+import com.meada.profiles.barbearia.appointments.BarberAppointmentService;
 import com.meada.profiles.barbearia.queue.BarberQueueService.InactiveBarberException;
 import com.meada.profiles.barbearia.queue.BarberQueueService.InactiveServiceException;
 import com.meada.profiles.barbearia.queue.BarberQueueService.InvalidStatusException;
@@ -165,9 +166,21 @@ public class BarberQueueController {
             return error(409, "Conflict", "invalid_status_transition");
         } catch (BarberQueueService.BarberRequiredException e) {
             return error(400, "Bad Request", "barber_required");
-        } catch (RuntimeException e) {
-            // Inclui conflito de slot do barbeiro (409 conflict_slot da agenda) e afins.
+        } catch (BarberAppointmentService.ConflictException e) {
             return error(409, "Conflict", "conflict_slot");
+        } catch (BarberAppointmentService.OutsideHoursException e) {
+            return error(400, "Bad Request", "outside_hours");
+        } catch (BarberAppointmentService.BarberNotFoundException e) {
+            return error(404, "Not Found", "barber_not_found");
+        } catch (BarberAppointmentService.InactiveBarberException e) {
+            return error(400, "Bad Request", "inactive_barber");
+        } catch (BarberAppointmentService.ServiceNotFoundException e) {
+            return error(404, "Not Found", "service_not_found");
+        } catch (BarberAppointmentService.InactiveServiceException e) {
+            return error(400, "Bad Request", "inactive_service");
         }
+        // RuntimeException inesperada NÃO é capturada de propósito: sobe pro
+        // GlobalExceptionHandler (500 honesto) em vez de virar um falso 409
+        // conflict_slot (contrato da skill spring-error-handling).
     }
 }

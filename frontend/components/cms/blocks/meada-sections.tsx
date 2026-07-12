@@ -19,6 +19,7 @@ import type {
   MeadaPortfolioProps,
   MeadaServicesProps,
 } from '@/lib/cms/cms-block-type'
+import { safeUrl } from '@/lib/cms/safe-url'
 import { slotOutlineStyle } from '@/lib/cms/slot-highlight'
 
 /**
@@ -139,7 +140,7 @@ export function MeadaServices({ props }: { props: MeadaServicesProps }) {
                 </p>
                 {s.linkLabel && (
                   <a
-                    href={s.linkHref || '#'}
+                    href={safeUrl(s.linkHref) || '#'}
                     style={{ color, fontWeight: 600, fontSize: '14px', textDecoration: 'none' }}
                   >
                     {s.linkLabel}
@@ -205,7 +206,7 @@ export function MeadaPortfolio({ props }: { props: MeadaPortfolioProps }) {
           </div>
           {props.linkLabel && (
             <a
-              href={props.linkHref || '#'}
+              href={safeUrl(props.linkHref) || '#'}
               style={{
                 padding: '12px 28px',
                 borderRadius: '10px',
@@ -235,7 +236,7 @@ export function MeadaPortfolio({ props }: { props: MeadaPortfolioProps }) {
               return (
                 <a
                   key={i}
-                  href={p.href || '#'}
+                  href={safeUrl(p.href) || '#'}
                   style={{
                     borderRadius: '16px',
                     overflow: 'hidden',
@@ -255,10 +256,10 @@ export function MeadaPortfolio({ props }: { props: MeadaPortfolioProps }) {
                       background: '#0f172a',
                     }}
                   >
-                    {p.imageUrl ? (
+                    {safeUrl(p.imageUrl) ? (
                       /* eslint-disable-next-line @next/next/no-img-element -- URL externa colada pelo tenant */
                       <img
-                        src={p.imageUrl}
+                        src={safeUrl(p.imageUrl)}
                         alt={p.name}
                         style={{
                           width: '100%',
@@ -454,7 +455,7 @@ export function MeadaCta({ props, activeSlot }: { props: MeadaCtaProps; activeSl
         <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' }}>
           {props.primaryLabel && (
             <a
-              href={props.primaryHref || '#'}
+              href={safeUrl(props.primaryHref) || '#'}
               data-slot="buttonPrimary"
               style={{
                 padding: '13px 32px',
@@ -474,7 +475,7 @@ export function MeadaCta({ props, activeSlot }: { props: MeadaCtaProps; activeSl
           )}
           {props.secondaryLabel && (
             <a
-              href={props.secondaryHref || '#'}
+              href={safeUrl(props.secondaryHref) || '#'}
               data-slot="buttonSecondary"
               style={{
                 padding: '13px 32px',

@@ -124,6 +124,20 @@ class DermatologiaAppointmentServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("half-open: consulta que COMEÇA exatamente onde a outra TERMINA não conflita; parcial conflita")
+    void create_halfOpenWindow() {
+        seedWithCarla();   // Carla 11:00–11:30 BRT
+        // Borda exata (11:30 = fim da primeira): janela half-open NÃO conflita — invariante do chassi A.
+        DermatologiaAppointment adjacent = service.create(COMPANY, profCarla, patientMarina, typeConsulta,
+            null, START.plusSeconds(30 * 60), null);
+        assertThat(adjacent.status()).isEqualTo("agendada");
+        // Sobreposição parcial (11:15) → conflita.
+        assertThatThrownBy(() -> service.create(COMPANY, profCarla, patientMarina, typeConsulta,
+            null, START.plusSeconds(15 * 60), null))
+            .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
     @DisplayName("MESMO HORÁRIO, PROFISSIONAL DIFERENTE (Patrícia) → OK (paralelismo)")
     void create_sameSlotDifferentProfessional() {
         seedWithCarla();   // Carla 11:00 BRT

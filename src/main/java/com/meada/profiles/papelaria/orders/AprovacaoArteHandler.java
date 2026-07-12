@@ -2,6 +2,7 @@ package com.meada.profiles.papelaria.orders;
 
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.meada.messaging.ConversationRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
@@ -33,10 +34,13 @@ public class AprovacaoArteHandler {
 
     private final ObjectMapper objectMapper;
     private final PapelariaOrderService orderService;
+    private final ConversationRepository conversationRepository;
 
-    public AprovacaoArteHandler(ObjectMapper objectMapper, PapelariaOrderService orderService) {
+    public AprovacaoArteHandler(ObjectMapper objectMapper, PapelariaOrderService orderService,
+                                ConversationRepository conversationRepository) {
         this.objectMapper = objectMapper;
         this.orderService = orderService;
+        this.conversationRepository = conversationRepository;
     }
 
     public boolean hasTag(String text) {
@@ -93,6 +97,16 @@ public class AprovacaoArteHandler {
 
         if (current.isEmpty()) {
             log.warn("papelaria: <aprovacao_arte> não resolveu pedido p/ conversa {} — ignorada", conversationId);
+            return Optional.empty();
+        }
+        // BARREIRA DE CONTATO: a aprovação só vale vinda do contato DONO do pedido — no modo
+        // order_id explícito, um id alucinado/chutado não pode aprovar a arte de outro cliente.
+        // O pedido não guarda contact_id; o dono é o contato da conversa de origem do pedido.
+        UUID ownerContact = current.get().conversationId() == null ? null
+            : conversationRepository.findContactIdByConversation(current.get().conversationId()).orElse(null);
+        if (contactId == null || ownerContact == null || !ownerContact.equals(contactId)) {
+            log.warn("papelaria: <aprovacao_arte> em pedido de outro contato (pedido {} dono {} ≠ conversa {}) — bloqueada",
+                current.get().id(), ownerContact, contactId);
             return Optional.empty();
         }
         // SÓ aprova um pedido que está aguardando aprovação da arte (arte_aprovacao). Senão ignora.

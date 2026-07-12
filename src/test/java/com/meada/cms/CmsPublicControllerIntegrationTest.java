@@ -80,4 +80,22 @@ class CmsPublicControllerIntegrationTest extends AbstractIntegrationTest {
         mockMvc.perform(get("/public/cms/tls-allowed").param("domain", "publicaco.com.br")).andExpect(status().isOk());
         mockMvc.perform(get("/public/cms/tls-allowed").param("domain", "outro.com")).andExpect(status().isNotFound());
     }
+
+    @Test
+    @DisplayName("empresa SUSPENSA → 404 por slug, por domínio e no ask de TLS (site público some)")
+    void suspendedCompany_404Everywhere() throws Exception {
+        seedPublishedSite();
+        service.setDomain(CO, "publicaco.com.br");
+        jdbcTemplate.update("update cms_sites set domain_verified = true where company_id = ?", CO);
+        // sanity: servindo normalmente antes da suspensão.
+        mockMvc.perform(get("/public/cms/by-slug/publica-co")).andExpect(status().isOk());
+        mockMvc.perform(get("/public/cms/by-domain").param("host", "publicaco.com.br")).andExpect(status().isOk());
+
+        // suspensão pelo root → mesmo contrato do resolvePublicCompany: tratada como inexistente.
+        jdbcTemplate.update("update companies set status = 'suspended' where id = ?", CO);
+        mockMvc.perform(get("/public/cms/by-slug/publica-co")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/public/cms/by-slug/publica-co/servicos")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/public/cms/by-domain").param("host", "publicaco.com.br")).andExpect(status().isNotFound());
+        mockMvc.perform(get("/public/cms/tls-allowed").param("domain", "publicaco.com.br")).andExpect(status().isNotFound());
+    }
 }

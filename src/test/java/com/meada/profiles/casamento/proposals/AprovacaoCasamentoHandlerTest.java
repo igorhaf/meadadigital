@@ -73,7 +73,7 @@ class AprovacaoCasamentoHandlerTest extends AbstractIntegrationTest {
         String aiText = "Que ótimo! Registrei sua aprovação.\n"
             + "<aprovacao_casamento>{\"proposal_id\":\"" + proposalId + "\",\"decisao\":\"aprovada\"}</aprovacao_casamento>";
 
-        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
 
         assertThat(o).isPresent();
         assertThat(o.get().status()).isEqualTo("aprovada");
@@ -88,7 +88,7 @@ class AprovacaoCasamentoHandlerTest extends AbstractIntegrationTest {
         String aiText = "Tudo bem, registrei.\n"
             + "<aprovacao_casamento>{\"proposal_id\":\"" + proposalId + "\",\"decisao\":\"recusada\"}</aprovacao_casamento>";
 
-        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
 
         assertThat(o).isPresent();
         assertThat(o.get().status()).isEqualTo("recusada");
@@ -103,7 +103,7 @@ class AprovacaoCasamentoHandlerTest extends AbstractIntegrationTest {
         String aiText = "Aprovado!\n<aprovacao_casamento>{\"proposal_id\":\"" + proposalId
             + "\",\"decisao\":\"aprovada\"}</aprovacao_casamento>";
 
-        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
 
         assertThat(o).isEmpty();
         String status = jdbcTemplate.queryForObject("select status from wedding_proposals where id = ?", String.class, proposalId);
@@ -113,9 +113,26 @@ class AprovacaoCasamentoHandlerTest extends AbstractIntegrationTest {
     @Test
     @DisplayName("sem tag → Optional.empty")
     void parseAndApply_noTag() {
-        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId,
+        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, contactId,
             "Claro, qualquer dúvida estou à disposição!");
         assertThat(o).isEmpty();
+    }
+
+    @Test
+    @DisplayName("BARREIRA DE CONTATO: aprovação vinda de OUTRO contato → Optional.empty + estado intacto")
+    void parseAndApply_contactBarrier() {
+        UUID proposalId = seedProposal("orcada");
+        UUID otherContact = UUID.randomUUID();
+        jdbcTemplate.update("insert into contacts (id, company_id, phone_number, name) values (?, ?, ?, ?)",
+            otherContact, COMPANY, "+5511999990193", "Outro Cliente");
+        String aiText = "Aprovado!\n<aprovacao_casamento>{\"proposal_id\":\"" + proposalId
+            + "\",\"decisao\":\"aprovada\"}</aprovacao_casamento>";
+
+        Optional<WeddingProposal> o = handler.parseAndApply(COMPANY, conversationId, otherContact, aiText);
+
+        assertThat(o).isEmpty();
+        String status = jdbcTemplate.queryForObject("select status from wedding_proposals where id = ?", String.class, proposalId);
+        assertThat(status).isEqualTo("orcada");
     }
 
     record SentMessage(String instanceName, String token, String number, String text) {}

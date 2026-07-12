@@ -33,6 +33,8 @@ import java.util.List;
 import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 /**
  * Orquestra a resposta da IA a uma mensagem inbound: monta o prompt, chama a IA com
@@ -64,6 +66,16 @@ import java.util.UUID;
 public class OutboundService {
 
     private static final Logger log = LoggerFactory.getLogger(OutboundService.class);
+
+    /**
+     * Formato canônico de TODA tag de ação da IA: {@code <nome_tag>{json}</nome_tag>}.
+     * Rede de segurança para tag que sobrou sem interpretação — emitida junto com
+     * needsHuman=true (o handoff não roda a cadeia de handlers) ou tag de perfil
+     * errado/alucinada (o early-return de perfil devolve o reply intacto). O cliente
+     * NUNCA recebe JSON cru.
+     */
+    private static final Pattern LEFTOVER_TAG =
+        Pattern.compile("<([a-z][a-z0-9_]*)>\\s*\\{.*?\\}\\s*</\\1>", Pattern.DOTALL);
 
     private final ConversationRepository conversationRepository;
     private final ContactRepository contactRepository;
@@ -456,9 +468,15 @@ public class OutboundService {
                 // resposta-ponte, grava, depois flipa. Casos 2/3 (sem reply efetivo) NÃO persistem.
                 persistSchedulingIntent(conversationId, aiResponse);
                 persistInsights(event.companyId(), conversationId, aiResponse);
-                Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, aiResponse);
-                if (sendFailure.isPresent()) {
-                    return sendFailure.get();   // falha de envio domina (casos 7/8/9) — já logado lá
+                // O handoff NÃO roda a cadeia de handlers (a ação fica com o humano) — mas a tag
+                // não pode vazar crua pro cliente: strip SEM agir. Se o reply era SÓ a tag, não
+                // há resposta-ponte útil → cai no comportamento do caso 2 (flipa sem enviar).
+                AiResponse bridge = stripLeftoverTags(aiResponse);
+                if (bridge.reply() != null && !bridge.reply().isBlank()) {
+                    Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, bridge);
+                    if (sendFailure.isPresent()) {
+                        return sendFailure.get();   // falha de envio domina (casos 7/8/9) — já logado lá
+                    }
                 }
                 conversationRepository.markHandledByHuman(conversationId);
                 return logOutcome(OutboundOutcome.FLIPPED_AI_HANDOFF, event, aiResponse, null);
@@ -596,11 +614,42 @@ public class OutboundService {
         toSend = maybeProcessAprovacaoViagem(event, conversationId, toSend);
         // Camada 8.24 (perfil suplementos): <pedido_suplementos> cria o pedido de varejo.
         toSend = maybeProcessPedidoSuplementos(event, conversationId, toSend);
+        // Rede de segurança: tag que NENHUM handler interpretou (perfil errado/alucinada) não
+        // pode chegar crua ao cliente. Se o reply era SÓ a tag, não sobrou nada útil a enviar —
+        // contrato quebrado, mesmo tratamento do caso 3 (flipa para humano).
+        toSend = stripLeftoverTags(toSend);
+        if (toSend.reply() == null || toSend.reply().isBlank()) {
+            conversationRepository.markHandledByHuman(conversationId);
+            return logOutcome(OutboundOutcome.FLIPPED_AI_BAD_REPLY, event, aiResponse, null);
+        }
         Optional<OutboundOutcome> sendFailure = sendAndPersist(event, conversationId, toSend);
         if (sendFailure.isPresent()) {
             return sendFailure.get();   // casos 7/8/9 — já logado lá
         }
         return logOutcome(OutboundOutcome.PROCESSED, event, aiResponse, null);
+    }
+
+    /**
+     * Remove do reply qualquer tag de ação que tenha SOBRADO sem interpretação (formato
+     * canônico {@code <nome_tag>{json}</nome_tag>}). Acontece em dois cenários: (a) handoff
+     * (needsHuman=true) — a cadeia de handlers não roda e a ação fica com o humano; (b) tag
+     * de perfil errado/alucinada — o early-return de perfil devolve o reply intacto. Em ambos,
+     * a tag é descartada (nenhuma entidade é criada) e o texto restante segue ao cliente.
+     */
+    private AiResponse stripLeftoverTags(AiResponse response) {
+        String reply = response.reply();
+        if (reply == null || reply.isBlank()) {
+            return response;
+        }
+        Matcher matcher = LEFTOVER_TAG.matcher(reply);
+        if (!matcher.find()) {
+            return response;
+        }
+        String stripped = matcher.replaceAll("").trim();
+        log.warn("outbound: leftover AI tag stripped before send (handoff ou tag de perfil errado; nenhuma ação executada)");
+        return new AiResponse(stripped, response.needsHuman(), response.reason(),
+            response.tokensIn(), response.tokensOut(), response.latencyMs(),
+            response.schedulingIntent(), response.insights());
     }
 
     /**
@@ -913,7 +962,9 @@ public class OutboundService {
         if (!"oficina".equals(companyProfileRepository.findProfileId(event.companyId()))) {
             return aiResponse;
         }
-        aprovacaoOsHandler.parseAndApply(event.companyId(), conversationId, reply);
+        // contactId da conversa alimenta a BARREIRA DE CONTATO do handler (aprovação só do dono).
+        Optional<UUID> aprovacaoOsContact = conversationRepository.findContactIdByConversation(conversationId);
+        aprovacaoOsHandler.parseAndApply(event.companyId(), conversationId, aprovacaoOsContact.orElse(null), reply);
         String stripped = aprovacaoOsHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
@@ -1442,7 +1493,9 @@ public class OutboundService {
         if (!"eventos".equals(companyProfileRepository.findProfileId(event.companyId()))) {
             return aiResponse;
         }
-        aprovacaoPropostaHandler.parseAndApply(event.companyId(), conversationId, reply);
+        // contactId da conversa alimenta a BARREIRA DE CONTATO do handler (aprovação só do dono).
+        Optional<UUID> aprovacaoEventoContact = conversationRepository.findContactIdByConversation(conversationId);
+        aprovacaoPropostaHandler.parseAndApply(event.companyId(), conversationId, aprovacaoEventoContact.orElse(null), reply);
         String stripped = aprovacaoPropostaHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
@@ -1756,7 +1809,9 @@ public class OutboundService {
         if (!"casamento".equals(companyProfileRepository.findProfileId(event.companyId()))) {
             return aiResponse;
         }
-        aprovacaoCasamentoHandler.parseAndApply(event.companyId(), conversationId, reply);
+        // contactId da conversa alimenta a BARREIRA DE CONTATO do handler (aprovação só do dono).
+        Optional<UUID> aprovacaoCasamentoContact = conversationRepository.findContactIdByConversation(conversationId);
+        aprovacaoCasamentoHandler.parseAndApply(event.companyId(), conversationId, aprovacaoCasamentoContact.orElse(null), reply);
         String stripped = aprovacaoCasamentoHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),
@@ -2285,7 +2340,9 @@ public class OutboundService {
         if (!"viagens".equals(companyProfileRepository.findProfileId(event.companyId()))) {
             return aiResponse;
         }
-        aprovacaoViagemHandler.parseAndApply(event.companyId(), conversationId, reply);
+        // contactId da conversa alimenta a BARREIRA DE CONTATO do handler (aprovação só do dono).
+        Optional<UUID> aprovacaoViagemContact = conversationRepository.findContactIdByConversation(conversationId);
+        aprovacaoViagemHandler.parseAndApply(event.companyId(), conversationId, aprovacaoViagemContact.orElse(null), reply);
         String stripped = aprovacaoViagemHandler.stripTag(reply);
         return new AiResponse(stripped, aiResponse.needsHuman(), aiResponse.reason(),
             aiResponse.tokensIn(), aiResponse.tokensOut(), aiResponse.latencyMs(),

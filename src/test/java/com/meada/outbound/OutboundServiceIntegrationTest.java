@@ -222,6 +222,67 @@ class OutboundServiceIntegrationTest extends AbstractIntegrationTest {
         assertThat(handledByOf(CONV)).isEqualTo("human");
     }
 
+    // ---- rede de segurança: tag de ação que sobrou sem interpretação ---------
+
+    @Test
+    @DisplayName("caso 1 com tag de ação no reply → tag REMOVIDA da ponte, nenhuma ação executada")
+    void handoff_stripsLeftoverTagFromBridge() {
+        fakeAi.enqueue(aiReply(
+            "Vou te passar pro atendente. <pedido>{\"itens\":[{\"id\":\"x\",\"qtd\":1}]}</pedido>", true));
+        fakeEvolution.enqueue("key-tag-1");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.FLIPPED_AI_HANDOFF);
+        assertThat(fakeEvolution.calls()).isEqualTo(1);
+        String content = (String) outboundRow(CONV).get("content");
+        assertThat(content).isEqualTo("Vou te passar pro atendente.");
+        assertThat(handledByOf(CONV)).isEqualTo("human");
+    }
+
+    @Test
+    @DisplayName("caso 1 com reply que é SÓ a tag → sem ponte útil, flipa sem enviar (como caso 2)")
+    void handoff_onlyTagReply_flipsWithoutSending() {
+        fakeAi.enqueue(aiReply("<pedido>{\"itens\":[]}</pedido>", true));
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.FLIPPED_AI_HANDOFF);
+        assertThat(fakeEvolution.calls()).isZero();
+        assertThat(countOutbound(CONV)).isZero();
+        assertThat(handledByOf(CONV)).isEqualTo("human");
+    }
+
+    @Test
+    @DisplayName("caso 6 com tag que nenhum handler interpretou (perfil errado) → tag removida antes do envio")
+    void processed_stripsWrongProfileTag() {
+        // company sem perfil de nicho: nenhum maybeProcess* age sobre <pedido_pizza> —
+        // sem a rede de segurança, o JSON cru chegaria ao cliente.
+        fakeAi.enqueue(aiReply(
+            "Anotei seu pedido! <pedido_pizza>{\"sabores\":[\"calabresa\"]}</pedido_pizza>", false));
+        fakeEvolution.enqueue("key-tag-6");
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.PROCESSED);
+        String content = (String) outboundRow(CONV).get("content");
+        assertThat(content).isEqualTo("Anotei seu pedido!");
+        assertThat(handledByOf(CONV)).isEqualTo("ai");
+    }
+
+    @Test
+    @DisplayName("caso 6 com reply que é SÓ tag não-interpretada → nada útil a enviar → FLIPPED_AI_BAD_REPLY")
+    void processed_onlyLeftoverTag_flipsBadReply() {
+        fakeAi.enqueue(aiReply("<pedido_pizza>{\"sabores\":[]}</pedido_pizza>", false));
+
+        OutboundOutcome outcome = service.process(event());
+
+        assertThat(outcome).isEqualTo(OutboundOutcome.FLIPPED_AI_BAD_REPLY);
+        assertThat(fakeEvolution.calls()).isZero();
+        assertThat(countOutbound(CONV)).isZero();
+        assertThat(handledByOf(CONV)).isEqualTo("human");
+    }
+
     // ---- casos 4-5 (falha da IA) --------------------------------------------
 
     @Test

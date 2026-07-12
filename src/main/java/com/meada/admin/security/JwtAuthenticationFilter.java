@@ -137,6 +137,7 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
                                    JWKSource<SecurityContext> jwkSource,
                                    @Value("${supabase.jwt-secret:}") String jwtSecret,
                                    @Value("${supabase.url:}") String supabaseUrl,
+                                   @Value("${supabase.issuer:}") String supabaseIssuer,
                                    JdbcTemplate jdbcTemplate,
                                    ObjectMapper objectMapper) {
         this.jdbcTemplate = jdbcTemplate;
@@ -165,7 +166,17 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         // OUTRO projeto Supabase (mesma curva) seria aceito. Só ativa quando supabase.url está
         // setado — dev local (Supabase CLI, url vazia/divergente) mantém o verifier default
         // (exp/nbf), pra não quebrar o fluxo HS256 local.
-        if (supabaseUrl != null && !supabaseUrl.isBlank()) {
+        // supabase.issuer permite DESACOPLAR o issuer esperado da URL de ALCANCE do GoTrue:
+        // no compose dev, o backend alcança o Supabase local pelo IP do WSL (SUPABASE_URL),
+        // mas o GoTrue emite iss=http://127.0.0.1:54321/auth/v1 — sem o override, TODO token
+        // de tenant era rejeitado com invalid_claims (regressão real do stack dev). Vazio →
+        // deriva da URL (comportamento de prod inalterado).
+        String issuerOverride = supabaseIssuer == null ? "" : supabaseIssuer.trim();
+        if (!issuerOverride.isBlank()) {
+            processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
+                new JWTClaimsSet.Builder().issuer(issuerOverride).audience("authenticated").build(),
+                Set.of("exp")));
+        } else if (supabaseUrl != null && !supabaseUrl.isBlank()) {
             String issuer = supabaseUrl.replaceAll("/+$", "") + "/auth/v1";
             processor.setJWTClaimsSetVerifier(new DefaultJWTClaimsVerifier<>(
                 new JWTClaimsSet.Builder().issuer(issuer).audience("authenticated").build(),

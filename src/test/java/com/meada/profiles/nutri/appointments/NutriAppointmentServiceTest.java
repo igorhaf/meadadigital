@@ -124,6 +124,20 @@ class NutriAppointmentServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("half-open: consulta que COMEÇA exatamente onde a outra TERMINA não conflita; parcial conflita")
+    void create_halfOpenWindow() {
+        seedWithCarla();   // Carla 11:00–12:00 BRT
+        // Borda exata (12:00 = fim da primeira): janela half-open NÃO conflita — invariante do chassi A.
+        NutriAppointment adjacent = service.create(COMPANY, profCarla, patientMarina, null, "retorno",
+            START.plusSeconds(60 * 60), null, null);
+        assertThat(adjacent.status()).isEqualTo("agendado");
+        // Sobreposição parcial (11:30) → conflita.
+        assertThatThrownBy(() -> service.create(COMPANY, profCarla, patientMarina, null, "retorno",
+            START.plusSeconds(30 * 60), null, null))
+            .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
     @DisplayName("MESMO HORÁRIO, PROFISSIONAL DIFERENTE (Patrícia) → OK (paralelismo)")
     void create_sameSlotDifferentProfessional() {
         seedWithCarla();   // Carla 11:00 BRT

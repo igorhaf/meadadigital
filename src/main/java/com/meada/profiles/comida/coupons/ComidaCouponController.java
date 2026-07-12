@@ -28,7 +28,7 @@ import java.util.UUID;
 /**
  * Cupons de desconto do tenant comida (onda 1 do comida, backlog #1 — clone do chassi sushi). TENANT +
  * perfil 'comida' only. CRUD do catálogo de cupons; a aplicação acontece na criação do pedido. Sob
- * {@code /api/adega/**}.
+ * {@code /api/comida/**}.
  */
 @RestController
 public class ComidaCouponController {

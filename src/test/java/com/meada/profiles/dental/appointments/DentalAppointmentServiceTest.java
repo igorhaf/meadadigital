@@ -95,6 +95,28 @@ class DentalAppointmentServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("half-open: consulta que COMEÇA exatamente onde a outra TERMINA não conflita; sobreposição parcial conflita")
+    void create_halfOpenWindow() {
+        seedAppointment();   // 15:00–15:30 BRT
+        UUID other = UUID.randomUUID();
+        jdbcTemplate.update("insert into dental_patients (id, company_id, name) values (?, ?, 'Outro')",
+            other, COMPANY);
+        // Borda exata (15:30 = fim da primeira): janela half-open NOT (end <= :s OR start >= :e)
+        // NÃO pode acusar conflito — invariante do chassi A.
+        DentalAppointment adjacent = service.create(COMPANY, other, null,
+            START.plusSeconds(30 * 60), "Canal", null);
+        assertThat(adjacent.status()).isEqualTo("agendada");
+
+        // Sobreposição parcial (15:15–15:45) → conflita.
+        UUID third = UUID.randomUUID();
+        jdbcTemplate.update("insert into dental_patients (id, company_id, name) values (?, ?, 'Terceiro')",
+            third, COMPANY);
+        assertThatThrownBy(() -> service.create(COMPANY, third, null,
+            START.plusSeconds(15 * 60), "Avaliação", null))
+            .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
     @DisplayName("updateStatus agendada→confirmada → notifica o paciente")
     void confirm_notifies() {
         DentalAppointment a = seedAppointment();

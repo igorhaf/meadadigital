@@ -290,6 +290,13 @@ public class TravelProposalRepository {
     @Transactional
     public Optional<TravelProposalItem> updateItem(UUID companyId, UUID proposalId, UUID itemId, String category,
                                                    String description, Integer quantity, Integer unitPriceCents) {
+        // Lê o item atual para resolver os campos finais (null = mantém) e materializar
+        // line_total em Java: em Postgres, um SET que referencia quantity * unit_price_cents
+        // leria os valores ANTIGOS da linha (mesmo padrão do AtelieProposalRepository).
+        Optional<TravelProposalItem> current = findItem(companyId, proposalId, itemId);
+        if (current.isEmpty()) {
+            return Optional.empty();
+        }
         List<String> sets = new ArrayList<>();
         List<Object> args = new ArrayList<>();
         if (category != null && !category.isBlank()) { sets.add("category = ?"); args.add(category); }
@@ -297,10 +304,13 @@ public class TravelProposalRepository {
         if (quantity != null) { sets.add("quantity = ?"); args.add(quantity); }
         if (unitPriceCents != null) { sets.add("unit_price_cents = ?"); args.add(unitPriceCents); }
         if (sets.isEmpty()) {
-            return findItem(companyId, proposalId, itemId);
+            return current;
         }
-        // recalcula line_total_cents = quantity * unit_price (com os valores finais).
-        sets.add("line_total_cents = quantity * unit_price_cents");
+        TravelProposalItem old = current.get();
+        int finalQty = quantity != null ? quantity : old.quantity();
+        int finalUnit = unitPriceCents != null ? unitPriceCents : old.unitPriceCents();
+        sets.add("line_total_cents = ?");
+        args.add(finalQty * finalUnit);
         sets.add("updated_at = now()");
         args.add(companyId);
         args.add(proposalId);

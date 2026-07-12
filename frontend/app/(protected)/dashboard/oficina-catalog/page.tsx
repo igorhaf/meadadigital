@@ -108,7 +108,7 @@ export default function OficinaCatalogPage() {
   return (
     <div className="space-y-6">
       <PageHeader
-        title="Materiais e técnicas"
+        title="Peças e serviços"
         description="Catálogo que preenche o orçamento (autofill) e alimenta a sugestão da IA — sem valores na conversa."
         actions={<Button onClick={openCreate}>Novo item</Button>}
       />
@@ -181,7 +181,7 @@ export default function OficinaCatalogPage() {
                 onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
                 required
                 maxLength={200}
-                placeholder="Bordado à mão, forro de cetim, mão de obra…"
+                placeholder="Troca de óleo, pastilha de freio, mão de obra…"
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
             </div>
@@ -192,7 +192,7 @@ export default function OficinaCatalogPage() {
               <input
                 value={form.category}
                 onChange={(e) => setForm((f) => ({ ...f, category: e.target.value }))}
-                placeholder="tecido, acabamento, mão de obra…"
+                placeholder="peça, fluido, mão de obra…"
                 className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm"
               />
             </div>

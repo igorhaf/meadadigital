@@ -76,7 +76,7 @@ class AprovacaoOsHandlerTest extends AbstractIntegrationTest {
         String aiText = "Perfeito! Registrei sua aprovação.\n"
             + "<aprovacao_os>{\"service_order_id\":\"" + orderId + "\",\"decisao\":\"aprovada\"}</aprovacao_os>";
 
-        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
 
         assertThat(o).isPresent();
         assertThat(o.get().status()).isEqualTo("aprovada");
@@ -91,7 +91,7 @@ class AprovacaoOsHandlerTest extends AbstractIntegrationTest {
         String aiText = "Aprovado!\n<aprovacao_os>{\"service_order_id\":\"" + orderId
             + "\",\"decisao\":\"aprovada\"}</aprovacao_os>";
 
-        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
 
         assertThat(o).isEmpty();
         String status = jdbcTemplate.queryForObject("select status from service_orders where id = ?", String.class, orderId);
@@ -103,7 +103,7 @@ class AprovacaoOsHandlerTest extends AbstractIntegrationTest {
     void parseAndApply_unknownOrder() {
         String aiText = "Aprovado!\n<aprovacao_os>{\"service_order_id\":\"" + UUID.randomUUID()
             + "\",\"decisao\":\"aprovada\"}</aprovacao_os>";
-        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
         assertThat(o).isEmpty();
     }
 
@@ -114,7 +114,25 @@ class AprovacaoOsHandlerTest extends AbstractIntegrationTest {
         String aiText = "Ok!\n<aprovacao_os>{\"service_order_id\":\"" + orderId
             + "\",\"decisao\":\"xpto\"}</aprovacao_os>";
 
-        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, aiText);
+        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, contactId, aiText);
+
+        assertThat(o).isEmpty();
+        String status = jdbcTemplate.queryForObject("select status from service_orders where id = ?", String.class, orderId);
+        assertThat(status).isEqualTo("orcada");
+    }
+
+    @Test
+    @DisplayName("BARREIRA DE CONTATO: aprovação vinda de OUTRO contato → Optional.empty + estado intacto")
+    void parseAndApply_contactBarrier() {
+        UUID orderId = seedOrder("orcada");
+        UUID otherContact = UUID.randomUUID();
+        jdbcTemplate.update("insert into contacts (id, company_id, phone_number, name) values (?, ?, ?, ?)",
+            otherContact, COMPANY, "+5511999990197", "Outro Cliente");
+        String aiText = "Aprovado!\n<aprovacao_os>{\"service_order_id\":\"" + orderId
+            + "\",\"decisao\":\"aprovada\"}</aprovacao_os>";
+
+        // conversa de OUTRO contato tentando aprovar a OS do João → bloqueada, OS intacta.
+        Optional<ServiceOrder> o = handler.parseAndApply(COMPANY, conversationId, otherContact, aiText);
 
         assertThat(o).isEmpty();
         String status = jdbcTemplate.queryForObject("select status from service_orders where id = ?", String.class, orderId);

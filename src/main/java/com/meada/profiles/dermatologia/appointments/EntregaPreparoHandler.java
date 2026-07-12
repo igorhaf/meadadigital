@@ -100,41 +100,49 @@ public class EntregaPreparoHandler {
             return Optional.empty();
         }
 
-        Optional<DermatologiaAppointment> appointment = appointmentService.get(companyId, appointmentId);
-        if (appointment.isEmpty()) {
-            log.warn("dermatologia: <entrega_preparo> referencia consulta inexistente {} p/ conversa {} — não entregue",
-                appointmentId, conversationId);
+        // Best-effort DE VERDADE: lookups/envio dentro do catch-all — uma RuntimeException
+        // transitória (banco, rede) NÃO pode derrubar o envio da resposta da IA ao cliente.
+        try {
+            Optional<DermatologiaAppointment> appointment = appointmentService.get(companyId, appointmentId);
+            if (appointment.isEmpty()) {
+                log.warn("dermatologia: <entrega_preparo> referencia consulta inexistente {} p/ conversa {} — não entregue",
+                    appointmentId, conversationId);
+                return Optional.empty();
+            }
+
+            // BARREIRA DE SEGURANÇA: a nota só sai para o contato dono da consulta.
+            if (!Objects.equals(appointment.get().contactId(), contactId)) {
+                log.warn("dermatologia: <entrega_preparo> de consulta de outro contato (consulta {} contato {} ≠ conversa {}) — bloqueado, não entregue",
+                    appointmentId, appointment.get().contactId(), contactId);
+                return Optional.empty();
+            }
+
+            Optional<DermatologiaProcedureType> type = procedureTypeService.get(companyId, appointment.get().procedureTypeId());
+            if (type.isEmpty()) {
+                log.warn("dermatologia: <entrega_preparo> tipo da consulta {} inexistente p/ conversa {} — não entregue",
+                    appointmentId, conversationId);
+                return Optional.empty();
+            }
+
+            String prep = type.get().prepInstructions();
+            if (prep == null || prep.isBlank()) {
+                log.warn("dermatologia: <entrega_preparo> tipo {} sem preparo p/ consulta {} (conversa {}) — não entregue",
+                    type.get().id(), appointmentId, conversationId);
+                return Optional.empty();
+            }
+
+            if (notifier.sendText(companyId, conversationId, prep)) {
+                log.info("dermatologia: preparo do tipo {} entregue VERBATIM p/ conversa {} (consulta {})",
+                    type.get().id(), conversationId, appointmentId);
+                return Optional.of(prep);
+            }
+            log.warn("dermatologia: <entrega_preparo> falhou ao enviar o preparo p/ conversa {} (consulta {}) — não entregue",
+                conversationId, appointmentId);
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            log.warn("dermatologia: <entrega_preparo> falhou inesperadamente p/ conversa {} ({}) — não entregue (best-effort)",
+                conversationId, e.getMessage());
             return Optional.empty();
         }
-
-        // BARREIRA DE SEGURANÇA: a nota só sai para o contato dono da consulta.
-        if (!Objects.equals(appointment.get().contactId(), contactId)) {
-            log.warn("dermatologia: <entrega_preparo> de consulta de outro contato (consulta {} contato {} ≠ conversa {}) — bloqueado, não entregue",
-                appointmentId, appointment.get().contactId(), contactId);
-            return Optional.empty();
-        }
-
-        Optional<DermatologiaProcedureType> type = procedureTypeService.get(companyId, appointment.get().procedureTypeId());
-        if (type.isEmpty()) {
-            log.warn("dermatologia: <entrega_preparo> tipo da consulta {} inexistente p/ conversa {} — não entregue",
-                appointmentId, conversationId);
-            return Optional.empty();
-        }
-
-        String prep = type.get().prepInstructions();
-        if (prep == null || prep.isBlank()) {
-            log.warn("dermatologia: <entrega_preparo> tipo {} sem preparo p/ consulta {} (conversa {}) — não entregue",
-                type.get().id(), appointmentId, conversationId);
-            return Optional.empty();
-        }
-
-        if (notifier.sendText(companyId, conversationId, prep)) {
-            log.info("dermatologia: preparo do tipo {} entregue VERBATIM p/ conversa {} (consulta {})",
-                type.get().id(), conversationId, appointmentId);
-            return Optional.of(prep);
-        }
-        log.warn("dermatologia: <entrega_preparo> falhou ao enviar o preparo p/ conversa {} (consulta {}) — não entregue",
-            conversationId, appointmentId);
-        return Optional.empty();
     }
 }

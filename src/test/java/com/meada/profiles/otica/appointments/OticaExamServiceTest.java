@@ -89,6 +89,20 @@ class OticaExamServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("half-open: exame que COMEÇA exatamente onde o outro TERMINA não conflita; parcial conflita")
+    void create_halfOpenWindow() {
+        schedule(profA);   // 15:00–15:30 BRT (duração 30 do config)
+        // Borda exata (15:30 = fim do primeiro): janela half-open NÃO conflita — invariante do chassi A.
+        OticaExamAppointment adjacent = service.create(COMPANY, profA, null, contactId, "Outro",
+            START.plusSeconds(30 * 60), null);
+        assertThat(adjacent.status()).isEqualTo("agendado");
+        // Sobreposição parcial (15:15) → conflita.
+        assertThatThrownBy(() -> service.create(COMPANY, profA, null, contactId, "Terceiro",
+            START.plusSeconds(15 * 60), null))
+            .isInstanceOf(ConflictException.class);
+    }
+
+    @Test
     @DisplayName("MESMO horário, profissional DIFERENTE → OK (paralelismo)")
     void sameTime_differentProfessional_ok() {
         schedule(profA);

@@ -115,6 +115,16 @@ evolution:
   connect-timeout-ms: ${EVOLUTION_CONNECT_TIMEOUT_MS:5000}
   read-timeout-ms: ${EVOLUTION_READ_TIMEOUT_MS:30000}
   dry-run: ${EVOLUTION_DRY_RUN:false}
+  # API key GLOBAL do servidor Evolution (o AUTHENTICATION_API_KEY de lá). Necessária só para
+  # PROVISIONAR instância pelo painel (criar/QR/estado/webhook) — o ENVIO usa o token per-instância.
+  # VAZIA = conexão pelo painel desabilitada (503 whatsapp_unavailable); o boot NÃO quebra.
+  global-api-key: ${EVOLUTION_GLOBAL_API_KEY:}
+  # URL pública do webhook do Meada, apontada automaticamente na instância ao conectar.
+  # O secret vai no HEADER apikey (não em query param — evita vazar em access log).
+  # VAZIA = o webhook não é apontado (a instância conecta, mas nada chega ao Meada) + WARN no log.
+  webhook-url: ${EVOLUTION_WEBHOOK_URL:}
+  # Provisionar instância (criar/QR) é mais lento que enviar texto — timeout próprio.
+  instance-read-timeout-ms: ${EVOLUTION_INSTANCE_READ_TIMEOUT_MS:60000}
 
 # Retry do OutboundService (IA + envio). max-attempts inclui a 1ª tentativa;
 #   backoff-ms tem max-attempts-1 entradas (a espera ANTES de cada retry). Aqui:
@@ -170,6 +180,10 @@ supabase:
   # "entrar como empresa" do super-admin (SupabaseAdminClient). VAZIOS = recurso
   # desabilitado (503 impersonation_unavailable) — não quebra o boot.
   url: ${SUPABASE_URL:}
+  # Issuer ESPERADO nos JWTs (claim iss). VAZIO = deriva de url (+/auth/v1) — prod intocado.
+  # No compose dev, url aponta pro IP do WSL (alcance) mas o GoTrue local emite
+  # iss=http://127.0.0.1:54321/auth/v1 — este override evita o 401 invalid_claims.
+  issuer: ${SUPABASE_ISSUER:}
   service-role-key: ${SUPABASE_SERVICE_ROLE_KEY:}
 
 server:

@@ -83,4 +83,47 @@ class BarberQueueControllerIntegrationTest extends AbstractAdminIntegrationTest 
             .andExpect(status().isForbidden())
             .andExpect(jsonPath("$.reason").value("forbidden_wrong_profile"));
     }
+
+    @Test
+    @DisplayName("convert: 1º ticket vira atendimento (201); 2º do MESMO barbeiro no mesmo instante → 409 conflict_slot")
+    void convertAndSlotConflict() throws Exception {
+        UUID sub = UUID.randomUUID();
+        UUID companyId = seedTenant(sub, "barber@test.dev", "barbearia");
+        String t = mintValidToken("barber@test.dev", sub);
+        // Janela cheia: o convert agenda em Instant.now() — sem isso o default 09-20h
+        // flakearia o teste em runs fora do horário comercial (fuso SP).
+        jdbcTemplate.update("insert into barber_config (company_id, queue_enabled, opens_at, closes_at) "
+            + "values (?, true, '00:00', '23:59:59')", companyId);
+        UUID marcelo = UUID.randomUUID();
+        UUID svc = UUID.randomUUID();
+        jdbcTemplate.update("insert into barber_barbers (id, company_id, name) values (?, ?, 'Marcelo')", marcelo, companyId);
+        jdbcTemplate.update("insert into barber_services (id, company_id, name, duration_minutes) values (?, ?, 'Corte', 30)", svc, companyId);
+
+        mockMvc.perform(post("/api/barbearia/queue").header("Authorization", "Bearer " + t)
+                .contentType(JSON)
+                .content("{\"barberId\":\"" + marcelo + "\",\"serviceId\":\"" + svc + "\",\"guestName\":\"Cli 1\"}"))
+            .andExpect(status().isCreated());
+        mockMvc.perform(post("/api/barbearia/queue").header("Authorization", "Bearer " + t)
+                .contentType(JSON)
+                .content("{\"barberId\":\"" + marcelo + "\",\"serviceId\":\"" + svc + "\",\"guestName\":\"Cli 2\"}"))
+            .andExpect(status().isCreated());
+
+        UUID ticket1 = jdbcTemplate.queryForObject(
+            "select id from barber_queue_tickets where company_id = ? and guest_name = 'Cli 1'", UUID.class, companyId);
+        UUID ticket2 = jdbcTemplate.queryForObject(
+            "select id from barber_queue_tickets where company_id = ? and guest_name = 'Cli 2'", UUID.class, companyId);
+
+        mockMvc.perform(post("/api/barbearia/queue/" + ticket1 + "/convert").header("Authorization", "Bearer " + t)
+                .contentType(JSON).content("{}"))
+            .andExpect(status().isCreated())
+            .andExpect(jsonPath("$.status").value("agendado"));
+
+        // Mesmo barbeiro, mesmo instante → SlotConflict → ConflictException TIPADA → 409
+        // conflict_slot. (Antes o catch genérico de RuntimeException mascarava qualquer
+        // erro inesperado como conflict_slot; agora só o conflito real cai aqui.)
+        mockMvc.perform(post("/api/barbearia/queue/" + ticket2 + "/convert").header("Authorization", "Bearer " + t)
+                .contentType(JSON).content("{}"))
+            .andExpect(status().isConflict())
+            .andExpect(jsonPath("$.reason").value("conflict_slot"));
+    }
 }

@@ -93,6 +93,7 @@ export default function CmsEditorPage() {
   const [tree, setTree] = useState<CmsRow[]>([])
   const [pagePublished, setPagePublished] = useState(false)
   const [savedAt, setSavedAt] = useState<string | null>(null)
+  const [saveError, setSaveError] = useState<string | null>(null)
 
   // estado do EDITOR (tela-cheia)
   const [selection, setSelection] = useState<Selection>(null) // nó selecionado (linha/coluna/bloco)
@@ -209,6 +210,17 @@ export default function CmsEditorPage() {
     onSuccess: () => {
       qc.invalidateQueries({ queryKey: ['cms-site'] })
       setSavedAt(new Date().toLocaleTimeString('pt-BR'))
+      setSaveError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant achando que salvou. invalid_blocks = limites do
+      // backend (30 linhas / 6 colunas / 50 blocos por página).
+      setSavedAt(null)
+      setSaveError(
+        e instanceof ApiError && e.reason === 'invalid_blocks'
+          ? 'Página excede os limites do editor (linhas/colunas/blocos). Reduza e salve de novo.'
+          : 'Erro ao salvar a página. Tente novamente.',
+      )
     },
   })
   const createPageMut = useMutation({
@@ -492,6 +504,7 @@ export default function CmsEditorPage() {
           ))}
         </select>
         {savedAt && <span className="text-xs text-muted-foreground">Salvo às {savedAt}</span>}
+        {saveError && <span className="text-xs text-destructive">{saveError}</span>}
 
         <div className="ml-auto flex items-center gap-2">
           <Badge variant={site.published ? 'success' : 'muted'}>

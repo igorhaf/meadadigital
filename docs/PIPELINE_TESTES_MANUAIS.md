@@ -155,7 +155,9 @@ tentativa deliberada de furo (forçar `company_id` do outro no SDK) retorna vazi
 
 | Sintoma | Causa provável | Ação |
 |---------|----------------|------|
-| Redirect loop no login | IP do WSL mudou vs `.env.local` | atualizar `NEXT_PUBLIC_SUPABASE_URL` e reiniciar frontend |
+| Redirect loop no login | IP do WSL mudou vs `.env.local` | atualizar `NEXT_PUBLIC_SUPABASE_URL` e reiniciar frontend (e exportar `SUPABASE_HOST_IP` antes do compose up) |
+| 401 `invalid_claims` para TODO tenant (stack compose) | issuer esperado derivado do `SUPABASE_URL` (IP WSL) ≠ `iss` do GoTrue local (127.0.0.1) | conferir `SUPABASE_ISSUER=http://127.0.0.1:54321/auth/v1` no `docker-compose.override.yml` (fix de 2026-07-11) |
+| Porta 3000/8095 "ocupada" ao subir host | stack docker-compose (meada-frontend/backend) já serve essas portas | usar o stack (Selenium funciona contra ele) OU `./scripts/meada-down.sh` antes de subir no host |
 | `invalid_credentials` em user seedado via SQL | `instance_id`/colunas de token erradas | usar GoTrue admin API (ou seed com `instance_id` zero-UUID + tokens `''`) |
 | Testes estouram conexões | pool Hikari default × N contexts | `application-dev.yml` de teste já limita (min 0/max 2) — não mexer |
 | Teste de service que audita falha em silêncio | FK `audit_log.user_id → auth.users` aborta commit | semear `auth.users` + `public.users` no teste |

@@ -117,6 +117,19 @@ class CmsServiceTest extends AbstractIntegrationTest {
     }
 
     @Test
+    @DisplayName("bloqueio do domínio Meada é por label: 'minhameadadigital.com' passa; raiz e subdomínio não")
+    void domain_meadaSuffixByLabel() {
+        // Regressão: endsWith("meadadigital.com") SEM ponto rejeitava domínios legítimos de
+        // terceiros que apenas terminam com a string (sem separador de label).
+        assertThat(service.setDomain(CO_A, "minhameadadigital.com").domain())
+            .isEqualTo("minhameadadigital.com");
+        assertThatThrownBy(() -> service.setDomain(CO_A, "meadadigital.com"))
+            .isInstanceOf(InvalidDomainException.class);
+        assertThatThrownBy(() -> service.setDomain(CO_A, "app.meadadigital.local"))
+            .isInstanceOf(InvalidDomainException.class);
+    }
+
+    @Test
     @DisplayName("verifyDomain: TXT com o token → verified=true; sem → false")
     void verify() {
         service.setDomain(CO_A, "loja.com.br");

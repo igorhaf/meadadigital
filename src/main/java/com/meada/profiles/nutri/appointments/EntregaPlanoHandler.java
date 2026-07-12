@@ -99,34 +99,42 @@ public class EntregaPlanoHandler {
             return Optional.empty();
         }
 
-        Optional<NutriPatient> patient = patientService.get(companyId, patientId);
-        if (patient.isEmpty()) {
-            log.warn("nutri: <entrega_plano> referencia paciente inexistente {} p/ conversa {} — não entregue",
-                patientId, conversationId);
+        // Best-effort DE VERDADE: lookups/envio dentro do catch-all — uma RuntimeException
+        // transitória (banco, rede) NÃO pode derrubar o envio da resposta da IA ao cliente.
+        try {
+            Optional<NutriPatient> patient = patientService.get(companyId, patientId);
+            if (patient.isEmpty()) {
+                log.warn("nutri: <entrega_plano> referencia paciente inexistente {} p/ conversa {} — não entregue",
+                    patientId, conversationId);
+                return Optional.empty();
+            }
+
+            // BARREIRA DE SEGURANÇA: o plano só sai para o contato dono do paciente.
+            if (!java.util.Objects.equals(patient.get().contactId(), contactId)) {
+                log.warn("nutri: <entrega_plano> de paciente de outro contato (paciente {} contato {} ≠ conversa {}) — bloqueado, não entregue",
+                    patientId, patient.get().contactId(), contactId);
+                return Optional.empty();
+            }
+
+            Optional<NutriPlan> plan = planService.getActiveByPatient(companyId, patientId);
+            if (plan.isEmpty()) {
+                log.warn("nutri: <entrega_plano> sem plano ativo p/ paciente {} (conversa {}) — não entregue",
+                    patientId, conversationId);
+                return Optional.empty();
+            }
+
+            String body = plan.get().body();
+            if (notifier.sendText(companyId, conversationId, body)) {
+                log.info("nutri: plano {} entregue VERBATIM p/ conversa {} (paciente {})", plan.get().id(), conversationId, patientId);
+                return Optional.of(body);
+            }
+            log.warn("nutri: <entrega_plano> falhou ao enviar o plano p/ conversa {} (paciente {}) — não entregue",
+                conversationId, patientId);
+            return Optional.empty();
+        } catch (RuntimeException e) {
+            log.warn("nutri: <entrega_plano> falhou inesperadamente p/ conversa {} ({}) — não entregue (best-effort)",
+                conversationId, e.getMessage());
             return Optional.empty();
         }
-
-        // BARREIRA DE SEGURANÇA: o plano só sai para o contato dono do paciente.
-        if (!java.util.Objects.equals(patient.get().contactId(), contactId)) {
-            log.warn("nutri: <entrega_plano> de paciente de outro contato (paciente {} contato {} ≠ conversa {}) — bloqueado, não entregue",
-                patientId, patient.get().contactId(), contactId);
-            return Optional.empty();
-        }
-
-        Optional<NutriPlan> plan = planService.getActiveByPatient(companyId, patientId);
-        if (plan.isEmpty()) {
-            log.warn("nutri: <entrega_plano> sem plano ativo p/ paciente {} (conversa {}) — não entregue",
-                patientId, conversationId);
-            return Optional.empty();
-        }
-
-        String body = plan.get().body();
-        if (notifier.sendText(companyId, conversationId, body)) {
-            log.info("nutri: plano {} entregue VERBATIM p/ conversa {} (paciente {})", plan.get().id(), conversationId, patientId);
-            return Optional.of(body);
-        }
-        log.warn("nutri: <entrega_plano> falhou ao enviar o plano p/ conversa {} (paciente {}) — não entregue",
-            conversationId, patientId);
-        return Optional.empty();
     }
 }

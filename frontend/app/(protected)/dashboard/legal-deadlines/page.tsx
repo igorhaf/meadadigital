@@ -101,9 +101,22 @@ export default function LegalDeadlinesPage() {
     },
   })
 
+  const [statusError, setStatusError] = useState<string | null>(null)
   const statusMutation = useMutation({
     mutationFn: ({ id, status }: { id: string; status: string }) => updateDeadline(id, { status }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['legal-deadlines'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['legal-deadlines'] })
+      setStatusError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant sem saber que a ação não valeu; re-busca o estado real.
+      qc.invalidateQueries({ queryKey: ['legal-deadlines'] })
+      setStatusError(
+        e instanceof ApiError && e.reason === 'invalid_status_transition'
+          ? 'O status já mudou em outra tela — a lista foi atualizada.'
+          : 'Erro ao atualizar o status. Tente novamente.',
+      )
+    },
   })
 
   const deleteMutation = useMutation({
@@ -142,6 +155,8 @@ export default function LegalDeadlinesPage() {
         description="A agenda do escritório. O cliente vinculado recebe lembrete automático 3 dias e 1 dia antes (data e local, sem mérito)."
         actions={<Button onClick={openCreate}>Novo prazo</Button>}
       />
+
+      {statusError && <p className="text-sm text-destructive">{statusError}</p>}
 
       <div className="flex gap-2">
         {['pendente', 'cumprido', 'perdido', ''].map((s) => (

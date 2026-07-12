@@ -49,10 +49,11 @@ public class AprovacaoOsHandler {
 
     /**
      * Extrai a tag e aplica a decisão. {@link Optional#empty()} quando: não há tag, JSON inválido,
-     * id/decisão faltando ou inválida, OS inexistente, ou a OS NÃO está em 'orcada' (ignorado).
-     * Devolve a OS atualizada em caso de sucesso.
+     * id/decisão faltando ou inválida, OS inexistente, OS de OUTRO contato (barreira de contato),
+     * ou a OS NÃO está em 'orcada' (ignorado). Devolve a OS atualizada em caso de sucesso.
      */
-    public Optional<ServiceOrder> parseAndApply(UUID companyId, UUID conversationId, String aiResponseText) {
+    public Optional<ServiceOrder> parseAndApply(UUID companyId, UUID conversationId, UUID contactId,
+                                                String aiResponseText) {
         if (aiResponseText == null) {
             return Optional.empty();
         }
@@ -90,6 +91,13 @@ public class AprovacaoOsHandler {
         Optional<ServiceOrder> current = orderService.get(companyId, orderId);
         if (current.isEmpty()) {
             log.warn("oficina: <aprovacao_os> referencia OS inexistente {} p/ conversa {} — ignorada", orderId, conversationId);
+            return Optional.empty();
+        }
+        // BARREIRA DE CONTATO: a aprovação só vale vinda do contato DONO da OS — impede que a tag
+        // (id alucinado/chutado) aprove/recuse a OS de outro cliente do mesmo tenant.
+        if (contactId == null || !java.util.Objects.equals(current.get().contactId(), contactId)) {
+            log.warn("oficina: <aprovacao_os> em OS de outro contato (OS {} contato {} ≠ conversa {}) — bloqueada",
+                orderId, current.get().contactId(), contactId);
             return Optional.empty();
         }
         // SÓ muta uma OS que está aguardando aprovação (orcada). Caso contrário ignora sem efeito.

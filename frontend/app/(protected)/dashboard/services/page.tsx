@@ -89,6 +89,12 @@ export default function ServicesPage() {
     return (
       <div className="space-y-4">
         <PageHeader title="Serviços" />
+
+        {toggleActive.isError && (
+          <p className="text-sm text-destructive">
+            Erro ao salvar a alteração do serviço. Tente novamente.
+          </p>
+        )}
         <p className="text-sm text-destructive">Erro ao carregar serviços.</p>
         <Link href="/dashboard">
           <Button variant="outline">Voltar ao dashboard</Button>

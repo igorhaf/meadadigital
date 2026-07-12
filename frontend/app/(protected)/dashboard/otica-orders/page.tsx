@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge'
 import { Button } from '@/components/ui/button'
 import { Card } from '@/components/ui/card'
 import { Modal } from '@/components/ui/modal'
+import { ApiError } from '@/lib/api/client'
 import { listOrders, updateOrderStatus } from '@/lib/api/otica/orders'
 import { useKanbanDnd } from '@/lib/kanban/use-kanban-dnd'
 import type { OticaOrderStatusId } from '@/profiles/otica/otica-order-status'
@@ -225,6 +226,7 @@ export default function OticaOrdersPage() {
     enabled: tab === 'historico',
   })
 
+  const [statusError, setStatusError] = useState<string | null>(null)
   const statusMutation = useMutation({
     mutationFn: ({
       id,
@@ -235,7 +237,19 @@ export default function OticaOrdersPage() {
       status: OticaOrderStatusId
       reason?: string
     }) => updateOrderStatus(id, status, reason),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['otica-orders'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['otica-orders'] })
+      setStatusError(null)
+    },
+    onError: (e) => {
+      // Falha silenciosa deixava o tenant sem saber que a ação não valeu; re-busca o estado real.
+      qc.invalidateQueries({ queryKey: ['otica-orders'] })
+      setStatusError(
+        e instanceof ApiError && e.reason === 'invalid_status_transition'
+          ? 'O status já mudou em outra tela — a lista foi atualizada.'
+          : 'Erro ao atualizar o status. Tente novamente.',
+      )
+    },
   })
 
   function accept(o: Order) {
@@ -283,6 +297,8 @@ export default function OticaOrdersPage() {
         title="Pedidos"
         description="Aceite ou recuse novos pedidos e acompanhe a montagem e a retirada dos óculos."
       />
+
+      {statusError && <p className="text-sm text-destructive">{statusError}</p>}
 
       <div className="flex gap-2">
         <Button

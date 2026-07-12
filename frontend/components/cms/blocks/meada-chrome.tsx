@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { useEffect, useState } from 'react'
 
 import type { MeadaFooterProps, MeadaNavbarProps } from '@/lib/cms/cms-block-type'
+import { safeUrl } from '@/lib/cms/safe-url'
 import { slotOutlineStyle } from '@/lib/cms/slot-highlight'
 
 /**
@@ -160,7 +161,7 @@ export function MeadaNavbar({
             {links.map((l) => (
               <a
                 key={l.href + l.label}
-                href={l.href}
+                href={safeUrl(l.href) || '#'}
                 style={{
                   textDecoration: 'none',
                   color: 'rgba(255,255,255,0.65)',
@@ -175,7 +176,7 @@ export function MeadaNavbar({
             ))}
             {props.ctaLabel && (
               <a
-                href={props.ctaHref || '#'}
+                href={safeUrl(props.ctaHref) || '#'}
                 data-slot="cta"
                 style={{
                   padding: '9px 20px',
@@ -268,7 +269,7 @@ export function MeadaNavbar({
           {links.map((l) => (
             <a
               key={l.href + l.label}
-              href={l.href}
+              href={safeUrl(l.href) || '#'}
               onClick={() => setMobileOpen(false)}
               style={{
                 padding: '1rem 0',
@@ -283,7 +284,7 @@ export function MeadaNavbar({
           ))}
           {props.ctaLabel && (
             <a
-              href={props.ctaHref || '#'}
+              href={safeUrl(props.ctaHref) || '#'}
               onClick={() => setMobileOpen(false)}
               style={{
                 marginTop: '1rem',
@@ -361,7 +362,7 @@ export function MeadaFooter({
               {social.map((s) => (
                 <a
                   key={s.label}
-                  href={s.href}
+                  href={safeUrl(s.href) || '#'}
                   target="_blank"
                   rel="noopener noreferrer"
                   aria-label={s.label}
@@ -413,7 +414,7 @@ export function MeadaFooter({
                 {(col.links ?? []).map((l) => (
                   <li key={l.href + l.label}>
                     <a
-                      href={l.href}
+                      href={safeUrl(l.href) || '#'}
                       style={{
                         color: 'rgba(255,255,255,0.4)',
                         textDecoration: 'none',
