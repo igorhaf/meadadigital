@@ -55,7 +55,7 @@ onBeforeUnmount(() => document.removeEventListener('click', onClickOutside));
 <template>
     <div ref="root" class="relative w-full">
         <form :action="action" method="GET" @submit="open = false">
-            <div class="flex items-center overflow-hidden rounded-xl bg-white shadow-sm ring-1 ring-black/5 focus-within:ring-2 focus-within:ring-brand-400">
+            <div class="flex items-center overflow-hidden rounded-full bg-white shadow-sm ring-1 ring-neutral-200 focus-within:ring-2 focus-within:ring-brand-400">
                 <input
                     v-model="term"
                     name="q"

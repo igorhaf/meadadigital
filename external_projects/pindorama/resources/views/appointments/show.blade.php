@@ -5,7 +5,7 @@
 @section('content')
 @php($start = $appointment->start_at->setTimezone($appointment->timezone))
 @php($end = $appointment->end_at->setTimezone($appointment->timezone))
-<div class="container-muda max-w-2xl py-10">
+<div class="container-site max-w-2xl py-10">
     <a href="{{ route('appointments.index') }}" class="text-sm text-neutral-500 hover:underline">← Meus agendamentos</a>
 
     @if(session('status'))

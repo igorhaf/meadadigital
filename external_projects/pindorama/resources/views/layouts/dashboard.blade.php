@@ -4,17 +4,24 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <meta name="csrf-token" content="{{ csrf_token() }}">
-    <title>@yield('title', 'Painel') · Pindorama</title>
+    <title>@yield('title', 'Painel') · {{ settings()->site_name }}</title>
+    <link rel="icon" type="image/svg+xml" href="{{ asset('favicon.svg') }}">
+    <meta name="theme-color" content="#b0552c">
+
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link href="https://fonts.bunny.net/css?family=albert-sans:400,500,600,700,800|fraunces:600,700&display=swap" rel="stylesheet">
+
     @vite(['resources/css/app.css', 'resources/js/app.js'])
 </head>
-<body class="flex min-h-full flex-col bg-neutral-100">
+<body class="flex min-h-full flex-col bg-sand-100">
     @php($user = auth()->user())
 
     {{-- Top bar --}}
-    <header class="bg-brand-800 text-white">
-        <div class="container-muda flex items-center justify-between py-3">
-            <a href="{{ route('home') }}" class="flex items-center gap-2 text-xl font-extrabold">
-                <span class="text-2xl">🌿</span> {{ \App\Models\SiteSetting::current()->site_name }} <span class="font-light text-white/60">· Painel</span>
+    <header class="bg-forest-900 text-white">
+        <div class="container-site flex items-center justify-between py-3">
+            <a href="{{ route('home') }}" class="flex items-center gap-2.5">
+                @include('partials.logo', ['logoSize' => 'h-8 w-8'])
+                <span class="font-display text-xl font-bold tracking-tight">{{ \App\Models\SiteSetting::current()->site_name }}</span> <span class="font-light text-white/60">· Painel</span>
             </a>
             <div class="flex items-center gap-4 text-sm">
                 <a href="{{ route('home') }}" class="hidden text-white/80 hover:text-white sm:inline">Ver site ↗</a>
@@ -29,7 +36,7 @@
 
         {{-- Tabs --}}
         <nav class="border-t border-white/10">
-            <div class="container-muda flex items-center gap-1 overflow-x-auto no-scrollbar">
+            <div class="container-site flex items-center gap-1 overflow-x-auto no-scrollbar">
                 @php($tab = fn ($pattern) => request()->routeIs($pattern) ? 'border-white text-white' : 'border-transparent text-white/70 hover:text-white')
                 <a href="{{ route('professional.dashboard') }}" class="whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium {{ $tab('professional.dashboard') }}">Visão geral</a>
                 <a href="{{ route('professional.agenda') }}" class="whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium {{ $tab('professional.agenda*') }}">Agenda</a>
@@ -42,7 +49,7 @@
 
                 @if($user->isRoot())
                     <span class="mx-2 h-5 w-px bg-white/20"></span>
-                    <span class="whitespace-nowrap py-3 text-xs font-bold uppercase tracking-wide text-amber-300">Admin</span>
+                    <span class="whitespace-nowrap py-3 text-xs font-bold uppercase tracking-wide text-gold-300">Admin</span>
                     <a href="{{ route('admin.dashboard') }}" class="whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium {{ $tab('admin.dashboard') }}">Site</a>
                     <a href="{{ route('admin.settings.edit') }}" class="whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium {{ $tab('admin.settings.*') }}">Configurações</a>
                     <a href="{{ route('admin.banners.index') }}" class="whitespace-nowrap border-b-2 px-3 py-3 text-sm font-medium {{ $tab('admin.banners.*') }}">Banners</a>
@@ -60,12 +67,12 @@
     </header>
 
     @if(session('status'))
-        <div class="container-muda pt-4">
+        <div class="container-site pt-4">
             <div class="rounded-xl bg-brand-100 px-4 py-3 text-sm font-medium text-brand-800">{{ session('status') }}</div>
         </div>
     @endif
 
-    <main class="container-muda flex-1 py-8">
+    <main class="container-site flex-1 py-8">
         @yield('content')
     </main>
 </body>

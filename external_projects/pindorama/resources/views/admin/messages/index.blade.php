@@ -5,7 +5,7 @@
 @section('content')
     <div class="mb-6 flex items-center gap-3">
         <h1 class="text-2xl font-extrabold text-neutral-900">Mensagens de contato</h1>
-        @if($unread)<span class="chip bg-grape-600 text-white">{{ $unread }} não lida(s)</span>@endif
+        @if($unread)<span class="chip bg-gold-600 text-white">{{ $unread }} não lida(s)</span>@endif
     </div>
 
     <div class="space-y-3">

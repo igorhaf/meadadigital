@@ -3,7 +3,7 @@
 @section('title', 'Meus pedidos')
 
 @section('content')
-    <div class="container-muda py-8">
+    <div class="container-site py-8">
         <h1 class="mb-6 text-2xl font-extrabold text-neutral-900">Meus pedidos</h1>
 
         @forelse($orders as $order)
@@ -35,7 +35,7 @@
             <div class="card flex flex-col items-center justify-center py-16 text-center">
                 <div class="text-5xl">🧾</div>
                 <p class="mt-4 font-semibold text-neutral-700">Você ainda não fez pedidos</p>
-                <a href="{{ route('home') }}" class="btn-brand mt-6">Começar a garimpar</a>
+                <a href="{{ route('home') }}" class="btn-brand mt-6">Explorar terapias</a>
             </div>
         @endforelse
 

@@ -14,13 +14,15 @@ class PlaceholderController extends Controller
 {
     public function show(Request $request): Response
     {
-        $seed = (string) $request->query('seed', 'muda');
+        $seed = (string) $request->query('seed', 'pindorama');
         $text = trim((string) $request->query('text', $seed));
         $w = (int) min(1600, max(80, (int) $request->query('w', 600)));
         $h = (int) min(1600, max(80, (int) $request->query('h', 600)));
 
-        $hue = crc32($seed) % 360;
-        $hue2 = ($hue + 40) % 360;
+        // Faixa quente (terracota → ocre → oliva) para manter as imagens
+        // geradas em harmonia com a identidade visual do site.
+        $hue = 14 + (crc32($seed) % 75);
+        $hue2 = $hue + 18;
 
         $lines = $this->wrap($text, 16);
         $fontSize = $w >= 400 ? 34 : 24;
@@ -43,8 +45,8 @@ class PlaceholderController extends Controller
         <svg xmlns="http://www.w3.org/2000/svg" width="{$w}" height="{$h}" viewBox="0 0 {$w} {$h}" role="img">
           <defs>
             <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
-              <stop offset="0" stop-color="hsl({$hue}, 62%, 58%)"/>
-              <stop offset="1" stop-color="hsl({$hue2}, 58%, 42%)"/>
+              <stop offset="0" stop-color="hsl({$hue}, 48%, 56%)"/>
+              <stop offset="1" stop-color="hsl({$hue2}, 52%, 38%)"/>
             </linearGradient>
           </defs>
           <rect width="{$w}" height="{$h}" fill="url(#g)"/>

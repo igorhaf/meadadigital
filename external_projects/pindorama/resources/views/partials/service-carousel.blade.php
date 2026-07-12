@@ -1,6 +1,6 @@
 {{-- Horizontal service row. Expects: $title, $services; optional $seeAllUrl, $subtitle. --}}
 @if($services->isNotEmpty())
-    <section data-row class="container-muda py-6">
+    <section data-row class="container-site py-6">
         <div class="mb-4 flex items-end justify-between gap-4">
             <div>
                 <h2 class="text-xl font-extrabold text-neutral-900 sm:text-2xl">{{ $title }}</h2>

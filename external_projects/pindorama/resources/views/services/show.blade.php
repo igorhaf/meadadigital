@@ -4,7 +4,7 @@
 @section('description', \Illuminate\Support\Str::limit(strip_tags($service->description), 150))
 
 @section('content')
-    <div class="container-muda py-6">
+    <div class="container-site py-6">
         {{-- Breadcrumb --}}
         <nav class="mb-5 flex flex-wrap items-center gap-1 text-sm text-neutral-500">
             <a href="{{ route('home') }}" class="hover:text-brand-700">Início</a>
@@ -30,7 +30,7 @@
             <div class="lg:col-span-5">
                 <div class="flex flex-wrap items-center gap-2">
                     <span class="chip bg-brand-50 text-brand-700">{{ $service->modality_label }}</span>
-                    @if($service->is_featured)<span class="chip bg-grape-600 text-white">Destaque</span>@endif
+                    @if($service->is_featured)<span class="chip bg-gold-600 text-white">Destaque</span>@endif
                 </div>
 
                 <h1 class="mt-3 text-2xl font-extrabold leading-tight text-neutral-900 sm:text-3xl">{{ $service->title }}</h1>
@@ -58,7 +58,7 @@
                     @if($service->discount_percent)
                         <div class="flex items-center gap-2">
                             <span class="text-sm text-neutral-400 line-through">{{ money($service->compare_at_price) }}</span>
-                            <span class="chip bg-grape-600 text-white">-{{ $service->discount_percent }}%</span>
+                            <span class="chip bg-gold-600 text-white">-{{ $service->discount_percent }}%</span>
                         </div>
                     @endif
                     <p class="mt-1 text-4xl font-extrabold text-neutral-900">{{ money($service->price) }}</p>

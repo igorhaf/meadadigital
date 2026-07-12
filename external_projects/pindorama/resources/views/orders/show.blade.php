@@ -3,7 +3,7 @@
 @section('title', 'Pedido ' . $order->reference)
 
 @section('content')
-    <div class="container-muda py-8">
+    <div class="container-site py-8">
         @if(session('placed') || request('pago'))
             @if($order->isPaid())
                 <div class="mb-6 flex items-center gap-4 rounded-2xl border border-brand-200 bg-brand-50 p-6">
@@ -23,7 +23,7 @@
                 </div>
             @endif
             {{-- Clear the client-side cart after a successful checkout --}}
-            <script>try { localStorage.removeItem('muda.cart.v1'); } catch (e) {}</script>
+            <script>try { localStorage.removeItem('pindorama.cart.v1'); } catch (e) {}</script>
         @endif
 
         @if(session('status'))

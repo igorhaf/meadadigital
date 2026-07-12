@@ -10,7 +10,7 @@
     'cancelled' => 'bg-red-100 text-red-700',
     'no_show' => 'bg-red-100 text-red-700',
 ])
-<div class="container-muda max-w-3xl py-10">
+<div class="container-site max-w-3xl py-10">
     <h1 class="mb-6 text-2xl font-extrabold text-neutral-900">Meus agendamentos</h1>
 
     @if(session('status'))

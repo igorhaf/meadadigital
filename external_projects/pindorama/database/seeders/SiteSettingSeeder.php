@@ -14,7 +14,7 @@ class SiteSettingSeeder extends Seeder
         SiteSetting::create([
             'site_name' => 'Pindorama',
             'tagline' => 'Terapias integrativas e práticas de bem-estar, com agenda online',
-            'announcement' => null,
+            'announcement' => '🌿 Agende online com terapeutas verificados — presencial ou à distância, em até 12x',
             'instagram_url' => 'https://instagram.com/pindorama',
             'facebook_url' => 'https://facebook.com/pindorama',
             'tiktok_url' => null,

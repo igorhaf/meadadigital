@@ -4,7 +4,7 @@
 
 @section('content')
 @php($start = $event->starts_at->setTimezone($event->timezone))
-<div class="container-muda max-w-3xl py-10">
+<div class="container-site max-w-3xl py-10">
     <a href="{{ route('events.index') }}" class="text-sm text-neutral-500 hover:underline">← Eventos</a>
 
     @if(session('error'))<div class="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">{{ session('error') }}</div>@endif

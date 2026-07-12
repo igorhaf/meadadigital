@@ -5,7 +5,7 @@
 @section('content')
 @php($event = $registration->event)
 @php($start = $event->starts_at->setTimezone($event->timezone))
-<div class="container-muda max-w-xl py-10">
+<div class="container-site max-w-xl py-10">
     @if(session('status'))<div class="mb-4 rounded-xl bg-brand-50 px-4 py-3 text-sm font-medium text-brand-800">{{ session('status') }}</div>@endif
 
     <div class="card overflow-hidden">

@@ -3,7 +3,7 @@
 @section('title', 'Eventos')
 
 @section('content')
-<div class="container-muda py-10">
+<div class="container-site py-10">
     <h1 class="mb-2 text-3xl font-extrabold text-neutral-900">Eventos & experiências</h1>
     <p class="mb-8 text-neutral-500">Rodas de terapia, cursos presenciais e certificações.</p>
 

@@ -16,7 +16,7 @@
 @section('content')
     {{-- Cabeçalho --}}
     <div class="bg-gradient-to-br from-brand-600 to-brand-800 text-white">
-        <div class="container-muda py-10">
+        <div class="container-site py-10">
             <h1 class="text-3xl font-extrabold">Terapeutas</h1>
             <p class="mt-2 max-w-2xl text-sm text-white/90">
                 Encontre terapeutas de práticas integrativas — acupuntura, reiki, ayurveda,
@@ -31,7 +31,7 @@
     {{-- Filtro por cidade (GET via links, sem JS) --}}
     @if($cities->isNotEmpty())
         <div class="border-b border-neutral-200 bg-white">
-            <div class="container-muda flex items-center gap-2 overflow-x-auto no-scrollbar py-3">
+            <div class="container-site flex items-center gap-2 overflow-x-auto no-scrollbar py-3">
                 <a href="{{ route('professionals.index') }}"
                    class="chip whitespace-nowrap {{ ! $city ? 'bg-brand-600 text-white' : 'bg-neutral-100 text-neutral-600 hover:bg-brand-50' }}">
                     Todas as cidades
@@ -46,7 +46,7 @@
         </div>
     @endif
 
-    <div class="container-muda py-8">
+    <div class="container-site py-8">
         @if($professionals->isEmpty())
             <div class="card flex flex-col items-center justify-center py-16 text-center">
                 <div class="text-5xl">🧘</div>
@@ -104,7 +104,7 @@
                                     {{ $count }} {{ $count === 1 ? 'serviço' : 'serviços' }}
                                 </span>
                                 @if($verified)
-                                    <span class="chip bg-grape-600 text-white">✓ Verificado</span>
+                                    <span class="chip bg-gold-600 text-white">✓ Verificado</span>
                                 @endif
                             </div>
                         </div>

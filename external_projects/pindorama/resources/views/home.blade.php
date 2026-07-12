@@ -8,19 +8,26 @@
         'link' => $b->link_url,
         'from' => $b->bg_from,
         'to' => $b->bg_to,
+        'image' => $b->image_path,
     ]))
 
     {{-- Hero --}}
     @php($heroProps = ['slides' => $heroSlides->values()])
-    <section class="container-muda pt-6">
+    <section class="container-site pt-6">
         <div data-island="HeroCarousel" data-props='@json($heroProps)'>
             {{-- SSR fallback: first slide --}}
             @if($heroBanners->first())
                 @php($b = $heroBanners->first())
-                <div class="flex min-h-[240px] flex-col justify-center rounded-3xl px-8 py-12 text-white" style="background-image: linear-gradient(120deg, {{ $b->bg_from }}, {{ $b->bg_to }})">
-                    <h2 class="text-3xl font-extrabold sm:text-4xl">{{ $b->title }}</h2>
-                    <p class="mt-3 max-w-md text-white/90">{{ $b->subtitle }}</p>
-                    @if($b->link_url)<a href="{{ $b->link_url }}" class="mt-6 inline-block w-fit rounded-xl bg-white px-6 py-3 font-bold text-neutral-900">{{ $b->cta_label }}</a>@endif
+                <div class="relative flex min-h-[240px] flex-col justify-center overflow-hidden rounded-3xl px-8 py-12 text-white sm:min-h-[320px] sm:px-14" style="background-image: linear-gradient(120deg, {{ $b->bg_from }}, {{ $b->bg_to }})">
+                    @if($b->image_path)
+                        <img src="{{ $b->image_path }}" alt="" class="absolute inset-0 h-full w-full object-cover">
+                        <div class="absolute inset-0" style="background-image: linear-gradient(100deg, {{ $b->bg_from }}f2 0%, {{ $b->bg_from }}cc 38%, {{ $b->bg_from }}55 68%, transparent 95%)"></div>
+                    @endif
+                    <div class="relative max-w-xl">
+                        <h2 class="text-3xl font-extrabold sm:text-4xl">{{ $b->title }}</h2>
+                        <p class="mt-3 max-w-md text-white/90">{{ $b->subtitle }}</p>
+                        @if($b->link_url)<a href="{{ $b->link_url }}" class="mt-6 inline-block w-fit rounded-full bg-white px-6 py-3 font-bold text-brand-800">{{ $b->cta_label }}</a>@endif
+                    </div>
                 </div>
             @endif
         </div>
@@ -28,7 +35,7 @@
 
     {{-- Explore por prática --}}
     @if($categories->isNotEmpty())
-        <section class="container-muda pt-10">
+        <section class="container-site pt-10">
             <h2 class="mb-5 text-xl font-extrabold text-neutral-900 sm:text-2xl">Explore por prática</h2>
             <div class="grid grid-cols-3 gap-4 sm:grid-cols-6">
                 @foreach($categories as $cat)
@@ -53,7 +60,7 @@
 
     {{-- Promo strip tiles --}}
     @if($stripBanners->isNotEmpty())
-        <section class="container-muda py-6">
+        <section class="container-site py-6">
             <div class="grid gap-4 sm:grid-cols-3">
                 @foreach($stripBanners as $b)
                     <a href="{{ $b->link_url }}" class="group relative flex flex-col justify-between overflow-hidden rounded-2xl p-6 text-white transition hover:shadow-lg" style="background-image: linear-gradient(120deg, {{ $b->bg_from }}, {{ $b->bg_to }})">
@@ -89,7 +96,7 @@
 
     {{-- Terapeutas em destaque --}}
     @if($featuredProfessionals->isNotEmpty())
-        <section data-row class="container-muda py-6">
+        <section data-row class="container-site py-6">
             <div class="mb-4 flex items-end justify-between gap-4">
                 <div>
                     <h2 class="text-xl font-extrabold text-neutral-900 sm:text-2xl">Terapeutas em destaque</h2>
@@ -133,12 +140,12 @@
     @endforeach
 
     {{-- Wellness CTA --}}
-    <section class="container-muda py-10">
+    <section class="container-site py-10">
         <div class="flex flex-col items-center gap-4 rounded-3xl bg-gradient-to-br from-brand-600 to-brand-800 px-8 py-12 text-center text-white">
             <span class="text-4xl">🧘</span>
             <h2 class="max-w-2xl text-2xl font-extrabold sm:text-3xl">Cuidar de você é um ato de equilíbrio</h2>
             <p class="max-w-xl text-white/90">Conecte-se a terapeutas de práticas integrativas — acupuntura, reiki, ayurveda, medicina tradicional chinesa e muito mais. Encontre a sessão certa para o seu momento e agende em minutos.</p>
-            <a href="{{ route('search') }}" class="mt-2 rounded-xl bg-white px-6 py-3 font-bold text-brand-700 transition hover:bg-neutral-100">Explorar todas as terapias</a>
+            <a href="{{ route('search') }}" class="mt-2 rounded-full bg-white px-6 py-3 font-bold text-brand-700 transition hover:bg-neutral-100">Explorar todas as terapias</a>
         </div>
     </section>
 @endsection

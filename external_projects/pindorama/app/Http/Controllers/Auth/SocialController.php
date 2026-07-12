@@ -51,7 +51,7 @@ class SocialController extends Controller
         } else {
             // Cadastro automático via Google.
             $user = User::create([
-                'name' => $googleUser->getName() ?: 'Cliente Muda',
+                'name' => $googleUser->getName() ?: 'Cliente Pindorama',
                 'email' => $email,
                 'google_id' => $googleUser->getId(),
                 'avatar' => $googleUser->getAvatar(),

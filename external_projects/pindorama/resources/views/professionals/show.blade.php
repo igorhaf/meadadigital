@@ -16,7 +16,7 @@
         <div class="absolute inset-0 bg-gradient-to-t from-black/45 to-transparent"></div>
     </div>
 
-    <div class="container-muda -mt-16 sm:-mt-20">
+    <div class="container-site -mt-16 sm:-mt-20">
         {{-- Header card --}}
         <div class="card flex flex-col gap-5 p-6 sm:flex-row sm:items-center">
             <div class="flex h-28 w-28 shrink-0 items-center justify-center overflow-hidden rounded-2xl text-4xl font-extrabold text-white shadow-lg ring-4 ring-white"

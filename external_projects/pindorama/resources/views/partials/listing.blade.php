@@ -12,7 +12,7 @@
     $hasFilters = collect(['modality', 'city', 'min', 'max'])->contains(fn ($k) => request()->filled($k));
 @endphp
 
-<div class="container-muda py-6">
+<div class="container-site py-6">
     @isset($breadcrumbs)
         <nav class="mb-4 flex flex-wrap items-center gap-1 text-sm text-neutral-500">
             <a href="{{ route('home') }}" class="hover:text-brand-700">Início</a>

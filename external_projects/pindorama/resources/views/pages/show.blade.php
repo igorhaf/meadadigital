@@ -4,7 +4,7 @@
 @section('description', \Illuminate\Support\Str::limit(strip_tags($page->body), 150))
 
 @section('content')
-    <div class="container-muda py-10">
+    <div class="container-site py-10">
         <nav class="mb-4 text-sm text-neutral-500">
             <a href="{{ route('home') }}" class="hover:text-brand-700">Início</a>
             <span>/</span>

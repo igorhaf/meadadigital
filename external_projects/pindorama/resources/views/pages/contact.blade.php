@@ -4,7 +4,7 @@
 
 @section('content')
     @php($settings = \App\Models\SiteSetting::current())
-    <div class="container-muda py-10">
+    <div class="container-site py-10">
         <nav class="mb-4 text-sm text-neutral-500">
             <a href="{{ route('home') }}" class="hover:text-brand-700">Início</a>
             <span>/</span><span class="font-medium text-neutral-700">Contato</span>
@@ -12,7 +12,7 @@
 
         <div class="mx-auto grid max-w-4xl gap-8 lg:grid-cols-2">
             <div>
-                <h1 class="text-3xl font-extrabold text-neutral-900">Fale com a Muda</h1>
+                <h1 class="text-3xl font-extrabold text-neutral-900">Fale com a {{ $settings->site_name }}</h1>
                 <p class="mt-2 text-neutral-600">Tem dúvida, sugestão ou quer falar sobre parceria? A gente adora um papo.</p>
 
                 <div class="mt-6 space-y-4 text-sm">
@@ -20,7 +20,7 @@
                         <span class="flex h-10 w-10 items-center justify-center rounded-xl bg-brand-100 text-lg">✉️</span>
                         <div>
                             <p class="text-neutral-500">E-mail</p>
-                            <a href="mailto:{{ $settings->contact_email ?? 'contato@muda.com.br' }}" class="font-semibold text-brand-700 hover:underline">{{ $settings->contact_email ?? 'contato@muda.com.br' }}</a>
+                            <a href="mailto:{{ $settings->contact_email ?? 'contato@pindorama.com.br' }}" class="font-semibold text-brand-700 hover:underline">{{ $settings->contact_email ?? 'contato@pindorama.com.br' }}</a>
                         </div>
                     </div>
                     @if($settings->contact_phone)

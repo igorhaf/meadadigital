@@ -10,7 +10,7 @@
 
         @if($service->discount_percent)
             <div class="absolute left-2 top-2 flex flex-col gap-1">
-                <span class="chip bg-grape-600 text-white shadow-sm">-{{ $service->discount_percent }}%</span>
+                <span class="chip bg-gold-600 text-white shadow-sm">-{{ $service->discount_percent }}%</span>
             </div>
         @endif
     </a>

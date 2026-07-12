@@ -2,10 +2,10 @@
 @php($navCategories = $navCategories ?? collect())
 @php($socials = $settings->socialLinks())
 
-<footer class="mt-16 bg-neutral-900 text-neutral-300">
+<footer class="mt-16 bg-forest-950 text-forest-100">
     {{-- Trust strip --}}
     <div class="border-b border-white/10">
-        <div class="container-muda flex flex-wrap items-center justify-evenly gap-x-6 gap-y-6 py-8">
+        <div class="container-site flex flex-wrap items-center justify-evenly gap-x-6 gap-y-6 py-8">
             @foreach([
                 ['💳', 'Até 12x sem juros', 'No cartão de crédito'],
                 ['🔒', 'Pagamento seguro', 'Seus dados protegidos'],
@@ -15,19 +15,20 @@
                     <span class="text-2xl">{{ $icon }}</span>
                     <div>
                         <p class="text-sm font-semibold text-white">{{ $title }}</p>
-                        <p class="text-xs text-neutral-400">{{ $desc }}</p>
+                        <p class="text-xs text-forest-300">{{ $desc }}</p>
                     </div>
                 </div>
             @endforeach
         </div>
     </div>
 
-    <div class="container-muda grid grid-cols-2 gap-8 py-12 md:grid-cols-4 lg:grid-cols-5">
+    <div class="container-site grid grid-cols-2 gap-8 py-12 md:grid-cols-4 lg:grid-cols-5">
         <div class="col-span-2">
-            <a href="{{ route('home') }}" class="flex items-center gap-2 text-2xl font-extrabold text-white">
-                <span class="text-3xl">🌱</span> {{ $settings->site_name }}
+            <a href="{{ route('home') }}" class="flex items-center gap-2.5 text-white">
+                @include('partials.logo', ['logoSize' => 'h-10 w-10'])
+                <span class="font-display text-2xl font-bold tracking-tight">{{ $settings->site_name }}</span>
             </a>
-            <p class="mt-4 max-w-sm text-sm leading-relaxed text-neutral-400">{{ $settings->about }}</p>
+            <p class="mt-4 max-w-sm text-sm leading-relaxed text-forest-200">{{ $settings->about }}</p>
 
             @if(count($socials))
                 <div class="mt-6 flex gap-3">
@@ -59,7 +60,7 @@
             <h3 class="mb-4 text-sm font-bold uppercase tracking-wide text-white">Práticas</h3>
             <ul class="space-y-2 text-sm">
                 @foreach($navCategories->take(6) as $cat)
-                    <li><a href="{{ $cat->url }}" class="text-neutral-400 transition hover:text-brand-400">{{ $cat->name }}</a></li>
+                    <li><a href="{{ $cat->url }}" class="text-forest-300 transition hover:text-gold-300">{{ $cat->name }}</a></li>
                 @endforeach
             </ul>
         </div>
@@ -67,12 +68,12 @@
         <div>
             <h3 class="mb-4 text-sm font-bold uppercase tracking-wide text-white">Institucional</h3>
             <ul class="space-y-2 text-sm">
-                <li><a href="#" class="text-neutral-400 hover:text-brand-400">Sobre a {{ $settings->site_name }}</a></li>
-                <li><a href="#" class="text-neutral-400 hover:text-brand-400">Como funciona</a></li>
-                <li><a href="{{ route('professionals.index') }}" class="text-neutral-400 hover:text-brand-400">Terapeutas</a></li>
-                <li><a href="{{ route('events.index') }}" class="text-neutral-400 hover:text-brand-400">Eventos</a></li>
+                <li><a href="#" class="text-forest-300 hover:text-gold-300">Sobre a {{ $settings->site_name }}</a></li>
+                <li><a href="#" class="text-forest-300 hover:text-gold-300">Como funciona</a></li>
+                <li><a href="{{ route('professionals.index') }}" class="text-forest-300 hover:text-gold-300">Terapeutas</a></li>
+                <li><a href="{{ route('events.index') }}" class="text-forest-300 hover:text-gold-300">Eventos</a></li>
                 @if(config('pindorama.professionals_enabled'))
-                    <li><a href="{{ route('onboarding.create') }}" class="text-neutral-400 hover:text-brand-400">Seja um terapeuta</a></li>
+                    <li><a href="{{ route('onboarding.create') }}" class="text-forest-300 hover:text-gold-300">Seja um terapeuta</a></li>
                 @endif
             </ul>
         </div>
@@ -80,21 +81,21 @@
         <div>
             <h3 class="mb-4 text-sm font-bold uppercase tracking-wide text-white">Ajuda</h3>
             <ul class="space-y-2 text-sm">
-                <li><a href="{{ route('pages.help') }}" class="text-neutral-400 hover:text-brand-400">Central de ajuda</a></li>
-                <li><a href="{{ route('pages.returns') }}" class="text-neutral-400 hover:text-brand-400">Trocas e devoluções</a></li>
-                <li><a href="{{ route('pages.privacy') }}" class="text-neutral-400 hover:text-brand-400">Privacidade</a></li>
-                <li><a href="{{ route('contact.show') }}" class="text-neutral-400 hover:text-brand-400">Contato</a></li>
+                <li><a href="{{ route('pages.help') }}" class="text-forest-300 hover:text-gold-300">Central de ajuda</a></li>
+                <li><a href="{{ route('pages.returns') }}" class="text-forest-300 hover:text-gold-300">Trocas e devoluções</a></li>
+                <li><a href="{{ route('pages.privacy') }}" class="text-forest-300 hover:text-gold-300">Privacidade</a></li>
+                <li><a href="{{ route('contact.show') }}" class="text-forest-300 hover:text-gold-300">Contato</a></li>
                 @if($settings->contact_email)
-                    <li><a href="mailto:{{ $settings->contact_email }}" class="text-neutral-400 hover:text-brand-400">{{ $settings->contact_email }}</a></li>
+                    <li><a href="mailto:{{ $settings->contact_email }}" class="text-forest-300 hover:text-gold-300">{{ $settings->contact_email }}</a></li>
                 @endif
             </ul>
         </div>
     </div>
 
     <div class="border-t border-white/10">
-        <div class="container-muda flex flex-col items-center justify-between gap-2 py-6 text-xs text-neutral-500 sm:flex-row">
+        <div class="container-site flex flex-col items-center justify-between gap-2 py-6 text-xs text-forest-300 sm:flex-row">
             <p>© {{ date('Y') }} {{ $settings->site_name }} · Marketplace de terapias integrativas. Todos os direitos reservados.</p>
-            <p>Feito com 💚 para a <a href="https://meadadigital.com" target="_blank" rel="noopener" class="font-medium text-neutral-400 hover:text-brand-400">meada digital</a></p>
+            <p>Feito com 🧡 para a <a href="https://meadadigital.com" target="_blank" rel="noopener" class="font-medium text-forest-200 hover:text-gold-300">meada digital</a></p>
         </div>
     </div>
 </footer>

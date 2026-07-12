@@ -5,7 +5,7 @@
 @section('content')
     <div class="rounded-3xl border border-neutral-200 bg-white p-8 shadow-sm">
         <h1 class="text-2xl font-extrabold text-neutral-900">Entrar</h1>
-        <p class="mt-1 text-sm text-neutral-500">Bem-vindo de volta ao seu garimpo.</p>
+        <p class="mt-1 text-sm text-neutral-500">Que bom te ver de novo. Continue cuidando de você.</p>
 
         @if ($errors->any())
             <div class="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">

@@ -7,25 +7,52 @@
 @source '../js/**/*.vue';
 
 @theme {
-    --font-sans: 'Inter', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif,
+    --font-sans: 'Albert Sans', ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif,
         'Apple Color Emoji', 'Segoe UI Emoji';
+    --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
 
-    /* Muda brand — fresh emerald (moda circular / sustentabilidade) */
-    --color-brand-50: #ecfdf5;
-    --color-brand-100: #d1fae5;
-    --color-brand-200: #a7f3d0;
-    --color-brand-300: #6ee7b7;
-    --color-brand-400: #34d399;
-    --color-brand-500: #10b981;
-    --color-brand-600: #059669;
-    --color-brand-700: #047857;
-    --color-brand-800: #065f46;
-    --color-brand-900: #064e3b;
+    /* Pindorama brand — terracota (terra, acolhimento, raiz) */
+    --color-brand-50: #fbf6f1;
+    --color-brand-100: #f5e8dd;
+    --color-brand-200: #ead0ba;
+    --color-brand-300: #dcb18d;
+    --color-brand-400: #cd8c5e;
+    --color-brand-500: #bf6d3d;
+    --color-brand-600: #b0552c;
+    --color-brand-700: #93421f;
+    --color-brand-800: #78381f;
+    --color-brand-900: #62301d;
+    --color-brand-950: #34170d;
 
-    /* Secondary accent — grape (CTAs / destaques) */
-    --color-grape-500: #8b5cf6;
-    --color-grape-600: #7c3aed;
-    --color-grape-700: #6d28d9;
+    /* Gold — sol / destaques e promoções */
+    --color-gold-50: #fbf6e9;
+    --color-gold-100: #f6ecd0;
+    --color-gold-200: #ecd9a1;
+    --color-gold-300: #dfbf6a;
+    --color-gold-400: #d2a63f;
+    --color-gold-500: #c08f24;
+    --color-gold-600: #a0711a;
+    --color-gold-700: #815816;
+    --color-gold-800: #684716;
+    --color-gold-900: #573b15;
+
+    /* Forest — verde-mata profunda (footer, blocos de apoio) */
+    --color-forest-50: #f2f7f4;
+    --color-forest-100: #dfece4;
+    --color-forest-200: #c1d8ca;
+    --color-forest-300: #97bca7;
+    --color-forest-400: #6a9b81;
+    --color-forest-500: #3f7357;
+    --color-forest-600: #2f5a44;
+    --color-forest-700: #274a39;
+    --color-forest-800: #213c30;
+    --color-forest-900: #1c3128;
+    --color-forest-950: #0e1f18;
+
+    /* Sand — fundo quente do site */
+    --color-sand-50: #faf7f2;
+    --color-sand-100: #f3ede3;
+    --color-sand-200: #e8ddcc;
 }
 
 @layer base {
@@ -34,25 +61,32 @@
     }
 
     body {
-        @apply bg-neutral-50 text-neutral-800 antialiased;
+        @apply bg-sand-50 text-neutral-800 antialiased;
+    }
+
+    h1,
+    h2,
+    h3 {
+        font-family: var(--font-display);
+        letter-spacing: -0.015em;
     }
 }
 
 @layer components {
-    .container-muda {
+    .container-site {
         @apply mx-auto w-full max-w-7xl px-4 sm:px-6 lg:px-8;
     }
 
     .btn-brand {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl bg-brand-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
+        @apply inline-flex items-center justify-center gap-2 rounded-full bg-brand-600 px-6 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-brand-700 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60;
     }
 
     .btn-outline {
-        @apply inline-flex items-center justify-center gap-2 rounded-xl border border-neutral-300 bg-white px-5 py-3 text-sm font-semibold text-neutral-700 transition hover:border-brand-400 hover:text-brand-700;
+        @apply inline-flex items-center justify-center gap-2 rounded-full border border-neutral-300 bg-white px-6 py-3 text-sm font-semibold text-neutral-700 transition hover:border-brand-400 hover:text-brand-700;
     }
 
     .card {
-        @apply rounded-2xl border border-neutral-200 bg-white shadow-sm transition hover:shadow-md;
+        @apply rounded-2xl border border-neutral-200/80 bg-white shadow-sm transition hover:shadow-md;
     }
 
     .chip {

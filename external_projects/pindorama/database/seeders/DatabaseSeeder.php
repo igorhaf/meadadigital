@@ -12,6 +12,17 @@ use Illuminate\Support\Str;
 
 class DatabaseSeeder extends Seeder
 {
+    /** Foto de capa por título de serviço (arquivos em public/images/services). */
+    private const SERVICE_IMAGES = [
+        'Acupuntura Sistêmica' => '/images/services/acupuntura.jpg',
+        'Auriculoterapia' => '/images/services/auriculoterapia.jpg',
+        'Reiki Nível 1' => '/images/services/reiki.jpg',
+        'Consulta Ayurvédica' => '/images/services/ayurveda.jpg',
+        'Massagem Relaxante' => '/images/services/massagem.jpg',
+        'Yoga Individual' => '/images/services/yoga.jpg',
+        'Meditação Guiada' => '/images/services/meditacao.jpg',
+    ];
+
     /** @var array<string, ServiceCategory> */
     private array $cats = [];
 
@@ -39,7 +50,7 @@ class DatabaseSeeder extends Seeder
             'headline' => 'Acupunturista • Terapeuta Reiki',
             'bio' => "Há 10 anos cuidando do equilíbrio de corpo e mente com práticas integrativas.\nAtendimento humanizado e individualizado.",
             'city' => 'São Paulo', 'state' => 'SP', 'whatsapp' => '11999990000',
-            'brand_primary' => '#b45309', 'brand_secondary' => '#7c3aed', 'is_verified' => true,
+            'brand_primary' => '#b0552c', 'brand_secondary' => '#a0711a', 'is_verified' => true,
         ], ['acupuntura', 'auriculoterapia', 'reiki'], [
             ['name' => 'Consultório Vila Mariana', 'is_online' => false, 'address' => 'Rua Sena Madureira, 120', 'neighborhood' => 'Vila Mariana', 'city' => 'São Paulo', 'state' => 'SP'],
             ['name' => 'Atendimento Online', 'is_online' => true],
@@ -53,7 +64,7 @@ class DatabaseSeeder extends Seeder
             'headline' => 'Terapeuta Ayurvédico',
             'bio' => 'Consultas ayurvédicas e massoterapia com foco em bem-estar integral.',
             'city' => 'Rio de Janeiro', 'state' => 'RJ', 'whatsapp' => '21988887777',
-            'brand_primary' => '#059669', 'brand_secondary' => '#0891b2', 'is_verified' => true,
+            'brand_primary' => '#2f5a44', 'brand_secondary' => '#3f7357', 'is_verified' => true,
         ], ['ayurveda', 'massoterapia'], [
             ['name' => 'Espaço Bem-Viver Ipanema', 'is_online' => false, 'address' => 'Rua Visconde de Pirajá, 500', 'neighborhood' => 'Ipanema', 'city' => 'Rio de Janeiro', 'state' => 'RJ'],
             ['name' => 'Atendimento Online', 'is_online' => true],
@@ -66,7 +77,7 @@ class DatabaseSeeder extends Seeder
             'headline' => 'Instrutora de Yoga & Meditação',
             'bio' => 'Práticas de yoga e meditação guiada para reduzir ansiedade e melhorar o sono.',
             'city' => 'São Paulo', 'state' => 'SP', 'whatsapp' => '11977776666',
-            'brand_primary' => '#0d9488', 'brand_secondary' => '#4f46e5', 'is_verified' => false,
+            'brand_primary' => '#3f7357', 'brand_secondary' => '#c08f24', 'is_verified' => false,
         ], ['yoga', 'meditacao'], [
             ['name' => 'Estúdio Pinheiros', 'is_online' => false, 'address' => 'Rua dos Pinheiros, 800', 'neighborhood' => 'Pinheiros', 'city' => 'São Paulo', 'state' => 'SP'],
             ['name' => 'Atendimento Online', 'is_online' => true],
@@ -77,8 +88,41 @@ class DatabaseSeeder extends Seeder
 
         $this->seedCommission();
         $this->seedEvents();
+        $this->seedBanners();
 
         $this->call([SiteSettingSeeder::class, PageSeeder::class]);
+    }
+
+    private function seedBanners(): void
+    {
+        // Gradientes na paleta da identidade (terracota / verde-mata / dourado);
+        // heroes levam foto de fundo (public/images/banners) com scrim do bg_from.
+        $hero = [
+            ['Equilíbrio que nasce da terra', 'Acupuntura, reiki, ayurveda e mais de dez práticas integrativas com terapeutas verificados.', 'Explorar terapias', '/busca', '#78381f', '#bf6d3d', '/images/banners/hero-terra.jpg'],
+            ['Cuidado no seu ritmo, onde você estiver', 'Sessões presenciais ou online — escolha o melhor horário e agende em minutos.', 'Conhecer os terapeutas', '/terapeutas', '#213c30', '#3f7357', '/images/banners/hero-online.jpg'],
+            ['Rodas, cursos e vivências', 'Experiências em grupo para aprofundar sua prática, ao vivo ou online.', 'Ver agenda de eventos', '/eventos', '#815816', '#c08f24', '/images/banners/hero-eventos.jpg'],
+        ];
+
+        $strip = [
+            ['Atendimento online', 'Bem-estar sem sair de casa', 'Buscar sessões', '/busca', '#274a39', '#3f7357', null],
+            ['Seja um terapeuta', 'Atenda no espaço Pindorama ou online', 'Começar agora', '/seja-terapeuta', '#93421f', '#cd8c5e', null],
+            ['Eventos abertos', 'Rodas de cura e meditações gratuitas', 'Ver eventos', '/eventos', '#815816', '#d2a63f', null],
+        ];
+
+        foreach (['hero' => $hero, 'strip' => $strip] as $placement => $banners) {
+            foreach ($banners as $i => [$title, $subtitle, $cta, $link, $from, $to, $image]) {
+                \App\Models\Banner::updateOrCreate(['placement' => $placement, 'position' => $i + 1], [
+                    'title' => $title,
+                    'subtitle' => $subtitle,
+                    'cta_label' => $cta,
+                    'link_url' => $link,
+                    'bg_from' => $from,
+                    'bg_to' => $to,
+                    'image_path' => $image,
+                    'is_active' => true,
+                ]);
+            }
+        }
     }
 
     private function seedEvents(): void
@@ -131,17 +175,17 @@ class DatabaseSeeder extends Seeder
     private function seedCategories(): void
     {
         $tree = [
-            ['Medicina Tradicional Chinesa', 'mtc', '☯️', '#b45309', [
+            ['Medicina Tradicional Chinesa', 'mtc', '☯️', '#b0552c', [
                 ['Acupuntura', 'acupuntura', '🪡'],
                 ['Auriculoterapia', 'auriculoterapia', '👂'],
             ]],
-            ['Terapias Energéticas', 'energeticas', '✨', '#7c3aed', [
+            ['Terapias Energéticas', 'energeticas', '✨', '#a0711a', [
                 ['Reiki', 'reiki', '🙌'],
                 ['Florais', 'florais', '🌼'],
             ]],
-            ['Ayurveda', 'ayurveda-raiz', '🌸', '#059669', [['Ayurveda', 'ayurveda', '🌸']]],
-            ['Terapias Corporais', 'corporais', '💆', '#0891b2', [['Massoterapia', 'massoterapia', '💆']]],
-            ['Movimento & Mente', 'movimento', '🧘', '#0d9488', [
+            ['Ayurveda', 'ayurveda-raiz', '🌸', '#2f5a44', [['Ayurveda', 'ayurveda', '🌸']]],
+            ['Terapias Corporais', 'corporais', '💆', '#bf6d3d', [['Massoterapia', 'massoterapia', '💆']]],
+            ['Movimento & Mente', 'movimento', '🧘', '#3f7357', [
                 ['Yoga', 'yoga', '🧘'],
                 ['Meditação', 'meditacao', '🌬️'],
             ]],
@@ -226,6 +270,13 @@ class DatabaseSeeder extends Seeder
                 'professional_state' => $profile['state'] ?? null,
             ]);
             $service->locations()->sync(collect($locNames)->map(fn ($n) => $locByName[$n]->id)->all());
+
+            if ($imagePath = self::SERVICE_IMAGES[$title] ?? null) {
+                \App\Models\ServiceImage::updateOrCreate(
+                    ['service_id' => $service->id, 'position' => 1],
+                    ['path' => $imagePath, 'alt' => "{$title} — {$name}", 'is_primary' => true],
+                );
+            }
         }
     }
 }

@@ -131,7 +131,7 @@ class ServiceController extends Controller
             'requires_prepayment' => ['nullable', 'boolean'],
             'is_active' => ['nullable', 'boolean'],
             'is_featured' => ['nullable', 'boolean'],
-            'cover' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:5120'],
+            'cover' => ['nullable', 'image', 'mimes:jpeg,jpg,png,webp', 'max:8192'],
         ]);
 
         unset($data['cover']);
@@ -187,8 +187,9 @@ class ServiceController extends Controller
             return null;
         }
 
-        $stored = Storage::disk('public')->putFile('services/covers', $file);
+        // Reencoda para o tamanho usado na galeria/zoom (economia de disco).
+        $stored = \App\Support\ImageOptimizer::store($file, 'services/covers');
 
-        return $stored ? '/storage/' . $stored : null;
+        return '/storage/' . $stored;
     }
 }

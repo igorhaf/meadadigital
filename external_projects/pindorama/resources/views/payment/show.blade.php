@@ -4,7 +4,7 @@
 
 @section('content')
     @php($start = $appointment->start_at->setTimezone($appointment->timezone))
-    <div class="container-muda py-8">
+    <div class="container-site py-8">
         <div class="mx-auto max-w-4xl">
             <a href="{{ route('appointments.show', $appointment) }}" class="text-sm text-neutral-500 hover:text-brand-700">← Voltar ao agendamento</a>
             <h1 class="mt-1 mb-6 text-2xl font-extrabold text-neutral-900">Pagamento seguro</h1>
