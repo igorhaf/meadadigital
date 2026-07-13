@@ -15,8 +15,19 @@
 name: Deploy (servidor)
 
 on:
-  push:
-    branches: [main]
+  # ⚠ AUTO-DEPLOY TEMPORARIAMENTE DESLIGADO — migração do muda para repositório próprio.
+  #
+  # Motivo: o commit que tira o muda do índice faz o `git reset --hard` deste deploy APAGAR
+  # os 192 arquivos rastreados do muda no servidor. Sem o docker/php/Dockerfile, o build do
+  # muda-app falha; e como este deploy faz `compose down` ANTES do `up --build`, a stack
+  # inteira ficaria no chão (não só o muda — o meadadigital.com todo).
+  #
+  # A migração do servidor é feita à mão (scripts/migrar-muda-servidor.sh), que move a pasta
+  # em vez de deixar o git apagá-la. Depois dela, este gatilho VOLTA — o reset nunca mais
+  # alcança a pasta (ela passa a ser ignorada).
+  #
+  # push:
+  #   branches: [main]
   workflow_dispatch:
     inputs:
       project_dir:
