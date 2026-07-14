@@ -83,12 +83,6 @@ http://pindorama.meadadigital.local {
 	reverse_proxy pindorama-nginx:80
 }
 
-# Projeto externo framely (Spring Boot — controle financeiro) — subdomínio próprio.
-# Spring serve HTTP direto na 8090 (sem nginx). Prod: framely.meadadigital.com.
-http://framely.meadadigital.local {
-	reverse_proxy framely-app:8090
-}
-
 # Projeto externo conexao-municipio (Laravel API + Next) — subdomínio próprio.
 # Path-based mesma-origem: /api/* vai pro backend Laravel; o resto pro frontend Next.
 # Prod: conexao-municipio.meadadigital.com.

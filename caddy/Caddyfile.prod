@@ -76,11 +76,6 @@ germinar.meadadigital.com {
 	reverse_proxy germinar-nginx:80
 }
 
-# Projeto externo framely (Spring Boot — controle financeiro) — subdomínio próprio.
-framely.meadadigital.com {
-	reverse_proxy framely-app:8090
-}
-
 # Projeto externo conexao-municipio (Laravel API + Next) — path-based mesma-origem.
 conexao-municipio.meadadigital.com {
 	handle /api/* {

@@ -135,7 +135,7 @@ services:
       - ${CADDYFILE_PATH:-./caddy/Caddyfile}:/etc/caddy/Caddyfile:ro
       - caddy-data:/data
     networks: [meada]
-    depends_on: [frontend, backend, muda-nginx, semente-nginx, pindorama-nginx, germinar-nginx, framely-app, conexao-municipio-frontend, soar-frontend]
+    depends_on: [frontend, backend, muda-nginx, semente-nginx, pindorama-nginx, germinar-nginx, conexao-municipio-frontend, soar-frontend]
 
   # ---------------------------------------------------------------------------
   # Projeto EXTERNO muda (Laravel/PHP) — REPOSITÓRIO PRÓPRIO: github.com/igorhaf/muda
@@ -419,28 +419,6 @@ services:
     networks: [meada]
 
   # ---------------------------------------------------------------------------
-  # Projeto EXTERNO framely (Spring Boot/Java) — external_projects/framely.
-  # Controle financeiro pessoal: API REST + bot de Telegram (opcional, só liga com
-  # TELEGRAM_BOT_TOKEN). Banco H2 EM ARQUIVO (volume framely-data) — sem Postgres. O Spring
-  # serve HTTP direto na 8090, sem nginx. Acessível SÓ via Caddy em
-  # http://framely.meadadigital.local. Spec: external_projects/framely/README.md
-  # ---------------------------------------------------------------------------
-  framely-app:
-    build:
-      context: ./external_projects/framely
-      dockerfile: Dockerfile
-    container_name: framely-app
-    restart: unless-stopped
-    environment:
-      - SERVER_PORT=8090
-      # bot Telegram é opcional: sem token, sobe só a API REST.
-      - TELEGRAM_BOT_TOKEN=${FRAMELY_TELEGRAM_BOT_TOKEN:-}
-      - TELEGRAM_BOT_USERNAME=${FRAMELY_TELEGRAM_BOT_USERNAME:-}
-    volumes:
-      - framely-data:/app/data
-    networks: [meada]
-
-  # ---------------------------------------------------------------------------
   # Projeto EXTERNO conexao-municipio (Laravel API + Next) — external_projects/.
   # Acessível SÓ via Caddy em http://conexao-municipio.meadadigital.local
   # (path /api/* -> backend; resto -> frontend; mesma origem, sem CORS).
@@ -569,7 +547,6 @@ volumes:
   semente-postgres-data:
   pindorama-postgres-data:
   germinar-postgres-data:
-  framely-data:
   conexao-municipio-db-data:
   conexao-municipio-backend-vendor:
   conexao-municipio-frontend-node_modules:
