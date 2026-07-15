@@ -42,8 +42,15 @@ http://muda.meadadigital.local {
 }
 
 # HOMOLOG do muda (branch `homolog` do repo github.com/igorhaf/muda).
-# Ambiente espelho, banco e credenciais próprios. Prod: mudahomolog.meadadigital.com.
+# Ambiente espelho, banco e credenciais próprios. Remoto: homolog.mudabrecho.com.br.
 http://mudahomolog.meadadigital.local {
+	reverse_proxy mudahomolog-nginx:80
+}
+
+# DEV do muda — domínio local da tríade mudabrecho (dev/homolog/prod). Aponta pro
+# clone de DESENVOLVIMENTO (branch homolog, external_projects/mudahomolog).
+# Requer `127.0.0.1 dev.mudabrecho.com.br` no /etc/hosts — NÃO criar DNS público.
+http://dev.mudabrecho.com.br {
 	reverse_proxy mudahomolog-nginx:80
 }
 
