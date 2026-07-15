@@ -47,11 +47,23 @@ http://mudahomolog.meadadigital.local {
 	reverse_proxy mudahomolog-nginx:80
 }
 
-# DEV do muda — domínio local da tríade mudabrecho (dev/homolog/prod). Aponta pro
-# clone de DESENVOLVIMENTO (branch homolog, external_projects/mudahomolog).
+# DEV do muda — domínio local da tríade mudabrecho (dev/homolog/prod), com HTTPS
+# via CA interna do Caddy (tls internal — funciona mesmo com auto_https off).
+# Aponta pro clone de DESENVOLVIMENTO (branch homolog, external_projects/mudahomolog).
 # Requer `127.0.0.1 dev.mudabrecho.com.br` no /etc/hosts — NÃO criar DNS público.
-http://dev.mudabrecho.com.br {
+#
+# Para o navegador confiar (uma vez, com a stack de pé):
+#   docker cp meada-caddy:/data/caddy/pki/authorities/local/root.crt /tmp/caddy-root.crt
+#   → importar no trust store (Windows: certmgr "Autoridades Confiáveis"; WSL/CLI:
+#     sudo cp /tmp/caddy-root.crt /usr/local/share/ca-certificates/caddy-root.crt && sudo update-ca-certificates)
+https://dev.mudabrecho.com.br {
+	tls internal
 	reverse_proxy mudahomolog-nginx:80
+}
+
+# HTTP do dev só redireciona pro HTTPS.
+http://dev.mudabrecho.com.br {
+	redir https://dev.mudabrecho.com.br{uri} permanent
 }
 
 # Túnel ngrok da muda (DEV) — domínio fixo reservado na conta, usado para callbacks
