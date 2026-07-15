@@ -54,8 +54,13 @@ api-demo.meadadigital.com {
 # Repo: github.com/igorhaf/muda (branch main). DNS exigido: A mudabrecho.com.br,
 # A/CNAME www.mudabrecho.com.br e A homolog.mudabrecho.com.br → 84.247.186.108
 # (DNS-only/nuvem cinza se estiver no Cloudflare — proxied quebra o ACME, erro 525).
-mudabrecho.com.br, www.mudabrecho.com.br {
+mudabrecho.com.br {
 	reverse_proxy muda-nginx:80
+}
+
+# www é só redirect 301 pro domínio canônico (SEO + sessão/cookies num host único).
+www.mudabrecho.com.br {
+	redir https://mudabrecho.com.br{uri} permanent
 }
 
 # HOMOLOG do muda (branch `homolog` do mesmo repo) — ambiente espelho, banco e credenciais próprios.
