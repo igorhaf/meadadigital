@@ -49,16 +49,32 @@ api-demo.meadadigital.com {
 	reverse_proxy demo-backend:8095
 }
 
-# Projeto externo muda (Laravel) — subdomínio próprio. Repo: github.com/igorhaf/muda (branch main).
-muda.meadadigital.com {
+# Projeto externo muda (Laravel) — DOMÍNIO PRÓPRIO mudabrecho.com.br.
+# Repo: github.com/igorhaf/muda (branch main). DNS exigido: A mudabrecho.com.br,
+# A/CNAME www.mudabrecho.com.br e A homolog.mudabrecho.com.br → 84.247.186.108
+# (DNS-only/nuvem cinza se estiver no Cloudflare — proxied quebra o ACME, erro 525).
+mudabrecho.com.br, www.mudabrecho.com.br {
 	reverse_proxy muda-nginx:80
 }
 
+# Domínio antigo — segue servindo até o DNS de mudabrecho.com.br estar ativo e validado.
+# CUTOVER: quando o domínio novo estiver no ar, trocar o reverse_proxy pela linha de redir.
+muda.meadadigital.com {
+	reverse_proxy muda-nginx:80
+	# redir https://mudabrecho.com.br{uri} permanent
+}
+
 # HOMOLOG do muda (branch `homolog` do mesmo repo) — ambiente espelho, banco e credenciais próprios.
+homolog.mudabrecho.com.br {
+	reverse_proxy mudahomolog-nginx:80
+}
+
+# Domínio antigo da homolog — mesma regra de cutover do bloco de produção acima.
 # ⚠ O DNS deste subdomínio precisa estar DNS-ONLY (nuvem CINZA) no Cloudflare: em modo proxied o
 # Let's Encrypt do Caddy falha com 525 (ver nota no topo deste arquivo).
 mudahomolog.meadadigital.com {
 	reverse_proxy mudahomolog-nginx:80
+	# redir https://homolog.mudabrecho.com.br{uri} permanent
 }
 
 # Projeto externo semente-doce (Laravel — doceria) — subdomínio próprio.

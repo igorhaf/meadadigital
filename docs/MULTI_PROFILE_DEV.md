@@ -54,7 +54,7 @@ Fonte de verdade: `src/main/java/com/meada/profiles/ProfileType.java` +
 ```
 
 > `muda.meadadigital.local` → projeto EXTERNO **muda** (Laravel, em `external_projects/muda`),
-> roteado pelo Caddy pro `muda-nginx`. Em produção é `muda.meadadigital.com`.
+> roteado pelo Caddy pro `muda-nginx`. Em produção é `mudabrecho.com.br` (homolog: `homolog.mudabrecho.com.br`).
 >
 > `conexao-municipio.meadadigital.local` → projeto EXTERNO **conexao-municipio** (Laravel API +
 > Next, em `external_projects/conexao-municipio`). Caddy faz path-based: `/api/*` vai pro backend
