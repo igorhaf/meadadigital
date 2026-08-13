@@ -9,6 +9,8 @@ import com.meada.messaging.FaqRepository;
 import com.meada.messaging.MessageRepository;
 import com.meada.messaging.Service;
 import com.meada.messaging.ServiceRepository;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StreamUtils;
@@ -39,6 +41,8 @@ import java.util.stream.Collectors;
 @Component
 public class PromptBuilder {
 
+    private static final Logger log = LoggerFactory.getLogger(PromptBuilder.class);
+
     private static final int HISTORY_LIMIT = 20;
 
     // Defaults neutros (produto). tone e handoff nunca ficam vazios.
@@ -59,17 +63,20 @@ public class PromptBuilder {
     private final FaqRepository faqRepository;
     private final BusinessHoursRepository businessHoursRepository;
     private final MessageRepository messageRepository;
+    private final com.meada.knowledge.KnowledgeRetrievalService knowledgeRetrievalService;
 
     public PromptBuilder(AiSettingsRepository aiSettingsRepository,
                          ServiceRepository serviceRepository,
                          FaqRepository faqRepository,
                          BusinessHoursRepository businessHoursRepository,
-                         MessageRepository messageRepository) {
+                         MessageRepository messageRepository,
+                         com.meada.knowledge.KnowledgeRetrievalService knowledgeRetrievalService) {
         this.aiSettingsRepository = aiSettingsRepository;
         this.serviceRepository = serviceRepository;
         this.faqRepository = faqRepository;
         this.businessHoursRepository = businessHoursRepository;
         this.messageRepository = messageRepository;
+        this.knowledgeRetrievalService = knowledgeRetrievalService;
         this.template = loadTemplate();
     }
 
@@ -104,7 +111,8 @@ public class PromptBuilder {
             .replace("{{restrictions}}", optionalSection("Restrições", restrictionsValue))
             .replace("{{services}}", servicesSection(companyId))
             .replace("{{faqs}}", faqsSection(companyId))
-            .replace("{{businessHours}}", businessHoursSection(companyId));
+            .replace("{{businessHours}}", businessHoursSection(companyId))
+            .replace("{{knowledge}}", knowledgeSection(companyId, userMessage));
 
         List<ConversationTurn> history =
             messageRepository.findRecentByConversation(conversationId, HISTORY_LIMIT);
@@ -155,6 +163,33 @@ public class PromptBuilder {
             .map(f -> "P: " + f.question().strip() + "\nR: " + f.answer().strip())
             .collect(Collectors.joining("\n\n"));
         return "\n# Perguntas frequentes\n" + body + "\n";
+    }
+
+    /**
+     * Trechos de documentos do tenant relevantes para a mensagem do cliente (RAG, 5.13.d).
+     * Faz retrieval semântico (embed da query → top-5 chunks acima do threshold). Vazio
+     * quando não há documento relevante OU o sidecar de embeddings está indisponível —
+     * neste caso a IA responde sem o contexto de documento (degradação graciosa), NÃO
+     * quebra o fluxo. Mesma forma de seção opcional das demais (cabeçalho embutido).
+     */
+    private String knowledgeSection(UUID companyId, String userMessage) {
+        List<com.meada.knowledge.RetrievedChunk> chunks;
+        try {
+            chunks = knowledgeRetrievalService.retrieve(companyId, userMessage);
+        } catch (RuntimeException e) {
+            // Sidecar fora / erro de retrieval: a IA segue sem documentos. NÃO propaga.
+            log.warn("knowledge retrieval failed for company {} — prompt sem documentos ({})",
+                companyId, e.getMessage());
+            return "";
+        }
+        if (chunks.isEmpty()) {
+            return "";
+        }
+        String body = chunks.stream()
+            .map(c -> "[Documento \"" + c.documentTitle() + "\" — trecho " + (c.chunkIndex() + 1)
+                + "]\n" + c.content().strip())
+            .collect(Collectors.joining("\n\n"));
+        return "\n# Conhecimento de documentos\n" + body + "\n";
     }
 
     private String businessHoursSection(UUID companyId) {
