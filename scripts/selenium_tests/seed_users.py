@@ -17,6 +17,7 @@ from config import (
     CORE_COMPANIES,
     CORE_INSTANCE,
     CORE_USERS,
+    ROOT_EMAIL,
     SELENIUM_PASSWORD,
     SERVICE_ROLE_KEY,
     SUPABASE_URL,
@@ -98,6 +99,14 @@ def main() -> int:
             ensure_company(company)
         ensure_instance()
         print(f"[ok] instância: {CORE_INSTANCE['instance_name']}")
+        # Super-admin: auth user SEM linha em public.users (o filtro resolve pela allowlist).
+        root_id = find_auth_user(ROOT_EMAIL)
+        if root_id:
+            set_password(root_id)
+        else:
+            root_id = create_auth_user(ROOT_EMAIL)
+        psql(f"delete from public.users where id = '{root_id}';")
+        print(f"[ok] root: {ROOT_EMAIL} (id={root_id})")
     except Exception as exc:  # noqa: BLE001
         failures += 1
         print(f"[FALHA] instância: {exc}")
