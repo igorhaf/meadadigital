@@ -51,6 +51,14 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-validation</artifactId>
         </dependency>
+
+        <!-- nimbus-jose-jwt 9.48: validação HS256 do JWT Supabase no filtro admin (4.1).
+             Major 9.x alinhada ao Spring Security; ver DEVELOPMENT.md seção 4.1. -->
+        <dependency>
+            <groupId>com.nimbusds</groupId>
+            <artifactId>nimbus-jose-jwt</artifactId>
+            <version>9.48</version>
+        </dependency>
     </dependencies>
 
     <build>

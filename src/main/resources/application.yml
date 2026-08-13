@@ -108,6 +108,20 @@ outbound:
       - 1000
       - 3000
 
+# Admin (painel — camada 4.1+). super-admin-emails: CSV de emails que o filtro JWT
+#   trata como super-admin (sem SELECT em public.users). cors-allowed-origins: origens
+#   do frontend aceitas no CORS de /admin/**. Ambos via @ConfigurationProperties (AdminProperties).
+admin:
+  super-admin-emails: ${ADMIN_SUPER_ADMIN_EMAILS:}
+  cors-allowed-origins: ${ADMIN_CORS_ALLOWED_ORIGINS:http://localhost:3000}
+
+# Supabase. jwks-url SEM default (fail-fast): o filtro JWT do admin valida os tokens
+#   ES256 contra as chaves públicas servidas neste endpoint JWKS (o Supabase migrou de
+#   HS256/secret compartilhado para JWT Signing Keys assimétricas — ver JwksConfig e
+#   DEVELOPMENT.md seção 4.1). Ex.: https://<ref>.supabase.co/auth/v1/.well-known/jwks.json
+supabase:
+  jwks-url: ${SUPABASE_JWKS_URL}
+
 server:
   port: 8080
   shutdown: graceful

@@ -18,6 +18,10 @@ REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 # Backend Spring (regra/2+). A suíte exige o backend DE PÉ ao rodar.
 API_URL = os.environ.get("MEADA_API_URL", "http://localhost:8095")
 
+# Frontend Next (regra/4+), em BUILD DE PRODUÇÃO (dev/Turbopack é lazy e
+# mascara import quebrado): npm run build && npm run start.
+BASE_URL = os.environ.get("MEADA_FRONTEND_URL", "http://localhost:3000")
+
 # Senha dos usuários descartáveis de teste (Supabase LOCAL apenas).
 SELENIUM_PASSWORD = os.environ.get("MEADA_SELENIUM_PASSWORD", "Selenium.Meada.2026!")
 
