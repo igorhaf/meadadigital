@@ -7,20 +7,28 @@
 >
 > Esta wiki cobre o projeto **do começo até o estado atual**: regras de negócio, referências
 > técnicas, todos os nichos verticais e o estado de cada subsistema. É a fonte de consulta
-> "tipo Wikipédia" do projeto.
+> "tipo Wikipédia" do projeto. Última revisão completa contra o código: **2026-08-12**.
+
+## Como navegar
+
+- **No browser (recomendado):** `./scripts/wiki-serve.sh` na raiz do repo →
+  `http://localhost:8098` — wiki navegável com busca (Docsify vendorizado em `assets/`,
+  funciona offline).
+- **No GitHub/editor:** os arquivos são markdown puro; comece por este índice.
 
 ## Índice
 
 | Página | Conteúdo |
 |--------|----------|
 | [01 — Arquitetura e Stack](01-arquitetura.md) | Stack (Spring Boot + JdbcTemplate, Supabase, Gemini, Evolution, Next 16), módulos top-level, convenções de banco, decisões cravadas. |
-| [02 — Auth e Multi-tenancy](02-auth-multitenancy.md) | Super-admin × tenant-admin, JWT ES256/JWKS, RLS (`app.company_id()`), FKs compostas, suspensão/LGPD, convites. |
+| [02 — Auth e Multi-tenancy](02-auth-multitenancy.md) | Super-admin × tenant-admin, JWT ES256/JWKS, RLS (`app.company_id()`), FKs compostas, suspensão/LGPD, convites, feature flags. |
 | [03 — IA e Fluxo de Mensagens](03-ia-fluxo.md) | Gemini, PromptBuilder, system-template, RAG/embeddings, webhook inbound, OutboundService, cadeia de handlers de tag, ciclo end-to-end. |
-| [04 — Multi-perfil e Chassis](04-multiperfil-chassis.md) | Perfis hardcoded (`ProfileType`), guard por perfil, context cache, e os **9 chassis transversais** que todos os nichos reusam. |
-| [05 — Catálogo dos Nichos](05-nichos.md) | Os 34 nichos verticais: regra de negócio, escapada, tag de IA, trava, tabelas e máquina de status de cada um. |
-| [06 — Pagamentos](06-pagamentos.md) | Estado atual (registro **manual** de mensalidade) + a pendência do **gateway integrado (#50)**. **Onde paramos.** |
-| [07 — Núcleo de Plataforma](07-plataforma.md) | CMS/site por tenant, feature flags por nicho, LGPD, teams, métricas, saved replies, engagement, webchat. |
-| [API — Swagger/OpenAPI](../api/openapi.yaml) | Especificação OpenAPI 3.0 de toda a API HTTP (~703 endpoints / 150 controllers). |
+| [04 — Multi-perfil e Chassis](04-multiperfil-chassis.md) | Perfis hardcoded (`ProfileType`), guard por perfil, context cache, os **9 chassis transversais** e as regras de plataforma que valem para todo nicho. |
+| [05 — Catálogo dos Nichos](05-nichos.md) | Tabela-mestra dos 33 nichos + link para a **página de regras de negócio de cada um** (`nichos/*.md`). |
+| [06 — Pagamentos](06-pagamentos.md) | Registro manual (mensalidade + sinal com gate `deposit_required`), réguas de inadimplência, e o schema da assinatura Mercado Pago (migration 118) ainda sem código. |
+| [07 — Núcleo de Plataforma](07-plataforma.md) | CMS/site por tenant, feature flags, vitrine de nichos, LGPD, teams, métricas, saved replies, engagement, webchat, busca, treino da IA, logs de acesso. |
+| [Nichos — regras de negócio](05-nichos.md) | 33 páginas individuais em `nichos/<profile_id>.md`: jornada no WhatsApp, invariantes transacionais, máquina de status, travas da IA, tags, erros, notificações, dados e limites de cada nicho. |
+| [API — Swagger/OpenAPI](../api/openapi.yaml) | Especificação OpenAPI 3.0 da API HTTP. |
 
 ## O projeto em uma frase
 
@@ -30,11 +38,11 @@ parece um produto distinto para o cliente final (subdomínio, nome, tom de IA, f
 
 ## Números do estado atual
 
-- **34 nichos verticais** no enum `ProfileType` (+ `generic` = produto base do admin).
-- **70 migrations** SQL (`supabase/migrations/`).
-- **~150 controllers** / **~703 endpoints** HTTP.
+- **33 nichos verticais** no enum `ProfileType` (+ `generic` = produto base do admin).
+- **117 migrations** SQL (`supabase/migrations/`, numeradas até 118 — o slot 57 ficou vago).
+- **206 controllers** HTTP no backend.
 - **9 chassis** de negócio reusados pelos nichos (order-based, agenda, assinatura, proposta+aprovação, varejo com variantes, etc.).
-- **Pagamento:** registro manual de mensalidade em 3 nichos (academia/escola/cursos). **Gateway integrado (Stripe/Pix): NÃO implementado** — pendência #50. Ver [06 — Pagamentos](06-pagamentos.md).
+- **Pagamento:** registro manual (mensalidade em academia/escola/cursos; sinal com gate em casamento/atelie/viagens/papelaria/padaria). **Gateway integrado: NÃO implementado** — a migration 118 traz o schema da assinatura via Mercado Pago Preapproval, sem código ainda (pendência #50). Ver [06 — Pagamentos](06-pagamentos.md).
 
 ## Como esta wiki foi montada
 
@@ -42,7 +50,8 @@ Levantamento empírico do código real (`src/main/java/com/meada/`), das migrati
 (`supabase/migrations/`), do `CLAUDE.md`, dos guias `docs/PERFIL_*.md` e dos prompts de nicho
 (`docs/PROMPT_NICHO_*.md` + `docs/prompts-nicho/`). Onde a doc histórica divergia do código, **o
 código real prevaleceu** (ex.: `end_at` do restaurant é materializado no INSERT, não "coluna
-gerada" como dizia um comentário antigo de migration).
+gerada" como dizia um comentário antigo de migration; o nicho `projetos` do catálogo antigo nunca
+entrou no código e foi removido do índice).
 
 ## Convenção de leitura
 

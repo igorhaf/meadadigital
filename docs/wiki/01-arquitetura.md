@@ -23,14 +23,14 @@ Painel: Next 16 (frontend) ⇄ Backend (/admin, /api) + Supabase SDK (RLS) diret
 | Camada | Tecnologia | Notas |
 |--------|-----------|-------|
 | Backend | **Spring Boot 3.3.13 + Java 17 Temurin** | Single-module Maven, **JdbcTemplate (não JPA)**, sem Lombok, sem webflux. HTTP outbound síncrono via `RestClient`. |
-| Banco/Auth | **Supabase (Postgres 17 + Auth + Storage)** | JWT ES256. Migrations SQL em `supabase/migrations/`. RLS em todas as tabelas de domínio. |
-| IA | **Gemini Flash** (Google) | `responseSchema` JSON (intent + needs_human). Persona por perfil injetada no system prompt. |
-| WhatsApp | **Evolution API self-hosted** (`evoapicloud/evolution-api:v2.3.1`) | Uma instância por tenant. |
-| RAG/Embeddings | **pgvector** + sidecar Python (porta 7080) | Retrieval semântico da base de conhecimento. |
+| Banco/Auth | **Supabase (Postgres 17 + Auth + Storage)** | JWT ES256. Migrations SQL em `supabase/migrations/` (01→118). RLS em todas as tabelas de domínio. Em dev, Supabase **LOCAL via CLI** (`supabase start` — API/Auth `:54321`, Postgres `:54322`). |
+| IA | **Gemini Flash** (Google) | `responseSchema` JSON (`reply` + `needs_human` + `reason` + intents/insights opcionais). Persona por perfil injetada no system prompt. |
+| WhatsApp | **Evolution API self-hosted** (`evoapicloud/evolution-api:v2.3.1`) | Uma instância por tenant. Em dev, serviço compartilhado em `~/shared/evolution-local` (fora do repo). |
+| RAG/Embeddings | **pgvector** + sidecar Python (porta 7080, modelo `multilingual-e5-small`) | Retrieval semântico da base de conhecimento. Código do sidecar no repo `shared` (`~/shared/python`), buildado pelo compose (`context: ../shared/python`). |
 | Frontend | **Next 16 (app router) + React 19 + TS + Tailwind 4 + shadcn/ui + @base-ui/react** (NÃO Radix) + TanStack Query + react-hook-form + zod + @supabase/ssr | Em `frontend/`, isolado do Maven. |
 
 Portas locais: backend **8095**, frontend **3000**, sidecar embeddings **7080**, Evolution local
-**8086** (Postgres 5433 / Redis 6380).
+**8086** (Postgres 5433 / Redis 6380), Supabase CLI **54321** (API/Auth) / **54322** (Postgres).
 
 ## Módulos top-level do backend (`src/main/java/com/meada/`)
 
@@ -44,7 +44,7 @@ Portas locais: backend **8095**, frontend **3000**, sidecar embeddings **7080**,
 | `webchat/` | Chat web embeddable (canal além do WhatsApp). |
 | `knowledge/` | Base de conhecimento: upload de documentos, chunking, embeddings, retrieval semântico (RAG). |
 | `training/` | Feedback dos agentes sobre respostas da IA. |
-| `profiles/` | Suporte multi-perfil: enum `ProfileType`, guards, context caches, e os 34 diretórios de nicho. |
+| `profiles/` | Suporte multi-perfil: enum `ProfileType` (33 nichos + `generic`), guards, context caches, os 33 diretórios de nicho, `features/` (feature flags por nicho — camada 9.0, gate `requireFeature` → 403 `feature_disabled`) e `showcase/` (páginas institucionais por nicho, `GET /public/niches`). |
 | `cms/` | Site/página por tenant (page builder, domínio próprio). |
 | `access/` | Logs de acesso (login sucesso/falha, troca de senha). |
 | `teams/` | Times/grupos de usuários por tenant. |
@@ -77,7 +77,7 @@ Portas locais: backend **8095**, frontend **3000**, sidecar embeddings **7080**,
 5. **Mensagens imutáveis** — `messages` nunca sofre DELETE (histórico íntegro).
 6. **Perfis HARDCODED** — não existe tabela de perfis; enum Java + const TS + CHECK na migration, com teste de paridade (`ProfileTypeParityTest`).
 7. **Tag handlers por perfil** — a IA emite tags em texto livre; cada perfil parseia as suas em `outbound/` sem forkar o core.
-8. **Inbound assíncrono** — o webhook persiste e publica `MessageInboundProcessedEvent`; a IA + outbound rodam async (não bloqueiam o 200 do webhook).
+8. **Inbound assíncrono** — o webhook persiste e publica `MessageInboundProcessedEvent` DENTRO da transação; o `OutboundEventListener` é `@Async("outboundExecutor")` + `@TransactionalEventListener(AFTER_COMMIT)` — a IA + outbound só rodam depois que a inbound está durável, sem bloquear o 200 do webhook.
 9. **RAG nativo no banco** (pgvector) — sem Elasticsearch.
 10. **Sidecar Python de embeddings** — desacoplado, reutilizável.
 
@@ -85,7 +85,13 @@ Portas locais: backend **8095**, frontend **3000**, sidecar embeddings **7080**,
 
 - **Backend** (porta 8095): `./scripts/run-local.sh`. Sanity: `GET /admin/me` sem token → 401 `missing_auth_header`.
 - **Frontend** (porta 3000): `cd frontend && npm run dev`.
-- **DevX Docker** (porta 80 via Caddy): `./scripts/meada-up.sh` / `meada-down.sh` — sobe backend+frontend+embeddings+caddy em container, **banco continua no Supabase remoto**.
+- **DevX Docker** (porta 80 via Caddy): `./scripts/meada-up.sh` / `meada-down.sh`. O compose do repo
+  sobe **só os serviços do próprio Meada**: `backend`, `frontend`, `embeddings` e o ambiente
+  **demo** (`demo-backend`/`demo-frontend`, só com `--profile demo` — mesmo código, Supabase
+  separado via `DEMO_*`). O **Caddy (ingress)** e a rede externa compartilhada **`meada`** vivem no
+  repo `shared` (`~/shared`), fora deste compose. O **banco fica fora** dos containers (dev:
+  Supabase CLI local; prod: Supabase remoto via `.env`). O `docker-compose.override.yml` troca os
+  targets para `dev` (hot-reload por volume) automaticamente em `docker compose up`.
 - **Testes backend:** `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn -B clean test`.
 - **Build frontend:** `cd frontend && npm run build`.
 
@@ -93,5 +99,5 @@ Portas locais: backend **8095**, frontend **3000**, sidecar embeddings **7080**,
 
 - `pom.xml` — dependências/versões.
 - `src/main/resources/prompts/system-template.txt` — template do system prompt.
-- `supabase/migrations/` — schema (01→70).
+- `supabase/migrations/` — schema (01→118).
 - `CLAUDE.md` — convenções vivas e histórico de camadas.
