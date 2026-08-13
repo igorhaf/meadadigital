@@ -2,6 +2,7 @@ package com.meada.admin.me;
 
 import com.meada.admin.security.AuthenticatedUser;
 import com.meada.admin.security.JwtAuthenticationFilter;
+import com.meada.profiles.CompanyProfileRepository;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestAttribute;
 import org.springframework.web.bind.annotation.RestController;
@@ -18,8 +19,18 @@ import org.springframework.web.bind.annotation.RestController;
 @RestController
 public class MeController {
 
+    private final CompanyProfileRepository companyProfileRepository;
+
+    public MeController(CompanyProfileRepository companyProfileRepository) {
+        this.companyProfileRepository = companyProfileRepository;
+    }
+
     @GetMapping("/admin/me")
     public MeResponse me(@RequestAttribute(JwtAuthenticationFilter.AUTH_USER_ATTRIBUTE) AuthenticatedUser user) {
-        return MeResponse.from(user);
+        // Perfil (camada 7.0): só o tenant tem empresa → resolve o profile_id dela. Super-admin
+        // não tem empresa (companyId null) → profileId null, productName cai para "Meada".
+        String profileId = user.companyId() == null
+            ? null : companyProfileRepository.findProfileId(user.companyId());
+        return MeResponse.from(user, profileId);
     }
 }

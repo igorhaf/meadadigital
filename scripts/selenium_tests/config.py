@@ -73,6 +73,10 @@ CORE_USERS = {
     "beta": {"email": "selenium.core-beta@meada.test", "company": "beta"},
 }
 
+# Super-admin da suíte: email na allowlist ADMIN_SUPER_ADMIN_EMAILS do .env local,
+# SEM linha em public.users (é assim que o filtro reconhece o root).
+ROOT_EMAIL = "selenium.root@meada.test"
+
 # Instância WhatsApp do laboratório (regra/2+): chave de resolução do tenant no
 # webhook. Token sintético — nunca fala com uma Evolution real.
 CORE_INSTANCE = {

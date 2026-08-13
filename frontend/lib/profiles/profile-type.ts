@@ -1,0 +1,34 @@
+/**
+ * Catálogo MATERIALIZADO de perfis verticais (camada 7.0) — espelho 1:1 de
+ * src/main/java/com/meada/whatsapp/profiles/ProfileType.java.
+ *
+ * Meada é um monolito que se apresenta como N produtos verticais ("perfis"). Cada perfil
+ * parece um produto distinto para o cliente final. Os perfis são HARDCODED aqui e no enum
+ * Java; o ProfileTypeParityTest (backend) garante que os dois nunca divergem — adicionar um
+ * perfil = editar os 2 arquivos + a CHECK constraint da migration + rodar os testes.
+ *
+ * Campos: id (estável, persistido em companies.profile_id), productName (label do produto),
+ * subdomain (sem domínio base), defaultPaletteId (ref. a lib/themes/palettes.ts).
+ */
+export const PROFILES = [
+  { id: 'generic', productName: 'Meada', subdomain: 'meada', defaultPaletteId: 'meada-default' },
+  { id: 'legal', productName: 'ProcessoBot', subdomain: 'processo', defaultPaletteId: 'indigo' },
+  { id: 'dental', productName: 'DentalBot', subdomain: 'dental', defaultPaletteId: 'celeste' },
+  { id: 'sushi', productName: 'SushiBot', subdomain: 'sushi', defaultPaletteId: 'tijolo' },
+] as const
+
+export type Profile = (typeof PROFILES)[number]
+export type ProfileId = Profile['id']
+
+/** Resolve um perfil pelo id estável (companies.profile_id). undefined se inválido. */
+export function getProfile(id: string): Profile | undefined {
+  return PROFILES.find((p) => p.id === id)
+}
+
+/** Resolve um perfil pelo subdomínio (ex.: "processo" → legal). undefined se inválido. */
+export function getProfileBySubdomain(sub: string): Profile | undefined {
+  return PROFILES.find((p) => p.subdomain === sub)
+}
+
+/** Perfil genérico (fallback universal): login universal, comportamento atual. */
+export const GENERIC_PROFILE: Profile = PROFILES[0]

@@ -1,6 +1,8 @@
 import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
+import { SUBDOMAIN_HEADER, subdomainFromHost } from '@/lib/profiles/subdomain'
+
 /**
  * Middleware de sessão Supabase. ÚNICA responsabilidade: refrescar o token a cada
  * request (escrevendo os cookies atualizados na response). NÃO decide rota — a
@@ -22,6 +24,12 @@ import { NextResponse, type NextRequest } from 'next/server'
  *     é o objetivo.
  */
 export async function middleware(request: NextRequest) {
+  // Subdomain detection (camada 7.0): resolve o perfil pelo host e injeta como header de
+  // request, para que Server Components / layouts downstream possam ler o perfil sem re-parsear.
+  // localhost / domínio-base → 'meada' (genérico/universal).
+  const subdomain = subdomainFromHost(request.headers.get('host'))
+  request.headers.set(SUBDOMAIN_HEADER, subdomain)
+
   let response = NextResponse.next({ request })
 
   const supabase = createServerClient(

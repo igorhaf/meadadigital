@@ -1,3 +1,4 @@
+import { currentSubdomain } from '@/lib/profiles/subdomain'
 import { createClient } from '@/lib/supabase/client'
 
 const API_BASE = process.env.NEXT_PUBLIC_API_URL
@@ -46,6 +47,9 @@ export async function apiFetch<T>(path: string, options?: RequestInit): Promise<
   const headers: Record<string, string> = {
     ...(options?.headers as Record<string, string> | undefined),
     ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    // Subdomínio/perfil atual (camada 7.0): informa ao backend de qual "produto" a request
+    // vem. Lido do hostname do browser (mesma regra do middleware). 'meada' em SSR.
+    'X-Meada-Subdomain': currentSubdomain(),
   }
   // Content-Type só quando há body (POST/PUT/PATCH): evita preflight CORS desnecessário
   // e não faz sentido semântico num GET.
