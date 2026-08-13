@@ -2,11 +2,14 @@
 
 import { zodResolver } from '@hookform/resolvers/zod'
 import { useRouter } from 'next/navigation'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { z } from 'zod'
 
 import { Button } from '@/components/ui/button'
+import { getProfileMatch } from '@/lib/api/admin/profiles'
+import { GENERIC_PROFILE } from '@/lib/profiles/profile-type'
+import { currentProfile, currentSubdomain, isUniversalSubdomain } from '@/lib/profiles/subdomain'
 import { createClient } from '@/lib/supabase/client'
 
 // Schema de LOGIN (não de signup): só verifica que há algo para enviar. Regras de
@@ -47,13 +50,42 @@ export default function LoginPage() {
       setAuthError('Email ou senha inválidos.')
       return
     }
+
+    // Validação subdomínio×perfil (camada 7.0): num subdomínio de produto, o usuário só
+    // prossegue se a empresa dele for daquele perfil. No universal ('meada'/localhost)
+    // qualquer usuário passa. Mismatch → signOut + a MESMA mensagem genérica (não revela
+    // que a conta existe nem em qual produto ela está — indistinguível de senha errada).
+    const sub = currentSubdomain()
+    if (!isUniversalSubdomain(sub)) {
+      try {
+        const result = await getProfileMatch(sub)
+        if (!result.match) {
+          await supabase.auth.signOut()
+          setAuthError('Email ou senha inválidos.')
+          return
+        }
+      } catch (err) {
+        console.error('profile-match failed:', err)
+        // Falha de rede no match não tranca o usuário fora do produto correto: deixa
+        // passar (defensivo). O backend segue como barreira real por endpoint.
+      }
+    }
+
     router.push('/dashboard')
   }
+
+  // Produto pelo subdomínio (camada 7.0): "Bem-vindo ao Sushi" etc. currentProfile() lê
+  // window.location.hostname, que NÃO existe no SSR — padrão SSR-safe: começa no genérico
+  // (igual ao servidor) e atualiza para o perfil real DEPOIS da montagem, no cliente.
+  const [profile, setProfile] = useState(GENERIC_PROFILE)
+  useEffect(() => {
+    setProfile(currentProfile())
+  }, [])
 
   return (
     <div className="flex min-h-screen items-center justify-center p-4">
       <div className="w-full max-w-sm rounded-xl border bg-background p-6 shadow-sm">
-        <h1 className="mb-1 text-lg font-semibold">Bem-vindo ao Meada</h1>
+        <h1 className="mb-1 text-lg font-semibold">{`Bem-vindo ao ${profile.productName}`}</h1>
         <p className="mb-6 text-sm text-muted-foreground">Entre no painel administrativo.</p>
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
