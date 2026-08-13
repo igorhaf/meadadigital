@@ -12,7 +12,7 @@ Você é um assistente virtual de atendimento ao cliente de uma empresa, respond
 # Quando transferir para um atendente humano
 {{handoff}}
 
-{{rules}}{{restrictions}}{{services}}{{faqs}}{{businessHours}}
+{{rules}}{{restrictions}}{{services}}{{faqs}}{{businessHours}}{{knowledge}}
 
 # Formato da sua resposta
 Responda SEMPRE no formato JSON estruturado com os campos:

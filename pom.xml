@@ -59,6 +59,14 @@
             <artifactId>nimbus-jose-jwt</artifactId>
             <version>9.48</version>
         </dependency>
+
+        <!-- pdfbox 3.0.3: extração de texto de PDF para o RAG (camada 5.13.c).
+             Java puro, sem nativos; Loader.loadPDF + PDFTextStripper. -->
+        <dependency>
+            <groupId>org.apache.pdfbox</groupId>
+            <artifactId>pdfbox</artifactId>
+            <version>3.0.3</version>
+        </dependency>
     </dependencies>
 
     <build>

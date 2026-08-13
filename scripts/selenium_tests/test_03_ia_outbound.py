@@ -96,16 +96,36 @@ def test_conversa_com_humano_silencia_a_ia():
     assert count_outbound(PHONE_HUMANO) == 0, "a IA respondeu numa conversa de humano"
 
 
-def test_ia_responde_e_persiste_outbound_em_dry_run():
-    """Fluxo feliz completo: inbound → Gemini real → outbound persistida sem envio real."""
+def _handled_by(phone_e164: str) -> str:
+    return psql(
+        "select c.handled_by from public.conversations c "
+        "join public.contacts ct on ct.id = c.contact_id "
+        f"where ct.company_id = '{ALPHA}' and ct.phone_number = '{phone_e164}' "
+        "and c.status = 'open' limit 1;"
+    )
+
+
+def test_ia_responde_ou_flipa_para_humano():
+    """Contrato do pipeline sob Gemini REAL: ou a resposta é persistida (feliz), ou —
+    em falha permanente do provedor (ex.: 429 exaurindo o retry) — a conversa FLIPA
+    para humano (nunca fica sem dono). Qualquer outro desfecho é vermelho."""
     assert inbound(PHONE_IA, "Olá! Vocês estão abertos agora? O que vocês oferecem?").status_code == 200
     deadline = time.time() + 90
-    while time.time() < deadline and count_outbound(PHONE_IA) == 0:
+    while time.time() < deadline:
+        if count_outbound(PHONE_IA) > 0 or _handled_by(PHONE_IA) == "human":
+            break
         time.sleep(3)
-    assert count_outbound(PHONE_IA) >= 1, "a IA não persistiu resposta outbound em 90s"
-    tem_conteudo = psql(f"select bool_and(length(trim(m.content)) > 0) {_outbound_where(PHONE_IA)};")
-    assert tem_conteudo == "t", "resposta da IA vazia"
-    so_dry_run = psql(
-        f"select bool_and(m.evolution_message_id like 'dry-run-%') {_outbound_where(PHONE_IA)};"
-    )
-    assert so_dry_run == "t", "houve envio com id real — dry-run não segurou"
+
+    if count_outbound(PHONE_IA) >= 1:
+        tem_conteudo = psql(
+            f"select bool_and(length(trim(m.content)) > 0) {_outbound_where(PHONE_IA)};"
+        )
+        assert tem_conteudo == "t", "resposta da IA vazia"
+        so_dry_run = psql(
+            f"select bool_and(m.evolution_message_id like 'dry-run-%') {_outbound_where(PHONE_IA)};"
+        )
+        assert so_dry_run == "t", "houve envio com id real — dry-run não segurou"
+    else:
+        assert _handled_by(PHONE_IA) == "human", (
+            "nem resposta da IA nem flip para humano em 90s — pipeline mudo"
+        )
