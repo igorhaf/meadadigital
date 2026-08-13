@@ -1,0 +1,122 @@
+# =============================================================================
+# application.yml — Meada backend
+#
+# Estrutura: YAML multi-documento (--- separator).
+#   - Documento RAIZ: tudo que é COMUM (datasource, hikari, webhook, server) +
+#     o profile default (dev).
+#   - Documentos dev/prod: SÓ o que diverge (logging + revelação de erro).
+#   Não duplicar configuração comum entre profiles. O que muda em produção é o
+#   VALOR das env vars (apontam para o Supabase de prod), não a estrutura do yaml.
+#
+# Fail-fast: todas as credenciais vêm de env var SEM default (${VAR}, nunca
+#   ${VAR:-algo}). Se a env var não existir, o Spring lança erro ao resolver o
+#   placeholder no startup e a APP NÃO SOBE. Sem fallback silencioso.
+#   Variáveis obrigatórias: WEBHOOK_SECRET, SPRING_DATASOURCE_URL,
+#   SPRING_DATASOURCE_USERNAME, SPRING_DATASOURCE_PASSWORD.
+# =============================================================================
+
+spring:
+  # Profile default: rodar local sem SPRING_PROFILES_ACTIVE cai em dev.
+  # Produção sobrescreve com SPRING_PROFILES_ACTIVE=prod.
+  profiles:
+    active: dev
+
+  datasource:
+    # Credenciais por env var, sem default → fail-fast se ausentes.
+    url: ${SPRING_DATASOURCE_URL}
+    username: ${SPRING_DATASOURCE_USERNAME}
+    password: ${SPRING_DATASOURCE_PASSWORD}
+    hikari:
+      minimum-idle: 5
+      maximum-pool-size: 10
+      # Fail-fast de conexão no STARTUP. Sem isto, o Hikari inicializa o pool de
+      #   forma LAZY (confirmado empiricamente: com log DEBUG, nenhuma conexão
+      #   abre no boot) — e o connection-init-sql (SET ROLE service_role) só roda
+      #   na 1ª query real. Consequência ruim: URL errada, role inexistente ou
+      #   Supabase fora do ar só seriam descobertos no 1º webhook, não no boot.
+      # initialization-fail-timeout > 0 força o pool a abrir a conexão inicial no
+      #   startup; se falhar dentro de 10s, a APP NÃO SOBE (fail-fast). Isto também
+      #   exercita o SET ROLE service_role no boot. 10s cobre latência de rede ao
+      #   pooler do Supabase; instantâneo quando a conexão está OK.
+      initialization-fail-timeout: 10000
+      # connection-init-sql roda em TODA conexão nova do pool. SET ROLE é
+      # session-level: persiste pela vida da conexão — atravessa transações e
+      # segue quando a conexão volta ao pool (Hikari não faz DISCARD ALL/RESET
+      # por default). Resultado: o backend opera SEMPRE como service_role.
+      # CONTRATO DE CÓDIGO: nenhum SQL ad-hoc pode executar RESET ROLE / SET ROLE
+      #   postgres — quebraria o invariante de que toda conexão é service_role.
+      # Pool 5-10 sobre o Supabase Session pooler (PgBouncer). Camadas distintas:
+      #   Hikari gerencia o ciclo de conexão Java (TCP, prepared statements, retry);
+      #   PgBouncer multiplexa conexões cliente para um número menor de conexões
+      #   backend reais ao Postgres. NÃO remover o Hikari pensando que é redundante
+      #   com o pooler — são funções diferentes. Pool grande sobre pooler causa
+      #   connection exhaustion, por isso 5-10 modesto.
+      connection-init-sql: SET ROLE service_role
+
+  # Shutdown graceful: drena requests em andamento antes de encerrar.
+  lifecycle:
+    # 20s = drain de webhook em voo (transação típica fecha em ms); abaixo do
+    #   grace de 30s típico em orquestradores como K8s/systemd antes do SIGKILL.
+    timeout-per-shutdown-phase: 20s
+
+  # Desserialização tolerante do payload da Evolution (DTOs de webhook/dto).
+  jackson:
+    deserialization:
+      # Evolution adiciona campos por versão — ignorar desconhecidos, não quebrar.
+      fail-on-unknown-properties: false
+      # Defesa em profundidade: primitivo que receba null da Evolution não estoura.
+      fail-on-null-for-primitives: false
+
+# Webhook (Evolution → backend). secret (decisão 7): obrigatório, sem default —
+#   sem WEBHOOK_SECRET a app não sobe; comparado em constant-time no filtro (código).
+#   message-max-age-seconds: threshold do guard de frescor do WebhookService —
+#   default 180s, largo o bastante para latência + clock skew, apertado para
+#   rejeitar append-on-reconnect (ver RISKS.md incidente 2026-06-10).
+webhook:
+  secret: ${WEBHOOK_SECRET}
+  message-max-age-seconds: ${WEBHOOK_MESSAGE_MAX_AGE_SECONDS:180}
+
+server:
+  port: 8080
+  shutdown: graceful
+
+---
+# =============================================================================
+# Profile: dev — desenvolvimento local.
+#   Verboso para diagnóstico. PODE revelar mensagem/stacktrace de erro porque
+#   o consumidor é o próprio desenvolvedor, não um cliente externo.
+# =============================================================================
+spring:
+  config:
+    activate:
+      on-profile: dev
+
+logging:
+  level:
+    com.meada: DEBUG
+
+server:
+  error:
+    include-message: always
+    include-stacktrace: on_param   # ?trace=true revela stacktrace sob demanda
+
+---
+# =============================================================================
+# Profile: prod — produção.
+#   Silencioso e fechado. NUNCA revelar mensagem ou stacktrace no corpo de erro
+#   — o consumidor do endpoint é a Evolution (externa); vazar detalhe interno
+#   no payload de erro é superfície de ataque e leak de implementação.
+# =============================================================================
+spring:
+  config:
+    activate:
+      on-profile: prod
+
+logging:
+  level:
+    com.meada: INFO
+
+server:
+  error:
+    include-message: never
+    include-stacktrace: never
