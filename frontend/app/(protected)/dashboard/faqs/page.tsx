@@ -1,7 +1,7 @@
 'use client'
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
-import { HelpCircle, Pencil } from 'lucide-react'
+import { HelpCircle, Lightbulb, Pencil, Plus } from 'lucide-react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useEffect, useState } from 'react'
@@ -13,6 +13,7 @@ import { Card, Section } from '@/components/ui/card'
 import { DataTable, type Column } from '@/components/ui/data-table'
 import { EmptyState } from '@/components/ui/empty-state'
 import { getMe } from '@/lib/api/me'
+import { getFaqSuggestions } from '@/lib/supabase/faq-suggestions'
 import { getMyFaqs, setFaqActive, type Faq } from '@/lib/supabase/faqs'
 
 import { CreateFaqDialog } from './create-faq-dialog'
@@ -71,7 +72,20 @@ export default function FaqsPage() {
     enabled: isTenant, // só busca quando confirmado tenant (evita 0 rows para super-admin)
   })
 
+  // Sugestões da IA (5.18 #54): perguntas recentes de conversas que caíram para humano.
+  // Mesmo gate de tenant. Falha silenciosa (a seção apenas não aparece) — é auxiliar.
+  const { data: suggestions } = useQuery({
+    queryKey: ['faq-suggestions'],
+    queryFn: getFaqSuggestions,
+    enabled: isTenant,
+  })
 
+  // Abre a criação pré-preenchida com a pergunta da sugestão.
+  function openCreateFromSuggestion(content: string) {
+    setEditingFaq(undefined)
+    setInitialQuestion(content)
+    setDialogOpen(true)
+  }
 
   // Estado vazio elevado (5.8): lista carregada, sem erro, zero registros.
   const isEmpty = !isPending && !isError && (data?.length ?? 0) === 0
@@ -117,6 +131,37 @@ export default function FaqsPage() {
           </Button>
         }
       />
+      {(suggestions?.length ?? 0) > 0 && (
+        <Card>
+          <Section
+            title="Sugestões da IA"
+            description="Perguntas recentes de clientes em conversas que passaram para atendimento humano — candidatas a virar FAQ."
+            actions={<Lightbulb className="size-4 text-muted-foreground" />}
+          >
+            <ul className="space-y-2">
+              {suggestions!.map((s) => (
+                <li
+                  key={s.conversationId + s.lastAt}
+                  className="flex items-center justify-between gap-3 rounded-md border border-border px-3 py-2"
+                >
+                  <span className="min-w-0 flex-1 truncate text-sm" title={s.content}>
+                    {s.content}
+                  </span>
+                  <Button
+                    variant="outline"
+                    className="h-7 shrink-0 px-2 text-xs"
+                    disabled={!me?.companyId}
+                    onClick={() => openCreateFromSuggestion(s.content)}
+                  >
+                    <Plus className="size-3" />
+                    Criar FAQ
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </Section>
+        </Card>
+      )}
       {isEmpty ? (
         <EmptyState
           icon={<HelpCircle />}

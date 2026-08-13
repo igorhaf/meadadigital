@@ -51,4 +51,18 @@ public class ProfilePromptContext {
         }
         return "# Persona (" + profile.productName() + ")\n" + body + "\n\n";
     }
+    /**
+     * Segmento de perfil COM contexto do tenant. Nesta fase devolve só a persona —
+     * o contexto dinâmico de cada nicho (cardápio, processos, agenda…) pluga aqui
+     * quando o nicho nascer, sem mudar o chamador (PromptBuilder).
+     */
+    public String segmentFor(String profileId, java.util.UUID companyId) {
+        return segmentFor(profileId);
+    }
+
+    /** Variante com a conversa (nichos que resolvem contexto por contato plugam aqui). */
+    public String segmentFor(String profileId, java.util.UUID companyId, java.util.UUID conversationId) {
+        return segmentFor(profileId);
+    }
+
 }

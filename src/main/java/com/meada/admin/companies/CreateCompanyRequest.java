@@ -13,10 +13,16 @@ import jakarta.validation.constraints.Pattern;
  * distinto do {error, reason} de autorização). status não vem aqui: default 'active' no
  * banco. id/created_at/updated_at também são do banco.
  *
- * @param name  nome da empresa, obrigatório.
- * @param slug  identificador único; minúsculas, números e hífens (sem hífen no início/fim
- *              nem duplo). A unicidade é garantida pelo UNIQUE em companies.slug — colisão
- *              vira 409 slug_already_exists no controller (não é checada aqui).
+ * @param name      nome da empresa, obrigatório.
+ * @param slug      identificador único; minúsculas, números e hífens (sem hífen no início/fim
+ *                  nem duplo). A unicidade é garantida pelo UNIQUE em companies.slug — colisão
+ *                  vira 409 slug_already_exists no controller (não é checada aqui).
+ * @param paletteId id da paleta de tema da empresa (camada 5.1.a). @NotBlank apenas — NÃO
+ *                  validado contra o catálogo das 30 paletas: o catálogo vive só no frontend
+ *                  (lib/themes/palettes.ts); duplicar a lista aqui acoplaria o banco à
+ *                  curadoria visual e divergiria a cada paleta nova. Defesa em profundidade:
+ *                  o PaletteSelect só deixa escolher dos 30 ids válidos, e o getPalette() do
+ *                  frontend cai em 'meada-default' se um id desconhecido chegar ao banco.
  */
 public record CreateCompanyRequest(
     @NotBlank(message = "name é obrigatório")
@@ -26,6 +32,9 @@ public record CreateCompanyRequest(
     @Pattern(
         regexp = "^[a-z0-9]+(-[a-z0-9]+)*$",
         message = "slug inválido: use minúsculas, números e hífens (ex.: acme-corp)")
-    String slug
+    String slug,
+
+    @NotBlank(message = "paletteId é obrigatório")
+    String paletteId
 ) {
 }
