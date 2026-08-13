@@ -4,6 +4,7 @@ import com.meada.messaging.AiSettings;
 import com.meada.messaging.AiSettingsRepository;
 import com.meada.messaging.BusinessHours;
 import com.meada.messaging.BusinessHoursRepository;
+import com.meada.messaging.ContactRepository;
 import com.meada.messaging.Faq;
 import com.meada.messaging.FaqRepository;
 import com.meada.messaging.MessageRepository;
@@ -63,20 +64,29 @@ public class PromptBuilder {
     private final FaqRepository faqRepository;
     private final BusinessHoursRepository businessHoursRepository;
     private final MessageRepository messageRepository;
+    private final ContactRepository contactRepository;
     private final com.meada.knowledge.KnowledgeRetrievalService knowledgeRetrievalService;
+    private final com.meada.profiles.CompanyProfileRepository companyProfileRepository;
+    private final com.meada.profiles.ProfilePromptContext profilePromptContext;
 
     public PromptBuilder(AiSettingsRepository aiSettingsRepository,
                          ServiceRepository serviceRepository,
                          FaqRepository faqRepository,
                          BusinessHoursRepository businessHoursRepository,
                          MessageRepository messageRepository,
-                         com.meada.knowledge.KnowledgeRetrievalService knowledgeRetrievalService) {
+                         ContactRepository contactRepository,
+                         com.meada.knowledge.KnowledgeRetrievalService knowledgeRetrievalService,
+                         com.meada.profiles.CompanyProfileRepository companyProfileRepository,
+                         com.meada.profiles.ProfilePromptContext profilePromptContext) {
         this.aiSettingsRepository = aiSettingsRepository;
         this.serviceRepository = serviceRepository;
         this.faqRepository = faqRepository;
         this.businessHoursRepository = businessHoursRepository;
         this.messageRepository = messageRepository;
+        this.contactRepository = contactRepository;
         this.knowledgeRetrievalService = knowledgeRetrievalService;
+        this.companyProfileRepository = companyProfileRepository;
+        this.profilePromptContext = profilePromptContext;
         this.template = loadTemplate();
     }
 
@@ -99,12 +109,21 @@ public class PromptBuilder {
 
         String tone = settings.map(AiSettings::tone).filter(s -> s != null && !s.isBlank())
             .orElse(DEFAULT_TONE);
+        // Ajuste de tom (5.18 #58): se a IA já classificou o tom do contato, anexa uma linha
+        // de direção de estilo ao tom configurado pelo tenant (não o substitui).
+        tone = appendToneSteering(tone, conversationId);
         String handoff = settings.map(AiSettings::handoffTriggers).filter(s -> s != null && !s.isBlank())
             .orElse(DEFAULT_HANDOFF);
         String rulesValue = settings.map(AiSettings::systemRules).orElse(null);
         String restrictionsValue = settings.map(AiSettings::restrictions).orElse(null);
 
-        String systemPrompt = template
+        // Persona por perfil (camada 7.0): prefixo de voz do "produto" (legal/dental/sushi),
+        // concatenado ANTES do prompt base. generic → "" (o template já é o comportamento
+        // genérico). NÃO substitui o template — só antecede.
+        String profileSegment =
+            profilePromptContext.segmentFor(companyProfileRepository.findProfileId(companyId));
+
+        String systemPrompt = profileSegment + template
             .replace("{{tone}}", tone)
             .replace("{{handoff}}", handoff)
             .replace("{{rules}}", optionalSection("Regras adicionais", rulesValue))
@@ -112,7 +131,8 @@ public class PromptBuilder {
             .replace("{{services}}", servicesSection(companyId))
             .replace("{{faqs}}", faqsSection(companyId))
             .replace("{{businessHours}}", businessHoursSection(companyId))
-            .replace("{{knowledge}}", knowledgeSection(companyId, userMessage));
+            .replace("{{knowledge}}", knowledgeSection(companyId, userMessage))
+            .replace("{{contactMemory}}", contactMemorySection(conversationId));
 
         List<ConversationTurn> history =
             messageRepository.findRecentByConversation(conversationId, HISTORY_LIMIT);
@@ -190,6 +210,36 @@ public class PromptBuilder {
                 + "]\n" + c.content().strip())
             .collect(Collectors.joining("\n\n"));
         return "\n# Conhecimento de documentos\n" + body + "\n";
+    }
+
+    /**
+     * Memória de longo prazo do contato (5.18 #55): o jsonb contact_memory injetado no
+     * contexto. Vazio ("") quando não há conversa/contato OU a memória ainda está vazia —
+     * some sem cabeçalho órfão, como as demais seções opcionais. O jsonb é renderizado cru
+     * (a IA lê JSON sem dificuldade); o conteúdo é território do modelo (ele mesmo o gravou
+     * via memory_update).
+     */
+    private String contactMemorySection(UUID conversationId) {
+        Optional<String> memory = contactRepository.findMemoryByConversation(conversationId);
+        if (memory.isEmpty() || memory.get() == null || memory.get().isBlank()) {
+            return "";
+        }
+        return "\n# Memória do contato\n" + memory.get().strip() + "\n";
+    }
+
+    /**
+     * Ajuste de tom (5.18 #58): anexa uma linha de direção de estilo ao tom configurado quando
+     * a IA já classificou o tom do contato (formal|informal|neutro|irritado). Não substitui o
+     * tom do tenant — soma uma instrução de adaptação. Retorna o tom original quando não há
+     * tom detectado (caso da 1ª interação).
+     */
+    private String appendToneSteering(String tone, UUID conversationId) {
+        Optional<String> detected = contactRepository.findDetectedToneByConversation(conversationId);
+        if (detected.isEmpty() || detected.get() == null || detected.get().isBlank()) {
+            return tone;
+        }
+        return tone + "\nO contato tende a um tom " + detected.get().strip()
+            + "; ajuste sua resposta a esse tom.";
     }
 
     private String businessHoursSection(UUID companyId) {
