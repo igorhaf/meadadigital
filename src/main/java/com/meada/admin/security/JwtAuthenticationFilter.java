@@ -71,6 +71,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     // autentica este path como INVITEE, pulando resolveUser. Path: POST
     // /api/invitations/{token}/accept — casado por prefixo + sufixo (token é livre).
     private static final String INVITE_ACCEPT_PREFIX = "/api/invitations/";
+
+    // Endpoints dos perfis verticais (sushi 7.1): sob /api/sushi/**, mas TENANT-autenticados
+    // (precisam do AuthenticatedUser; o guard de perfil de cada controller decide o 403).
+    private static final String SUSHI_PATH_PREFIX = "/api/sushi/";
     private static final String INVITE_ACCEPT_SUFFIX = "/accept";
 
     // Junta a company para checar suspensão da empresa no mesmo SELECT (camada 6.1/6.2).
@@ -123,9 +127,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         if ("OPTIONS".equals(request.getMethod())) {
             return true;   // preflight CORS passa direto (ver javadoc acima)
         }
-        // Filtra /admin/** E o aceite de convite (/api/invitations/{token}/accept). Demais
-        // rotas (webhook, lookup público do convite, health) passam sem filtro de auth.
-        return !request.getRequestURI().startsWith(ADMIN_PATH_PREFIX)
+        // Filtra /admin/**, /api/sushi/** (tenant do perfil sushi — camada 7.1) E o aceite de
+        // convite (/api/invitations/{token}/accept). Demais rotas (webhook, lookup público do
+        // convite, health) passam sem filtro de auth.
+        String uri = request.getRequestURI();
+        return !uri.startsWith(ADMIN_PATH_PREFIX)
+            && !uri.startsWith(SUSHI_PATH_PREFIX)
             && !isInviteAccept(request);
     }
 
