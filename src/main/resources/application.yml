@@ -67,6 +67,14 @@ spring:
       # Defesa em profundidade: primitivo que receba null da Evolution não estoura.
       fail-on-null-for-primitives: false
 
+  # Upload de PDF da base de conhecimento (camada 5.13). Limite de 5MB por arquivo —
+  #   PDFs de FAQ/manual cabem; protege contra upload abusivo (o RAG não é storage geral).
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 5MB
+      max-request-size: 6MB
+
 # Webhook (Evolution → backend). secret (decisão 7): obrigatório, sem default —
 #   sem WEBHOOK_SECRET a app não sobe; comparado em constant-time no filtro (código).
 #   message-max-age-seconds: threshold do guard de frescor do WebhookService —
@@ -75,6 +83,17 @@ spring:
 webhook:
   secret: ${WEBHOOK_SECRET}
   message-max-age-seconds: ${WEBHOOK_MESSAGE_MAX_AGE_SECONDS:180}
+
+# RAG / base de conhecimento (camada 5.13). embedding-endpoint aponta para o sidecar
+#   Python (docker-compose, porta 7080), que serve o modelo multilingual-e5-small.
+#   read-timeout largo (60s): embeddings de muitos chunks num batch podem demorar em CPU.
+knowledge:
+  embedding-endpoint: ${KNOWLEDGE_EMBEDDING_ENDPOINT:http://localhost:7080}
+  embedding-connect-timeout-ms: 5000
+  embedding-read-timeout-ms: 60000
+  chunk-size-chars: 800
+  chunk-overlap-chars: 100
+  max-chars-per-document: 500000
 
 # IA (Gemini). api-key e model obrigatórios (sem default) — fail-fast no
 #   GeminiProvider se ausentes. O nome do modelo vigente deve ser confirmado antes
