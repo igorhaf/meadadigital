@@ -34,8 +34,8 @@ o roteiro completo.
 | 3 | `regra/3-ia-outbound` | A IA responde: Gemini + PromptBuilder (contexto do tenant), OutboundService (horário de funcionamento ANTES da IA, retry com backoff, idempotência por message id, dry-run). |
 | 4 | `regra/4-painel-admin` | Auth JWT ES256/JWKS, super-admin × tenant-admin, painel Next (login, conversas, CRUD de serviços/FAQs/horários/instâncias), convites e roles. |
 | 5 | `regra/5-conhecimento-rag` | Base de conhecimento com embeddings (sidecar), retrieval no prompt, busca global. |
-| 6 | `regra/6-operacao` | Operação de atendimento: tags, saved replies, teams e limites, métricas, engagement/reativação, insights, treino da IA, webchat, LGPD, access logs, admin de plataforma (planos, announcements, impersonation, auditoria). |
-| 7 | `regra/7.0-multiperfil` | O chassi multi-perfil: `ProfileType` (nasce com `generic`), guard por perfil, paleta por perfil, subdomínio → perfil no middleware. |
+| 7 | `regra/6-operacao` | Operação de atendimento: tags, saved replies, teams e limites, métricas, engagement/reativação, insights, treino da IA, webchat, LGPD, access logs, admin de plataforma (planos, announcements, impersonation, auditoria). |
+| 6 | `regra/7.0-multiperfil` | O chassi multi-perfil: `ProfileType` (nasce com `generic`), guard por perfil, paleta por perfil, subdomínio → perfil no middleware. |
 
 ### Nichos verticais (ordem histórica — 1 branch por nicho)
 
@@ -69,6 +69,12 @@ services, handlers de tag) · persona com as travas do domínio · contexto/cach
 | 43 | `regra/10-wiki` | A wiki de regras de negócio (docs/wiki + Docsify + serve). |
 
 ## Notas de execução
+
+- **Ordem 6 × 7.0:** o chassi multi-perfil (`regra/7.0`) fecha ANTES da operação
+  (`regra/6`): os módulos da operação, no estado final, referenciam o `ProfileType` —
+  com o enum nascendo primeiro (só `generic` + os declarados), a operação entra
+  compilando sem retrabalho. A numeração das camadas segue a história real.
+
 
 - A referência de conteúdo é a branch `main-legado` (estado congelado na tag
   `wiki-regras-negocio-v1`). Ao final, a convergência é provada por diff de árvores:
