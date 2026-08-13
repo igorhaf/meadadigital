@@ -5,9 +5,10 @@ import java.util.List;
 import java.util.Optional;
 
 /**
- * Catálogo MATERIALIZADO de perfis verticais (camada 7.0). Meada é um monolito que se
- * apresenta como N produtos verticais ("perfis"); cada perfil parece um produto distinto
- * para o cliente final.
+ * Catálogo MATERIALIZADO de perfis verticais (camada 7.0). Meada é um SaaS de atendimento que se
+ * apresenta como N produtos verticais ("perfis"/nichos); cada perfil habilita features (CMS, CRM,
+ * agenda, etc.) conforme a demanda do nicho. O atendimento por IA ("bot") é apenas UMA das features —
+ * o produto não é "um bot", por isso o label do nicho NÃO carrega o sufixo "Bot".
  *
  * <p>Os perfis são HARDCODED — esta enum é a fonte de verdade no backend, espelhada 1:1 por
  * {@code frontend/lib/profiles/profile-type.ts}. O {@code ProfileTypeParityTest} garante que
@@ -17,16 +18,16 @@ import java.util.Optional;
  * <p>Campos:
  * <ul>
  *   <li>{@code id} — string estável (persistida em companies.profile_id; nunca renomear em uso).
- *   <li>{@code productName} — label do "produto" exibido ao cliente (ex.: "ProcessoBot").
+ *   <li>{@code productName} — label do nicho exibido ao cliente (ex.: "Legal", "Restaurante").
  *   <li>{@code subdomain} — subdomínio (sem o domínio base) que mapeia o perfil.
  *   <li>{@code defaultPaletteId} — paleta padrão (referência a lib/themes/palettes.ts).
  * </ul>
  */
 public enum ProfileType {
     GENERIC("generic", "Meada", "meada", "meada-default"),
-    LEGAL("legal", "ProcessoBot", "processo", "indigo"),
-    DENTAL("dental", "DentalBot", "dental", "celeste"),
-    SUSHI("sushi", "SushiBot", "sushi", "tijolo");
+    LEGAL("legal", "Legal", "juridico", "indigo"),
+    DENTAL("dental", "Dental", "dental", "celeste"),
+    SUSHI("sushi", "Sushi", "sushi", "tijolo");
 
     private final String id;
     private final String productName;
@@ -64,7 +65,7 @@ public enum ProfileType {
         return Arrays.stream(values()).filter(p -> p.id.equals(id)).findFirst();
     }
 
-    /** Resolve um perfil pelo subdomínio (ex.: "processo" → LEGAL). Optional vazio se inválido. */
+    /** Resolve um perfil pelo subdomínio (ex.: "juridico" → LEGAL). Optional vazio se inválido. */
     public static Optional<ProfileType> bySubdomain(String subdomain) {
         if (subdomain == null) {
             return Optional.empty();
@@ -75,5 +76,18 @@ public enum ProfileType {
     /** Todos os perfis ativos (no MVP, todos os do enum). Ordem de declaração. */
     public static List<ProfileType> allActive() {
         return List.of(values());
+    }
+
+    /**
+     * True se o slug colide com um subdomínio RESERVADO de nicho (ex.: "sushi", "comida").
+     * Usado na criação/edição de empresa: o slug do tenant É o subdomínio dele, então nenhuma
+     * empresa pode usar um slug igual ao subdomínio de um perfil — senão a desambiguação
+     * nicho-vs-empresa do middleware ficaria indeterminada. Case-insensitive, trim.
+     */
+    public static boolean isReservedSubdomain(String slug) {
+        if (slug == null) {
+            return false;
+        }
+        return bySubdomain(slug.trim().toLowerCase()).isPresent();
     }
 }

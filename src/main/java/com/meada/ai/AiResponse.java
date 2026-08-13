@@ -17,6 +17,13 @@ package com.meada.ai;
  * @param tokensIn   tokens do prompt (usageMetadata da API); 0 se indisponível.
  * @param tokensOut  tokens da resposta; 0 se indisponível.
  * @param latencyMs  latência da chamada à IA, medida pelo provider.
+ * @param schedulingIntent intenção de agendamento detectada na mensagem do cliente
+ *                   (camada 5.15 #29); NULLABLE — null quando o modelo não detectou
+ *                   intenção de marcar/agendar (caso da maioria das mensagens). Quando
+ *                   presente, o OutboundService persiste em conversations.scheduling_intent
+ *                   (só nos casos com AiResponse válido — caminho feliz e handoff-com-reply).
+ *                   Ortogonal a needsHuman: a detecção NÃO força handoff (a IA segue
+ *                   respondendo), só marca a conversa.
  */
 public record AiResponse(
     String reply,
@@ -24,5 +31,28 @@ public record AiResponse(
     String reason,
     int tokensIn,
     int tokensOut,
-    long latencyMs) {
+    long latencyMs,
+    SchedulingIntent schedulingIntent,
+    AiInsights insights) {
+
+    /**
+     * Construtor de conveniência sem intent nem insights — preserva a aridade histórica de
+     * 6 args (synthetic outside-hours, testes). insights = AiInsights.empty() (nunca null,
+     * para o OutboundService chamar hasAny() sem NPE).
+     */
+    public AiResponse(String reply, boolean needsHuman, String reason,
+                      int tokensIn, int tokensOut, long latencyMs) {
+        this(reply, needsHuman, reason, tokensIn, tokensOut, latencyMs, null, AiInsights.empty());
+    }
+
+    /**
+     * Construtor de 7 args (sem insights) — preserva os call-sites da 5.15 que passam só
+     * schedulingIntent. insights = empty.
+     */
+    public AiResponse(String reply, boolean needsHuman, String reason,
+                      int tokensIn, int tokensOut, long latencyMs,
+                      SchedulingIntent schedulingIntent) {
+        this(reply, needsHuman, reason, tokensIn, tokensOut, latencyMs, schedulingIntent,
+            AiInsights.empty());
+    }
 }
