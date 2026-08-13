@@ -4,6 +4,9 @@ import { useQuery } from '@tanstack/react-query'
 import { Menu as MenuIcon, X } from 'lucide-react'
 import { useState, type ReactNode } from 'react'
 
+import { AnnouncementBanner } from '@/components/announcement-banner'
+import { GlobalSearch } from '@/components/global-search'
+import { RealtimeNotifications } from '@/components/realtime-notifications'
 import { ThemeToggle } from '@/components/theme-toggle'
 import { Button } from '@/components/ui/button'
 import { getMe } from '@/lib/api/me'
@@ -22,16 +25,23 @@ import { UserDropdown } from './user-dropdown'
  * compartilhado, sem fetch duplo). O papel decide quais grupos o sidebar mostra.
  *
  * O drawer mobile é um overlay + painel deslizante hand-rolled (mesmo padrão pragmático do
- * Modal do projeto), fechando ao navegar (onNavigate) e no overlay/X.
+ * Modal do projeto), fechando ao navegar (onNavigate) e no overlay/X. GlobalSearch (Cmd+K)
+ * e RealtimeNotifications seguem montados aqui (uma vez), como antes.
  */
 export function AppShell({ children }: { children: ReactNode }) {
   const { data: me } = useQuery({ queryKey: ['me'], queryFn: getMe })
   const [drawerOpen, setDrawerOpen] = useState(false)
 
+
   return (
     <SidebarProvider>
       <div className="flex min-h-screen bg-background">
-        {/* Sidebar desktop COLAPSÁVEL — push (padrão): empurra o conteúdo, clique-toggle. */}
+        <GlobalSearch />
+        <RealtimeNotifications />
+
+        {/* Sidebar desktop COLAPSÁVEL — productName + nav mudam por perfil (camada 7.0/7.1).
+          push (padrão): empurra o conteúdo, clique-toggle. cms: overlay por hover. features (9.0):
+          plumbing pra SM-M gatear itens de nav por feature flag. */}
         <Sidebar
           role={me?.role}
           productName={me?.productName}
@@ -39,7 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
           features={me?.features}
         />
 
-        {/* Aba-balão (desktop): clique-toggle (push). Sempre visível. */}
+        {/* Aba-balão (desktop): clique-toggle (push) ou hover-peek (cms). Sempre visível. */}
         <SidebarTab />
 
         {/* Drawer mobile */}
@@ -48,49 +58,58 @@ export function AppShell({ children }: { children: ReactNode }) {
             <div
               className="absolute inset-0 bg-black/40"
               onClick={() => setDrawerOpen(false)}
-              aria-hidden
+              aria-hidden="true"
             />
-            <div className="absolute inset-y-0 left-0 flex w-72 flex-col bg-sidebar text-sidebar-foreground shadow-xl">
-              <div className="flex items-center justify-between px-4 py-3">
+            <div className="absolute inset-y-0 left-0 flex w-72 max-w-[80%] flex-col border-r border-border bg-background shadow-xl">
+              <div className="flex items-center justify-between pr-3">
                 <SidebarBrand productName={me?.productName} />
                 <Button
                   variant="ghost"
                   size="icon"
-                  aria-label="Fechar menu"
                   onClick={() => setDrawerOpen(false)}
+                  aria-label="Fechar menu"
                 >
                   <X className="size-5" />
                 </Button>
               </div>
-              <SidebarNav
-                role={me?.role}
-                profileId={me?.profileId}
-                features={me?.features}
-                onNavigate={() => setDrawerOpen(false)}
-              />
+              <div className="flex-1 overflow-y-auto">
+                <SidebarNav
+                  role={me?.role}
+                  profileId={me?.profileId}
+                  features={me?.features}
+                  onNavigate={() => setDrawerOpen(false)}
+                />
+              </div>
             </div>
           </div>
         )}
 
-        {/* Área principal */}
+        {/* Coluna de conteúdo */}
         <div className="flex min-w-0 flex-1 flex-col">
-          <header className="flex items-center justify-between gap-2 border-b border-border px-4 py-2">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="md:hidden"
-              aria-label="Abrir menu"
-              onClick={() => setDrawerOpen(true)}
-            >
-              <MenuIcon className="size-5" />
-            </Button>
-            <div className="flex flex-1 items-center justify-end gap-2">
+          <header className="flex items-center justify-between border-b border-border px-4 py-4 md:px-8">
+            <div className="flex items-center gap-2">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="md:hidden"
+                onClick={() => setDrawerOpen(true)}
+                aria-label="Abrir menu"
+              >
+                <MenuIcon className="size-5" />
+              </Button>
+            </div>
+            <div className="flex items-center gap-2">
               <ThemeToggle />
               <UserDropdown me={me} />
             </div>
           </header>
-          <main className="min-h-0 flex-1 overflow-y-auto">
-            <div className="mx-auto w-full max-w-6xl p-4 md:p-6">{children}</div>
+
+          {/* Banner de anúncios (camada 6.7): entre o header global e o conteúdo. Some sozinho
+            quando não há anúncios ativos não-dispensados. */}
+          <AnnouncementBanner />
+
+          <main className="flex-1 overflow-x-hidden">
+            <div className="mx-auto max-w-6xl px-4 py-8 md:px-8">{children}</div>
           </main>
         </div>
       </div>
