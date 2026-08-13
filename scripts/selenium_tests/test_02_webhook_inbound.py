@@ -64,7 +64,22 @@ def backend_up():
             last = "sem conexão"
         time.sleep(2)
     assert last == 401, f"backend não respondeu 401 sem secret na {WEBHOOK} (último: {last})"
+    # O assunto deste módulo é o WEBHOOK, não a IA: pré-cria a conversa do contato-alvo em
+    # modo humano — o pipeline async cai em SKIPPED_NOT_AI (não chama Gemini, não envia,
+    # e não corre contra a limpeza do teardown).
+    psql(
+        "insert into public.contacts (id, company_id, phone_number, name) "
+        f"values ('{uuid.uuid4()}', '{ALPHA}', '+5511977770001', 'Webhook Lab') "
+        "on conflict do nothing;"
+    )
+    psql(
+        "insert into public.conversations (company_id, contact_id, whatsapp_instance_id, status, handled_by) "
+        f"select '{ALPHA}', id, '{CORE_INSTANCE['id']}', 'open', 'human' "
+        f"from public.contacts where company_id = '{ALPHA}' and phone_number = '+5511977770001' "
+        "and not exists (select 1 from public.conversations c2 where c2.contact_id = public.contacts.id and c2.status = 'open');"
+    )
     yield
+    time.sleep(4)  # deixa qualquer retry async em voo terminar antes de apagar o rastro
     psql(
         "delete from public.messages where conversation_id in "
         f"(select c.id from public.conversations c join public.contacts ct on ct.id = c.contact_id "
