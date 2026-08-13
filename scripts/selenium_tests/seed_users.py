@@ -17,6 +17,7 @@ from config import (
     CORE_COMPANIES,
     CORE_INSTANCE,
     CORE_USERS,
+    NICHE_COMPANIES,
     ROOT_EMAIL,
     SELENIUM_PASSWORD,
     SERVICE_ROLE_KEY,
@@ -107,6 +108,20 @@ def main() -> int:
             root_id = create_auth_user(ROOT_EMAIL)
         psql(f"delete from public.users where id = '{root_id}';")
         print(f"[ok] root: {ROOT_EMAIL} (id={root_id})")
+        # Empresas + admins dos NICHOS (perfil cravado — como o root faria).
+        for niche, info in NICHE_COMPANIES.items():
+            psql(
+                "insert into public.companies (id, name, slug, profile_id) "
+                f"values ('{info['id']}', '{info['name']}', '{info['slug']}', '{info['profile_id']}') "
+                "on conflict (id) do nothing;"
+            )
+            uid = find_auth_user(info["email"])
+            if uid:
+                set_password(uid)
+            else:
+                uid = create_auth_user(info["email"])
+            upsert_public_user(uid, info["email"], info["id"], niche)
+            print(f"[ok] nicho {niche}: {info['email']}")
     except Exception as exc:  # noqa: BLE001
         failures += 1
         print(f"[FALHA] instância: {exc}")

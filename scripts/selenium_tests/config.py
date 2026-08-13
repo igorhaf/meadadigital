@@ -77,6 +77,18 @@ CORE_USERS = {
 # SEM linha em public.users (é assim que o filtro reconhece o root).
 ROOT_EMAIL = "selenium.root@meada.test"
 
+# Empresas-laboratório POR NICHO (1 por perfil implementado; crescem com as regras).
+# UUID fixo por nicho; user selenium.<nicho>@meada.test amarrado a ela.
+NICHE_COMPANIES = {
+    "sushi": {
+        "id": "5e1e0000-0000-4000-8000-000000000071",
+        "name": "Selenium Sushi",
+        "slug": "selenium-sushi",
+        "profile_id": "sushi",
+        "email": "selenium.sushi@meada.test",
+    },
+}
+
 # Instância WhatsApp do laboratório (regra/2+): chave de resolução do tenant no
 # webhook. Token sintético — nunca fala com uma Evolution real.
 CORE_INSTANCE = {

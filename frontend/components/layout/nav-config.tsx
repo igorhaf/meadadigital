@@ -1,6 +1,9 @@
 import {
   Activity,
   AlertTriangle,
+  Award,
+  BellRing,
+  ClipboardList,
   BarChart3,
   BookOpen,
   Building2,
@@ -17,14 +20,17 @@ import {
   Package,
   Palette,
   ScrollText,
+  Settings,
   ShieldCheck,
   Smartphone,
   Sparkles,
   Tag,
+  Ticket,
   UserCog,
   UserPlus,
   Users,
   UsersRound,
+  UtensilsCrossed,
   Workflow,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
@@ -150,8 +156,23 @@ export function getNavForProfile(
   return profileGroups(profileId)
 }
 
+/** Grupo de navegação exclusivo do perfil sushi (camada 7.1). */
+const SUSHI_GROUP: NavGroup = {
+  heading: 'Restaurante',
+  items: [
+    { label: 'Cardápio', href: '/dashboard/sushi-menu', icon: UtensilsCrossed },
+    { label: 'Categorias', href: '/dashboard/sushi-categories', icon: Tag },
+    { label: 'Pedidos', href: '/dashboard/sushi-orders', icon: ClipboardList },
+    { label: 'Status & Notificações', href: '/dashboard/sushi-statuses', icon: BellRing },
+    { label: 'Cupons', href: '/dashboard/sushi-coupons', icon: Ticket },
+    { label: 'Fidelidade', href: '/dashboard/sushi-loyalty', icon: Award },
+    { label: 'Configurações', href: '/dashboard/sushi-settings', icon: Settings },
+  ],
+}
+
 /** Grupos base por perfil (sem o gate de feature flags). */
 function profileGroups(profileId: string | null | undefined): NavGroup[] {
-  void profileId
+  // Perfil vertical (camada 7.1): grupo próprio no topo. Demais perfis seguem o nav padrão.
+  if (profileId === 'sushi') return [SUSHI_GROUP, ...NAV_GROUPS]
   return NAV_GROUPS
 }
