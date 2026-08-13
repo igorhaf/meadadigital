@@ -1,4 +1,4 @@
-import { Clock, HelpCircle, Home, Package, Sparkles } from 'lucide-react'
+import { BookOpen, Clock, HelpCircle, Home, Package, Sparkles } from 'lucide-react'
 import type { ComponentType } from 'react'
 
 /** Item de navegação do sidebar. */
@@ -31,6 +31,7 @@ export const NAV_GROUPS: NavGroup[] = [
       { label: 'IA', href: '/dashboard/ai-settings', icon: Sparkles },
       { label: 'FAQs', href: '/dashboard/faqs', icon: HelpCircle },
       { label: 'Serviços', href: '/dashboard/services', icon: Package },
+      { label: 'Conhecimento', href: '/dashboard/knowledge', icon: BookOpen },
       { label: 'Horários', href: '/dashboard/business-hours', icon: Clock },
     ],
   },
