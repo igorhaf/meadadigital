@@ -37,12 +37,18 @@ def test_tenant_ve_apenas_a_propria_empresa(token_alpha):
 
 
 def test_leitura_cross_tenant_volta_vazia(token_alpha):
-    contact_id = str(uuid.uuid4())
+    # Insert idempotente (on conflict SEM alvo: cobre tanto o id quanto a UNIQUE
+    # company+phone de rodadas anteriores); o id REAL é relido por company+phone.
     psql(
         "insert into public.contacts (id, company_id, phone_number, name) "
-        f"values ('{contact_id}', '{BETA}', '+5511900000001', 'Contato Beta') "
-        "on conflict (id) do nothing;"
+        f"values ('{uuid.uuid4()}', '{BETA}', '+5511900000001', 'Contato Beta') "
+        "on conflict do nothing;"
     )
+    contact_id = psql(
+        "select id from public.contacts "
+        f"where company_id = '{BETA}' and phone_number = '+5511900000001' limit 1;"
+    )
+    assert contact_id, "contato-laboratório do beta não existe"
     resp = rest_get("/contacts?select=id", token=token_alpha)
     assert resp.status_code == 200, resp.text[:200]
     ids = {row["id"] for row in resp.json()}
