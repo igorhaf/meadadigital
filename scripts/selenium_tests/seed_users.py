@@ -13,7 +13,14 @@ import sys
 
 import requests
 
-from config import CORE_COMPANIES, CORE_USERS, SELENIUM_PASSWORD, SERVICE_ROLE_KEY, SUPABASE_URL
+from config import (
+    CORE_COMPANIES,
+    CORE_INSTANCE,
+    CORE_USERS,
+    SELENIUM_PASSWORD,
+    SERVICE_ROLE_KEY,
+    SUPABASE_URL,
+)
 from helpers import psql
 
 
@@ -29,6 +36,17 @@ def ensure_company(info: dict) -> None:
     psql(
         "insert into public.companies (id, name, slug) "
         f"values ('{info['id']}', '{info['name']}', '{info['slug']}') "
+        "on conflict (id) do nothing;"
+    )
+
+
+def ensure_instance() -> None:
+    """Instância WhatsApp do laboratório (webhook resolve o tenant por ela)."""
+    company_id = CORE_COMPANIES[CORE_INSTANCE["company"]]["id"]
+    psql(
+        "insert into public.whatsapp_instances (id, company_id, instance_name, evolution_token) "
+        f"values ('{CORE_INSTANCE['id']}', '{company_id}', "
+        f"'{CORE_INSTANCE['instance_name']}', '{CORE_INSTANCE['evolution_token']}') "
         "on conflict (id) do nothing;"
     )
 
@@ -75,6 +93,14 @@ def main() -> int:
         print("ERRO: SUPABASE_SERVICE_ROLE_KEY ausente no .env da raiz.")
         return 1
     failures = 0
+    try:
+        for company in CORE_COMPANIES.values():
+            ensure_company(company)
+        ensure_instance()
+        print(f"[ok] instância: {CORE_INSTANCE['instance_name']}")
+    except Exception as exc:  # noqa: BLE001
+        failures += 1
+        print(f"[FALHA] instância: {exc}")
     for label, info in CORE_USERS.items():
         company = CORE_COMPANIES[info["company"]]
         try:

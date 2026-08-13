@@ -1,0 +1,46 @@
+-- =============================================================================
+-- 06_unique_open_conversation.sql
+-- Meada — no máximo UMA conversa aberta por (contact, instance).
+--
+-- Por que existe:
+--   O fluxo do webhook (Camada 2) faz "resolve/cria conversation" para cada
+--   mensagem inbound. Sem garantia única, duas webhooks SIMULTÂNEAS do mesmo
+--   contato (reentrega concorrente da Evolution, ou duas mensagens em rajada)
+--   criariam DUAS conversas 'open' para o mesmo par — fragmentando o histórico
+--   de atendimento em duas threads paralelas. Esta constraint resolve a race no
+--   nível do banco: a 2ª tentativa vira ON CONFLICT em vez de linha duplicada.
+--
+-- ÍNDICE PARCIAL (where status = 'open'): a unicidade vale SÓ entre conversas
+--   abertas. Conversas 'closed' não contam — pode haver N fechadas + 1 aberta
+--   por par. Isso sustenta a política decidida nesta camada:
+--     'closed' é ESTADO FINAL IMUTÁVEL. Mensagem nova de um contato cuja conversa
+--     anterior está fechada NÃO reabre a antiga — cria uma conversa nova aberta.
+--     As fechadas permanecem no histórico como atendimentos discretos.
+--   Razões (registradas para não reabrir o debate):
+--     1. Reabrir tornaria status mutável indefinidamente; queries históricas
+--        ("conversas encerradas em janeiro") teriam resultado mudando retroativo
+--        — reporting/auditoria/contagens do painel ficariam não-determinísticos.
+--     2. Cliente que volta após meses é atendimento novo de produto (contexto,
+--        agente, tom, regras podem ter mudado). Continuar thread morta é UX falsa.
+--
+-- PADRÃO DE UPSERT NO WEBHOOK (a constraint suporta, o código usa):
+--   select-then-upsert-then-reselect.
+--     1. SELECT conversa 'open' por (company_id, contact_id, whatsapp_instance_id).
+--     2. Se vazio, INSERT ... ON CONFLICT (contact_id, whatsapp_instance_id)
+--        WHERE status = 'open' DO NOTHING RETURNING id.
+--     3. Se o RETURNING vier vazio, outra thread criou entre o SELECT e o INSERT
+--        — re-executa o SELECT do passo 1 para obter o id da conversa criada.
+--   Cobre concorrência sem advisory lock.
+--
+-- NOTA: o ON CONFLICT que mira este índice DEVE repetir o predicado parcial
+--   (WHERE status = 'open') — Postgres exige o predicado para reconhecer o índice
+--   parcial como arbiter. (Mesma pegadinha do uq_messages_evolution_id.)
+--
+-- Quem FECHA conversa não é decisão desta camada — fica para a camada de IA/painel
+--   (timeout de inatividade, comando explícito, ação manual). O webhook só insere
+--   mensagem e atualiza last_message_at; nunca muda status para 'closed'.
+-- =============================================================================
+
+create unique index uq_conversations_open_per_contact_instance
+  on conversations (contact_id, whatsapp_instance_id)
+  where status = 'open';

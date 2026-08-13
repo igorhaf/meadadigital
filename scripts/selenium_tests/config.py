@@ -15,6 +15,9 @@ import os
 
 REPO_ROOT = os.path.abspath(os.path.join(os.path.dirname(__file__), "..", ".."))
 
+# Backend Spring (regra/2+). A suíte exige o backend DE PÉ ao rodar.
+API_URL = os.environ.get("MEADA_API_URL", "http://localhost:8095")
+
 # Senha dos usuários descartáveis de teste (Supabase LOCAL apenas).
 SELENIUM_PASSWORD = os.environ.get("MEADA_SELENIUM_PASSWORD", "Selenium.Meada.2026!")
 
@@ -41,6 +44,7 @@ SUPABASE_URL = _backend_env.get("SUPABASE_URL", "http://127.0.0.1:54321")
 SERVICE_ROLE_KEY = _backend_env.get("SUPABASE_SERVICE_ROLE_KEY", "")
 DB_PASSWORD = _backend_env.get("SPRING_DATASOURCE_PASSWORD", "")
 ANON_KEY = _frontend_env.get("NEXT_PUBLIC_SUPABASE_ANON_KEY", "")
+WEBHOOK_SECRET = _backend_env.get("WEBHOOK_SECRET", "")
 
 DB_HOST = "127.0.0.1"
 DB_PORT = "54322"
@@ -63,4 +67,13 @@ CORE_COMPANIES = {
 CORE_USERS = {
     "alpha": {"email": "selenium.core-alpha@meada.test", "company": "alpha"},
     "beta": {"email": "selenium.core-beta@meada.test", "company": "beta"},
+}
+
+# Instância WhatsApp do laboratório (regra/2+): chave de resolução do tenant no
+# webhook. Token sintético — nunca fala com uma Evolution real.
+CORE_INSTANCE = {
+    "id": "5e1e0000-0000-4000-8000-0000000000aa",
+    "company": "alpha",
+    "instance_name": "selenium-core-alpha-wa",
+    "evolution_token": "selenium-local-token",
 }
